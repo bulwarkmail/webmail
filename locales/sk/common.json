@@ -4139,7 +4139,10 @@
     "unassign_me": "Zrušiť moje priradenie",
     "save": "Uložiť",
     "assignees_changed": "Priradenie zmenené",
-    "unassigned_person": "{name} už nie je priradený(á)"
+    "unassigned_person": "{name} už nie je priradený(á)",
+    "add_assignee": "Priradiť",
+    "remove_assignee": "Zrušiť priradenie: {name}",
+    "assignees_label": "Priradené"
   },
   "menuMove": {
     "filter_placeholder": "Nájsť priečinok",

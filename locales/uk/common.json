@@ -4139,7 +4139,10 @@
     "unassign_me": "Зняти призначення з мене",
     "save": "Зберегти",
     "assignees_changed": "Призначення змінено",
-    "unassigned_person": "{name}: призначення знято"
+    "unassigned_person": "{name}: призначення знято",
+    "add_assignee": "Призначити",
+    "remove_assignee": "Зняти призначення: {name}",
+    "assignees_label": "Призначено"
   },
   "menuMove": {
     "filter_placeholder": "Знайти папку",

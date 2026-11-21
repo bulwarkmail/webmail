@@ -4139,7 +4139,10 @@
     "unassign_me": "Elimină atribuirea mea",
     "save": "Salvează",
     "assignees_changed": "Atribuire modificată",
-    "unassigned_person": "{name} nu mai este atribuit"
+    "unassigned_person": "{name} nu mai este atribuit",
+    "add_assignee": "Atribuie",
+    "remove_assignee": "Elimină atribuirea pentru {name}",
+    "assignees_label": "Atribuit către"
   },
   "menuMove": {
     "filter_placeholder": "Caută un folder",

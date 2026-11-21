@@ -4139,7 +4139,10 @@
     "unassign_me": "Rimuovi la mia assegnazione",
     "save": "Salva",
     "assignees_changed": "Assegnazione modificata",
-    "unassigned_person": "{name} non è più assegnato"
+    "unassigned_person": "{name} non è più assegnato",
+    "add_assignee": "Assegna",
+    "remove_assignee": "Rimuovi l'assegnazione a {name}",
+    "assignees_label": "Assegnato a"
   },
   "menuMove": {
     "filter_placeholder": "Cerca una cartella",

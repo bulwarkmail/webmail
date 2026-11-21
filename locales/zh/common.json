@@ -4139,7 +4139,10 @@
     "unassign_me": "取消分配给我",
     "save": "保存",
     "assignees_changed": "已更改分配",
-    "unassigned_person": "已取消分配给 {name}"
+    "unassigned_person": "已取消分配给 {name}",
+    "add_assignee": "分配",
+    "remove_assignee": "取消分配给 {name}",
+    "assignees_label": "已分配给"
   },
   "menuMove": {
     "filter_placeholder": "查找文件夹",

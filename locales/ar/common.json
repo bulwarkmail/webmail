@@ -4139,7 +4139,10 @@
     "unassign_me": "إلغاء تعييني",
     "save": "حفظ",
     "assignees_changed": "تم تغيير المعيّنين",
-    "unassigned_person": "لم يعد {name} معيّنًا"
+    "unassigned_person": "لم يعد {name} معيّنًا",
+    "add_assignee": "تعيين",
+    "remove_assignee": "إلغاء تعيين {name}",
+    "assignees_label": "معيّنة إلى"
   },
   "menuMove": {
     "filter_placeholder": "ابحث عن مجلد",

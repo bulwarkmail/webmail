@@ -4139,7 +4139,10 @@
     "unassign_me": "Снять назначение с меня",
     "save": "Сохранить",
     "assignees_changed": "Назначение изменено",
-    "unassigned_person": "{name}: назначение снято"
+    "unassigned_person": "{name}: назначение снято",
+    "add_assignee": "Назначить",
+    "remove_assignee": "Снять назначение: {name}",
+    "assignees_label": "Назначено"
   },
   "menuMove": {
     "filter_placeholder": "Найти папку",

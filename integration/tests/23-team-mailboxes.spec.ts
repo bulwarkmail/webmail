@@ -356,6 +356,8 @@ test('alice assigns a message to bob; bob finds it, marks it done and reopens it
   await expect(bobOption).toBeVisible({ timeout: 20000 });
   await shot(alice, 'team-assign-dialog');
   await bobOption.click();
+  await expect(bobOption).toHaveAttribute('aria-selected', 'true');
+  await dialog.getByTestId('team-assign-save').click();
   await expect(dialog).toHaveCount(0);
   const bobId = (await connect(TM.bob)).accountId;
   await expect.poll(() => keywordsOf(ASSIGNED), { timeout: 30000 }).toContain(`$assigned:${bobId}`);

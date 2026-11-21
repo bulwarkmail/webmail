@@ -4139,7 +4139,10 @@
     "unassign_me": "Unassign me",
     "save": "Save",
     "assignees_changed": "Assignees changed",
-    "unassigned_person": "{name} is no longer assigned"
+    "unassigned_person": "{name} is no longer assigned",
+    "add_assignee": "Assign",
+    "remove_assignee": "Unassign {name}",
+    "assignees_label": "Assigned to"
   },
   "menuMove": {
     "filter_placeholder": "Find a folder",

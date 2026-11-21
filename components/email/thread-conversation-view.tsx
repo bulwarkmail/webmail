@@ -92,6 +92,7 @@ import { useDevicePolicy } from "@/hooks/use-device-policy";
 import { Watermark, useWatermarkText } from "@/components/device/watermark";
 import { NO_SAVE_MEDIA_CSS, blockMediaSaving } from "@/lib/device-frame";
 import { NotesAfter, NotesSummaryLine, TeamNoteArea, TeamNotesProvider } from "@/components/team-mailboxes/team-conversation";
+import { TeamAssigneeLine } from "@/components/team-mailboxes/team-actions";
 
 export type ConversationAttachmentHandler = (
   blobId: string, name: string, type: string | undefined, source: EmailBlobContext,
@@ -327,6 +328,8 @@ export function ThreadConversationView({
           <p className="truncate text-xs sm:text-sm text-muted-foreground">
             {t("threads.messages_count", { count: emails.length })}
           </p>
+          {/* Team mailboxes: who has the conversation's newest message, Assign and Done. */}
+          <TeamAssigneeLine email={thread.latestEmail} className="mt-1" />
         </div>
         {actions && <ConversationHeaderActions email={thread.latestEmail} actions={actions} />}
       </div>

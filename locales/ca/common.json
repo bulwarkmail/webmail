@@ -4139,7 +4139,10 @@
     "unassign_me": "Desassigna'm",
     "save": "Desa",
     "assignees_changed": "S'han canviat les persones assignades",
-    "unassigned_person": "{name} ja no hi està assignat"
+    "unassigned_person": "{name} ja no hi està assignat",
+    "add_assignee": "Assigna",
+    "remove_assignee": "Desassigna {name}",
+    "assignees_label": "Assignat a"
   },
   "menuMove": {
     "filter_placeholder": "Cerca una carpeta",

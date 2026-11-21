@@ -4139,7 +4139,10 @@
     "unassign_me": "Saját hozzárendelésem megszüntetése",
     "save": "Mentés",
     "assignees_changed": "Hozzárendelés módosítva",
-    "unassigned_person": "{name} már nincs hozzárendelve"
+    "unassigned_person": "{name} már nincs hozzárendelve",
+    "add_assignee": "Hozzárendelés",
+    "remove_assignee": "{name} hozzárendelésének megszüntetése",
+    "assignees_label": "Hozzárendelve"
   },
   "menuMove": {
     "filter_placeholder": "Mappa keresése",

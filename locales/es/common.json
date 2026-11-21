@@ -4139,7 +4139,10 @@
     "unassign_me": "Quitarme la asignación",
     "save": "Guardar",
     "assignees_changed": "Asignación cambiada",
-    "unassigned_person": "{name} ya no está asignado"
+    "unassigned_person": "{name} ya no está asignado",
+    "add_assignee": "Asignar",
+    "remove_assignee": "Quitar asignación a {name}",
+    "assignees_label": "Asignado a"
   },
   "menuMove": {
     "filter_placeholder": "Buscar una carpeta",

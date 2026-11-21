@@ -4139,7 +4139,10 @@
     "unassign_me": "لغو واگذاری به من",
     "save": "ذخیره",
     "assignees_changed": "واگذاری تغییر کرد",
-    "unassigned_person": "{name} دیگر واگذارشده نیست"
+    "unassigned_person": "{name} دیگر واگذارشده نیست",
+    "add_assignee": "واگذاری",
+    "remove_assignee": "لغو واگذاری به {name}",
+    "assignees_label": "واگذارشده به"
   },
   "menuMove": {
     "filter_placeholder": "یافتن پوشه",

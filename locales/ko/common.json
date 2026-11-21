@@ -4139,7 +4139,10 @@
     "unassign_me": "내 지정 해제",
     "save": "저장",
     "assignees_changed": "지정이 변경됨",
-    "unassigned_person": "{name}의 지정이 해제됨"
+    "unassigned_person": "{name}의 지정이 해제됨",
+    "add_assignee": "지정",
+    "remove_assignee": "{name} 지정 해제",
+    "assignees_label": "지정 대상"
   },
   "menuMove": {
     "filter_placeholder": "폴더 찾기",

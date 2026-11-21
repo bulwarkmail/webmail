@@ -4139,7 +4139,10 @@
     "unassign_me": "Mijn toewijzing opheffen",
     "save": "Opslaan",
     "assignees_changed": "Toewijzing gewijzigd",
-    "unassigned_person": "{name} is niet meer toegewezen"
+    "unassigned_person": "{name} is niet meer toegewezen",
+    "add_assignee": "Toewijzen",
+    "remove_assignee": "Toewijzing aan {name} opheffen",
+    "assignees_label": "Toegewezen aan"
   },
   "menuMove": {
     "filter_placeholder": "Map zoeken",

@@ -29,7 +29,7 @@ vi.mock('@/stores/toast-store', async (importOriginal) => ({
   toast: { ...toasts, info: vi.fn(), dismiss: vi.fn(), update: vi.fn() },
 }));
 
-const { useTeamActions, TeamAssignDialogHost, resetAssignRequest } = await import('../team-actions');
+const { useTeamActions, TeamAssignDialogHost, TeamAssigneeLine, resetAssignRequest } = await import('../team-actions');
 const { useEmailStore } = await import('@/stores/email-store');
 
 const email = (keywords: Record<string, boolean> = {}) => ({
@@ -122,5 +122,48 @@ describe('team actions', () => {
     const entries = renderHook(() => useTeamActions(email())).result.current;
     act(() => { (entries.find((e) => (e as { key?: string }).key === 'extra:team_assign_to') as { run: () => void }).run(); });
     expect(screen.getByRole('dialog', { name: 'dialog_title' })).toBeTruthy();
+  });
+
+  it('shows who has the message under the subject, the user first, and takes one off with their x', async () => {
+    store.unassignPerson.mockResolvedValue(result('unassigned', { removed: { id: 'cj', name: '', me: false } }));
+    render(<TeamAssigneeLine email={email({ '$assigned:cj': true, '$assigned:me': true })} />);
+    const chips = document.querySelectorAll('[data-team-assignee]');
+    expect([...chips].map((c) => c.getAttribute('data-team-assignee'))).toEqual(['me', 'cj']);
+    expect(chips[0].textContent).toContain('chip_me');
+    expect(screen.getByRole('button', { name: 'unassign_me' })).toBeTruthy();
+    await act(async () => { screen.getByRole('button', { name: 'remove_assignee' }).click(); });
+    expect(store.unassignPerson).toHaveBeenCalledWith(ref.key, expect.objectContaining({ id: 'e1' }), 'cj');
+  });
+
+  it('opens Assign to… from the line, and switches Done on and off', async () => {
+    store.markDone.mockResolvedValue(result('done'));
+    store.reopen.mockResolvedValue(result('reopened'));
+    render(<TeamAssignDialogHost />);
+    const { rerender } = render(<TeamAssigneeLine email={email()} />);
+    const done = screen.getByTestId('team-line-done');
+    expect(done).toHaveAttribute('aria-pressed', 'false');
+    await act(async () => { done.click(); });
+    expect(store.markDone).toHaveBeenCalled();
+    rerender(<TeamAssigneeLine email={email({ $done: true })} />);
+    expect(screen.getByTestId('team-line-done')).toHaveAttribute('aria-pressed', 'true');
+    await act(async () => { screen.getByTestId('team-line-done').click(); });
+    expect(store.reopen).toHaveBeenCalled();
+    act(() => { screen.getByTestId('team-line-assign').click(); });
+    expect(screen.getByRole('dialog', { name: 'dialog_title' })).toBeTruthy();
+  });
+
+  it('shows the names and the Done mark without buttons where the user may only read', () => {
+    teamClient = { ...client, getAccountInfo: () => ({ name: 'tm-team@example.org', isPersonal: false, isReadOnly: true }) };
+    render(<TeamAssigneeLine email={email({ '$assigned:cj': true, $done: true })} />);
+    expect(document.querySelectorAll('[data-team-assignee]')).toHaveLength(1);
+    expect(screen.queryByTestId('team-line-assign')).toBeNull();
+    expect(screen.queryByRole('button', { name: 'remove_assignee' })).toBeNull();
+    expect(screen.getByTestId('team-line-done')).toBeDisabled();
+  });
+
+  it('shows nothing outside a team mailbox', () => {
+    inTeam = false;
+    const { container } = render(<TeamAssigneeLine email={email({ '$assigned:cj': true })} />);
+    expect(container.innerHTML).toBe('');
   });
 });

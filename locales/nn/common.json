@@ -4147,7 +4147,10 @@
     "unassign_me": "Fjern tildelinga mi",
     "save": "Lagre",
     "assignees_changed": "Tildeling endra",
-    "unassigned_person": "{name} er ikkje lenger tildelt"
+    "unassigned_person": "{name} er ikkje lenger tildelt",
+    "add_assignee": "Tildel",
+    "remove_assignee": "Fjern tildeling til {name}",
+    "assignees_label": "Tildelt"
   },
   "menuMove": {
     "filter_placeholder": "Finn ei mappe",

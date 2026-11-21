@@ -4139,7 +4139,10 @@
     "unassign_me": "Usuń moje przypisanie",
     "save": "Zapisz",
     "assignees_changed": "Zmieniono przypisanie",
-    "unassigned_person": "{name}: przypisanie usunięte"
+    "unassigned_person": "{name}: przypisanie usunięte",
+    "add_assignee": "Przypisz",
+    "remove_assignee": "Usuń przypisanie: {name}",
+    "assignees_label": "Przypisano do"
   },
   "menuMove": {
     "filter_placeholder": "Znajdź folder",

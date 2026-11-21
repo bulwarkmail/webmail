@@ -4139,7 +4139,10 @@
     "unassign_me": "Zrušit mé přiřazení",
     "save": "Uložit",
     "assignees_changed": "Přiřazení změněno",
-    "unassigned_person": "{name} už není přiřazen(a)"
+    "unassigned_person": "{name} už není přiřazen(a)",
+    "add_assignee": "Přiřadit",
+    "remove_assignee": "Zrušit přiřazení: {name}",
+    "assignees_label": "Přiřazeno"
   },
   "menuMove": {
     "filter_placeholder": "Najít složku",

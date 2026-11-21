@@ -4139,7 +4139,10 @@
     "unassign_me": "自分の割り当てを解除",
     "save": "保存",
     "assignees_changed": "割り当てを変更しました",
-    "unassigned_person": "{name} の割り当てを解除しました"
+    "unassigned_person": "{name} の割り当てを解除しました",
+    "add_assignee": "割り当て",
+    "remove_assignee": "{name} の割り当てを解除",
+    "assignees_label": "割り当て先"
   },
   "menuMove": {
     "filter_placeholder": "フォルダーを検索",

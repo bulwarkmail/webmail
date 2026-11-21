@@ -4151,7 +4151,10 @@
     "unassign_me": "Κατάργηση της ανάθεσής μου",
     "save": "Αποθήκευση",
     "assignees_changed": "Οι αναθέσεις άλλαξαν",
-    "unassigned_person": "{name}: δεν είναι πλέον ανατεθειμένο"
+    "unassigned_person": "{name}: δεν είναι πλέον ανατεθειμένο",
+    "add_assignee": "Ανάθεση",
+    "remove_assignee": "Κατάργηση ανάθεσης: {name}",
+    "assignees_label": "Ανατέθηκε σε"
   },
   "menuMove": {
     "filter_placeholder": "Εύρεση φακέλου",

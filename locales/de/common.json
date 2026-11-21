@@ -4139,7 +4139,10 @@
     "unassign_me": "Meine Zuweisung aufheben",
     "save": "Speichern",
     "assignees_changed": "Zuweisung geändert",
-    "unassigned_person": "{name} ist nicht mehr zugewiesen"
+    "unassigned_person": "{name} ist nicht mehr zugewiesen",
+    "add_assignee": "Zuweisen",
+    "remove_assignee": "Zuweisung an {name} aufheben",
+    "assignees_label": "Zugewiesen an"
   },
   "menuMove": {
     "filter_placeholder": "Ordner suchen",

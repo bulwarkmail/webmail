@@ -4139,7 +4139,10 @@
     "unassign_me": "Fjern min tildeling",
     "save": "Gem",
     "assignees_changed": "Tildeling ændret",
-    "unassigned_person": "{name} er ikke længere tildelt"
+    "unassigned_person": "{name} er ikke længere tildelt",
+    "add_assignee": "Tildel",
+    "remove_assignee": "Fjern tildeling til {name}",
+    "assignees_label": "Tildelt til"
   },
   "menuMove": {
     "filter_placeholder": "Find en mappe",

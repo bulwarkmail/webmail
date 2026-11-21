@@ -4139,7 +4139,10 @@
     "unassign_me": "Retirer mon attribution",
     "save": "Enregistrer",
     "assignees_changed": "Attribution modifiée",
-    "unassigned_person": "{name} n'est plus attribué"
+    "unassigned_person": "{name} n'est plus attribué",
+    "add_assignee": "Attribuer",
+    "remove_assignee": "Retirer l'attribution à {name}",
+    "assignees_label": "Attribué à"
   },
   "menuMove": {
     "filter_placeholder": "Rechercher un dossier",

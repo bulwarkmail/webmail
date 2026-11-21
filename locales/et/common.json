@@ -4139,7 +4139,10 @@
     "unassign_me": "Eemalda minu määramine",
     "save": "Salvesta",
     "assignees_changed": "Määramine muudetud",
-    "unassigned_person": "{name} pole enam määratud"
+    "unassigned_person": "{name} pole enam määratud",
+    "add_assignee": "Määra",
+    "remove_assignee": "Eemalda määramine: {name}",
+    "assignees_label": "Määratud"
   },
   "menuMove": {
     "filter_placeholder": "Otsi kausta",

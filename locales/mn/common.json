@@ -4139,7 +4139,10 @@
     "unassign_me": "Миний хариуцуулалтыг цуцлах",
     "save": "Хадгалах",
     "assignees_changed": "Хариуцуулалт өөрчлөгдсөн",
-    "unassigned_person": "{name}-д хариуцуулалт цуцлагдсан"
+    "unassigned_person": "{name}-д хариуцуулалт цуцлагдсан",
+    "add_assignee": "Хариуцуулах",
+    "remove_assignee": "{name}-н хариуцуулалтыг цуцлах",
+    "assignees_label": "Хариуцагч"
   },
   "menuMove": {
     "filter_placeholder": "Хавтас хайх",

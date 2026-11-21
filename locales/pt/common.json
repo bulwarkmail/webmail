@@ -4139,7 +4139,10 @@
     "unassign_me": "Remover minha atribuição",
     "save": "Salvar",
     "assignees_changed": "Atribuição alterada",
-    "unassigned_person": "{name} não está mais atribuído"
+    "unassigned_person": "{name} não está mais atribuído",
+    "add_assignee": "Atribuir",
+    "remove_assignee": "Remover atribuição de {name}",
+    "assignees_label": "Atribuído a"
   },
   "menuMove": {
     "filter_placeholder": "Encontrar uma pasta",

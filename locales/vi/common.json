@@ -4151,7 +4151,10 @@
     "unassign_me": "Bỏ giao cho tôi",
     "save": "Lưu",
     "assignees_changed": "Đã thay đổi người được giao",
-    "unassigned_person": "{name} không còn được giao"
+    "unassigned_person": "{name} không còn được giao",
+    "add_assignee": "Giao",
+    "remove_assignee": "Bỏ giao cho {name}",
+    "assignees_label": "Đã giao cho"
   },
   "menuMove": {
     "filter_placeholder": "Tìm thư mục",

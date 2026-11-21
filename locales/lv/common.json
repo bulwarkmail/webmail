@@ -4139,7 +4139,10 @@
     "unassign_me": "Atcelt manu piešķiršanu",
     "save": "Saglabāt",
     "assignees_changed": "Piešķiršana mainīta",
-    "unassigned_person": "{name} vairs nav piešķirts"
+    "unassigned_person": "{name} vairs nav piešķirts",
+    "add_assignee": "Piešķirt",
+    "remove_assignee": "Atcelt piešķiršanu: {name}",
+    "assignees_label": "Piešķirts"
   },
   "menuMove": {
     "filter_placeholder": "Meklēt mapi",

@@ -1093,7 +1093,10 @@
     "unassign_me": "ยกเลิกการมอบหมายให้ฉัน",
     "save": "บันทึก",
     "assignees_changed": "เปลี่ยนการมอบหมายแล้ว",
-    "unassigned_person": "ยกเลิกการมอบหมายให้ {name} แล้ว"
+    "unassigned_person": "ยกเลิกการมอบหมายให้ {name} แล้ว",
+    "add_assignee": "มอบหมาย",
+    "remove_assignee": "ยกเลิกการมอบหมายให้ {name}",
+    "assignees_label": "มอบหมายให้"
   },
   "menuMove": {
     "filter_placeholder": "ค้นหาโฟลเดอร์",

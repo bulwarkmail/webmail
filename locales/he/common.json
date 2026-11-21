@@ -4084,7 +4084,10 @@
     "unassign_me": "ביטול ההקצאה שלי",
     "save": "שמירה",
     "assignees_changed": "ההקצאה השתנתה",
-    "unassigned_person": "{name} כבר לא מוקצה"
+    "unassigned_person": "{name} כבר לא מוקצה",
+    "add_assignee": "הקצאה",
+    "remove_assignee": "ביטול ההקצאה ל{name}",
+    "assignees_label": "מוקצה אל"
   },
   "menuMove": {
     "filter_placeholder": "חיפוש תיקייה",

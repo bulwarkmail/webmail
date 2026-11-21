@@ -4139,7 +4139,10 @@
     "unassign_me": "Bana atamayı kaldır",
     "save": "Kaydet",
     "assignees_changed": "Atama değişti",
-    "unassigned_person": "{name} artık atanmış değil"
+    "unassigned_person": "{name} artık atanmış değil",
+    "add_assignee": "Ata",
+    "remove_assignee": "{name} atamasını kaldır",
+    "assignees_label": "Atanan"
   },
   "menuMove": {
     "filter_placeholder": "Klasör bul",

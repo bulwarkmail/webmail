@@ -162,7 +162,7 @@ import { EmailIdentityBadge } from "./email-identity-badge";
 import { ExternalSenderChip } from "./external-sender-chip";
 import { NotesAfter, NotesSummaryLine, TeamNoteArea, TeamNotesProvider, useHasNotesAfter } from "@/components/team-mailboxes/team-conversation";
 import { requestNoteField, useTeamOf, useTeamState } from "@/components/team-mailboxes/use-team";
-import { useTeamActions } from "@/components/team-mailboxes/team-actions";
+import { TeamAssigneeLine, useTeamActions } from "@/components/team-mailboxes/team-actions";
 import { ReceivedLabelChip } from "./received-label-chip";
 import { ImportanceChip } from "./importance-chip";
 import { UnsubscribeBanner } from "./unsubscribe-banner";
@@ -235,17 +235,9 @@ const TOOLBAR_PRIORITY_ACTIONS: Record<string, MessageActionKey> = {
   '10': 'open_window',
   '11': 'extra:view_mode',
   '12': 'extra:fullscreen',
-  // Team mailboxes only (lib/team-mailboxes).
+  // Team mailboxes only (lib/team-mailboxes). Assignment and Done sit in
+  // the line under the subject, and in the ⋮ menu.
   '13': 'extra:team_note',
-  '14': 'extra:team_assign_me',
-  '15': 'extra:team_assign_to',
-  '16': 'extra:team_unassign',
-  '17': 'extra:team_done',
-  '18': 'extra:team_reopen',
-};
-/** The toolbar priority of each team mailbox action (TOOLBAR_PRIORITY_ACTIONS). */
-const TEAM_ACTION_PRIORITY: Record<string, string> = {
-  'extra:team_assign_me': '14', 'extra:team_assign_to': '15', 'extra:team_unassign': '16', 'extra:team_done': '17', 'extra:team_reopen': '18',
 };
 /**
  * The reader toolbar's buttons that stay: Reply (1), Reply all (2), Forward
@@ -4858,23 +4850,6 @@ export function EmailViewer({
             {showToolbarLabels && <span data-toolbar-label="primary" className="hidden @[30rem]/reader-toolbar:inline text-sm whitespace-nowrap">{tTeam('note')}</span>}
           </Button>
         )}
-        {!isMobile && teamActions.map((entry) => entry.kind === 'item' && (
-          <Button
-            key={entry.key}
-            variant="ghost"
-            size="sm"
-            onClick={entry.run}
-            data-overflow-item
-            data-overflow-priority={TEAM_ACTION_PRIORITY[entry.key]}
-            className="hidden sm:flex sm:flex-row sm:h-8 sm:gap-1.5 sm:py-0"
-            title={entry.label}
-            aria-label={entry.label}
-            data-testid={entry.testId}
-          >
-            <entry.icon className="w-4 h-4" />
-            {showToolbarLabels && <span data-toolbar-label="secondary" className="hidden @[30rem]/reader-toolbar:inline text-sm whitespace-nowrap">{entry.label}</span>}
-          </Button>
-        ))}
         </>)}
         <PluginSlot name="toolbar-actions" />
         {/* Phones get these in the More panel. */}
@@ -5447,6 +5422,8 @@ export function EmailViewer({
                   <VerificationCodeChip code={verificationCode} className="py-1 text-sm" />
                 </div>
               )}
+              {/* Team mailboxes: who has the message, Assign and Done. */}
+              {!isDraft && !isScheduled && <TeamAssigneeLine email={email} className="mt-1.5" />}
               {sortedTagIds.length > 0 && (
                 <div ref={headerTagsRef} className="mt-1.5 flex flex-wrap items-center gap-1">
                   {sortedTagIds.map((tagId) => (

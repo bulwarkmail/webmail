@@ -9,12 +9,16 @@
  * the message. Try again."
  */
 
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
 import { create } from 'zustand';
 import type { Email } from '@/lib/jmap/types';
 import type { IJMAPClient } from '@/lib/jmap/client-interface';
-import { CheckCircle, RotateCcw, UserCheck, UserMinus, UserPlus } from '@/components/icons';
+import { Check, CheckCircle, RotateCcw, UserCheck, UserMinus, UserPlus, X } from '@/components/icons';
+import { Avatar } from '@/components/ui/avatar';
+import { useTeamPeople } from '@/hooks/use-team-people';
+import { shortName } from '@/lib/team-mailboxes/names';
+import { cn } from '@/lib/utils';
 import { toast } from '@/stores/toast-store';
 import { toastWithUndo } from '@/lib/email-action-toast';
 import { emailKeyFor } from '@/lib/thread-utils';
@@ -182,3 +186,97 @@ export function resetAssignRequest(): void {
 }
 
 export type { TeamRef };
+
+/**
+ * Under the subject of a team mail: who has it, each with an x that takes
+ * them off, "Assign" for Assign to… and the Done switch. Where the user may
+ * only read, the names and the Done mark without the buttons. Nothing
+ * outside a team mailbox.
+ */
+export function TeamAssigneeLine({ email, className }: { email: ActionEmail | null | undefined; className?: string }) {
+  const context = useTeamOf(email ?? null);
+  const texts = useTexts();
+  const people = useTeamPeople(context?.ref ?? null, context?.client ?? null);
+  const ids = assigneesOf(email?.keywords ?? {});
+  const unknownKey = ids.filter((id) => !people.byId(id)?.name && !people.byId(id)?.email).join(' ');
+  const { lookUp } = people;
+  // Assignees nobody named yet: ask the server once (batched, rate limited).
+  useEffect(() => {
+    if (unknownKey) lookUp(unknownKey.split(' '));
+  }, [unknownKey, lookUp]);
+  if (!context || !email) return null;
+  const { t } = texts;
+  const writable = maySetKeywords(email, context.ref.accountId, context.client);
+  const done = isDone(email.keywords);
+  if (!writable && ids.length === 0 && !done) return null;
+  const selfId = context.client.getAccountId().toLowerCase();
+  const target = asAssignable(email);
+  const go = (change: () => Promise<AssignmentResult>) => {
+    void run(context, email, change, { done: texts.doneText, failed: texts.failed, undo: texts.undo });
+  };
+  // The user first, then in the order the keywords came.
+  const ordered = [...ids].sort((a, b) => Number(b === selfId) - Number(a === selfId));
+  return (
+    <div className={cn('flex flex-wrap items-center gap-1.5', className)} data-team-assignee-line="">
+      <span className="sr-only">{ids.length > 0 ? t('assignees_label') : null}</span>
+      {ordered.map((id) => {
+        const person = people.byId(id);
+        const full = id === selfId ? t('you') : person?.name || person?.email || t('assigned_unknown');
+        const short = id === selfId ? t('chip_me') : person && (person.name || person.email) ? shortName(person) : t('chip_assigned');
+        const removeLabel = id === selfId ? t('unassign_me') : t('remove_assignee', { name: full });
+        return (
+          <span
+            key={id}
+            className="inline-flex max-w-[12rem] items-center gap-1.5 rounded-full border border-border bg-muted/60 py-0.5 ps-0.5 pe-1 text-xs text-foreground"
+            title={full}
+            data-team-assignee={id}
+          >
+            <span aria-hidden="true" className="shrink-0"><Avatar name={person?.name || person?.email || id} email={person?.email ?? ''} size="sm" className="h-5 w-5 text-[0.55rem]" disableFavicon /></span>
+            <span className="truncate">{short}</span>
+            {writable && (
+              <button
+                type="button"
+                className="grid h-5 w-5 shrink-0 place-items-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground"
+                aria-label={removeLabel}
+                title={removeLabel}
+                onClick={() => go(() => unassignPerson(context.ref.key, target, id))}
+              >
+                <X className="h-3 w-3" />
+              </button>
+            )}
+          </span>
+        );
+      })}
+      {writable && (
+        <button
+          type="button"
+          className="inline-flex h-7 items-center gap-1 rounded-full border border-dashed border-border px-2.5 text-xs text-muted-foreground hover:border-solid hover:text-foreground"
+          onClick={() => useAssignRequest.setState({ request: { context, email } })}
+          data-testid="team-line-assign"
+        >
+          <UserPlus className="h-3.5 w-3.5" />
+          {t('add_assignee')}
+        </button>
+      )}
+      {(writable || done) && (
+        <button
+          type="button"
+          aria-pressed={done}
+          disabled={!writable}
+          title={done ? t('reopen') : t('mark_done')}
+          className={cn(
+            'inline-flex h-7 items-center gap-1 rounded-full border px-2.5 text-xs disabled:cursor-default',
+            done
+              ? 'border-success/40 bg-success/10 text-green-700 dark:text-green-400'
+              : 'border-border text-muted-foreground hover:text-foreground',
+          )}
+          onClick={() => go(() => (done ? reopen(context.ref.key, target) : markDone(context.ref.key, target)))}
+          data-testid="team-line-done"
+        >
+          <Check className="h-3.5 w-3.5" />
+          {t('done')}
+        </button>
+      )}
+    </div>
+  );
+}

@@ -4139,7 +4139,10 @@
     "unassign_me": "取消指派給我",
     "save": "儲存",
     "assignees_changed": "已變更指派",
-    "unassigned_person": "已取消指派給 {name}"
+    "unassigned_person": "已取消指派給 {name}",
+    "add_assignee": "指派",
+    "remove_assignee": "取消指派給 {name}",
+    "assignees_label": "已指派給"
   },
   "menuMove": {
     "filter_placeholder": "尋找資料夾",
