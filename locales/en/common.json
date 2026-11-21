@@ -977,7 +977,7 @@
     "note": "Note",
     "add_note": "Add note",
     "field_label": "Note",
-    "placeholder": "Write a note for your team",
+    "placeholder": "Note for your team, @ to mention",
     "chars_left": "{count, plural, one {# character left} other {# characters left}}",
     "too_long": "{count, plural, one {Too long by # character} other {Too long by # characters}}",
     "sending": "Sending…",

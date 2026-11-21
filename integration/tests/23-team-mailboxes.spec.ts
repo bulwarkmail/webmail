@@ -152,10 +152,10 @@ async function openRow(row: Locator): Promise<void> {
 const noteCards = (page: Page): Locator => page.locator('[data-team-note]:visible');
 const noteCard = (page: Page, text: string): Locator => noteCards(page).filter({ hasText: text }).first();
 const noteField = (page: Page): Locator => page.locator('[data-team-note-field] textarea:visible').first();
-/** The Note button under the conversation (the toolbar's moves to its More menu when the reader is narrow). */
-const noteButton = (page: Page): Locator => page.locator('[data-team-note-button]:visible').first();
-/** Any Note button: under the conversation, in the toolbar, in the phone bar. */
-const anyNoteButton = (page: Page): Locator => page.locator('[data-team-note-button], [data-team-note-toolbar], [data-team-note-bar]');
+/** The note line above the reply box: always there, one click puts the caret in it. */
+const noteButton = (page: Page): Locator => noteField(page);
+/** Any way to write a note: the note line, the toolbar's Note, the phone bar's. */
+const anyNoteButton = (page: Page): Locator => page.locator('[data-team-note-field], [data-team-note-toolbar], [data-team-note-bar]');
 
 /** Right-click a row and wait for its menu. */
 async function rowMenu(page: Page, subject: string): Promise<void> {
@@ -240,18 +240,18 @@ test.afterAll(async () => {
   console.log(`team mailboxes spec ran on ${SERVER}`);
 });
 
-test('bob adds a note in one click: Enter sends, Shift+Enter makes a new line, Escape closes and keeps the draft', async ({ browser }) => {
+test('bob adds a note in the note line: Enter sends, Shift+Enter makes a new line, Escape leaves and keeps the draft', async ({ browser }) => {
   const bob = await userPage(browser, TM.bob);
   await openTeamMessage(bob, NOTED);
   await expect(noteButton(bob)).toBeVisible({ timeout: 30000 });
 
-  // Escape closes the field, nothing is written, the text waits for later.
+  // Escape leaves the field, nothing is written, the text waits for later.
   await noteButton(bob).click();
   await expect(noteField(bob)).toBeFocused();
   await noteField(bob).fill('not this one');
   await noteField(bob).press('Escape');
-  await expect(noteField(bob)).toHaveCount(0);
-  await expect(noteButton(bob)).toBeFocused();
+  await expect(noteField(bob)).not.toBeFocused();
+  await expect(noteField(bob)).toHaveValue('not this one');
 
   await noteButton(bob).click();
   await expect(noteField(bob)).toHaveValue('not this one');

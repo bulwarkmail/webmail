@@ -977,7 +977,7 @@
     "note": "Note",
     "add_note": "Tilføj note",
     "field_label": "Note",
-    "placeholder": "Skriv en note til dit team",
+    "placeholder": "Note til dit team, @ for at nævne",
     "chars_left": "{count, plural, one {# tegn tilbage} other {# tegn tilbage}}",
     "too_long": "{count, plural, one {# tegn for lang} other {# tegn for lang}}",
     "sending": "Sender…",

@@ -132,34 +132,52 @@ describe('notes in the conversation', () => {
     seed([note('a', '2026-11-20T10:00:00Z', 'my job')]);
     render(<Conversation />);
     expect(document.querySelector('[data-team-notes-after]')).toBeNull();
-    expect(screen.queryByRole('button', { name: 'note' })).toBeNull();
+    expect(screen.queryByLabelText('field_label')).toBeNull();
   });
 });
 
 describe('the note field', () => {
-  it('opens in place with one click; Enter sends, Shift+Enter is a new line, Escape keeps the text', async () => {
+  it('is always there as one line, grows when used; Enter sends, Shift+Enter is a new line, Escape keeps the text, Cancel empties it', async () => {
     seed([]);
     render(<Conversation />);
-    fireEvent.click(screen.getByRole('button', { name: 'note' }));
     const field = screen.getByLabelText('field_label') as HTMLTextAreaElement;
-    expect(document.activeElement).toBe(field);
+    const box = () => document.querySelector('[data-team-note-field]') as HTMLElement;
+    // One line, no buttons, until it is used.
+    expect(box()).not.toHaveAttribute('data-expanded');
+    expect(field.rows).toBe(1);
+    expect(screen.queryByRole('button', { name: 'add_note' })).toBeNull();
     expect(field.placeholder).toBe('placeholder');
+    act(() => field.focus());
+    expect(box()).toHaveAttribute('data-expanded');
+    expect(screen.getByRole('button', { name: 'add_note' })).toBeTruthy();
 
     fireEvent.change(field, { target: { value: 'my job' } });
     fireEvent.keyDown(field, { key: 'Enter', shiftKey: true });
     expect(writeNote).not.toHaveBeenCalled();
     fireEvent.keyDown(field, { key: 'Escape' });
-    expect(screen.queryByLabelText('field_label')).toBeNull();
-    // Focus goes back to the Note button, not the page.
-    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'note' }));
+    expect(document.activeElement).not.toBe(field);
+    expect(field.value).toBe('my job');
 
-    fireEvent.click(screen.getByRole('button', { name: 'note' }));
-    const again = screen.getByLabelText('field_label') as HTMLTextAreaElement;
-    expect(again.value).toBe('my job');
-    await act(async () => { fireEvent.keyDown(again, { key: 'Enter' }); });
+    act(() => field.focus());
+    await act(async () => { fireEvent.keyDown(field, { key: 'Enter' }); });
     // About the newest message of the conversation.
     expect(writeNote).toHaveBeenCalledWith(ref.key, expect.objectContaining({ emailId: 'm2', key: 'm2@client.example', threadId: 't1' }), { text: 'my job', mentions: [] });
-    expect(again.value).toBe('');
+    expect(field.value).toBe('');
+
+    fireEvent.change(field, { target: { value: 'never mind' } });
+    fireEvent.click(screen.getByRole('button', { name: 'cancel' }));
+    expect(field.value).toBe('');
+    expect(box()).not.toHaveAttribute('data-expanded');
+  });
+
+  it('comes into view focused when the toolbar\'s Note asks for it', async () => {
+    const { requestNoteField } = await import('../use-team');
+    seed([]);
+    render(<Conversation />);
+    const field = screen.getByLabelText('field_label');
+    expect(document.activeElement).not.toBe(field);
+    act(() => requestNoteField('m1'));
+    expect(document.activeElement).toBe(field);
   });
 
   it('offers the team after @, picks by keyboard, and stores the picked person as a mention', async () => {
@@ -167,7 +185,7 @@ describe('the note field', () => {
     useTeamNamesStore.setState({ lists: { [ref.key]: { hv: { name: 'Bob Baker', email: 'tm-bob@example.org' }, hw: { name: 'Carol Cooper', email: 'tm-carol@example.org' } } }, directory: {} });
     seed([]);
     render(<Conversation />);
-    fireEvent.click(screen.getByRole('button', { name: 'note' }));
+    act(() => (screen.getByLabelText('field_label') as HTMLTextAreaElement).focus());
     const field = screen.getByLabelText('field_label') as HTMLTextAreaElement;
     fireEvent.change(field, { target: { value: 'ask @ca' } });
     field.setSelectionRange(7, 7);
@@ -199,7 +217,7 @@ describe('the note field', () => {
     teamContext = { ref, client: { ...client, supportsPrincipals: () => true } };
     seed([]);
     render(<Conversation />);
-    fireEvent.click(screen.getByRole('button', { name: 'note' }));
+    act(() => (screen.getByLabelText('field_label') as HTMLTextAreaElement).focus());
     const field = screen.getByLabelText('field_label') as HTMLTextAreaElement;
     await act(async () => { fireEvent.change(field, { target: { value: '@' } }); });
     field.setSelectionRange(1, 1);
@@ -222,7 +240,7 @@ describe('the note field', () => {
     seed([]);
     const held = message('m2', '2026-11-20T12:00:00Z', { keywords: { '$assigned:hv': true } });
     render(<Conversation messages={[m1, held]} />);
-    fireEvent.click(screen.getByRole('button', { name: 'note' }));
+    act(() => (screen.getByLabelText('field_label') as HTMLTextAreaElement).focus());
     const field = screen.getByLabelText('field_label') as HTMLTextAreaElement;
     const mention = async (typed: string) => {
       fireEvent.change(field, { target: { value: typed } });
@@ -244,7 +262,7 @@ describe('the note field', () => {
     const { NoteField } = await import('../note-field');
     const { createRef } = await import('react');
     const handle = createRef<import('../note-field').NoteFieldHandle>();
-    render(<NoteField ref={handle} value="half written" onChange={() => {}} onSubmit={() => {}} onClose={() => {}} />);
+    render(<NoteField ref={handle} value="half written" onChange={() => {}} onSubmit={() => {}} onClose={() => {}} onCancel={() => {}} />);
     const field = screen.getByLabelText('field_label') as HTMLTextAreaElement;
     field.setSelectionRange(0, 0);
     act(() => handle.current!.focus());
@@ -255,7 +273,7 @@ describe('the note field', () => {
   it('never sends while an input method is composing', () => {
     seed([]);
     render(<Conversation />);
-    fireEvent.click(screen.getByRole('button', { name: 'note' }));
+    act(() => (screen.getByLabelText('field_label') as HTMLTextAreaElement).focus());
     const field = screen.getByLabelText('field_label');
     fireEvent.change(field, { target: { value: '日本' } });
     fireEvent.keyDown(field, { key: 'Enter', isComposing: true });
@@ -263,7 +281,7 @@ describe('the note field', () => {
     expect(writeNote).not.toHaveBeenCalled();
   });
 
-  it('gives a read-only member no Note button, and one sentence where notes are', () => {
+  it('gives a read-only member no note line, and one sentence where notes are', () => {
     seed([note('a', '2026-11-20T10:00:00Z', 'my job')], { canWrite: false });
     const view = render(<Conversation />);
     expect(screen.getByText('read_only_member')).toBeTruthy();
@@ -276,17 +294,17 @@ describe('the note field', () => {
     expect(container.querySelector('[data-team-note-area]')!.textContent).toBe('');
   });
 
-  it('gives no Note button in an account shared read-only, even before the notes have loaded', () => {
+  it('gives no note line in an account shared read-only, even before the notes have loaded', () => {
     teamContext = { ref, client: { ...client, getAccountInfo: () => ({ isReadOnly: true }) } };
     seed([], { canWrite: null });
     render(<Conversation />);
-    expect(screen.queryByRole('button', { name: 'note' })).toBeNull();
+    expect(screen.queryByLabelText('field_label')).toBeNull();
   });
 
   it('keeps the field open and its text when a reply joins the conversation', () => {
     seed([]);
     const view = render(<Conversation />);
-    fireEvent.click(screen.getByRole('button', { name: 'note' }));
+    act(() => (screen.getByLabelText('field_label') as HTMLTextAreaElement).focus());
     fireEvent.change(screen.getByLabelText('field_label'), { target: { value: 'half written' } });
     view.rerender(<Conversation messages={[m1, m2, message('m3', '2026-11-20T15:00:00Z')]} />);
     expect((screen.getByLabelText('field_label') as HTMLTextAreaElement).value).toBe('half written');

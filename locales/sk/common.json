@@ -977,7 +977,7 @@
     "note": "Poznámka",
     "add_note": "Pridať poznámku",
     "field_label": "Poznámka",
-    "placeholder": "Napíšte poznámku pre svoj tím",
+    "placeholder": "Poznámka pre tím, @ na zmienku",
     "chars_left": "{count, plural, one {Zostáva # znak} few {Zostávajú # znaky} many {Zostáva # znaku} other {Zostáva # znakov}}",
     "too_long": "{count, plural, one {O # znak dlhšie} few {O # znaky dlhšie} many {O # znaku dlhšie} other {O # znakov dlhšie}}",
     "sending": "Odosiela sa…",

@@ -977,7 +977,7 @@
     "note": "ملاحظة",
     "add_note": "إضافة ملاحظة",
     "field_label": "ملاحظة",
-    "placeholder": "اكتب ملاحظة لفريقك",
+    "placeholder": "ملاحظة لفريقك، @ للإشارة",
     "chars_left": "{count, plural, zero {لم يتبقّ أي حرف} one {يتبقّى حرف واحد} two {يتبقّى حرفان} few {يتبقّى # أحرف} many {يتبقّى # حرفًا} other {يتبقّى # حرف}}",
     "too_long": "{count, plural, zero {لا زيادة} one {أطول بحرف واحد} two {أطول بحرفين} few {أطول بـ # أحرف} many {أطول بـ # حرفًا} other {أطول بـ # حرف}}",
     "sending": "جارٍ الإرسال…",

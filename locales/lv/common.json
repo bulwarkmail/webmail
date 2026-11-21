@@ -977,7 +977,7 @@
     "note": "Piezīme",
     "add_note": "Pievienot piezīmi",
     "field_label": "Piezīme",
-    "placeholder": "Rakstiet piezīmi savai komandai",
+    "placeholder": "Piezīme komandai, @ pieminēšanai",
     "chars_left": "{count, plural, zero {Atlikušas # rakstzīmes} one {Atlikusi # rakstzīme} other {Atlikušas # rakstzīmes}}",
     "too_long": "{count, plural, zero {Par # rakstzīmēm par garu} one {Par # rakstzīmi par garu} other {Par # rakstzīmēm par garu}}",
     "sending": "Sūta…",

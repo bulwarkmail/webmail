@@ -977,7 +977,7 @@
     "note": "Notă",
     "add_note": "Adaugă nota",
     "field_label": "Notă",
-    "placeholder": "Scrie o notă pentru echipa ta",
+    "placeholder": "Notă pentru echipă, @ pentru a menționa",
     "chars_left": "{count, plural, one {A rămas # caracter} few {Au rămas # caractere} other {Au rămas # de caractere}}",
     "too_long": "{count, plural, one {Prea lung cu # caracter} few {Prea lung cu # caractere} other {Prea lung cu # de caractere}}",
     "sending": "Se trimite…",

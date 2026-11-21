@@ -921,7 +921,7 @@
     "note": "הערה",
     "add_note": "הוספת הערה",
     "field_label": "הערה",
-    "placeholder": "כתבו הערה לצוות",
+    "placeholder": "הערה לצוות, @ לאזכור",
     "chars_left": "{count, plural, one {נשאר תו אחד} two {נשארו שני תווים} other {נשארו # תווים}}",
     "too_long": "{count, plural, one {ארוך מדי בתו אחד} two {ארוך מדי בשני תווים} other {ארוך מדי ב-# תווים}}",
     "sending": "שולח…",

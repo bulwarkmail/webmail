@@ -16,7 +16,6 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import { useTranslations } from 'next-intl';
 import type { Email } from '@/lib/jmap/types';
 import { StickyNote, RotateCcw } from '@/components/icons';
-import { Button } from '@/components/ui/button';
 import { toast } from '@/stores/toast-store';
 import { toastWithUndo } from '@/lib/email-action-toast';
 import { noteKeyFor, type NoteEntry } from '@/lib/team-mailboxes/note-format';
@@ -316,18 +315,17 @@ export function NotesSummaryLine({ className }: { className?: string }) {
 }
 
 /**
- * The end of the conversation: the Note button, or the open field, or the
- * sentence that says why there is no field. Also where a load failure says
- * so, with Retry.
+ * The note line: always open above the reply box (or at the conversation's
+ * end where there is none), or the sentence that says why there is no
+ * field. Also where a load failure says so, with Retry. `docked`: inside the
+ * reply box's bar, which brings its own padding.
  */
-export function TeamNoteArea({ className, messages }: { className?: string; messages: readonly Message[] }) {
+export function TeamNoteArea({ className, messages, docked = false }: { className?: string; messages: readonly Message[]; docked?: boolean }) {
   const value = useContext(TeamNotesContext);
   const t = useTranslations('team_mailboxes');
   const online = useOnline();
   const field = useRef<NoteFieldHandle>(null);
   const areaRef = useRef<HTMLDivElement>(null);
-  const buttonRef = useRef<HTMLButtonElement>(null);
-  const refocusButton = useRef(false);
   const key = value?.context.ref.key ?? '';
   const convKey = value ? conversationKeyOf(conversationKeys(messages, value.context.ref.accountId).keys, conversationKeys(messages, value.context.ref.accountId).threadIds) : '';
   const draft = value?.draft ?? '';
@@ -355,17 +353,15 @@ export function TeamNoteArea({ className, messages }: { className?: string; mess
       field.current?.setCaret(caret);
     },
   });
+  // Asked from outside (the toolbar's Note, the row menu): into view and focused.
   const fieldOpen = value?.fieldOpen ?? false;
+  const closeField = value?.closeField;
   useEffect(() => {
-    if (!fieldOpen) {
-      // Escape or Cancel: focus goes back to the Note button, not the page.
-      if (refocusButton.current) buttonRef.current?.focus();
-      refocusButton.current = false;
-      return;
-    }
+    if (!fieldOpen) return;
     areaRef.current?.scrollIntoView?.({ block: 'nearest' });
     field.current?.focus();
-  }, [fieldOpen]);
+    closeField?.();
+  }, [fieldOpen, closeField]);
   if (!value) return null;
   const { team } = value;
   const convStatus = team.conversations[convKey];
@@ -395,13 +391,16 @@ export function TeamNoteArea({ className, messages }: { className?: string; mess
     }
     field.current?.focus();
   };
-  const close = () => {
-    refocusButton.current = true;
-    value.closeField();
+  // Escape: out of the field, the text kept. Cancel: the text goes too.
+  const close = () => field.current?.blur();
+  const cancel = () => {
+    value.setDraft('');
+    mention.reset();
+    field.current?.blur();
   };
 
   return (
-    <div ref={areaRef} className={className ?? 'px-4 pb-4 pt-2 desk:px-6'} data-team-note-area="">
+    <div ref={areaRef} className={className ?? (docked ? 'pb-2' : 'px-4 pb-4 pt-2 desk:px-6')} data-team-note-area="" data-docked={docked ? '' : undefined}>
       <span className="sr-only" role="status" aria-live="polite">{value.announcement}</span>
       {loadFailed && (
         <p className="mb-2 flex flex-wrap items-center gap-2 text-sm text-muted-foreground" role="alert">
@@ -416,27 +415,31 @@ export function TeamNoteArea({ className, messages }: { className?: string; mess
         </p>
       )}
       {readOnly ? (
-        // Reading only: no Note button anywhere; one sentence where notes are.
+        // Reading only: no note line anywhere; one sentence where notes are.
         hasWritten ? <p className="text-sm text-muted-foreground" role="status">{t('read_only_member')}</p> : null
-      ) : !fieldOpen ? (
-        <Button ref={buttonRef} type="button" variant="outline" size="sm" className="gap-2 rounded-full px-5" onClick={() => value.openField()} data-team-note-button="">
-          <StickyNote className="h-4 w-4" />
-          {t('note')}
-        </Button>
       ) : offline ? (
         <p className="text-sm text-muted-foreground" role="status">{t('offline')}</p>
       ) : (
-        <NoteField
-          ref={field}
-          value={draft}
-          onChange={(text) => value.setDraft(text)}
-          onSubmit={send}
-          onClose={close}
-          onKeyDownFirst={mention.onKeyDown}
-          textareaProps={mention.fieldProps}
-        >
-          {mention.list}
-        </NoteField>
+        <div className="flex items-start" style={{ gap: 'var(--density-item-gap, 0.75rem)' }}>
+          {/* Where the reply box has the user's picture: the note's mark. */}
+          <span aria-hidden="true" className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-note-border bg-note text-note-foreground">
+            <StickyNote className="h-4 w-4" />
+          </span>
+          <div className="min-w-0 flex-1">
+            <NoteField
+              ref={field}
+              value={draft}
+              onChange={(text) => value.setDraft(text)}
+              onSubmit={send}
+              onClose={close}
+              onCancel={cancel}
+              onKeyDownFirst={mention.onKeyDown}
+              textareaProps={mention.fieldProps}
+            >
+              {mention.list}
+            </NoteField>
+          </div>
+        </div>
       )}
     </div>
   );

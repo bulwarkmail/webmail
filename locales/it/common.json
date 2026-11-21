@@ -977,7 +977,7 @@
     "note": "Nota",
     "add_note": "Aggiungi nota",
     "field_label": "Nota",
-    "placeholder": "Scrivi una nota per il tuo team",
+    "placeholder": "Nota per il team, @ per menzionare",
     "chars_left": "{count, plural, one {Manca # carattere} many {Mancano # caratteri} other {Mancano # caratteri}}",
     "too_long": "{count, plural, one {# carattere di troppo} many {# caratteri di troppo} other {# caratteri di troppo}}",
     "sending": "Invio…",
