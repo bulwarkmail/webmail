@@ -48,6 +48,16 @@ describe('app password permissions', () => {
     });
   });
 
+  it('name mail filters and absence notes apart from mail, read or not: they can forward it', () => {
+    for (const name of ['jmapSieveGet', 'jmapSieveSet', 'jmapVacationResponseSet', 'sieveAuthenticate', 'sievePutScript']) {
+      expect(appPasswordRights([name])).toEqual({ areas: [{ area: 'filters', access: 'read' }], other: [] });
+    }
+    expect(appPasswordRights(['jmapSieveSet', 'jmapEmailGet']).areas).toEqual([
+      { area: 'mail', access: 'read' },
+      { area: 'filters', access: 'read' },
+    ]);
+  });
+
   it('count anything that is not plainly a read as a change', () => {
     expect(appPasswordRights(['jmapMailboxGet', 'imapStore']).areas).toEqual([{ area: 'mail', access: 'change' }]);
   });

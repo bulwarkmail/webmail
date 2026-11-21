@@ -69,6 +69,8 @@ const declared: Record<string, { scope: 'user'; label: string; inject: { type: s
   'elsewhere/stalwart': { scope: 'user', label: 'Stalwart', inject: { type: 'basic' }, appPassword: CALENDAR, origin: 'https://other.example.org' },
   // A manifest stored before app passwords took a permission list.
   'older/stalwart': { scope: 'user', label: 'Stalwart', inject: { type: 'basic' }, appPassword: true },
+  // One stored with a permission no plugin may have.
+  'admin/stalwart': { scope: 'user', label: 'Stalwart', inject: { type: 'basic' }, appPassword: { permissions: ['jmapCalendarEventGet', 'sysAccountGet'] } },
 };
 vi.mock('@/lib/plugin-secrets/known-plugins', () => ({
   declaringPlugin: async (pluginId: string, credentialId: string) => {
@@ -105,7 +107,7 @@ function proxyCall(query: string, headers: Record<string, string> = {}) {
   return proxy(new NextRequest(`http://localhost/api/plugin-proxy?${query}`, { method: 'POST', headers }));
 }
 
-const TEAM = { pluginId: 'team-calendar', credentialId: 'stalwart', label: 'Stalwart', appPassword: true };
+const TEAM = { pluginId: 'team-calendar', credentialId: 'stalwart', label: 'Stalwart', appPassword: true, permissions: CALENDAR.permissions };
 
 beforeEach(() => {
   signedIn = true;
@@ -214,8 +216,32 @@ describe('POST /api/plugin-secrets with appPassword', () => {
     ['anything sent along', { ...TEAM, secret: 'mine' }],
     ['another server than the one the plugin names', { ...TEAM, pluginId: 'elsewhere' }],
     ['a manifest that lists no permissions', { ...TEAM, pluginId: 'older' }],
+    ['a manifest that lists a permission no plugin may have', { ...TEAM, pluginId: 'admin', permissions: ['jmapCalendarEventGet', 'sysAccountGet'] }],
+    ['it without the permissions the dialog showed', { ...TEAM, permissions: undefined }],
+    ['permissions that are no list of names', { ...TEAM, permissions: [true] }],
   ])('refuses %s', async (_name, body) => {
     expect((await save(body)).status).toBe(400);
+    expect(made.size).toBe(0);
+    expect(store.size).toBe(0);
+  });
+
+  it('takes the permissions the dialog showed in any order', async () => {
+    expect((await save({ ...TEAM, permissions: [...CALENDAR.permissions].reverse() })).status).toBe(200);
+    expect(madeWith).toEqual([CALENDAR.permissions]);
+  });
+
+  // Two approved versions of a plugin: the dialog may have read another manifest.
+  it.each([
+    ['fewer permissions', CALENDAR.permissions.slice(0, 1)],
+    ['more permissions', [...CALENDAR.permissions, 'emailSend']],
+    ['other permissions', ['jmapCalendarEventGet', 'emailSend']],
+    ['one permission twice in place of another', ['jmapCalendarEventGet', 'jmapCalendarEventGet']],
+    ['no permissions', []],
+  ])('refuses when the dialog showed %s, not the ones the manifest lists, and says so', async (_name, permissions) => {
+    const res = await save({ ...TEAM, permissions });
+
+    expect(res.status).toBe(409);
+    expect((await res.json()).error).toMatch(/other permissions than the ones shown/);
     expect(made.size).toBe(0);
     expect(store.size).toBe(0);
   });

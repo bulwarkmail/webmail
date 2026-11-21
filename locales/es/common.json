@@ -6902,6 +6902,7 @@
       "rights_heading": "La contraseña de aplicación solo puede:",
       "right_mail_read": "leer su correo",
       "right_mail_change": "leer y modificar su correo",
+      "right_filters": "establecer filtros de correo, que pueden reenviar su correo",
       "right_send": "enviar correo en su nombre",
       "right_calendars_read": "leer sus calendarios",
       "right_calendars_change": "leer y modificar sus calendarios",

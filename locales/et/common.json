@@ -6902,6 +6902,7 @@
       "rights_heading": "Rakenduse parool saab ainult:",
       "right_mail_read": "lugeda teie e-kirju",
       "right_mail_change": "lugeda ja muuta teie e-kirju",
+      "right_filters": "seada e-kirjade filtreid, mis võivad teie e-kirju edasi saata",
       "right_send": "saata e-kirju teie nimel",
       "right_calendars_read": "lugeda teie kalendreid",
       "right_calendars_change": "lugeda ja muuta teie kalendreid",

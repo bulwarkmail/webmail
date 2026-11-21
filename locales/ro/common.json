@@ -6902,6 +6902,7 @@
       "rights_heading": "Parola de aplicație poate doar:",
       "right_mail_read": "să vă citească e-mailurile",
       "right_mail_change": "să vă citească și să vă modifice e-mailurile",
+      "right_filters": "să configureze filtre de e-mail, care vă pot redirecționa e-mailurile",
       "right_send": "să trimită e-mailuri în numele dvs.",
       "right_calendars_read": "să vă citească calendarele",
       "right_calendars_change": "să vă citească și să vă modifice calendarele",

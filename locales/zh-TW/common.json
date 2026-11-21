@@ -6902,6 +6902,7 @@
       "rights_heading": "應用程式密碼只能：",
       "right_mail_read": "讀取您的郵件",
       "right_mail_change": "讀取和變更您的郵件",
+      "right_filters": "設定郵件篩選規則（規則可以轉寄您的郵件）",
       "right_send": "以您的名義寄送郵件",
       "right_calendars_read": "讀取您的行事曆",
       "right_calendars_change": "讀取和變更您的行事曆",

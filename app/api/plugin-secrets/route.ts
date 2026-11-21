@@ -6,7 +6,7 @@ import { logger } from '@/lib/logger';
 import { rejectCrossOriginRequest } from '@/lib/security/same-origin';
 import { getStalwartCredentials, type StalwartCredentials } from '@/lib/stalwart/credentials';
 import { CREDENTIAL_ID_RE, checkInject, credentialOrigin } from '@/lib/plugin-secrets/credentials';
-import { appPasswordDescription } from '@/lib/plugin-secrets/app-password-permissions';
+import { appPasswordDescription, checkAppPasswordPermissions } from '@/lib/plugin-secrets/app-password-permissions';
 import { makePluginAppPassword, revokePluginAppPassword } from '@/lib/plugin-secrets/app-password';
 import { adminCredentialOrigins, adminCredentialStatus } from '@/lib/plugin-secrets/proxy';
 import { declaringPlugin } from '@/lib/plugin-secrets/known-plugins';
@@ -83,9 +83,10 @@ export async function GET(request: NextRequest) {
  * records the approved server, for a sign-in flow that fills the secret in
  * later through the proxy.
  *
- * Body: { pluginId, credentialId, label, appPassword: true } for a credential
- * whose manifest says `appPassword`: the server makes the secret itself, with
- * only the permissions that manifest lists.
+ * Body: { pluginId, credentialId, label, appPassword: true, permissions } for
+ * a credential whose manifest says `appPassword`: the server makes the secret
+ * itself, with only the permissions that manifest lists. `permissions` are
+ * the ones the dialog showed; they must be the manifest's.
  */
 export async function POST(request: NextRequest) {
   const crossOrigin = rejectCrossOriginRequest(request);
@@ -108,7 +109,9 @@ export async function POST(request: NextRequest) {
     if (body.appPassword !== true || username !== undefined || secret !== undefined || body.origin !== undefined) {
       return bad('An app password comes with nothing else');
     }
-    return connectAppPassword(current, pluginId, credentialId, label.trim());
+    const shown = body.permissions;
+    if (!Array.isArray(shown) || !shown.every((name) => typeof name === 'string')) return bad('Invalid permissions');
+    return connectAppPassword(current, pluginId, credentialId, label.trim(), shown);
   }
   const origin = credentialOrigin(body.origin);
   const inject = checkInject(body.inject);
@@ -148,16 +151,21 @@ export async function POST(request: NextRequest) {
  * their own session, and store it for the plugin. The secret never reaches
  * the browser. Connecting again replaces the app password made before.
  */
-async function connectAppPassword(current: CurrentUser, pluginId: string, credentialId: string, label: string) {
+async function connectAppPassword(current: CurrentUser, pluginId: string, credentialId: string, label: string, shown: string[]) {
   const { user, creds } = current;
   const plugin = await declaringPlugin(pluginId, credentialId);
   if (!plugin) return NextResponse.json({ error: 'No such plugin credential' }, { status: 404 });
   const { spec } = plugin;
   if (!spec.appPassword) return bad('This credential takes a password the user enters');
-  // A manifest stored before app passwords took a permission list has none:
-  // never make one with the account's full rights.
-  if (!Array.isArray(spec.appPassword.permissions) || spec.appPassword.permissions.length === 0) {
-    return bad('The plugin lists no permissions for its app password');
+  // Checked again here, not only when the manifest was stored. One stored
+  // before app passwords took a permission list has none: never make one
+  // with the account's full rights.
+  const listed = checkAppPasswordPermissions(spec.appPassword);
+  if ('error' in listed) return bad(`The plugin's app password cannot be made: ${listed.error}`);
+  // The user agreed to the permissions the dialog showed. With two approved
+  // versions of a plugin, that may be another manifest than the one read here.
+  if (new Set(shown).size !== listed.permissions.length || !shown.every((name) => listed.permissions.includes(name))) {
+    return NextResponse.json({ error: 'The plugin asks for other permissions than the ones shown' }, { status: 409 });
   }
   if (!appPasswordsOn()) return NextResponse.json({ error: 'App passwords are not available on this server' }, { status: 403 });
   // A support session opens the mailbox with a short-lived app password; it
@@ -179,7 +187,7 @@ async function connectAppPassword(current: CurrentUser, pluginId: string, creden
   }
   let made: { id: string; secret: string; username: string };
   try {
-    made = await makePluginAppPassword(creds, appPasswordDescription(plugin.name), spec.appPassword.permissions);
+    made = await makePluginAppPassword(creds, appPasswordDescription(plugin.name), listed.permissions);
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error';
     logger.warn('Plugin app password was not created', { error: message });

@@ -6902,6 +6902,7 @@
       "rights_heading": "La contrasenya d'aplicació només pot:",
       "right_mail_read": "llegir el vostre correu",
       "right_mail_change": "llegir i modificar el vostre correu",
+      "right_filters": "definir filtres de correu, que poden reenviar el vostre correu",
       "right_send": "enviar correu en nom vostre",
       "right_calendars_read": "llegir els vostres calendaris",
       "right_calendars_change": "llegir i modificar els vostres calendaris",

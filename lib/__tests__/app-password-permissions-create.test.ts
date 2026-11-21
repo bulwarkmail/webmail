@@ -73,6 +73,24 @@ describe('createAppPassword', () => {
     expect(destroyed()).toBe(true);
   });
 
+  it.each([
+    ['a list instead of a map', { '@type': 'Replace', permissions: ['authenticate', 'emailSend'] }],
+    ['a list for the whole value', ['authenticate']],
+    ['a value that is neither true nor false', { '@type': 'Replace', permissions: { authenticate: true, emailSend: 'true' } }],
+    ['a value that is a nested object', { '@type': 'Replace', permissions: { authenticate: { '@type': 'Inherit' } } }],
+    ['a Replace with more than its permissions', { '@type': 'Replace', permissions: { ...asked }, merge: { emailSend: true } }],
+    ['a Replace without a map of permissions', { '@type': 'Replace' }],
+  ])('deletes it again when its permissions come back as %s', async (_name, permissions) => {
+    stored.permissions = permissions;
+    await expect(make()).rejects.toThrow('did not limit the app password');
+    expect(destroyed()).toBe(true);
+  });
+
+  it('keeps it when a permission asked for or not comes back switched off', async () => {
+    stored.permissions = { '@type': 'Replace', permissions: { authenticate: true, jmapCalendarGet: false, emailSend: false } };
+    await expect(make()).resolves.toEqual({ id: 'b', secret: 'app_x' });
+  });
+
   it('deletes it again when its permissions cannot be read back', async () => {
     stored.getFails = true;
     await expect(make()).rejects.toThrow('did not limit the app password');

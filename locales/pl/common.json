@@ -6902,6 +6902,7 @@
       "rights_heading": "Hasło aplikacji może tylko:",
       "right_mail_read": "czytać Twoją pocztę",
       "right_mail_change": "czytać i zmieniać Twoją pocztę",
+      "right_filters": "ustawiać filtry poczty, które mogą przekazywać dalej Twoją pocztę",
       "right_send": "wysyłać pocztę w Twoim imieniu",
       "right_calendars_read": "czytać Twoje kalendarze",
       "right_calendars_change": "czytać i zmieniać Twoje kalendarze",

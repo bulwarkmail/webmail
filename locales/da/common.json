@@ -6902,6 +6902,7 @@
       "rights_heading": "App-adgangskoden kan kun:",
       "right_mail_read": "læse din mail",
       "right_mail_change": "læse og ændre din mail",
+      "right_filters": "opsætte mailfiltre, som kan videresende din mail",
       "right_send": "sende mail i dit navn",
       "right_calendars_read": "læse dine kalendere",
       "right_calendars_change": "læse og ændre dine kalendere",

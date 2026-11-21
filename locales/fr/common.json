@@ -6902,6 +6902,7 @@
       "rights_heading": "Le mot de passe d'application peut seulement :",
       "right_mail_read": "lire vos e-mails",
       "right_mail_change": "lire et modifier vos e-mails",
+      "right_filters": "définir des filtres de messagerie, qui peuvent transférer vos e-mails",
       "right_send": "envoyer des e-mails en votre nom",
       "right_calendars_read": "lire vos agendas",
       "right_calendars_change": "lire et modifier vos agendas",

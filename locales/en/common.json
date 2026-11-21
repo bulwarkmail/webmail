@@ -6902,6 +6902,7 @@
       "rights_heading": "The app password can only:",
       "right_mail_read": "read your mail",
       "right_mail_change": "read and change your mail",
+      "right_filters": "set mail filters, which can forward your mail",
       "right_send": "send mail in your name",
       "right_calendars_read": "read your calendars",
       "right_calendars_change": "read and change your calendars",

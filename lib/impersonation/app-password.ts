@@ -152,12 +152,21 @@ async function keepOnlyIfLimited(opts: {
   throw new ImpersonationCredentialError('The mail server did not limit the app password to the permissions asked for');
 }
 
-/** `Replace` with no permission beyond those asked for (Stalwart may grant fewer, never more). */
+/**
+ * `Replace` with no permission beyond those asked for (Stalwart may grant
+ * fewer, never more). Only the shape asked for counts: a map of permission
+ * names to true or false, and nothing beside it. Anything else may mean
+ * rights this cannot read, so it is not limited.
+ */
 function isLimitedTo(stored: unknown, asked: Record<string, true>): boolean {
-  if (!stored || typeof stored !== 'object') return false;
-  const { '@type': type, permissions } = stored as { '@type'?: unknown; permissions?: unknown };
-  if (type !== 'Replace' || !permissions || typeof permissions !== 'object') return false;
-  return Object.entries(permissions).every(([name, on]) => on !== true || asked[name] === true);
+  if (!isPlainObject(stored)) return false;
+  const { '@type': type, permissions, ...rest } = stored;
+  if (type !== 'Replace' || Object.keys(rest).length > 0 || !isPlainObject(permissions)) return false;
+  return Object.entries(permissions).every(([name, on]) => on === false || (on === true && asked[name] === true));
+}
+
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return !!value && typeof value === 'object' && !Array.isArray(value);
 }
 
 /** Delete an app password on the mailbox `authHeader` opens. */

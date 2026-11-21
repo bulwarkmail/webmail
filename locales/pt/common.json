@@ -6902,6 +6902,7 @@
       "rights_heading": "A palavra-passe de aplicação só pode:",
       "right_mail_read": "ler o seu correio",
       "right_mail_change": "ler e alterar o seu correio",
+      "right_filters": "definir filtros de correio, que podem reencaminhar o seu correio",
       "right_send": "enviar correio em seu nome",
       "right_calendars_read": "ler os seus calendários",
       "right_calendars_change": "ler e alterar os seus calendários",

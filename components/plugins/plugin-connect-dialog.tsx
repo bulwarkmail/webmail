@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useId, useState, useSyncExternalStore } from 'react';
+import { useEffect, useId, useRef, useState, useSyncExternalStore } from 'react';
 import { useTranslations } from 'next-intl';
 import { KeyRound } from '@/components/icons';
 import { Button } from '@/components/ui/button';
@@ -18,6 +18,9 @@ import {
 } from '@/lib/plugin-sandbox/connect-dialog';
 import { ModalWindow } from '@/components/ui/dialog-surface';
 
+/** How long Connect stays off after an app password's dialog opens. */
+const CONSENT_DELAY_MS = 500;
+
 /**
  * The host's own "Connect account" dialog (see lib/plugin-sandbox/connect-dialog.ts).
  * Everything here is rendered by the host: the plugin can't change the text,
@@ -30,11 +33,21 @@ export function PluginConnectDialog() {
   const account = useAuthStore((s) => s.username) ?? '';
   const serverUrl = useAuthStore((s) => s.serverUrl);
   const titleId = useId();
+  const cancelRef = useRef<HTMLButtonElement>(null);
   const [server, setServer] = useState('');
   const [username, setUsername] = useState('');
   const [secret, setSecret] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [armedFor, setArmedFor] = useState<string | null>(null);
+
+  // An app password is agreed to with one click: Connect waits a moment, so
+  // a click or Enter meant for the page behind does not agree.
+  useEffect(() => {
+    if (!request || request.mode !== 'appPassword') return;
+    const timer = setTimeout(() => setArmedFor(request.id), CONSENT_DELAY_MS);
+    return () => clearTimeout(timer);
+  }, [request]);
 
   useEffect(() => {
     setServer(request?.suggestedOrigin ?? '');
@@ -53,13 +66,14 @@ export function PluginConnectDialog() {
     return () => window.removeEventListener('keydown', onKey);
   }, [request]);
 
-  // Tab stays in the dialog, the first field takes the focus, and the focus
-  // goes back to where it was when the dialog closes. (Escape is the
-  // listener above.)
+  // Tab stays in the dialog, the first field takes the focus (Cancel when
+  // there is none: an app password is only agreed to), and the focus goes
+  // back to where it was when the dialog closes. (Escape is the listener
+  // above.)
   const panelRef = useFocusTrap({
     isActive: !!request,
     restoreFocus: true,
-    initialFocus: () => panelRef.current?.querySelector<HTMLElement>('input:not(:disabled)'),
+    initialFocus: () => panelRef.current?.querySelector<HTMLElement>('input:not(:disabled)') ?? cancelRef.current,
   });
 
   if (!request) return null;
@@ -72,12 +86,16 @@ export function PluginConnectDialog() {
   const needsUsername = mode === 'password' && spec.inject.type === 'basic';
   const needsSecret = mode === 'password' && spec.inject.type !== 'none';
   const origin = fixedOrigin ?? originFromInput(server);
-  const canSubmit = (appPassword || !!origin) && (!needsSecret || !!secret) && (!needsUsername || !!username.trim()) && !saving;
+  // What the app password may do, as the manifest lists it: the user agrees
+  // to exactly that, and the server is sent it to compare with its own.
+  const shownPermissions = appPassword && Array.isArray(spec.appPassword?.permissions) ? spec.appPassword.permissions : [];
+  const rights = shownPermissions.length > 0 ? appPasswordRights(shownPermissions) : null;
+  const canSubmit = (!appPassword || armedFor === request.id) && (appPassword || !!origin) && (!needsSecret || !!secret) && (!needsUsername || !!username.trim()) && !saving;
 
   const submit = async () => {
     const base = { pluginId: request.pluginId, credentialId: request.credentialId, label: spec.label };
     const input: SaveCredentialInput | null = appPassword
-      ? { ...base, appPassword: true }
+      ? { ...base, appPassword: true, permissions: shownPermissions }
       : origin
         ? {
           ...base,
@@ -102,12 +120,10 @@ export function PluginConnectDialog() {
     request.resolve({ connected: mode !== 'signin', ...(origin ? { origin } : {}) });
   };
 
-  // What the app password may do, as the manifest lists it: the user agrees
-  // to exactly that.
-  const rights = appPassword && Array.isArray(spec.appPassword?.permissions) ? appPasswordRights(spec.appPassword.permissions) : null;
   const rightText = (area: RightArea, access: 'read' | 'change'): string => {
     switch (area) {
       case 'mail': return access === 'read' ? t('right_mail_read') : t('right_mail_change');
+      case 'filters': return t('right_filters');
       case 'send': return t('right_send');
       case 'calendars': return access === 'read' ? t('right_calendars_read') : t('right_calendars_change');
       case 'contacts': return access === 'read' ? t('right_contacts_read') : t('right_contacts_change');
@@ -203,8 +219,8 @@ export function PluginConnectDialog() {
               {error && <p role="alert" className="text-xs text-destructive">{error}</p>}
             </div>
             <div className="flex justify-end gap-2">
-              <Button type="button" variant="outline" onClick={() => request.resolve({ connected: false })}>{t('cancel')}</Button>
-              <Button type="submit" disabled={!canSubmit} autoFocus={appPassword}>
+              <Button ref={cancelRef} type="button" variant="outline" onClick={() => request.resolve({ connected: false })}>{t('cancel')}</Button>
+              <Button type="submit" disabled={!canSubmit}>
                 {saving ? t('saving') : mode === 'signin' ? t('continue') : t('connect')}
               </Button>
             </div>

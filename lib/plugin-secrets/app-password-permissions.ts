@@ -52,10 +52,10 @@ export function appPasswordPermissions(permissions: readonly string[]): Record<s
   return out;
 }
 
-export type RightArea = 'calendars' | 'contacts' | 'files' | 'mail' | 'directory' | 'send';
+export type RightArea = 'calendars' | 'contacts' | 'files' | 'mail' | 'filters' | 'directory' | 'send';
 
 export interface AppPasswordRights {
-  /** Each area the permissions reach, in a fixed order; `send` and `directory` are always `read`. */
+  /** Each area the permissions reach, in a fixed order; `send`, `filters` and `directory` are always `read`. */
   areas: { area: RightArea; access: 'read' | 'change' }[];
   /** Permissions no area names, shown as they are. */
   other: string[];
@@ -66,7 +66,9 @@ const AREAS: [RightArea, RegExp][] = [
   ['calendars', /^(jmapCalendar|jmapParticipantIdentity|davCal)/],
   ['contacts', /^(jmapAddressBook|jmapContactCard|davCard)/],
   ['files', /^(jmapFileNode|jmapBlob|davFile)/],
-  ['mail', /^(jmapEmail|jmapThread|jmapMailbox|jmapSearchSnippet|jmapIdentity|jmapVacationResponse|jmapSieve|imap|pop3|sieve)/],
+  // Apart from mail: a filter or an absence note can send the user's mail on.
+  ['filters', /^(jmapSieve|jmapVacationResponse|sieve)/],
+  ['mail', /^(jmapEmail|jmapThread|jmapMailbox|jmapSearchSnippet|jmapIdentity|imap|pop3)/],
 ];
 
 /** Reads only; whatever else a permission does counts as a change. */
@@ -88,11 +90,11 @@ export function appPasswordRights(permissions: readonly string[]): AppPasswordRi
       other.push(name);
       continue;
     }
-    if (area === 'send') access.set('send', 'read');
+    if (area === 'send' || area === 'filters') access.set(area, 'read');
     else if (!READ_RE.test(name)) access.set(area, 'change');
     else if (!access.has(area)) access.set(area, 'read');
   }
-  const order: RightArea[] = ['mail', 'send', 'calendars', 'contacts', 'files', 'directory'];
+  const order: RightArea[] = ['mail', 'filters', 'send', 'calendars', 'contacts', 'files', 'directory'];
   return {
     areas: order.filter((a) => access.has(a)).map((area) => ({ area, access: access.get(area)! })),
     other,

@@ -6902,6 +6902,7 @@
       "rights_heading": "应用密码只能：",
       "right_mail_read": "读取您的邮件",
       "right_mail_change": "读取和更改您的邮件",
+      "right_filters": "设置邮件过滤器（过滤器可以转发您的邮件）",
       "right_send": "以您的名义发送邮件",
       "right_calendars_read": "读取您的日历",
       "right_calendars_change": "读取和更改您的日历",

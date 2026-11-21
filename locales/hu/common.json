@@ -6902,6 +6902,7 @@
       "rights_heading": "Az alkalmazásjelszó csak ennyit tehet:",
       "right_mail_read": "olvashatja a leveleit",
       "right_mail_change": "olvashatja és módosíthatja a leveleit",
+      "right_filters": "levélszűrőket állíthat be, amelyek továbbíthatják a leveleit",
       "right_send": "leveleket küldhet az Ön nevében",
       "right_calendars_read": "olvashatja a naptárait",
       "right_calendars_change": "olvashatja és módosíthatja a naptárait",

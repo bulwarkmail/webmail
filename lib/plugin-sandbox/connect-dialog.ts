@@ -83,7 +83,8 @@ export type SaveCredentialInput = {
   label: string;
 } & (
   | { origin: string; inject: UserCredentialSpec['inject']; username?: string; secret?: string }
-  | { appPassword: true }
+  // The permissions the dialog showed: the server refuses when its manifest lists others.
+  | { appPassword: true; permissions: string[] }
 );
 
 /** POST to /api/plugin-secrets. Returns an error message, or null. */

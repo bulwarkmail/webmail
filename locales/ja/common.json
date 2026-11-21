@@ -6902,6 +6902,7 @@
       "rights_heading": "アプリパスワードでできるのは次のことだけです:",
       "right_mail_read": "メールを読む",
       "right_mail_change": "メールを読み、変更する",
+      "right_filters": "メールフィルターを設定する（フィルターはメールを転送できる）",
       "right_send": "あなたの名前でメールを送信する",
       "right_calendars_read": "カレンダーを読む",
       "right_calendars_change": "カレンダーを読み、変更する",
