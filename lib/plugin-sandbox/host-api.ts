@@ -14,7 +14,7 @@ import '../device-policy';
 import { doAppGetSettings, doAppSearchSettings } from './host-api-app';
 import { mayOfferSlot, pluginHasPermission } from './permissions';
 import { doGetCheckText, doRecheck, doRegisterChecker, doSetAnnotations, doUnregisterChecker, doUpdateChecker } from './host-api-checker';
-import { closeEventStream, openEventStream, type EventStreamSink } from './event-streams';
+import { closeEventStream, openEventStream, OUTSIDE_OFF_MESSAGE, type EventStreamSink } from './event-streams';
 import { proxyAccounts, proxyCancel, proxyConnect, proxyDisconnect, proxyFetch, type StreamSink } from './proxy-client';
 import { checkActions, isActionSurface, setPluginActions } from './actions';
 import { checkDayLabels, setDayLabels } from './day-labels';
@@ -792,7 +792,7 @@ function outsideTarget(plugin: InstalledPlugin, rawUrl: unknown): { url: URL; al
   // Such a plugin isn't started in the no-third-party mode; this is the
   // second lock in case one runs anyway (#903). A plugin the mode lets run
   // (admin-entered servers through the proxy) has no outside fetch either.
-  if (noThirdPartyTraffic()) throw new Error('Outside requests are off: this server does not contact outside services');
+  if (noThirdPartyTraffic()) throw new Error(OUTSIDE_OFF_MESSAGE);
   if (typeof rawUrl !== 'string') throw new Error('url must be a string');
   let url: URL;
   try { url = new URL(rawUrl); } catch { throw new Error('url must be absolute https://'); }

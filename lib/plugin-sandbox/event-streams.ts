@@ -3,9 +3,11 @@
 // open the connection itself (its CSP has no connect-src for other sites),
 // so the host holds it in the user's browser, reads the events and posts
 // each to the frame that asked. The host reconnects by itself; the
-// connection ends when the plugin closes it, when its frame goes or when
-// the plugin is turned off.
+// connection ends when the plugin closes it, when its frame goes, when
+// the plugin is turned off or when the server stops contacting outside
+// services (the no-third-party mode).
 
+import { noThirdPartyTraffic, subscribeThirdPartyMode } from '../third-party-mode';
 import type { EventStreamMsg } from './protocol';
 
 /** Where the events go: the iframe that subscribed. */
@@ -23,6 +25,9 @@ export const DEFAULT_RETRY_MS = 3000;
 const MIN_RETRY_MS = 1000;
 /** The wait doubles with each failed attempt in a row, up to this. */
 export const MAX_RETRY_MS = 60_000;
+
+/** What http.fetch and http.eventSource answer in the no-third-party mode. */
+export const OUTSIDE_OFF_MESSAGE = 'Outside requests are off: this server does not contact outside services';
 
 const STREAM_ID_RE = /^[a-z0-9]{6,40}$/;
 
@@ -263,6 +268,12 @@ async function run(
   let failures = 0;
   try {
     while (!gone()) {
+      // The mode may have come on since the stream was opened; the listener
+      // below closes the streams then, this is the second lock.
+      if (noThirdPartyTraffic()) {
+        send({ kind: 'error', message: OUTSIDE_OFF_MESSAGE, closed: true });
+        return;
+      }
       // A parser per connection (half an event dies with its connection),
       // the last id carried over for Last-Event-ID.
       const parser = new EventStreamParser(lastEventId);
@@ -321,6 +332,7 @@ export function openEventStream(
   }
   if (streams.has(streamId)) throw new Error('Invalid streamId');
   if (streams.size >= MAX_EVENT_STREAMS_PER_PLUGIN) throw new Error(`At most ${MAX_EVENT_STREAMS_PER_PLUGIN} event streams at once`);
+  watchThirdPartyMode();
   const entry: Running = { controller: new AbortController(), sink };
   streams.set(streamId, entry);
   const untrack = () => end(pluginId, streamId, entry);
@@ -333,6 +345,33 @@ function end(pluginId: string, streamId: string, entry: Running): void {
   const streams = running.get(pluginId);
   if (streams?.get(streamId) === entry) streams.delete(streamId);
   if (streams?.size === 0) running.delete(pluginId);
+}
+
+let watchingMode = false;
+
+/**
+ * A stream opened while outside requests were allowed must not outlive
+ * that: once the mode comes on (an admin may turn it on while the app
+ * runs), every open connection is closed, and each plugin is told so.
+ */
+function watchThirdPartyMode(): void {
+  if (watchingMode) return;
+  watchingMode = true;
+  subscribeThirdPartyMode(() => {
+    if (!noThirdPartyTraffic()) return;
+    for (const [pluginId, streams] of [...running]) {
+      for (const [streamId, entry] of [...streams]) {
+        if (!entry.sink.closed) {
+          entry.sink.sendEventStream({
+            type: 'event-stream',
+            streamId,
+            event: { kind: 'error', message: OUTSIDE_OFF_MESSAGE, closed: true },
+          });
+        }
+        end(pluginId, streamId, entry);
+      }
+    }
+  });
 }
 
 /** `api.http.eventSource(...).close()`: one already closed is ignored. */

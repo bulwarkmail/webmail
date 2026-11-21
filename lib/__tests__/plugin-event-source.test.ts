@@ -15,6 +15,7 @@ vi.mock('@/stores/toast-store', () => ({
 }));
 
 import { dispatchApiCall } from '../plugin-sandbox/host-api';
+import { setNoThirdPartyTraffic } from '../third-party-mode';
 import {
   closeEventStreamsOf, closePluginEventStreams, eventStreamCount, EventStreamParser, openEventStream,
   DEFAULT_RETRY_MS, MAX_EVENT_CHARS, MAX_EVENT_STREAMS_PER_PLUGIN,
@@ -88,6 +89,7 @@ beforeEach(() => {
 
 afterEach(() => {
   closePluginEventStreams('p1');
+  setNoThirdPartyTraffic(false);
   vi.useRealTimers();
   vi.unstubAllGlobals();
 });
@@ -331,6 +333,28 @@ describe('http.eventSource', () => {
 
     expect(fetchSpy.mock.calls.every((c) => c[1].signal!.aborted)).toBe(true);
     expect(eventStreamCount('p1')).toBe(0);
+  });
+
+  it('closes every connection once the server stops contacting outside services', async () => {
+    const first = stream();
+    const fetchMock = vi.fn().mockResolvedValueOnce(first.res);
+    vi.stubGlobal('fetch', fetchMock);
+    const sink = frame();
+    await open(sink);
+    await pass();
+    const signal = fetchMock.mock.calls[0][1].signal as AbortSignal;
+
+    setNoThirdPartyTraffic(true);
+    expect(signal.aborted).toBe(true);
+    expect(eventStreamCount('p1')).toBe(0);
+    expect(sink.events()).toEqual([
+      { kind: 'open' },
+      { kind: 'error', message: expect.stringMatching(/Outside requests are off/), closed: true },
+    ]);
+    // Nothing is asked again, however long the mode stays on.
+    await pass(DEFAULT_RETRY_MS * 40);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    await expect(open(sink)).rejects.toThrow(/Outside requests are off/);
   });
 
   it('holds only so many connections for one plugin', async () => {
