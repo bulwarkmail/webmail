@@ -226,7 +226,6 @@ export function ensureTeamLoaded(ref: TeamRef, client: IJMAPClient): Promise<voi
   }));
   runtime.loading = enqueue(ref.key, async () => {
     await ensureSeenLoaded(ref, client);
-    ensureBaseline(ref);
     await loadIndex(ref, client);
   }).finally(() => { runtime.loading = null; });
   return runtime.loading;
@@ -277,6 +276,7 @@ async function loadIndex(ref: TeamRef, client: IJMAPClient, quiet = false): Prom
       baseline = (await client.getTeamNotes(ref.accountId, [], ['id'])).state ?? null;
     }
     if (runtime) runtime.baseline = baseline;
+    ensureSeenBaseline(ref, entries, windowStart);
     patchTeam(ref.key, (t) => {
       if (!quiet) {
         return { status: 'ready', author, canWrite, folderIds: folders.ids, windowStart, notes: withNotes({ ...t, notes: {} }, entries), conversations: {} };
@@ -913,11 +913,16 @@ function ensureSeenLoaded(ref: TeamRef, client: IJMAPClient): Promise<void> {
   return entry.loading;
 }
 
-/** The first visit to a team mailbox: older notes count as seen. */
-function ensureBaseline(ref: TeamRef): void {
+/**
+ * The first visit to a team mailbox: the notes there are now count as seen.
+ * By the server's times (the newest note the index has), so this device's
+ * clock can't hide a note written right after.
+ */
+function ensureSeenBaseline(ref: TeamRef, entries: readonly NoteEntry[], windowStart: number): void {
   const map = useTeamMailboxStore.getState().seen[ref.loginId] ?? {};
   if (map[ref.accountId]) return;
-  setSeen(ref.loginId, { ...map, [ref.accountId]: { baseline: Date.now(), threads: {} } });
+  const newest = entries.reduce((max, n) => Math.max(max, n.at), windowStart);
+  setSeen(ref.loginId, { ...map, [ref.accountId]: { baseline: newest, threads: {} } });
 }
 
 function setSeen(loginId: string, map: SeenMap): void {

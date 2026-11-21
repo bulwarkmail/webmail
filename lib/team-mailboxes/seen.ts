@@ -28,7 +28,9 @@ export interface TeamSeen {
 
 export type SeenMap = Record<string, TeamSeen>;
 
-const toMinute = (ms: number) => Math.floor(ms / 60_000).toString(36);
+// Up to the end of the minute: a seen note stays seen after a reload (a note
+// someone else writes in that same minute gets no dot).
+const toMinute = (ms: number) => Math.ceil(ms / 60_000).toString(36);
 const fromMinute = (value: unknown) => (typeof value === 'string' && /^[0-9a-z]{1,10}$/.test(value) ? parseInt(value, 36) * 60_000 : NaN);
 
 /** Reads a stored value; anything malformed is dropped, never thrown. */

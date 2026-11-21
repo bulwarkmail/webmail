@@ -33,6 +33,14 @@ describe('team notes seen per user', () => {
       .toEqual({ h: { baseline: at(1), threads: { u: at(2) } } });
   });
 
+  it('keeps a seen note seen after the map was stored and read again', () => {
+    const noteAt = at(2000) + 30_000;
+    const map = markThreadSeen({ g: { baseline: at(1000), threads: {} } }, 'g', 't', noteAt);
+    const stored = decodeSeen(JSON.parse(JSON.stringify(encodeSeen(map))));
+    expect(isUnseen(stored.g, 't', noteAt)).toBe(false);
+    expect(isUnseen(stored.g, 't', at(2001) + 1)).toBe(true);
+  });
+
   it('says a note is new after the last time the conversation was seen, and only then', () => {
     let map: SeenMap = { g: { baseline: at(100), threads: {} } };
     expect(isUnseen(map.g, 't', at(99))).toBe(false);

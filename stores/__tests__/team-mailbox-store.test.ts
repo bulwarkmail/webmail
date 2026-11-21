@@ -15,6 +15,7 @@ import {
   repairOriginalKeywords,
   resetTeamMailboxStore,
   retryNote,
+  rowNotesInfo,
   useTeamMailboxStore,
   writeNote,
 } from '../team-mailbox-store';
@@ -188,6 +189,23 @@ describe('live updates', () => {
     await applyChanges(ref.key);
     expect(team().status).toBe('ready');
     expect(team().notes[id]?.text).toBe('passed this to Josh');
+  });
+
+  it('counts notes from before the first visit as seen by the server\'s times, whatever this clock says', async () => {
+    const server = new FakeTeamServer();
+    server.addNotesFolder();
+    // A first visit: nothing kept from an earlier test.
+    localStorage.removeItem(`bulwark-team-seen:${ref.loginId}`);
+    // The server's clock is a minute ahead of this device.
+    const serverNow = Date.now() + 60_000;
+    bobNote(server, target.key, 'before the visit', {}, serverNow);
+    const client = server.client();
+    await ensureTeamLoaded(ref, client);
+    expect(rowNotesInfo(team(), 't1')).toEqual({ count: 1, unseen: false });
+
+    bobNote(server, target.key, 'after the visit', {}, serverNow + 5_000);
+    await applyChanges(ref.key);
+    expect(rowNotesInfo(team(), 't1')).toEqual({ count: 2, unseen: true });
   });
 
   it('ignores pushes for other accounts and other clients', async () => {
