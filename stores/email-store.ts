@@ -1130,7 +1130,8 @@ function teamListFilter(mailbox: Mailbox | undefined): Record<string, unknown> |
   if (!mailbox?.isShared || !mailbox.accountId || !useTeamListFilter.getState().active) return null;
   const auth = useAuthStore.getState();
   const loginId = useEmailStore.getState().viewingAccountId ?? auth.activeAccountId;
-  const client = loginId ? auth.getClientForAccount(loginId) ?? auth.client : auth.client;
+  // Ids repeat across logins: never fall back to another login's client.
+  const client = loginId ? auth.getClientForAccount(loginId) ?? (loginId === auth.activeAccountId ? auth.client : null) : auth.client;
   const ref = teamFor(client, loginId, mailbox.accountId, usePolicyStore.getState().rawPolicy);
   return ref && client ? activeTeamFilterCondition(ref.key, client.getAccountId().toLowerCase()) : null;
 }

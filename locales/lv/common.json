@@ -985,6 +985,7 @@
     "retry": "Mēģināt vēlreiz",
     "full": "Šī pastkaste ir pilna. Vērsieties pie administratora.",
     "read_only": "Šajā pastkastē nevar saglabāt piezīmes. Vērsieties pie administratora.",
+    "read_only_member": "Šeit varat lasīt piezīmes, bet ne rakstīt tās.",
     "offline": "Jūs esat bezsaistē. Piezīmes varēsiet rakstīt, kad atkal būsiet tiešsaistē.",
     "team_only": "To redz tikai jūsu komanda",
     "list_label": "Piezīmes",

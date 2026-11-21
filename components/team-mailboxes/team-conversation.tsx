@@ -22,6 +22,7 @@ import { toastWithUndo } from '@/lib/email-action-toast';
 import { noteKeyFor, type NoteEntry } from '@/lib/team-mailboxes/note-format';
 import {
   deleteNote,
+  discardPending,
   loadConversation,
   onNotesArrived,
   repairOriginalKeywords,
@@ -74,6 +75,9 @@ interface TeamNotesValue {
   nameOf: (principalId: string) => string | null;
   /** "New note from Mabel", for the polite live region in the note area. */
   announcement: string;
+  /** The text in the note field; kept while the field is closed and when a reply arrives. */
+  draft: string;
+  setDraft: (text: string) => void;
 }
 
 const TeamNotesContext = createContext<TeamNotesValue | null>(null);
@@ -165,16 +169,32 @@ function useTeamNotesValue(context: TeamContext | null, team: TeamState | undefi
     return null;
   }, [ordered, slots]);
 
+  // The conversation, by thread: a reply arriving while someone writes keeps
+  // the field open and its text.
+  const anchor = threadIds.length > 0 ? [...new Set(threadIds)].sort().join(' ') : (ordered[0]?.id ?? '');
   const [fieldOpen, setFieldOpen] = useState(false);
   const [targetId, setTargetId] = useState<string | null>(null);
   const [highlightNoteId, setHighlightNoteId] = useState<string | null>(null);
+  const [drafts, setDrafts] = useState<Record<string, string>>({});
+  const draft = drafts[anchor] ?? '';
+  const setDraft = useCallback((text: string) => setDrafts((d) => ({ ...d, [anchor]: text })), [anchor]);
   const openField = useCallback((emailId?: string) => {
     setTargetId(emailId ?? null);
     setFieldOpen(true);
   }, []);
   const closeField = useCallback(() => setFieldOpen(false), []);
   // Another conversation: the field starts closed again.
-  useEffect(() => { setFieldOpen(false); setTargetId(null); }, [idsKey]);
+  useEffect(() => { setFieldOpen(false); setTargetId(null); }, [key, anchor]);
+
+  // Back online: notes that couldn't load because of it load now.
+  const online = useOnline();
+  const teamStatus = team?.status;
+  useEffect(() => {
+    if (!online || !key) return;
+    if (teamStatus === 'offline') void reloadTeam(key);
+    else if (convStatus === 'offline' && ordered.length > 0) void retryConversation(key, ordered, keys);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- when the connection or the status changes
+  }, [online, key, teamStatus, convStatus]);
 
   // Asked from outside (the Note buttons, the row menu, a mention notification).
   const request = useNoteFieldRequest();
@@ -209,8 +229,8 @@ function useTeamNotesValue(context: TeamContext | null, team: TeamState | undefi
   const nameOf = useNameOf(context, selfName);
   const target: Message | undefined = ordered.find((m) => m.id === targetId) ?? ordered[ordered.length - 1];
   return useMemo<TeamNotesValue | null>(() => (context && team ? {
-    context, team, slots, firstSlot, notes, fieldOpen, openField, closeField, target, highlightNoteId, nameOf, announcement,
-  } : null), [context, team, slots, firstSlot, notes, fieldOpen, openField, closeField, target, highlightNoteId, nameOf, announcement]);
+    context, team, slots, firstSlot, notes, fieldOpen, openField, closeField, target, highlightNoteId, nameOf, announcement, draft, setDraft,
+  } : null), [context, team, slots, firstSlot, notes, fieldOpen, openField, closeField, target, highlightNoteId, nameOf, announcement, draft, setDraft]);
 }
 
 /** Whether notes follow a message (a folded run keeps such a message in view). */
@@ -231,11 +251,18 @@ export function NotesAfter({ emailId, className }: { emailId: string; className?
   if (!slot || (slot.notes.length === 0 && slot.pending.length === 0)) return null;
   const { team, context } = value;
   const own = team.author?.email ?? null;
+  // Notes written before the target was kept with them; this is the fallback.
   const target = (localKey: string): NoteTarget => {
     const message = value.target;
     return {
       emailId: message?.id ?? emailId, key: localKey, threadId: message?.threadId ?? null, subject: message?.subject,
     };
+  };
+  // Edit: the failed note's text goes back into the field and the card goes.
+  const onEdit = (p: PendingNote) => {
+    discardPending(context.ref.key, p.localId);
+    value.setDraft(value.draft ? `${value.draft}\n${p.text}` : p.text);
+    value.openField(p.target?.emailId);
   };
   const onDelete = async (note: NoteEntry) => {
     const undo = await deleteNote(context.ref.key, note.id);
@@ -253,7 +280,7 @@ export function NotesAfter({ emailId, className }: { emailId: string; className?
           ? <NoteCard key={note.id} note={note} highlighted={value.highlightNoteId === note.id} onDelete={isOwnNote(note, own) ? () => { void onDelete(note); } : undefined} />
           : <TimelineLine key={note.id} note={note} nameOf={value.nameOf} />)}
         {slot.pending.map((p) => (
-          <PendingNoteCard key={p.localId} pending={p} author={team.author ?? { name: '', email: '' }} onRetry={() => { void retryNote(context.ref.key, p.localId, target(p.key)); }} />
+          <PendingNoteCard key={p.localId} pending={p} author={team.author ?? { name: '', email: '' }} onRetry={() => { void retryNote(context.ref.key, p.localId, target(p.key)); }} onEdit={() => onEdit(p)} />
         ))}
       </ul>
     </div>
@@ -298,10 +325,12 @@ export function TeamNoteArea({ className, messages }: { className?: string; mess
   const online = useOnline();
   const field = useRef<NoteFieldHandle>(null);
   const areaRef = useRef<HTMLDivElement>(null);
-  const [drafts, setDrafts] = useState<Record<string, string>>({});
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const refocusButton = useRef(false);
   const key = value?.context.ref.key ?? '';
   const convKey = value ? conversationKeyOf(conversationKeys(messages, value.context.ref.accountId).keys, conversationKeys(messages, value.context.ref.accountId).threadIds) : '';
-  const draft = drafts[convKey] ?? '';
+  const draft = value?.draft ?? '';
+  const setDraft = value?.setDraft;
   // @ mentions: the team's people (the same people Assign to… offers).
   const people = useTeamPeople(value?.context.ref ?? null, value?.context.client ?? null);
   const candidates = useMemo(
@@ -313,13 +342,18 @@ export function TeamNoteArea({ className, messages }: { className?: string; mess
     selfId: value?.context.client.getAccountId().toLowerCase() ?? null,
     text: draft,
     setText: (text, caret) => {
-      setDrafts((d) => ({ ...d, [convKey]: text }));
+      setDraft?.(text);
       field.current?.setCaret(caret);
     },
   });
   const fieldOpen = value?.fieldOpen ?? false;
   useEffect(() => {
-    if (!fieldOpen) return;
+    if (!fieldOpen) {
+      // Escape or Cancel: focus goes back to the Note button, not the page.
+      if (refocusButton.current) buttonRef.current?.focus();
+      refocusButton.current = false;
+      return;
+    }
     areaRef.current?.scrollIntoView?.({ block: 'nearest' });
     field.current?.focus();
   }, [fieldOpen]);
@@ -329,6 +363,7 @@ export function TeamNoteArea({ className, messages }: { className?: string; mess
   const loadFailed = team.status === 'error' || convStatus === 'error';
   const offline = !online || team.status === 'offline' || convStatus === 'offline';
   const readOnly = team.canWrite === false;
+  const hasWritten = value.notes.some((n) => n.kind === 'note');
 
   const send = () => {
     const text = draft.trim();
@@ -336,14 +371,17 @@ export function TeamNoteArea({ className, messages }: { className?: string; mess
     if (!text || !target) return;
     // Only people still named in the text, and only people of the team.
     const mentions = mentionsIn(text, mention.picked, new Set(candidates.map((c) => c.id.toLowerCase())));
-    setDrafts((d) => ({ ...d, [convKey]: '' }));
+    value.setDraft('');
     mention.reset();
     void writeNote(key, {
       emailId: target.id, key: noteKeyFor(target, value.context.ref.accountId), threadId: target.threadId ?? null, subject: target.subject,
     }, { text, mentions });
     field.current?.focus();
   };
-  const close = () => value.closeField();
+  const close = () => {
+    refocusButton.current = true;
+    value.closeField();
+  };
 
   return (
     <div ref={areaRef} className={className ?? 'px-4 pb-4 pt-2 desk:px-6'} data-team-note-area="">
@@ -360,22 +398,21 @@ export function TeamNoteArea({ className, messages }: { className?: string; mess
           </button>
         </p>
       )}
-      {!fieldOpen && readOnly && value.notes.length > 0 ? (
-        <p className="text-sm text-muted-foreground" role="status">{t('read_only')}</p>
+      {readOnly ? (
+        // Reading only: no Note button anywhere; one sentence where notes are.
+        hasWritten ? <p className="text-sm text-muted-foreground" role="status">{t('read_only_member')}</p> : null
       ) : !fieldOpen ? (
-        <Button type="button" variant="outline" size="sm" className="gap-2 rounded-full px-5" onClick={() => value.openField()} data-team-note-button="">
+        <Button ref={buttonRef} type="button" variant="outline" size="sm" className="gap-2 rounded-full px-5" onClick={() => value.openField()} data-team-note-button="">
           <StickyNote className="h-4 w-4" />
           {t('note')}
         </Button>
       ) : offline ? (
         <p className="text-sm text-muted-foreground" role="status">{t('offline')}</p>
-      ) : readOnly ? (
-        <p className="text-sm text-muted-foreground" role="status">{t('read_only')}</p>
       ) : (
         <NoteField
           ref={field}
           value={draft}
-          onChange={(text) => setDrafts((d) => ({ ...d, [convKey]: text }))}
+          onChange={(text) => value.setDraft(text)}
           onSubmit={send}
           onClose={close}
           onKeyDownFirst={mention.onKeyDown}

@@ -985,6 +985,7 @@
     "retry": "Prøv igjen",
     "full": "Denne postkassen er full. Spør administratoren din.",
     "read_only": "Notater kan ikke lagres i denne postkassen. Spør administratoren din.",
+    "read_only_member": "Du kan lese notater her, men ikke skrive dem.",
     "offline": "Du er frakoblet. Du kan skrive notater når du er tilkoblet igjen.",
     "team_only": "Bare teamet ditt ser dette",
     "list_label": "Notater",

@@ -985,6 +985,7 @@
     "retry": "Zkusit znovu",
     "full": "Tato schránka je plná. Obraťte se na správce.",
     "read_only": "Do této schránky nelze ukládat poznámky. Obraťte se na správce.",
+    "read_only_member": "Poznámky zde můžete číst, ale ne psát.",
     "offline": "Jste offline. Poznámky půjde psát, až budete znovu online.",
     "team_only": "Vidí to jen váš tým",
     "list_label": "Poznámky",

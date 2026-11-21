@@ -985,6 +985,7 @@
     "retry": "Réessayer",
     "full": "Cette boîte aux lettres est pleine. Contactez votre administrateur.",
     "read_only": "Impossible d’enregistrer des notes dans cette boîte aux lettres. Contactez votre administrateur.",
+    "read_only_member": "Vous pouvez lire les notes ici, mais pas en écrire.",
     "offline": "Vous êtes hors ligne. Vous pourrez écrire des notes une fois de nouveau en ligne.",
     "team_only": "Visible uniquement par votre équipe",
     "list_label": "Notes",

@@ -985,6 +985,7 @@
     "retry": "Spróbuj ponownie",
     "full": "Ta skrzynka jest pełna. Zwróć się do administratora.",
     "read_only": "W tej skrzynce nie można zapisywać notatek. Zwróć się do administratora.",
+    "read_only_member": "Możesz tu czytać notatki, ale nie możesz ich pisać.",
     "offline": "Jesteś offline. Notatki będzie można pisać po powrocie do sieci.",
     "team_only": "Widzi to tylko Twój zespół",
     "list_label": "Notatki",

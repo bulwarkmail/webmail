@@ -82,12 +82,15 @@ export function NoteCard({ note, onDelete, highlighted }: NoteCardProps) {
 }
 
 /** A note on its way to the server, or one that couldn't be saved (with Retry). */
-export function PendingNoteCard({ pending, author, onRetry }: {
+export function PendingNoteCard({ pending, author, onRetry, onEdit }: {
   pending: PendingNote;
   author: { name: string; email: string };
   onRetry: () => void;
+  /** Takes the card away and puts its text back into the note field. */
+  onEdit?: () => void;
 }) {
   const t = useTranslations('team_mailboxes');
+  const tCommon = useTranslations('common');
   const name = displayName(author);
   const failed = pending.status === 'error';
   return (
@@ -110,6 +113,11 @@ export function PendingNoteCard({ pending, author, onRetry }: {
               <button type="button" onClick={onRetry} className="inline-flex items-center gap-1 rounded-md border border-note-border px-2 py-1 font-medium hover:bg-note-foreground/10">
                 <RotateCcw className="h-3.5 w-3.5" />
                 {t('retry')}
+              </button>
+            )}
+            {onEdit && (
+              <button type="button" onClick={onEdit} className="inline-flex items-center gap-1 rounded-md border border-note-border px-2 py-1 font-medium hover:bg-note-foreground/10">
+                {tCommon('edit')}
               </button>
             )}
           </div>

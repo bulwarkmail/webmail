@@ -68,6 +68,8 @@ export interface PendingNote {
   at: number;
   status: 'sending' | 'error';
   error?: NoteSaveError;
+  /** The message it is about, so Retry marks that one whatever is open now. */
+  target?: NoteTarget;
 }
 
 /** What a conversation's notes are: loading, there, or couldn't be loaded. */
@@ -240,7 +242,11 @@ export function reloadTeam(key: string): Promise<void> {
   return runtime.loading;
 }
 
-async function loadIndex(ref: TeamRef, client: IJMAPClient): Promise<void> {
+/**
+ * Reads the index. `quiet` (a resync after Email/changes gave up) keeps the
+ * texts and conversations already loaded, so open notes don't blank out.
+ */
+async function loadIndex(ref: TeamRef, client: IJMAPClient, quiet = false): Promise<void> {
   const runtime = runtimes.get(ref.key);
   try {
     const [author, folders] = await Promise.all([resolveAuthor(client), findFolders(client, ref.accountId)]);
@@ -271,10 +277,16 @@ async function loadIndex(ref: TeamRef, client: IJMAPClient): Promise<void> {
       baseline = (await client.getTeamNotes(ref.accountId, [], ['id'])).state ?? null;
     }
     if (runtime) runtime.baseline = baseline;
-    patchTeam(ref.key, (t) => ({
-      status: 'ready', author, canWrite, folderIds: folders.ids, windowStart,
-      notes: withNotes({ ...t, notes: {} }, entries), conversations: {},
-    }));
+    patchTeam(ref.key, (t) => {
+      if (!quiet) {
+        return { status: 'ready', author, canWrite, folderIds: folders.ids, windowStart, notes: withNotes({ ...t, notes: {} }, entries), conversations: {} };
+      }
+      // In the window the index is the truth (what's missing was deleted);
+      // older notes came from conversation lookups and stay.
+      const kept = Object.fromEntries(Object.entries(t.notes).filter(([, n]) => n.at < windowStart));
+      const previous = { ...t, notes: { ...kept, ...Object.fromEntries(entries.filter((e) => t.notes[e.id]).map((e) => [e.id, t.notes[e.id]])) } };
+      return { status: 'ready', author, canWrite, folderIds: folders.ids, windowStart, notes: withNotes(previous, entries) };
+    });
   } catch (error) {
     debug.warn('team-mailboxes', `Loading notes of ${ref.accountId} failed:`, error);
     patchTeam(ref.key, () => ({ status: isOffline(error) ? 'offline' : 'error' }));
@@ -368,7 +380,7 @@ async function reloadIndexQuietly(key: string): Promise<void> {
   const runtime = runtimes.get(key);
   const current = team(key);
   if (!runtime || !current) return;
-  await loadIndex(current.ref, runtime.client);
+  await loadIndex(current.ref, runtime.client, true);
 }
 
 async function loadTexts(key: string, ids: readonly string[]): Promise<void> {
@@ -544,15 +556,16 @@ export function writeNote(
     patchTeam(key, (t) => ({
       pending: {
         ...t.pending,
-        [localId]: { localId, key: target.key, threadId: target.threadId, text: input.text ?? '', mentions, at: Date.now(), status: 'sending' },
+        [localId]: { localId, key: target.key, threadId: target.threadId, text: input.text ?? '', mentions, at: Date.now(), status: 'sending', target },
       },
     }));
   }
   return enqueue(key, async () => {
     const runtime = runtimes.get(key);
     const t = team(key);
-    if (!runtime || !t?.author || !runtime.client.createTeamNote) throw new Error('Team not loaded');
     try {
+      // Notes that couldn't be loaded leave no author: the note fails with Retry.
+      if (!runtime || !t?.author || !runtime.client.createTeamNote) throw new Error('Team not loaded');
       const mailboxId = await ensureFolder(key);
       const { email, messageId } = buildNoteEmail({
         mailboxId, author: t.author, groupAddress: t.ref.groupAddress, subject: target.subject,
@@ -588,10 +601,10 @@ export function writeNote(
 export function retryNote(key: string, localId: string, target: NoteTarget): Promise<string | null> {
   const p = team(key)?.pending[localId];
   if (!p) return Promise.resolve(null);
-  return writeNote(key, target, { kind: 'note', text: p.text, mentions: p.mentions, localId });
+  return writeNote(key, p.target ?? target, { kind: 'note', text: p.text, mentions: p.mentions, localId });
 }
 
-/** Drops a failed note (its text went back into the field). */
+/** Drops a failed note (Edit puts its text back into the field). */
 export function discardPending(key: string, localId: string): void {
   patchTeam(key, (t) => {
     const pending = { ...t.pending };
@@ -878,7 +891,9 @@ function hasOwnSeenStore(client: IJMAPClient): boolean {
 /** Reads the login's seen map once: private Inbox metadata where the server has it, else this device. */
 function ensureSeenLoaded(ref: TeamRef, client: IJMAPClient): Promise<void> {
   const known = seenLogins.get(ref.loginId);
-  if (known) return known.loading ?? Promise.resolve();
+  if (known && known.client === client) return known.loading ?? Promise.resolve();
+  // Signed in again: the new client reads and writes from now on.
+  if (known?.timer) clearTimeout(known.timer);
   const entry = { client, loading: null as Promise<void> | null, lastWrite: 0, timer: null as ReturnType<typeof setTimeout> | null };
   seenLogins.set(ref.loginId, entry);
   entry.loading = (async () => {
@@ -983,7 +998,7 @@ export function rowNotesInfo(t: TeamState, threadId: string | null | undefined, 
   return { count, unseen };
 }
 
-/** For tests: forget every team. */
+/** Forgets every team: on sign-out and account switches, and in tests. */
 export function resetTeamMailboxStore(): void {
   runtimes.clear();
   arrivalListeners.clear();

@@ -985,6 +985,7 @@
     "retry": "Tentar de novo",
     "full": "Esta caixa de correio está cheia. Fale com o seu administrador.",
     "read_only": "Não é possível salvar notas nesta caixa de correio. Fale com o seu administrador.",
+    "read_only_member": "Aqui pode ler notas, mas não escrevê-las.",
     "offline": "Você está offline. Poderá escrever notas quando voltar a ficar online.",
     "team_only": "Só a sua equipe vê isto",
     "list_label": "Notas",

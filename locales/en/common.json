@@ -985,6 +985,7 @@
     "retry": "Retry",
     "full": "This mailbox is full. Ask your admin.",
     "read_only": "Notes can’t be saved in this mailbox. Ask your admin.",
+    "read_only_member": "You can read notes here but not write them.",
     "offline": "You’re offline. Notes can be written when you’re back online.",
     "team_only": "Only your team sees this",
     "list_label": "Notes",

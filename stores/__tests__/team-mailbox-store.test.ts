@@ -119,6 +119,16 @@ describe('writing notes', () => {
     expect(notesOf(team(), [target.key], []).map((n) => n.text)).toEqual(['my job']);
   });
 
+  it('fails a note with Retry, instead of leaving it on Sending, when the notes never loaded', async () => {
+    const server = new FakeTeamServer();
+    server.addNotesFolder();
+    await ensureTeamLoaded(ref, server.client());
+    useTeamMailboxStore.setState((s) => ({ teams: { ...s.teams, [ref.key]: { ...s.teams[ref.key], author: null, status: 'error' } } }));
+
+    expect(await writeNote(ref.key, target, { text: 'still here' }).catch(() => 'threw')).toBeNull();
+    expect(pendingOf(team(), [target.key])[0]).toMatchObject({ status: 'error', text: 'still here' });
+  });
+
   it('turns the field off when the server refuses the write', async () => {
     const server = new FakeTeamServer();
     server.addNotesFolder();
@@ -160,6 +170,23 @@ describe('live updates', () => {
     server.removeNote(id);
     await applyChanges(ref.key);
     expect(team().notes[id]).toBeUndefined();
+  });
+
+  it('keeps the notes on screen when the server can only answer with a full reload', async () => {
+    const server = new FakeTeamServer();
+    server.addNotesFolder();
+    const client = server.client();
+    await ensureTeamLoaded(ref, client);
+    server.touchMail('mail-9');
+    const id = bobNote(server, target.key, 'passed this to Josh');
+    await applyChanges(ref.key);
+    expect(team().notes[id]?.text).toBe('passed this to Josh');
+
+    // cannotCalculateChanges: the index is read again, texts stay.
+    (client as unknown as { getEmailChanges: () => Promise<null> }).getEmailChanges = async () => null;
+    await applyChanges(ref.key);
+    expect(team().status).toBe('ready');
+    expect(team().notes[id]?.text).toBe('passed this to Josh');
   });
 
   it('ignores pushes for other accounts and other clients', async () => {

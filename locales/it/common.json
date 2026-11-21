@@ -985,6 +985,7 @@
     "retry": "Riprova",
     "full": "Questa casella è piena. Rivolgiti all’amministratore.",
     "read_only": "In questa casella non si possono salvare note. Rivolgiti all’amministratore.",
+    "read_only_member": "Qui puoi leggere le note, ma non scriverle.",
     "offline": "Sei offline. Potrai scrivere note quando torni online.",
     "team_only": "Solo il tuo team lo vede",
     "list_label": "Note",

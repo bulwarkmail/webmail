@@ -18,6 +18,7 @@ vi.mock('../use-team', async (importOriginal) => ({
 
 const writeNote = vi.fn(async () => 'n-new');
 const deleteNote = vi.fn(async () => async () => true);
+const reloadTeam = vi.fn(async () => {});
 vi.mock('@/stores/team-mailbox-store', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/stores/team-mailbox-store')>();
   return {
@@ -26,6 +27,7 @@ vi.mock('@/stores/team-mailbox-store', async (importOriginal) => {
     repairOriginalKeywords: vi.fn(async () => {}),
     writeNote: (...args: unknown[]) => writeNote(...(args as [])),
     deleteNote: (...args: unknown[]) => deleteNote(...(args as [])),
+    reloadTeam: (...args: unknown[]) => reloadTeam(...(args as [])),
   };
 });
 
@@ -77,6 +79,7 @@ beforeEach(() => {
   teamContext = { ref, client };
   writeNote.mockClear();
   deleteNote.mockClear();
+  reloadTeam.mockClear();
   toastSuccess.mockClear();
 });
 afterEach(() => useTeamMailboxStore.setState({ teams: {} }));
@@ -138,6 +141,8 @@ describe('the note field', () => {
     expect(writeNote).not.toHaveBeenCalled();
     fireEvent.keyDown(field, { key: 'Escape' });
     expect(screen.queryByLabelText('field_label')).toBeNull();
+    // Focus goes back to the Note button, not the page.
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'note' }));
 
     fireEvent.click(screen.getByRole('button', { name: 'note' }));
     const again = screen.getByLabelText('field_label') as HTMLTextAreaElement;
@@ -181,11 +186,43 @@ describe('the note field', () => {
     expect(writeNote).not.toHaveBeenCalled();
   });
 
-  it('says why there is no field for a read-only member', () => {
+  it('gives a read-only member no Note button, and one sentence where notes are', () => {
     seed([note('a', '2026-11-20T10:00:00Z', 'my job')], { canWrite: false });
-    render(<Conversation />);
-    expect(screen.getByText('read_only')).toBeTruthy();
+    const view = render(<Conversation />);
+    expect(screen.getByText('read_only_member')).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'note' })).toBeNull();
     expect(screen.queryByLabelText('field_label')).toBeNull();
+    view.unmount();
+    // Without notes there is nothing to say.
+    seed([], { canWrite: false });
+    const { container } = render(<Conversation />);
+    expect(container.querySelector('[data-team-note-area]')!.textContent).toBe('');
+  });
+
+  it('keeps the field open and its text when a reply joins the conversation', () => {
+    seed([]);
+    const view = render(<Conversation />);
+    fireEvent.click(screen.getByRole('button', { name: 'note' }));
+    fireEvent.change(screen.getByLabelText('field_label'), { target: { value: 'half written' } });
+    view.rerender(<Conversation messages={[m1, m2, message('m3', '2026-11-20T15:00:00Z')]} />);
+    expect((screen.getByLabelText('field_label') as HTMLTextAreaElement).value).toBe('half written');
+  });
+
+  it('puts the text of a note that could not be saved back into the field with Edit', () => {
+    seed([], {
+      pending: { l1: { localId: 'l1', key: 'm2@client.example', threadId: 't1', text: 'mailbox full', mentions: [], at: Date.now(), status: 'error', error: 'overQuota' } },
+    });
+    render(<Conversation />);
+    const card = document.querySelector('[data-team-note-pending="l1"]') as HTMLElement;
+    fireEvent.click(within(card).getByRole('button', { name: 'edit' }));
+    expect(document.querySelector('[data-team-note-pending]')).toBeNull();
+    expect((screen.getByLabelText('field_label') as HTMLTextAreaElement).value).toBe('mailbox full');
+  });
+
+  it('loads the notes again once the browser is back online', () => {
+    seed([], { status: 'offline' });
+    render(<Conversation />);
+    expect(reloadTeam).toHaveBeenCalledWith(ref.key);
   });
 
   it('keeps a note that could not be saved, with the reason and Retry', () => {

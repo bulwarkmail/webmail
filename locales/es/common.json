@@ -985,6 +985,7 @@
     "retry": "Reintentar",
     "full": "Este buzón está lleno. Pide ayuda a tu administrador.",
     "read_only": "No se pueden guardar notas en este buzón. Pide ayuda a tu administrador.",
+    "read_only_member": "Aquí puedes leer notas, pero no escribirlas.",
     "offline": "Estás sin conexión. Podrás escribir notas cuando vuelvas a estar en línea.",
     "team_only": "Solo tu equipo ve esto",
     "list_label": "Notas",

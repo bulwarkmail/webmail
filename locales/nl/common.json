@@ -985,6 +985,7 @@
     "retry": "Opnieuw",
     "full": "Deze mailbox is vol. Vraag het je beheerder.",
     "read_only": "In deze mailbox kunnen geen notities worden opgeslagen. Vraag het je beheerder.",
+    "read_only_member": "Je kunt hier notities lezen, maar niet schrijven.",
     "offline": "Je bent offline. Notities kun je weer schrijven zodra je online bent.",
     "team_only": "Alleen je team ziet dit",
     "list_label": "Notities",

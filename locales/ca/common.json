@@ -985,6 +985,7 @@
     "retry": "Torna-ho a provar",
     "full": "Aquesta bústia és plena. Demana-ho a l’administrador.",
     "read_only": "En aquesta bústia no es poden desar notes. Demana-ho a l’administrador.",
+    "read_only_member": "Aquí pots llegir notes, però no escriure’n.",
     "offline": "No tens connexió. Podràs escriure notes quan tornis a estar en línia.",
     "team_only": "Només el teu equip ho veu",
     "list_label": "Notes",

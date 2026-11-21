@@ -985,6 +985,7 @@
     "retry": "Yeniden dene",
     "full": "Bu posta kutusu dolu. Yöneticinize başvurun.",
     "read_only": "Bu posta kutusuna not kaydedilemez. Yöneticinize başvurun.",
+    "read_only_member": "Burada notları okuyabilirsiniz ama yazamazsınız.",
     "offline": "Çevrimdışısınız. Yeniden çevrimiçi olduğunuzda not yazabilirsiniz.",
     "team_only": "Bunu yalnızca ekibiniz görür",
     "list_label": "Notlar",

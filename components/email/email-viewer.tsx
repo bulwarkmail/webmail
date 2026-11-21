@@ -161,7 +161,7 @@ import { useThemeStore } from "@/stores/theme-store";
 import { EmailIdentityBadge } from "./email-identity-badge";
 import { ExternalSenderChip } from "./external-sender-chip";
 import { NotesAfter, NotesSummaryLine, TeamNoteArea, TeamNotesProvider, useHasNotesAfter } from "@/components/team-mailboxes/team-conversation";
-import { requestNoteField, useTeamOf } from "@/components/team-mailboxes/use-team";
+import { requestNoteField, useTeamOf, useTeamState } from "@/components/team-mailboxes/use-team";
 import { useTeamActions } from "@/components/team-mailboxes/team-actions";
 import { ReceivedLabelChip } from "./received-label-chip";
 import { ImportanceChip } from "./importance-chip";
@@ -1680,6 +1680,10 @@ export function EmailViewer({
   const mvConversationIds = mvOpenIndex >= 0 ? mvConversation!.map((e) => e.id).join(',') : '';
   // Team mailboxes: the notes of the conversation on screen (or of the single message).
   const teamOfEmail = useTeamOf(email);
+  // A member who may only read gets no Note button anywhere (until the team
+  // has loaded it counts as allowed).
+  const teamOfEmailState = useTeamState(teamOfEmail?.ref.key);
+  const teamNoteAllowed = !!teamOfEmail && teamOfEmailState?.canWrite !== false;
   const teamActions = useTeamActions(email && !email.isScheduled && !email.keywords?.$draft ? email : null);
   const tTeam = useTranslations('team_mailboxes');
   const teamMessages = useMemo(
@@ -4706,7 +4710,7 @@ export function EmailViewer({
     views: readerViews,
     // Team mailboxes: Note opens the field at the end of the conversation.
     ...(teamOfEmail
-      ? { extras: [{ kind: 'item' as const, key: 'extra:team_note' as const, icon: StickyNote, label: tTeam('note'), run: () => requestNoteField(email.id) }, ...teamActions] }
+      ? { extras: [...(teamNoteAllowed ? [{ kind: 'item' as const, key: 'extra:team_note' as const, icon: StickyNote, label: tTeam('note'), run: () => requestNoteField(email.id) }] : []), ...teamActions] }
       : {}),
   };
 
@@ -4838,7 +4842,7 @@ export function EmailViewer({
           <Forward className="w-4 h-4" />
           {showToolbarLabels && <span data-toolbar-label="primary" className="hidden @[30rem]/reader-toolbar:inline text-sm whitespace-nowrap">{t('forward')}</span>}
         </Button>
-        {teamOfEmail && email && (
+        {teamNoteAllowed && email && (
           <Button
             variant="ghost"
             size="sm"
@@ -6417,7 +6421,7 @@ export function EmailViewer({
             <Forward className="w-5 h-5" />
             <span className="text-[0.625rem] font-medium leading-tight truncate max-w-full">{t('forward')}</span>
           </button>
-          {teamOfEmail && email && (
+          {teamNoteAllowed && email && (
             <button
               onClick={() => requestNoteField(email.id)}
               className="flex flex-col items-center justify-center gap-1 py-2 px-1 min-h-[44px] grow shrink-0 basis-[64px] min-w-0 text-muted-foreground active:text-foreground transition-colors duration-150"

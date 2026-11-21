@@ -985,6 +985,7 @@
     "retry": "Reîncearcă",
     "full": "Această căsuță este plină. Cere ajutorul administratorului.",
     "read_only": "În această căsuță nu se pot salva note. Cere ajutorul administratorului.",
+    "read_only_member": "Aici puteți citi notițe, dar nu le puteți scrie.",
     "offline": "Ești offline. Vei putea scrie note când revii online.",
     "team_only": "Doar echipa ta vede asta",
     "list_label": "Note",

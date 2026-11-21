@@ -985,6 +985,7 @@
     "retry": "Thử lại",
     "full": "Hộp thư này đã đầy. Hãy hỏi quản trị viên.",
     "read_only": "Không thể lưu ghi chú trong hộp thư này. Hãy hỏi quản trị viên.",
+    "read_only_member": "Bạn có thể đọc ghi chú ở đây nhưng không thể viết.",
     "offline": "Bạn đang ngoại tuyến. Bạn có thể viết ghi chú khi trực tuyến trở lại.",
     "team_only": "Chỉ nhóm của bạn thấy nội dung này",
     "list_label": "Ghi chú",

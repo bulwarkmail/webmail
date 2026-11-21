@@ -985,6 +985,7 @@
     "retry": "Újra",
     "full": "Ez a postafiók megtelt. Forduljon a rendszergazdához.",
     "read_only": "Ebben a postafiókban nem lehet jegyzetet menteni. Forduljon a rendszergazdához.",
+    "read_only_member": "Itt olvashatja a jegyzeteket, de nem írhat újat.",
     "offline": "Nincs kapcsolat. Jegyzetet akkor írhat, amikor újra online lesz.",
     "team_only": "Ezt csak a csapata látja",
     "list_label": "Jegyzetek",

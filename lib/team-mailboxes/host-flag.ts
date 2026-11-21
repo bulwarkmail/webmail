@@ -8,10 +8,11 @@
 import { useAuthStore } from '@/stores/auth-store';
 import { usePolicyStore } from '@/stores/policy-store';
 import { useConfirmedGroups } from '@/lib/plugin-sandbox/account-kind';
+import { TEAM_INBOX_PLUGIN_ID } from '@/lib/plugin-sandbox/handover';
 import { teamFor } from './team';
 
 /** The team-inbox plugin, retired in favour of team mailboxes. */
-export const TEAM_INBOX_PLUGIN_ID = 'team-inbox';
+export { TEAM_INBOX_PLUGIN_ID };
 
 export function anyTeamMailboxOn(): boolean {
   const { client, activeAccountId } = useAuthStore.getState();

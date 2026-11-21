@@ -985,6 +985,7 @@
     "retry": "Erneut versuchen",
     "full": "Dieses Postfach ist voll. Wenden Sie sich an Ihren Administrator.",
     "read_only": "In diesem Postfach können keine Notizen gespeichert werden. Wenden Sie sich an Ihren Administrator.",
+    "read_only_member": "Sie können Notizen hier lesen, aber nicht schreiben.",
     "offline": "Sie sind offline. Notizen können Sie wieder schreiben, sobald Sie online sind.",
     "team_only": "Nur Ihr Team sieht das",
     "list_label": "Notizen",

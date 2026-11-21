@@ -17,6 +17,8 @@ import { clearContactPhotoCache } from '@/lib/contact-photo-cache';
 import { bumpStoreEpoch } from '@/lib/store-epoch';
 import { useAccountSecurityStore } from '@/stores/account-security-store';
 import type { IJMAPClient } from '@/lib/jmap/client-interface';
+import { resetTeamMailboxStore } from '@/stores/team-mailbox-store';
+import { clearTeamListFilter } from '@/lib/team-mailboxes/list-filter';
 
 // Minimal snapshot shapes - we only capture what we need
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -173,6 +175,10 @@ export function clearAllStores(): void {
   // from the mail view, then navigate to Files). Clearing centrally makes the
   // reset happen on every switch path, not just the one the component observes.
   useFileStore.getState().clearClient();
+  // Team notes are per login: their texts, the seen marks and the chosen
+  // team filter go with the account (they load again on the next visit).
+  resetTeamMailboxStore();
+  clearTeamListFilter();
 }
 
 /**

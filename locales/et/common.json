@@ -985,6 +985,7 @@
     "retry": "Proovi uuesti",
     "full": "See postkast on täis. Pöördu administraatori poole.",
     "read_only": "Sellesse postkasti ei saa märkusi salvestada. Pöördu administraatori poole.",
+    "read_only_member": "Siin saate märkmeid lugeda, kuid mitte kirjutada.",
     "offline": "Oled võrguühenduseta. Märkusi saad kirjutada, kui oled jälle võrgus.",
     "team_only": "Seda näeb ainult sinu meeskond",
     "list_label": "Märkused",

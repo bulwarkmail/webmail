@@ -985,6 +985,7 @@
     "retry": "Prøv igen",
     "full": "Denne postkasse er fuld. Spørg din administrator.",
     "read_only": "Der kan ikke gemmes noter i denne postkasse. Spørg din administrator.",
+    "read_only_member": "Du kan læse noter her, men ikke skrive dem.",
     "offline": "Du er offline. Du kan skrive noter, når du er online igen.",
     "team_only": "Kun dit team kan se dette",
     "list_label": "Noter",

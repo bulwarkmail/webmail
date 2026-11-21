@@ -985,6 +985,7 @@
     "retry": "Prøv igjen",
     "full": "Denne postkassen er full. Spør administratoren din.",
     "read_only": "Notat kan ikkje lagrast i denne postkassen. Spør administratoren din.",
+    "read_only_member": "Du kan lese notat her, men ikkje skrive dei.",
     "offline": "Du er fråkopla. Du kan skrive notat når du er tilkopla igjen.",
     "team_only": "Berre teamet ditt ser dette",
     "list_label": "Notat",
