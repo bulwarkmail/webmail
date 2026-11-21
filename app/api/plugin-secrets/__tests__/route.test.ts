@@ -72,11 +72,28 @@ const declared: Record<string, { scope: 'user'; label: string; inject: { type: s
   // One stored with a permission no plugin may have.
   'admin/stalwart': { scope: 'user', label: 'Stalwart', inject: { type: 'basic' }, appPassword: { permissions: ['jmapCalendarEventGet', 'sysAccountGet'] } },
 };
+// An uploaded plugin with two approved versions; the newer one also reads files.
+const FILES = { permissions: [...CALENDAR.permissions, 'jmapFileNodeGet'] };
+const versions: Record<string, { name: string; spec: (typeof declared)[string] }[]> = {
+  'two-versions/stalwart': [
+    { name: 'Two 1.0', spec: { scope: 'user', label: 'Stalwart', inject: { type: 'basic' }, appPassword: CALENDAR } },
+    { name: 'Two 2.0', spec: { scope: 'user', label: 'Stalwart', inject: { type: 'basic' }, appPassword: FILES } },
+  ],
+  // The older version still took a password the user typed.
+  'typed-before/stalwart': [
+    { name: 'Typed 1.0', spec: { scope: 'user', label: 'Stalwart', inject: { type: 'basic' } } },
+    { name: 'Typed 2.0', spec: { scope: 'user', label: 'Stalwart', inject: { type: 'basic' }, appPassword: CALENDAR } },
+  ],
+};
+function known(pluginId: string, credentialId: string) {
+  const key = `${pluginId}/${credentialId}`;
+  if (versions[key]) return versions[key];
+  const spec = declared[key];
+  return spec ? [{ name: pluginId === 'team-calendar' ? 'Teamkalender' : pluginId, spec }] : [];
+}
 vi.mock('@/lib/plugin-secrets/known-plugins', () => ({
-  declaringPlugin: async (pluginId: string, credentialId: string) => {
-    const spec = declared[`${pluginId}/${credentialId}`];
-    return spec ? { name: pluginId === 'team-calendar' ? 'Teamkalender' : pluginId, spec } : null;
-  },
+  declaringPlugin: async (pluginId: string, credentialId: string) => known(pluginId, credentialId)[0] ?? null,
+  declaringPlugins: async (pluginId: string, credentialId: string) => known(pluginId, credentialId),
 }));
 const proxied: unknown[] = [];
 vi.mock('@/lib/plugin-secrets/proxy', async (orig) => {
@@ -230,7 +247,24 @@ describe('POST /api/plugin-secrets with appPassword', () => {
     expect(madeWith).toEqual([CALENDAR.permissions]);
   });
 
-  // Two approved versions of a plugin: the dialog may have read another manifest.
+  it.each([
+    ['two-versions', CALENDAR, 'Plugin: Two 1.0'],
+    ['two-versions', FILES, 'Plugin: Two 2.0'],
+    ['typed-before', CALENDAR, 'Plugin: Typed 2.0'],
+  ])('takes the approved version of %s whose permissions the dialog showed', async (pluginId, { permissions }, description) => {
+    expect((await save({ ...TEAM, pluginId, permissions })).status).toBe(200);
+    expect(madeWith).toEqual([permissions]);
+    expect([...made.values()]).toEqual([description]);
+  });
+
+  it('refuses permissions no approved version of a plugin lists', async () => {
+    const res = await save({ ...TEAM, pluginId: 'two-versions', permissions: [...CALENDAR.permissions, 'emailSend'] });
+
+    expect(res.status).toBe(409);
+    expect(made.size).toBe(0);
+  });
+
+  // The dialog may have read another manifest than the server knows.
   it.each([
     ['fewer permissions', CALENDAR.permissions.slice(0, 1)],
     ['more permissions', [...CALENDAR.permissions, 'emailSend']],

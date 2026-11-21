@@ -5,11 +5,11 @@ import { IMPERSONATION_GRANT_COOKIE, openImpersonationGrant } from '@/lib/impers
 import { logger } from '@/lib/logger';
 import { rejectCrossOriginRequest } from '@/lib/security/same-origin';
 import { getStalwartCredentials, type StalwartCredentials } from '@/lib/stalwart/credentials';
-import { CREDENTIAL_ID_RE, checkInject, credentialOrigin } from '@/lib/plugin-secrets/credentials';
+import { CREDENTIAL_ID_RE, checkInject, credentialOrigin, type UserCredentialSpec } from '@/lib/plugin-secrets/credentials';
 import { appPasswordDescription, checkAppPasswordPermissions } from '@/lib/plugin-secrets/app-password-permissions';
 import { makePluginAppPassword, revokePluginAppPassword } from '@/lib/plugin-secrets/app-password';
 import { adminCredentialOrigins, adminCredentialStatus } from '@/lib/plugin-secrets/proxy';
-import { declaringPlugin } from '@/lib/plugin-secrets/known-plugins';
+import { declaringPlugin, declaringPlugins } from '@/lib/plugin-secrets/known-plugins';
 import {
   VaultFullError,
   deleteAllUserCredentials,
@@ -153,8 +153,14 @@ export async function POST(request: NextRequest) {
  */
 async function connectAppPassword(current: CurrentUser, pluginId: string, credentialId: string, label: string, shown: string[]) {
   const { user, creds } = current;
-  const plugin = await declaringPlugin(pluginId, credentialId);
-  if (!plugin) return NextResponse.json({ error: 'No such plugin credential' }, { status: 404 });
+  const plugins = await declaringPlugins(pluginId, credentialId);
+  if (plugins.length === 0) return NextResponse.json({ error: 'No such plugin credential' }, { status: 404 });
+  // The user agreed to the permissions the dialog showed. With two approved
+  // versions of a plugin the dialog may have read either manifest: the one
+  // that lists exactly those permissions is the one agreed to.
+  const agreed = plugins.find((known) => listsExactly(known.spec, shown));
+  // None does: the first one says why not.
+  const plugin = agreed ?? plugins[0];
   const { spec } = plugin;
   if (!spec.appPassword) return bad('This credential takes a password the user enters');
   // Checked again here, not only when the manifest was stored. One stored
@@ -162,9 +168,7 @@ async function connectAppPassword(current: CurrentUser, pluginId: string, creden
   // with the account's full rights.
   const listed = checkAppPasswordPermissions(spec.appPassword);
   if ('error' in listed) return bad(`The plugin's app password cannot be made: ${listed.error}`);
-  // The user agreed to the permissions the dialog showed. With two approved
-  // versions of a plugin, that may be another manifest than the one read here.
-  if (new Set(shown).size !== listed.permissions.length || !shown.every((name) => listed.permissions.includes(name))) {
+  if (!agreed) {
     return NextResponse.json({ error: 'The plugin asks for other permissions than the ones shown' }, { status: 409 });
   }
   if (!appPasswordsOn()) return NextResponse.json({ error: 'App passwords are not available on this server' }, { status: 403 });
@@ -273,6 +277,13 @@ export async function DELETE(request: NextRequest) {
     }
   }
   return NextResponse.json({ ok: true }, { headers: NO_STORE });
+}
+
+/** Whether the credential's app password is made with exactly the permissions `shown`. */
+function listsExactly(spec: UserCredentialSpec, shown: string[]): boolean {
+  const listed = spec.appPassword ? checkAppPasswordPermissions(spec.appPassword) : null;
+  if (!listed || 'error' in listed) return false;
+  return new Set(shown).size === listed.permissions.length && shown.every((name) => listed.permissions.includes(name));
 }
 
 function bad(error: string) {
