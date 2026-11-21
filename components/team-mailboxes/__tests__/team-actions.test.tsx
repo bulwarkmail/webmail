@@ -9,9 +9,10 @@ import type { TeamRef } from '@/lib/team-mailboxes/team';
 const ref: TeamRef = { key: 'login|g', loginId: 'login', accountId: 'g', groupAddress: 'tm-team@example.org' };
 const client = { getAccountId: () => 'me', getUsername: () => 'tm-alice@example.org', supportsBulwarkMetadata: () => false };
 let inTeam = true;
+let teamClient: object = client;
 vi.mock('../use-team', async (importOriginal) => ({
   ...(await importOriginal<typeof import('../use-team')>()),
-  useTeamOf: () => (inTeam ? { ref, client } : null),
+  useTeamOf: () => (inTeam ? { ref, client: teamClient } : null),
 }));
 
 const result = (kind: string, extra: Record<string, unknown> = {}) => ({ kind, changed: true, keywords: {}, patch: {}, undo: vi.fn(async () => {}), timeline: Promise.resolve('n'), ...extra });
@@ -38,6 +39,7 @@ const keys = (entries: Array<{ kind: string; key?: string }>) => entries.map((e)
 
 afterEach(() => {
   inTeam = true;
+  teamClient = client;
   resetAssignRequest();
   Object.values(store).forEach((f) => f.mockReset());
   toasts.success.mockClear();
@@ -58,6 +60,12 @@ describe('team actions', () => {
     expect(renderHook(() => useTeamActions(email())).result.current).toEqual([]);
     inTeam = true;
     useEmailStore.setState({ mailboxes: [{ id: 'g:inbox', originalId: 'inbox', accountId: 'g', name: 'Inbox', myRights: { maySetKeywords: false } }] as never });
+    expect(renderHook(() => useTeamActions(email())).result.current).toEqual([]);
+  });
+
+  it('offers nothing in a team mailbox shared read-only, even before its folders are known', () => {
+    const readOnly = { ...client, getAccountInfo: () => ({ name: 'tm-team@example.org', isPersonal: false, isReadOnly: true }) };
+    teamClient = readOnly;
     expect(renderHook(() => useTeamActions(email())).result.current).toEqual([]);
   });
 

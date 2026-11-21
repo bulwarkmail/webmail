@@ -211,6 +211,13 @@ describe('the note field', () => {
     expect(container.querySelector('[data-team-note-area]')!.textContent).toBe('');
   });
 
+  it('gives no Note button in an account shared read-only, even before the notes have loaded', () => {
+    teamContext = { ref, client: { ...client, getAccountInfo: () => ({ isReadOnly: true }) } };
+    seed([], { canWrite: null });
+    render(<Conversation />);
+    expect(screen.queryByRole('button', { name: 'note' })).toBeNull();
+  });
+
   it('keeps the field open and its text when a reply joins the conversation', () => {
     seed([]);
     const view = render(<Conversation />);

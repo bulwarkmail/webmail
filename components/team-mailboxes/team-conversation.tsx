@@ -362,7 +362,7 @@ export function TeamNoteArea({ className, messages }: { className?: string; mess
   const convStatus = team.conversations[convKey];
   const loadFailed = team.status === 'error' || convStatus === 'error';
   const offline = !online || team.status === 'offline' || convStatus === 'offline';
-  const readOnly = team.canWrite === false;
+  const readOnly = team.canWrite === false || value.context.client.getAccountInfo?.(value.context.ref.accountId)?.isReadOnly === true;
   const hasWritten = value.notes.some((n) => n.kind === 'note');
 
   const send = () => {

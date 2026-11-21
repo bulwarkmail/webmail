@@ -1683,7 +1683,8 @@ export function EmailViewer({
   // A member who may only read gets no Note button anywhere (until the team
   // has loaded it counts as allowed).
   const teamOfEmailState = useTeamState(teamOfEmail?.ref.key);
-  const teamNoteAllowed = !!teamOfEmail && teamOfEmailState?.canWrite !== false;
+  const teamNoteAllowed = !!teamOfEmail && teamOfEmailState?.canWrite !== false
+    && teamOfEmail.client.getAccountInfo?.(teamOfEmail.ref.accountId)?.isReadOnly !== true;
   const teamActions = useTeamActions(email && !email.isScheduled && !email.keywords?.$draft ? email : null);
   const tTeam = useTranslations('team_mailboxes');
   const teamMessages = useMemo(

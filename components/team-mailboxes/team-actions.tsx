@@ -52,11 +52,15 @@ interface AssignRequest {
 }
 const useAssignRequest = create<{ request: AssignRequest | null }>()(() => ({ request: null }));
 
-/** Whether the user may change the message's keywords in its folder (false only when a folder says no). */
-function maySetKeywords(email: ActionEmail, accountId: string): boolean {
+/**
+ * Whether the user may change the message's keywords: not in an account
+ * shared read-only, and not where its folder says no.
+ */
+function maySetKeywords(email: ActionEmail, accountId: string, client: TeamContext['client']): boolean {
+  if (client.getAccountInfo?.(accountId)?.isReadOnly === true) return false;
   const ids = Object.keys(email.mailboxIds ?? {}).filter((id) => email.mailboxIds[id]);
   const mailboxes = useEmailStore.getState().mailboxes;
-  const folders = mailboxes.filter((m) => m.accountId === accountId && ids.includes(m.originalId ?? m.id));
+  const folders = mailboxes.filter((m) => m.accountId === accountId && (ids.includes(m.originalId ?? m.id) || ids.includes(m.id)));
   return folders.length === 0 || folders.some((m) => m.myRights?.maySetKeywords !== false);
 }
 
@@ -128,7 +132,7 @@ export function useTeamActions(email: ActionEmail | null | undefined): MessageAc
   const context = useTeamOf(email ?? null);
   const texts = useTexts();
   return useMemo(() => {
-    if (!context || !email || !maySetKeywords(email, context.ref.accountId)) return [];
+    if (!context || !email || !maySetKeywords(email, context.ref.accountId, context.client)) return [];
     const selfId = context.client.getAccountId().toLowerCase();
     const keywords = email.keywords ?? {};
     const mine = assignedTo(keywords, selfId);
