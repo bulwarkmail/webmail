@@ -22,7 +22,9 @@ import { DEMO_ASSETS } from './fixtures/assets';
 import { GONOGO_INVITE_BLOB } from './fixtures/emails';
 import { createGoNoGoInvitationIcs, GONOGO_EVENT_ID } from './fixtures/calendars';
 import { createSpreehostInvoiceXml, INVOICE_BLOB } from './fixtures/invoice';
-import { ALICE, BOB, SARAH, PRIYA, LISA } from './fixtures/people';
+import { ALICE, BOB, SARAH, PRIYA, LISA, SUPPORT } from './fixtures/people';
+import { SUPPORT_ACCOUNT_ID } from './fixtures/mailboxes';
+import { createDemoTeamNotes, type DemoTeamNote } from './fixtures/team-notes';
 import { parseAuthenticationResults, parseSpamLLM, parseSpamScore } from '@/lib/email-headers';
 import { compareEmails, type SortLevel } from '@/lib/message-list-order';
 import { withBasePath } from '@/lib/browser-navigation';
@@ -70,6 +72,9 @@ export class DemoJMAPClient implements IJMAPClient {
   private metadata: Record<string, Record<string, unknown>>;
   /** The same for each account's private metadata. */
   private ownMetadata: Record<string, Record<string, unknown>> = {};
+  /** Team notes by group account (fixtures/team-notes.ts); only Support has any. */
+  private teamNotes: Record<string, DemoTeamNote[]>;
+  private teamNotesVersion = 0;
   private blobStore = new Map<string, Blob>();
   private scheduledSubmissions = new Map<string, { id: string; emailId: string; identityId: string; sendAt: string; undoStatus: 'pending' | 'final' | 'canceled'; isSmime: boolean }>();
   private connectionCallback: ((connected: boolean) => void) | null = null;
@@ -83,6 +88,7 @@ export class DemoJMAPClient implements IJMAPClient {
     this.principals = profile === 'personal' ? [] : createDemoPrincipals();
     this.archive = profile === 'personal' ? [] : createDemoArchivedItems(this.data.accountId);
     this.metadata = profile === 'personal' ? {} : createDemoSharedMetadata();
+    this.teamNotes = profile === 'personal' ? {} : { [SUPPORT_ACCOUNT_ID]: createDemoTeamNotes(this.data.emails) };
     // Fixtures carry raw headers the way a server sends them; derive the
     // parsed fields the viewer reads, as JMAPClient.parseEmailHeaders does.
     for (const email of this.data.emails) {
@@ -159,7 +165,11 @@ export class DemoJMAPClient implements IJMAPClient {
   }
 
   getAccountInfo(accountId: string): AccountInfo | null {
-    if (accountId !== this.getAccountId()) return null;
+    if (accountId !== this.getAccountId()) {
+      // The Support group's account, named by its address as Stalwart names group accounts.
+      if (accountId !== SUPPORT_ACCOUNT_ID || this.isPersonal) return null;
+      return { name: SUPPORT.email, isPersonal: false, isReadOnly: false, accountCapabilities: {} };
+    }
     return {
       name: this.getUsername(),
       isPersonal: true,
@@ -846,6 +856,98 @@ export class DemoJMAPClient implements IJMAPClient {
         else email.keywords[keyword] = true;
       }
     }
+  }
+
+  // ── Team notes (lib/team-mailboxes, fixtures/team-notes.ts) ──────
+
+  /** The conditions the team mailbox store sends: folder, after, before, subject, under AND/OR. */
+  private noteMatches(note: DemoTeamNote, filter: Record<string, unknown>): boolean {
+    const conditions = Array.isArray(filter.conditions) ? (filter.conditions as Record<string, unknown>[]) : null;
+    if (conditions) {
+      const results = conditions.map((c) => this.noteMatches(note, c));
+      return filter.operator === 'OR' ? results.some(Boolean) : filter.operator === 'NOT' ? !results.some(Boolean) : results.every(Boolean);
+    }
+    const mailboxIds = note.mailboxIds as Record<string, boolean>;
+    const time = Date.parse(note.receivedAt);
+    if (typeof filter.inMailbox === 'string' && !mailboxIds[filter.inMailbox]) return false;
+    if (typeof filter.after === 'string' && !(time >= Date.parse(filter.after))) return false;
+    if (typeof filter.before === 'string' && !(time < Date.parse(filter.before))) return false;
+    if (typeof filter.subject === 'string' && !String(note.subject ?? '').toLowerCase().includes(filter.subject.toLowerCase())) return false;
+    return true;
+  }
+
+  private noteView(note: DemoTeamNote, properties: readonly string[], text: boolean): Record<string, unknown> {
+    const keep = new Set([...properties, ...(text ? ['textBody', 'bodyValues'] : [])]);
+    return Object.fromEntries(Object.entries(structuredClone(note)).filter(([key]) => key === 'id' || keep.has(key)));
+  }
+
+  async queryTeamNotes(
+    accountId: string,
+    filter: Record<string, unknown>,
+    options: { limit: number; position?: number; properties: readonly string[] },
+  ): Promise<{ ids: string[]; list: Array<Record<string, unknown>>; total?: number; state?: string }> {
+    const matching = (this.teamNotes[accountId] ?? [])
+      .filter((note) => this.noteMatches(note, filter))
+      .sort((a, b) => Date.parse(b.receivedAt) - Date.parse(a.receivedAt));
+    const position = options.position ?? 0;
+    const page = matching.slice(position, position + options.limit);
+    return { ids: page.map((n) => n.id), list: page.map((n) => this.noteView(n, options.properties, false)), total: matching.length, state: this.teamNotesState(accountId) };
+  }
+
+  async getTeamNotes(
+    accountId: string,
+    ids: readonly string[],
+    properties: readonly string[],
+    options: { text?: boolean } = {},
+  ): Promise<{ list: Array<Record<string, unknown>>; state?: string; notFound: string[] }> {
+    const notes = this.teamNotes[accountId] ?? [];
+    const list: Array<Record<string, unknown>> = [];
+    const notFound: string[] = [];
+    for (const id of ids) {
+      const note = notes.find((n) => n.id === id);
+      if (note) list.push(this.noteView(note, properties, !!options.text));
+      else notFound.push(id);
+    }
+    return { list, state: this.teamNotesState(accountId), notFound };
+  }
+
+  async createTeamNote(accountId: string, email: Record<string, unknown>): Promise<{ id: string; threadId?: string }> {
+    if (accountId !== SUPPORT_ACCOUNT_ID || this.isPersonal) throw new Error('Failed to save the note');
+    const id = generateDemoId('note');
+    const values = (email.bodyValues ?? {}) as Record<string, { value?: string }>;
+    const note: DemoTeamNote = {
+      ...structuredClone(email),
+      id,
+      receivedAt: typeof email.receivedAt === 'string' ? email.receivedAt : new Date().toISOString(),
+      textBody: [{ partId: '1', type: 'text/plain' }],
+      bodyValues: { '1': { value: values['1']?.value ?? '' } },
+    };
+    delete note.bodyStructure;
+    (this.teamNotes[accountId] ??= []).push(note);
+    this.teamNotesVersion++;
+    return { id, threadId: `thread-${id}` };
+  }
+
+  async destroyTeamNote(accountId: string, id: string): Promise<void> {
+    const notes = this.teamNotes[accountId] ?? [];
+    const index = notes.findIndex((n) => n.id === id);
+    if (index < 0) throw new Error('Failed to delete the note');
+    notes.splice(index, 1);
+    this.teamNotesVersion++;
+  }
+
+  async createTeamNotesFolder(accountId: string, name: string, _shareWith: Record<string, MailboxRights> | null): Promise<string> {
+    const folders = this.data.sharedMailboxes[accountId]?.mailboxes;
+    if (!folders) throw new Error('Failed to create the notes folder');
+    const existing = folders.find((m) => m.name === name && !m.role && !m.parentId);
+    if (existing) return existing.id;
+    const id = generateDemoId('mailbox');
+    folders.push({ id, name, sortOrder: 90, totalEmails: 0, unreadEmails: 0, totalThreads: 0, unreadThreads: 0, isSubscribed: false, myRights: { mayReadItems: true, mayAddItems: true, mayRemoveItems: true, maySetSeen: true, maySetKeywords: true, mayCreateChild: true, mayRename: true, mayDelete: true, maySubmit: true } });
+    return id;
+  }
+
+  private teamNotesState(accountId: string): string {
+    return `notes-${accountId}-${this.teamNotesVersion}`;
   }
 
   async migrateKeyword(oldKeyword: string, newKeyword: string): Promise<KeywordMigration> {

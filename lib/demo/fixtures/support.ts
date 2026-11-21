@@ -22,7 +22,7 @@ export function createDemoSupportEmails(): Email[] {
       id: 'demo-support-tomas', mailbox: SMB.inbox, date: ago(0, 55),
       from: addr(TOMAS), to: [support],
       subject: 'Beacon add-on: can we go to 100 tenants before launch?',
-      keywords: ['$label:billing', '$assigned:demo-account'],
+      keywords: ['$label:billing', '$assigned:demo-account', '$bulwark-notes', '$bulwark-mention-demo-account'],
       text: 'Hello,\n\nOur PO covers fifty tenants on the Beacon add-on. Operations now wants all hundred Lisbon tenants on it from day one. Can the add-on be raised before the launch, and does that change the canary plan Nora mentioned?\n\nThank you,\nTomás Ferreira\nLumen Logistics',
       headers: authPass('lumenlogistics.example'),
     }),
@@ -56,7 +56,7 @@ export function createDemoSupportEmails(): Email[] {
       from: addr(LENA), to: [support],
       subject: 'Access for a departed employee',
       text: `Hello,\n\nA colleague left us at the end of last month and still has an active login to our Meridian workspace. Could you disable it? The address is j.becker@hoffmann-partner.example. I am the account owner.\n\nThank you,\nLena Hoffmann`,
-      keywords: ['$seen', '$label:accounts', '$assigned:demo-bob'],
+      keywords: ['$seen', '$label:accounts', '$assigned:demo-bob', '$bulwark-notes'],
       headers: authPass('hoffmann-partner.example'),
     }),
 
