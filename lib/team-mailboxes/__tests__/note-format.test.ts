@@ -25,6 +25,7 @@ function serverCopy(email: Record<string, unknown>, id = 'n1'): Record<string, u
     'header:X-Bulwark-Note-Thread:asText': email['header:X-Bulwark-Note-Thread:asText'] ?? null,
     'header:X-Bulwark-Note-Kind:asText': email['header:X-Bulwark-Note-Kind:asText'],
     'header:X-Bulwark-Note-Mentions:asText': email['header:X-Bulwark-Note-Mentions:asText'] ?? null,
+    'header:X-Bulwark-Note-Author:asText': email['header:X-Bulwark-Note-Author:asText'] ?? null,
     textBody: [{ partId: '1' }],
     bodyValues: { '1': { value: (email.bodyValues as Record<string, { value: string }>)['1'].value } },
   };
@@ -57,6 +58,15 @@ describe('note message format', () => {
       at: Date.parse('2026-11-20T14:02:11Z'), mentions: ['hv', 'hw'],
       text: 'waiting for feedback from Mabel', truncated: false,
     });
+  });
+
+  it('names its writer by id, so the team can mention them later', () => {
+    const { email } = buildNoteEmail({
+      mailboxId: 'notes', author: { ...author, id: 'CA' }, groupAddress: 'tm-team@example.org', subject: 'Offer',
+      key: 'k@client.example', kind: 'note', text: 'mine',
+    });
+    expect(email['header:X-Bulwark-Note-Author:asText']).toBe('ca');
+    expect(parseNote(serverCopy(email))?.author).toEqual({ ...author, id: 'ca' });
   });
 
   it('keys a message without a Message-ID by account and id', () => {

@@ -10,6 +10,9 @@
  *   X-Bulwark-Note-Thread: <its thread id in the group account>
  *   X-Bulwark-Note-Kind: note | assigned | unassigned | done | reopened
  *   X-Bulwark-Note-Mentions: <principal ids, comma-separated>
+ *   X-Bulwark-Note-Author: <the writer's principal id>, so members can be
+ *     mentioned once they wrote a note, where no names list or directory
+ *     knows their id
  *   keywords $seen, $bulwark-note, and $bulwark-mention-<id> per mention
  *
  * The For header ties the note to its message by Message-ID, which survives
@@ -42,18 +45,21 @@ const H_FOR = 'header:X-Bulwark-Note-For:asText';
 const H_THREAD = 'header:X-Bulwark-Note-Thread:asText';
 const H_KIND = 'header:X-Bulwark-Note-Kind:asText';
 const H_MENTIONS = 'header:X-Bulwark-Note-Mentions:asText';
+const H_AUTHOR = 'header:X-Bulwark-Note-Author:asText';
 
 /** The note headers as Email/get properties (the push preview reads them without the rest). */
-export const NOTE_HEADER_PROPERTIES = { for: H_FOR, thread: H_THREAD, kind: H_KIND, mentions: H_MENTIONS } as const;
+export const NOTE_HEADER_PROPERTIES = { for: H_FOR, thread: H_THREAD, kind: H_KIND, mentions: H_MENTIONS, author: H_AUTHOR } as const;
 
 /** What the index reads of a note: no body, no preview (megabytes for a big team). */
 export const NOTE_INDEX_PROPERTIES = [
-  'id', 'receivedAt', 'from', 'keywords', 'mailboxIds', 'messageId', 'subject', H_FOR, H_THREAD, H_KIND, H_MENTIONS,
+  'id', 'receivedAt', 'from', 'keywords', 'mailboxIds', 'messageId', 'subject', H_FOR, H_THREAD, H_KIND, H_MENTIONS, H_AUTHOR,
 ] as const;
 
 export interface NoteAuthor {
   name: string;
   email: string;
+  /** The writer's principal id, where the note names it. */
+  id?: string;
 }
 
 export interface NoteEntry {
@@ -158,6 +164,8 @@ export function buildNoteEmail(draft: NoteDraft): { email: Record<string, unknow
   };
   if (draft.threadId) email[H_THREAD] = draft.threadId;
   if (mentions.length > 0) email[H_MENTIONS] = mentions.join(', ');
+  const authorId = parseMentions(draft.author.id)[0];
+  if (authorId) email[H_AUTHOR] = authorId;
   if (draft.receivedAt) email.receivedAt = draft.receivedAt;
   return { email, messageId };
 }
@@ -196,7 +204,7 @@ export function parseNote(raw: Record<string, unknown>): NoteEntry | null {
     key,
     threadId: str(raw[H_THREAD]),
     kind,
-    author: { name: str(from?.name) ?? '', email: authorEmail.toLowerCase() },
+    author: { name: str(from?.name) ?? '', email: authorEmail.toLowerCase(), ...(parseMentions(raw[H_AUTHOR])[0] ? { id: parseMentions(raw[H_AUTHOR])[0] } : {}) },
     at: Number.isFinite(at) ? at : 0,
     mentions: parseMentions(raw[H_MENTIONS]),
   };

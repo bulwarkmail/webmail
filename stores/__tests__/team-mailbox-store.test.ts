@@ -51,7 +51,8 @@ describe('loading a team', () => {
     expect(t.status).toBe('ready');
     expect(Object.keys(t.notes)).toEqual([recent]);
     expect(t.notes[recent].text).toBeUndefined();
-    expect(t.author).toEqual({ name: 'Alice Archer', email: 'tm-alice@example.org' });
+    // With the login's id, which every note carries so the team can mention its writer.
+    expect(t.author).toEqual({ name: 'Alice Archer', email: 'tm-alice@example.org', id: 'me' });
     expect(t.canWrite).toBe(true);
     expect(server.calls).not.toContain('getTeamNotes:text');
   });

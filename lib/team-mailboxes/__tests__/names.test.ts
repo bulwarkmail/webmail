@@ -205,6 +205,11 @@ describe('the people of a team', () => {
     expect(people.people).toEqual([{ id: 'cm', name: 'Mabel Moss', email: 'mabel@example.org' }]);
   });
 
+  it('gives a note author the id their note carries, so they can be mentioned', () => {
+    const people = mergeTeamPeople({ self: null, notes: [note({ author: { name: 'Mabel Moss', email: 'mabel@example.org', id: 'cm' } })] });
+    expect(people.people).toEqual([{ id: 'cm', name: 'Mabel Moss', email: 'mabel@example.org' }]);
+  });
+
   it('keeps an assignee nobody named, without a name', () => {
     const people = mergeTeamPeople({ self: null, notes: [note({ kind: 'assigned', mentions: ['zz'] })] });
     expect(people.byId('zz')).toEqual({ id: 'zz', name: '', email: '' });

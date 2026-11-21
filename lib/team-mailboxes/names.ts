@@ -13,7 +13,8 @@
  *   `{ v: 1, people: { "<id>": { n: name, e: email } } }`, under 3,584 bytes,
  *   oldest dropped first, a changed person moved to the end. 0.16 keeps no
  *   metadata, so there is no list there;
- * - authors of the team's notes (address and name, no principal id) and
+ * - authors of the team's notes (address and name, and the principal id
+ *   notes written since 1.22 carry) and
  *   assignees named in its timeline (id, no name);
  * - the server's directory where the administrator allows lookups, with the
  *   admin policy's directory rules (lib/directory-scope.ts).
@@ -206,7 +207,7 @@ export function mergeTeamPeople({ self, list, notes = [], directory }: TeamPeopl
   const newestFirst = [...notes].sort((a, b) => b.at - a.at);
   const counts = new Map<string, number>();
   for (const note of newestFirst) {
-    add(null, note.author);
+    add(note.author.id ?? null, note.author);
     if (note.kind === 'assigned' && note.mentions[0]) {
       add(note.mentions[0], {});
       counts.set(note.mentions[0], (counts.get(note.mentions[0]) ?? 0) + 1);

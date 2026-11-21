@@ -187,7 +187,7 @@ async function resolveAuthor(client: IJMAPClient): Promise<NoteAuthor> {
   const login = client.getUsername().trim().toLowerCase();
   const identities: Identity[] = await client.getIdentities().catch(() => []);
   const own = identities.find((i) => i.email?.toLowerCase() === login);
-  return { name: own?.name?.trim() ?? '', email: login };
+  return { name: own?.name?.trim() ?? '', email: login, id: client.getAccountId().toLowerCase() };
 }
 
 async function findFolders(client: IJMAPClient, accountId: string): Promise<{ ids: string[]; rights: MailboxRights | null; anyCreate: boolean }> {
