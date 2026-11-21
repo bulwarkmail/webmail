@@ -43,31 +43,12 @@ export function splitFileName(name: string): [stem: string, ext: string] {
   return [name.slice(0, dot), name.slice(dot)];
 }
 
-const COMPRESSED_EXT = /^\.(gz|bz2|xz|zst|lz|lz4|br|z)$/i;
-const INNER_EXT = /^\.[a-z][a-z0-9]{0,4}$/i;
-const KEPT_STEM_CHARS = 3;
-
-/**
- * Splits a file name for a middle ellipsis: the head is cut short, the tail
- * stays whole. The tail is the extension (".json.gz" counts as one) plus the
- * last few characters before it, so names that differ only at the end stay
- * apart and the ellipsis never lands right next to the extension's dot:
- * "google.com!x!001.json.gz" → ["google.com!x!", "001.json.gz"].
- */
-export function splitFileNameForDisplay(name: string): [head: string, tail: string] {
-  let [stem, ext] = splitFileName(name);
-  if (ext && COMPRESSED_EXT.test(ext)) {
-    const [innerStem, innerExt] = splitFileName(stem);
-    if (innerExt && INNER_EXT.test(innerExt)) {
-      stem = innerStem;
-      ext = innerExt + ext;
-    }
-  }
-  // Count code points, so an emoji at the cut doesn't split in half.
-  const chars = Array.from(stem);
-  const keep = chars.length > KEPT_STEM_CHARS + 1 ? KEPT_STEM_CHARS : 0;
-  return [chars.slice(0, chars.length - keep).join(""), chars.slice(chars.length - keep).join("") + ext];
-}
+const HOVER_ACTIONS = cn(
+  "flex max-w-0 items-center overflow-hidden opacity-0 transition-opacity",
+  "group-hover:max-w-none group-hover:overflow-visible group-hover:opacity-100",
+  "group-focus-within:max-w-none group-focus-within:overflow-visible group-focus-within:opacity-100",
+  "pointer-coarse:max-w-none pointer-coarse:overflow-visible pointer-coarse:opacity-100",
+);
 
 interface ReaderAttachmentsProps<T extends ReaderAttachmentItem> {
   attachments: T[];
@@ -176,8 +157,7 @@ export function ReaderAttachments<T extends ReaderAttachmentItem>({
 
   const tile = (attachment: T, drag: AttachmentDragProps) => {
     const name = getAttachmentDisplayName(attachment.name, attachment.type);
-    const [, ext] = splitFileName(name);
-    const [head, tail] = splitFileNameForDisplay(name);
+    const [stem, ext] = splitFileName(name);
     const kind = ext ? ext.slice(1).toUpperCase() : "";
     const preview = opensPreview(attachment);
     return (
@@ -201,8 +181,8 @@ export function ReaderAttachments<T extends ReaderAttachmentItem>({
           className="flex min-w-0 flex-1 flex-col justify-center gap-0.5 self-stretch text-start outline-none after:absolute after:inset-0 after:rounded-lg focus-visible:after:ring-2 focus-visible:after:ring-ring"
         >
           <span className="flex min-w-0 text-sm text-foreground" dir="auto">
-            <span className="truncate">{head}</span>
-            {tail && <span className="shrink-0">{tail}</span>}
+            <span className="truncate">{stem}</span>
+            {ext && <span className="shrink-0">{ext}</span>}
           </span>
           {/* The type is on the preview already. */}
           <span className="truncate text-xs text-muted-foreground">
@@ -210,8 +190,9 @@ export function ReaderAttachments<T extends ReaderAttachmentItem>({
           </span>
         </button>
         <div className="relative z-10 flex shrink-0 items-center">
-          {/* The less common actions wait for hover or focus, so a tile reads as one file with one download button. */}
-          <div className="flex items-center opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100 pointer-coarse:opacity-100">
+          {/* The less common actions wait for hover or focus, so a tile reads as one file with one download button.
+              Until then they take no width, so the name gets the whole tile; they stay in the tab order and for screen readers. */}
+          <div data-testid="attachment-more-actions" className={HOVER_ACTIONS}>
             {onSaveToFiles && attachment.blobId && (
               <IconButton label={t("save_to_files.title")} className="text-muted-foreground hover:text-foreground" onClick={() => onSaveToFiles(attachment)}>
                 <CloudUpload className="h-4 w-4" />

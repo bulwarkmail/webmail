@@ -1,6 +1,6 @@
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, it, expect, vi } from 'vitest';
-import { ReaderAttachments, splitFileName, splitFileNameForDisplay, type ReaderAttachmentItem } from '../reader-attachments';
+import { ReaderAttachments, splitFileName, type ReaderAttachmentItem } from '../reader-attachments';
 
 // The reader's attachment bar: equal tiles that keep the extension in view,
 // a download button that needs no hover, and one row of them: the files that
@@ -98,43 +98,27 @@ describe('splitFileName', () => {
   });
 });
 
-describe('splitFileNameForDisplay', () => {
-  it('keeps the end of the stem with the extension', () => {
-    expect(splitFileNameForDisplay('Brand-guidelines-2026-final-v2.pdf')).toEqual(['Brand-guidelines-2026-final', '-v2.pdf']);
-  });
-
-  it('keeps a compressed file type as one extension', () => {
-    expect(splitFileNameForDisplay('google.com!teelicht.pro!1795132800!1795219199!001.json.gz'))
-      .toEqual(['google.com!teelicht.pro!1795132800!1795219199!', '001.json.gz']);
-    expect(splitFileNameForDisplay('backup-2026-11.tar.gz')).toEqual(['backup-2026', '-11.tar.gz']);
-  });
-
-  it('does not treat any dotted word before .gz as part of the type', () => {
-    expect(splitFileNameForDisplay('logs.2026-11-10.gz')).toEqual(['logs.2026-11', '-10.gz']);
-  });
-
-  it('leaves short names whole and never splits an emoji', () => {
-    expect(splitFileNameForDisplay('a.pdf')).toEqual(['a', '.pdf']);
-    expect(splitFileNameForDisplay('plan.png')).toEqual(['plan', '.png']);
-    expect(splitFileNameForDisplay('party-🎉🎉🎉.png')).toEqual(['party-', '🎉🎉🎉.png']);
-  });
-});
-
 describe('ReaderAttachments bar', () => {
-  it('truncates the start of the name but never its end', () => {
+  it('truncates the stem but never the extension', () => {
     renderBar([file('a', 'Brand-guidelines-2026-final-v2.pdf')]);
-    const head = screen.getByText('Brand-guidelines-2026-final');
-    const tail = screen.getByText('-v2.pdf');
-    expect(head.className).toContain('truncate');
-    expect(tail.className).toContain('shrink-0');
-    expect(tail.className).not.toContain('truncate');
+    const stem = screen.getByText('Brand-guidelines-2026-final-v2');
+    const ext = screen.getByText('.pdf');
+    expect(stem.className).toContain('truncate');
+    expect(ext.className).toContain('shrink-0');
+    expect(ext.className).not.toContain('truncate');
   });
 
-  it('shows the last extension as the type of a compressed file', () => {
-    renderBar([file('a', 'report-001.json.gz', 'application/gzip')]);
-    const tile = screen.getByTestId('attachment');
-    expect(within(tile).getByText('001.json.gz')).toBeTruthy();
-    expect(within(tile).getByText('GZ')).toBeTruthy();
+  it('gives the hidden hover actions no width, but keeps them reachable', () => {
+    renderBar([file('a', 'google.com!teelicht.pro!1795132800!1795219199!001.json.gz')], { onSaveToFiles: vi.fn(), onRename: vi.fn() });
+    const more = screen.getByTestId('attachment-more-actions');
+    // Until hover or focus they must not take space from the name.
+    expect(more.className.split(' ')).toEqual(expect.arrayContaining(['max-w-0', 'overflow-hidden']));
+    expect(more.className).toContain('group-hover:max-w-none');
+    expect(more.className).toContain('group-focus-within:max-w-none');
+    expect(more.className).toContain('pointer-coarse:max-w-none');
+    // Collapsed, not removed: Tab and screen readers still find them.
+    expect(within(more).getAllByRole('button')).toHaveLength(2);
+    expect(more.className).not.toMatch(/(^|\s)hidden(\s|$)/);
   });
 
   it('shows the type once, on the preview, and the size under the name', () => {
