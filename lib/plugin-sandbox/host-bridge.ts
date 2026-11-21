@@ -9,6 +9,7 @@
 
 import type { HostFeaturesView, InstalledPlugin, SlotName, PluginTier } from '../plugin-types';
 import { dispatchApiCall } from './host-api';
+import { closeEventStreamsOf } from './event-streams';
 import { SANDBOX_PATH, SANDBOX_PRIVILEGED_PATH, type RegionalSnapshot } from './protocol';
 export type { RegionalSnapshot };
 import { withBasePath } from '../browser-navigation';
@@ -25,7 +26,7 @@ import { getEffectiveLocale } from '@/i18n/detect-locale';
 import { reportFrameActivity } from '@/lib/session-policy/frame-activity';
 import { useSettingsStore, type DateLocale } from '@/stores/settings-store';
 import type {
-  SandboxToHost, HostToSandbox, InitMsg, InitPayload, StreamChunkMsg, StreamEndMsg, StreamProgressMsg,
+  SandboxToHost, HostToSandbox, InitMsg, InitPayload, StreamChunkMsg, StreamEndMsg, StreamProgressMsg, EventStreamMsg,
   FloatingDropdownOpenMsg, FloatingDropdownUpdateMsg, FloatingDropdownCloseMsg,
   FloatingDropdownSelectMsg, FloatingDropdownHighlightMsg, FloatingDropdownDismissMsg,
   FloatingDropdownOption, FloatingDropdownRect,
@@ -509,7 +510,7 @@ export class SandboxInstance {
         const { id, method, args } = msg;
         void (async () => {
           try {
-            const result = await dispatchApiCall(this.plugin, method, args ?? [], { privileged: this.privileged, sink: this, toastSignal: this.toastLifetime.signal, frame: this.mode });
+            const result = await dispatchApiCall(this.plugin, method, args ?? [], { privileged: this.privileged, sink: this, eventSink: this, toastSignal: this.toastLifetime.signal, frame: this.mode });
             this.send({ type: 'api-response', id, ok: true, result });
           } catch (err) {
             this.send({ type: 'api-response', id, ok: false, error: (err as Error).message ?? String(err) });
@@ -668,6 +669,12 @@ export class SandboxInstance {
     this.send(msg);
   }
 
+  /** News of an api.http.eventSource subscription (see event-streams.ts). */
+  sendEventStream(msg: EventStreamMsg): void {
+    if (this.destroyed) return;
+    this.send(msg);
+  }
+
   setLocale(locale: string, regional?: RegionalSnapshot): void {
     if (this.destroyed) return;
     this.send({
@@ -748,6 +755,7 @@ export class SandboxInstance {
     if (this.destroyed) return;
     this.destroyed = true;
     this.toastLifetime.abort();
+    closeEventStreamsOf(this);
     // Whoever waits for init (the loader, calls held back below) stops waiting.
     this.rejectInit(new Error('sandbox destroyed'));
     liveInstances.delete(this);
