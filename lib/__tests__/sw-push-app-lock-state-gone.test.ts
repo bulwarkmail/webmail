@@ -16,6 +16,10 @@ function setup(clients: Array<{ id: string }>, caches = new FakeCaches()) {
   return { worker, caches, fetchMock };
 }
 
+// Locked, the worker asks only with locked=1, which reads and returns ids alone.
+const unlockedAsks = (fetchMock: ReturnType<typeof vi.fn>) =>
+  fetchMock.mock.calls.map(([input]) => String(input)).filter((url) => !url.includes('locked=1'));
+
 describe('the app lock\'s state gone from the worker\'s store', () => {
   it('names the sender on a device that never had the lock', async () => {
     const { worker } = setup([]);
@@ -23,14 +27,14 @@ describe('the app lock\'s state gone from the worker\'s store', () => {
     expect(worker.shown[0].title).toContain('Secret sender');
   });
 
-  it('says nothing, and asks nothing, once the lock was on', async () => {
+  it('says nothing, and asks for ids alone, once the lock was on', async () => {
     const clients = [{ id: 'app' }];
     const { worker, caches, fetchMock } = setup(clients);
     await worker.dispatch('message', { data: { type: 'app-lock', state: 'unlocked' } });
     await caches.delete(PUSH_CACHE);
     clients.length = 0;
     await worker.dispatch('push', { data: { json: () => delivery } });
-    expect(fetchMock).not.toHaveBeenCalled();
+    expect(unlockedAsks(fetchMock)).toEqual([]);
     expect(JSON.stringify(worker.shown)).not.toContain('Secret');
   });
 
@@ -39,7 +43,7 @@ describe('the app lock\'s state gone from the worker\'s store', () => {
     await worker.dispatch('message', { data: { type: 'app-lock', state: 'locked' } });
     await caches.delete(PUSH_CACHE);
     await worker.dispatch('push', { data: { json: () => delivery } });
-    expect(fetchMock).not.toHaveBeenCalled();
+    expect(unlockedAsks(fetchMock)).toEqual([]);
     expect(worker.shown[0].title).toBe('New mail');
   });
 
