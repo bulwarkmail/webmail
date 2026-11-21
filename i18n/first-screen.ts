@@ -32,6 +32,8 @@ export const FIRST_SCREEN_MESSAGES: readonly string[] = [
   'proofreading.shortcuts',
   'settings.appearance.theme',
   'sharing.no_match',
+  // Team mailboxes: the mention notifier and the list's assign actions make their labels up front.
+  'team_assign.change_failed', 'team_mailboxes.undo', 'team_push.mentioned_hidden', 'team_push.mentioned_you',
   'tour.take_a_tour',
 ];
 
