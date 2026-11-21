@@ -999,6 +999,8 @@
     "timeline_assigned": "{name} 將此指派給 {assignee}",
     "timeline_took": "{name} 接手了此事",
     "timeline_unassigned": "{name} 取消了指派",
+    "timeline_unassigned_person": "{name} 取消了對 {assignee} 的指派",
+    "timeline_left": "{name} 不再負責此事",
     "timeline_done": "{name} 標示為已完成",
     "timeline_reopened": "{name} 重新開啟了此事",
     "someone": "一位團隊成員",
@@ -4133,7 +4135,11 @@
     "assign_to": "指派給…",
     "unassign": "取消指派",
     "mark_done": "標示為完成",
-    "reopen": "重新開啟"
+    "reopen": "重新開啟",
+    "unassign_me": "取消指派給我",
+    "save": "儲存",
+    "assignees_changed": "已變更指派",
+    "unassigned_person": "已取消指派給 {name}"
   },
   "menuMove": {
     "filter_placeholder": "尋找資料夾",

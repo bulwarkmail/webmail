@@ -11,7 +11,9 @@ import {
   notesOf,
   reopen,
   resetTeamMailboxStore,
+  setAssignees,
   unassign,
+  unassignPerson,
   useTeamMailboxStore,
 } from '../team-mailbox-store';
 import { FakeTeamServer, GROUP } from './helpers/fake-team-server';
@@ -40,15 +42,15 @@ afterEach(() => {
 });
 
 describe('assigning', () => {
-  it('assigns to one person in one keyword write on the team\'s account, then writes the timeline line', async () => {
+  it('adds a person in one keyword write on the team\'s account, keeps whoever had it, then writes the timeline line', async () => {
     const { server } = await loaded();
     const result = await assign(ref.key, email, 'CJ', { name: 'Josh Jones', email: 'josh@example.org' });
 
     expect(server.keywordPatches).toEqual([
-      { ids: ['mail-1'], patch: { 'keywords/$assigned:ci': null, 'keywords/$assigned:cj': true } },
+      { ids: ['mail-1'], patch: { 'keywords/$assigned:cj': true } },
     ]);
     expect(result).toMatchObject({ kind: 'assigned', changed: true, assignee: { id: 'cj', name: 'Josh Jones', me: false } });
-    expect(result.keywords).toEqual({ $seen: true, '$assigned:cj': true });
+    expect(result.keywords).toEqual({ $seen: true, '$assigned:ci': true, '$assigned:cj': true });
     const entryId = await result.timeline;
     expect(entryId).toBeTruthy();
     expect(entries()).toEqual([{ kind: 'assigned', mentions: ['cj'] }]);
@@ -58,7 +60,7 @@ describe('assigning', () => {
   it('assigns to me with my own principal id, and says it was me', async () => {
     const { server } = await loaded();
     const result = await assignToMe(ref.key, email);
-    expect(server.keywordPatches[0].patch).toEqual({ 'keywords/$assigned:ci': null, 'keywords/$assigned:me': true });
+    expect(server.keywordPatches[0].patch).toEqual({ 'keywords/$assigned:me': true });
     expect(result.assignee).toEqual({ id: 'me', name: 'Alice Archer', me: true });
     await result.timeline;
     expect(entries()).toEqual([{ kind: 'assigned', mentions: ['me'] }]);
@@ -147,13 +149,61 @@ describe('assigning', () => {
   });
 });
 
+describe('several assignees', () => {
+  it('sets exactly the people ticked in one write, with a line for each one added and taken off', async () => {
+    const { server } = await loaded();
+    const result = await setAssignees(ref.key, email, ['cj', 'ME'], { cj: { name: 'Josh Jones', email: 'josh@example.org' } });
+    expect(server.keywordPatches).toEqual([
+      { ids: ['mail-1'], patch: { 'keywords/$assigned:ci': null, 'keywords/$assigned:cj': true, 'keywords/$assigned:me': true } },
+    ]);
+    expect(result).toMatchObject({ kind: 'assigned', changed: true });
+    expect(result.added).toEqual([{ id: 'cj', name: 'Josh Jones', me: false }, { id: 'me', name: 'Alice Archer', me: true }]);
+    await vi.waitFor(() => expect(entries()).toHaveLength(3));
+    expect(entries()).toEqual([
+      { kind: 'assigned', mentions: ['cj'] },
+      { kind: 'assigned', mentions: ['me'] },
+      { kind: 'unassigned', mentions: ['ci'] },
+    ]);
+  });
+
+  it('takes every line away again on undo', async () => {
+    const { server } = await loaded();
+    const result = await setAssignees(ref.key, email, ['cj', 'me']);
+    await vi.waitFor(() => expect(entries()).toHaveLength(3));
+    await result.undo();
+    expect(server.keywordPatches[1].patch).toEqual({ 'keywords/$assigned:ci': true, 'keywords/$assigned:cj': null, 'keywords/$assigned:me': null });
+    expect(entries()).toEqual([]);
+  });
+
+  it('takes one person off and leaves the others, saying who', async () => {
+    const { server } = await loaded();
+    const both = { ...email, keywords: { ...email.keywords, '$assigned:cj': true } };
+    const result = await unassignPerson(ref.key, both, 'CJ');
+    expect(server.keywordPatches[0].patch).toEqual({ 'keywords/$assigned:cj': null });
+    expect(result.keywords).toEqual({ $seen: true, '$assigned:ci': true });
+    await result.timeline;
+    expect(entries()).toEqual([{ kind: 'unassigned', mentions: ['cj'] }]);
+  });
+
+  it('gives the person back when the line about taking them off can\'t be taken away', async () => {
+    const server = new FakeTeamServer();
+    const client = server.client();
+    client.destroyTeamNote = vi.fn(async () => { throw new Error('gone'); });
+    await loaded(server, client);
+    const result = await unassignPerson(ref.key, email, 'ci');
+    await result.timeline;
+    await result.undo();
+    expect(entries()).toEqual([{ kind: 'unassigned', mentions: ['ci'] }, { kind: 'assigned', mentions: ['ci'] }]);
+  });
+});
+
 describe('undo', () => {
   it('puts the keywords back and takes the timeline line away', async () => {
     const { server } = await loaded();
     const result = await assign(ref.key, email, 'cj', { name: 'Josh', email: 'josh@example.org' });
     const entryId = await result.timeline;
     await result.undo();
-    expect(server.keywordPatches[1]).toEqual({ ids: ['mail-1'], patch: { 'keywords/$assigned:ci': true, 'keywords/$assigned:cj': null } });
+    expect(server.keywordPatches[1]).toEqual({ ids: ['mail-1'], patch: { 'keywords/$assigned:cj': null } });
     expect(server.notes.has(entryId!)).toBe(false);
     expect(entries()).toEqual([]);
   });
@@ -169,7 +219,7 @@ describe('undo', () => {
     expect(entries().map((e) => e.kind)).toEqual(['done', 'reopened']);
   });
 
-  it('gives the message back to whoever had it when the line can\'t be taken away', async () => {
+  it('says the person is off it again when the line can\'t be taken away', async () => {
     const server = new FakeTeamServer();
     const client = server.client();
     client.destroyTeamNote = vi.fn(async () => { throw new Error('gone'); });
@@ -177,7 +227,7 @@ describe('undo', () => {
     const result = await assign(ref.key, email, 'cj');
     await result.timeline;
     await result.undo();
-    expect(entries()).toEqual([{ kind: 'assigned', mentions: ['cj'] }, { kind: 'assigned', mentions: ['ci'] }]);
+    expect(entries()).toEqual([{ kind: 'assigned', mentions: ['cj'] }, { kind: 'unassigned', mentions: ['cj'] }]);
   });
 
   it('undoes once, however often Undo is pressed (toast and Ctrl+Z)', async () => {

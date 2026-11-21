@@ -28,8 +28,10 @@ import {
   assignChanges,
   assigneesOf,
   doneChanges,
+  removeAssigneeChanges,
   reopenChanges,
   reversePatch,
+  setAssigneesChanges,
   unassignChanges,
   type KeywordPatch,
 } from '@/lib/team-mailboxes/keywords';
@@ -630,20 +632,30 @@ export interface AssignmentResult {
   kind: AssignmentKind;
   /** False when the message already was that way: nothing was written, there is nothing to undo. */
   changed: boolean;
-  /** For `assigned`: who has it now, for the toast ("Assigned to you" when `me`). `name` is '' when unknown. */
+  /** For `assigned`: the first person added, for the toast ("Assigned to you" when `me`). `name` is '' when unknown. */
   assignee?: { id: string; name: string; me: boolean };
+  /** For `unassigned` of one person: who was taken off. */
+  removed?: { id: string; name: string; me: boolean };
+  /** Everyone added by this change, in order (several from Assign to...). */
+  added?: { id: string; name: string; me: boolean }[];
   /** The message's keywords after the change, for the caller's row. */
   keywords: Record<string, boolean>;
-  /** The keyword change written (keyword → true, or null for removed). */
+  /** The keyword change written (keyword -> true, or null for removed). */
   patch: KeywordPatch;
   /**
    * Takes the change back: the keywords as they were, and the timeline
-   * entry removed (or, if it can't be, the opposite entry written). Rejects
-   * when the keywords can't be written back.
+   * entries removed (or, where one can't be, the opposite entry written).
+   * Rejects when the keywords can't be written back.
    */
   undo: () => Promise<void>;
-  /** The timeline entry's id once written; null when it couldn't be (the change stands). */
+  /** The first timeline entry's id once written; null when it couldn't be (the change stands). */
   timeline: Promise<string | null>;
+}
+
+/** One grey line in the conversation: what happened, and to whom. */
+interface TimelineInput {
+  kind: AssignmentKind;
+  mentions: string[];
 }
 
 function pointerPatch(patch: KeywordPatch): Record<string, boolean | null> {
@@ -669,10 +681,12 @@ function knownPerson(t: TeamState, client: IJMAPClient, id: string): Person | nu
 }
 
 /** The timeline entry that says the opposite, for an undo whose entry couldn't be removed. */
-function oppositeEntry(kind: AssignmentKind, before: readonly string[]): { kind: AssignmentKind; mentions: string[] } {
-  switch (kind) {
+function oppositeEntry(entry: TimelineInput, before: readonly string[]): TimelineInput {
+  switch (entry.kind) {
     case 'assigned':
+      return { kind: 'unassigned', mentions: entry.mentions.slice(0, 1) };
     case 'unassigned':
+      if (entry.mentions[0]) return { kind: 'assigned', mentions: entry.mentions.slice(0, 1) };
       return before[0] ? { kind: 'assigned', mentions: [before[0]] } : { kind: 'unassigned', mentions: [] };
     case 'done':
       return { kind: 'reopened', mentions: [] };
@@ -683,15 +697,16 @@ function oppositeEntry(kind: AssignmentKind, before: readonly string[]): { kind:
 
 /**
  * One keyword write on the message in the team's own account (rejects when
- * it fails, for "Couldn't change the message. Try again."), then the
- * timeline entry, which never fails the change.
+ * it fails, for "Couldn't change the message. Try again."), then a timeline
+ * entry per line in `entries`, which never fail the change.
  */
 async function changeAssignment(
   key: string,
   email: AssignableEmail,
   kind: AssignmentKind,
   patch: KeywordPatch,
-  assignee?: AssignmentResult['assignee'],
+  entries: readonly TimelineInput[],
+  extra: Pick<AssignmentResult, 'assignee' | 'removed' | 'added'> = {},
 ): Promise<AssignmentResult> {
   const runtime = runtimes.get(key);
   const t = team(key);
@@ -699,31 +714,34 @@ async function changeAssignment(
   const { client } = runtime;
   const { accountId } = t.ref;
   if (Object.keys(patch).length === 0) {
-    return { kind, changed: false, assignee, keywords: patchedKeywords(email.keywords, {}), patch, undo: async () => {}, timeline: Promise.resolve(null) };
+    return { kind, changed: false, ...extra, keywords: patchedKeywords(email.keywords, {}), patch, undo: async () => {}, timeline: Promise.resolve(null) };
   }
   await client.batchUpdateKeywords([email.id], pointerPatch(patch), accountId);
   const before = assigneesOf(email.keywords);
   const target: NoteTarget = { emailId: email.id, key: noteKeyFor(email, accountId), threadId: email.threadId ?? null, subject: email.subject };
-  const timeline = writeNote(key, target, { kind, mentions: kind === 'assigned' && assignee ? [assignee.id] : [] })
+  const written = entries.map((entry) => writeNote(key, target, entry)
     .catch((error) => {
-      debug.warn('team-mailboxes', `The ${kind} line couldn't be written; the change stands:`, error);
+      debug.warn('team-mailboxes', `The ${entry.kind} line couldn't be written; the change stands:`, error);
       return null;
-    });
+    }));
   // One-shot: the toast's Undo and Ctrl+Z may both reach it.
   let undoing: Promise<void> | null = null;
   const undo = () => {
     undoing ??= (async () => {
       await client.batchUpdateKeywords([email.id], pointerPatch(reversePatch(patch)), accountId);
-      const entryId = await timeline;
-      if (entryId) await removeTimelineEntry(key, entryId, target, oppositeEntry(kind, before));
+      const ids = await Promise.all(written);
+      for (let i = 0; i < ids.length; i++) {
+        const entryId = ids[i];
+        if (entryId) await removeTimelineEntry(key, entryId, target, oppositeEntry(entries[i], before));
+      }
     })();
     return undoing;
   };
-  return { kind, changed: true, assignee, keywords: patchedKeywords(email.keywords, patch), patch, undo, timeline };
+  return { kind, changed: true, ...extra, keywords: patchedKeywords(email.keywords, patch), patch, undo, timeline: written[0] ?? Promise.resolve(null) };
 }
 
 /** Removes a timeline entry after an undo; where that fails, writes the opposite entry so the timeline still tells the truth. */
-function removeTimelineEntry(key: string, entryId: string, target: NoteTarget, opposite: { kind: AssignmentKind; mentions: string[] }): Promise<void> {
+function removeTimelineEntry(key: string, entryId: string, target: NoteTarget, opposite: TimelineInput): Promise<void> {
   return enqueue(key, async () => {
     const runtime = runtimes.get(key);
     const t = team(key);
@@ -742,10 +760,30 @@ function removeTimelineEntry(key: string, entryId: string, target: NoteTarget, o
   });
 }
 
+/** Who `id` is, for a toast: their name ('' when unknown) and whether it is the user. */
+function describe(t: TeamState, client: IJMAPClient, id: string, person?: Person | null): { id: string; name: string; me: boolean } {
+  const me = id === client.getAccountId().toLowerCase();
+  const who = person?.name || person?.email ? person : knownPerson(t, client, id);
+  return { id, name: who?.name || who?.email || '', me };
+}
+
+/** The assignees and the user go into the team's names list, best effort. */
+function rememberPeople(t: TeamState, client: IJMAPClient, ids: readonly string[], people: Readonly<Record<string, Person>>): void {
+  const selfId = client.getAccountId().toLowerCase();
+  const additions: Record<string, Person> = {};
+  const self = knownPerson(t, client, selfId);
+  if (self) additions[selfId] = self;
+  for (const id of ids) {
+    if (id === selfId) continue;
+    const who = people[id] ?? knownPerson(t, client, id);
+    if (who && (who.name || who.email)) additions[id] = { name: who.name || who.email, email: who.email };
+  }
+  if (Object.keys(additions).length > 0) void addToTeamNames(t.ref, client, additions);
+}
+
 /**
- * Assigns the message to `principalId` and nobody else. `person` (from the
- * Assign to dialog) names them; the assignee and the user go into the
- * team's names list, best effort.
+ * Adds `principalId` to the message's assignees (the others keep it).
+ * `person` (from Assign to... or an @ mention) names them.
  */
 export async function assign(key: string, email: AssignableEmail, principalId: string, person?: Person | null): Promise<AssignmentResult> {
   const runtime = runtimes.get(key);
@@ -753,15 +791,9 @@ export async function assign(key: string, email: AssignableEmail, principalId: s
   if (!runtime || !t) throw new Error('Team not loaded');
   const { client } = runtime;
   const id = principalId.toLowerCase();
-  const selfId = client.getAccountId().toLowerCase();
-  const me = id === selfId;
-  const who = person?.name || person?.email ? person : knownPerson(t, client, id);
-  const result = await changeAssignment(key, email, 'assigned', assignChanges(email.keywords, id), { id, name: who?.name || who?.email || '', me });
-  const additions: Record<string, Person> = {};
-  const self = knownPerson(t, client, selfId);
-  if (self) additions[selfId] = self;
-  if (who && !me) additions[id] = { name: who.name || who.email, email: who.email };
-  if (Object.keys(additions).length > 0) void addToTeamNames(t.ref, client, additions);
+  const assignee = describe(t, client, id, person);
+  const result = await changeAssignment(key, email, 'assigned', assignChanges(email.keywords, id), [{ kind: 'assigned', mentions: [id] }], { assignee, added: [assignee] });
+  rememberPeople(t, client, [id], person ? { [id]: person } : {});
   return result;
 }
 
@@ -772,16 +804,65 @@ export function assignToMe(key: string, email: AssignableEmail): Promise<Assignm
   return assign(key, email, runtime.client.getAccountId());
 }
 
+/**
+ * Leaves the message assigned to exactly `ids` (Assign to... with several
+ * people ticked): one keyword write, one timeline line per person added or
+ * taken off.
+ */
+export async function setAssignees(
+  key: string,
+  email: AssignableEmail,
+  ids: readonly string[],
+  people: Readonly<Record<string, Person>> = {},
+): Promise<AssignmentResult> {
+  const runtime = runtimes.get(key);
+  const t = team(key);
+  if (!runtime || !t) throw new Error('Team not loaded');
+  const { client } = runtime;
+  const wanted = [...new Set(ids.map((id) => id.toLowerCase()))];
+  const before = assigneesOf(email.keywords);
+  const added = wanted.filter((id) => !before.includes(id));
+  const removed = before.filter((id) => !wanted.includes(id));
+  const entries: TimelineInput[] = [
+    ...added.map((id) => ({ kind: 'assigned' as const, mentions: [id] })),
+    ...removed.map((id) => ({ kind: 'unassigned' as const, mentions: [id] })),
+  ];
+  const lower = Object.fromEntries(Object.entries(people).map(([id, p]) => [id.toLowerCase(), p]));
+  const addedPeople = added.map((id) => describe(t, client, id, lower[id]));
+  const result = await changeAssignment(
+    key, email, added.length > 0 ? 'assigned' : 'unassigned', setAssigneesChanges(email.keywords, wanted), entries,
+    {
+      assignee: addedPeople[0],
+      added: addedPeople,
+      removed: removed.length === 1 && added.length === 0 ? describe(t, client, removed[0]) : undefined,
+    },
+  );
+  rememberPeople(t, client, added, lower);
+  return result;
+}
+
+/** Takes one person off the message; the other assignees keep it. */
+export async function unassignPerson(key: string, email: AssignableEmail, principalId: string): Promise<AssignmentResult> {
+  const runtime = runtimes.get(key);
+  const t = team(key);
+  if (!runtime || !t) throw new Error('Team not loaded');
+  const id = principalId.toLowerCase();
+  return changeAssignment(key, email, 'unassigned', removeAssigneeChanges(email.keywords, id), [{ kind: 'unassigned', mentions: [id] }], {
+    removed: describe(t, runtime.client, id),
+  });
+}
+
+/** Takes everyone off the message. */
 export function unassign(key: string, email: AssignableEmail): Promise<AssignmentResult> {
-  return changeAssignment(key, email, 'unassigned', unassignChanges(email.keywords));
+  return changeAssignment(key, email, 'unassigned', unassignChanges(email.keywords), [{ kind: 'unassigned', mentions: [] }]);
 }
 
 export function markDone(key: string, email: AssignableEmail): Promise<AssignmentResult> {
-  return changeAssignment(key, email, 'done', doneChanges(email.keywords));
+  return changeAssignment(key, email, 'done', doneChanges(email.keywords), [{ kind: 'done', mentions: [] }]);
 }
 
 export function reopen(key: string, email: AssignableEmail): Promise<AssignmentResult> {
-  return changeAssignment(key, email, 'reopened', reopenChanges(email.keywords));
+  return changeAssignment(key, email, 'reopened', reopenChanges(email.keywords), [{ kind: 'reopened', mentions: [] }]);
 }
 
 /**

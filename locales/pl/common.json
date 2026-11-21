@@ -999,6 +999,8 @@
     "timeline_assigned": "{name} przypisuje to do: {assignee}",
     "timeline_took": "{name} przejmuje to",
     "timeline_unassigned": "{name} usuwa przypisanie",
+    "timeline_unassigned_person": "{name} usuwa przypisanie do: {assignee}",
+    "timeline_left": "{name} już się tym nie zajmuje",
     "timeline_done": "{name} oznacza to jako załatwione",
     "timeline_reopened": "{name} ponownie otwiera to",
     "someone": "członek zespołu",
@@ -4133,7 +4135,11 @@
     "assign_to": "Przypisz do…",
     "unassign": "Usuń przypisanie",
     "mark_done": "Oznacz jako gotowe",
-    "reopen": "Otwórz ponownie"
+    "reopen": "Otwórz ponownie",
+    "unassign_me": "Usuń moje przypisanie",
+    "save": "Zapisz",
+    "assignees_changed": "Zmieniono przypisanie",
+    "unassigned_person": "{name}: przypisanie usunięte"
   },
   "menuMove": {
     "filter_placeholder": "Znajdź folder",

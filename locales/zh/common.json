@@ -999,6 +999,8 @@
     "timeline_assigned": "{name} 将其分配给了 {assignee}",
     "timeline_took": "{name} 接手了此事",
     "timeline_unassigned": "{name} 取消了分配",
+    "timeline_unassigned_person": "{name} 取消了对 {assignee} 的分配",
+    "timeline_left": "{name} 不再负责此事",
     "timeline_done": "{name} 标记为已完成",
     "timeline_reopened": "{name} 重新打开了此事",
     "someone": "一位团队成员",
@@ -4133,7 +4135,11 @@
     "assign_to": "分配给…",
     "unassign": "取消分配",
     "mark_done": "标记为完成",
-    "reopen": "重新打开"
+    "reopen": "重新打开",
+    "unassign_me": "取消分配给我",
+    "save": "保存",
+    "assignees_changed": "已更改分配",
+    "unassigned_person": "已取消分配给 {name}"
   },
   "menuMove": {
     "filter_placeholder": "查找文件夹",

@@ -999,6 +999,8 @@
     "timeline_assigned": "{name} to pridelil(a) {assignee}",
     "timeline_took": "{name} to prevzal(a)",
     "timeline_unassigned": "{name} zrušil(a) pridelenie",
+    "timeline_unassigned_person": "{name} zrušil(a) pridelenie pre {assignee}",
+    "timeline_left": "{name} už na tom nepracuje",
     "timeline_done": "{name} to označil(a) ako hotové",
     "timeline_reopened": "{name} to znova otvoril(a)",
     "someone": "členovi tímu",
@@ -4133,7 +4135,11 @@
     "assign_to": "Priradiť…",
     "unassign": "Zrušiť priradenie",
     "mark_done": "Označiť ako hotové",
-    "reopen": "Znova otvoriť"
+    "reopen": "Znova otvoriť",
+    "unassign_me": "Zrušiť moje priradenie",
+    "save": "Uložiť",
+    "assignees_changed": "Priradenie zmenené",
+    "unassigned_person": "{name} už nie je priradený(á)"
   },
   "menuMove": {
     "filter_placeholder": "Nájsť priečinok",

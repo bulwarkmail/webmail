@@ -999,6 +999,8 @@
     "timeline_assigned": "{name} үүнийг {assignee}-д оноов",
     "timeline_took": "{name} үүнийг хариуцлаа",
     "timeline_unassigned": "{name} оноолтыг цуцаллаа",
+    "timeline_unassigned_person": "{name} {assignee}-н оноолтыг цуцаллаа",
+    "timeline_left": "{name} үүнийг хариуцахаа больсон",
     "timeline_done": "{name} үүнийг дууссан гэж тэмдэглэв",
     "timeline_reopened": "{name} үүнийг дахин нээв",
     "someone": "багийн гишүүн",
@@ -4133,7 +4135,11 @@
     "assign_to": "Хариуцуулах…",
     "unassign": "Хариуцуулалтыг цуцлах",
     "mark_done": "Дууссан гэж тэмдэглэх",
-    "reopen": "Дахин нээх"
+    "reopen": "Дахин нээх",
+    "unassign_me": "Миний хариуцуулалтыг цуцлах",
+    "save": "Хадгалах",
+    "assignees_changed": "Хариуцуулалт өөрчлөгдсөн",
+    "unassigned_person": "{name}-д хариуцуулалт цуцлагдсан"
   },
   "menuMove": {
     "filter_placeholder": "Хавтас хайх",

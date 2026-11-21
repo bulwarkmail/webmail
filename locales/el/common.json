@@ -999,6 +999,8 @@
     "timeline_assigned": "{name}: ανατέθηκε σε {assignee}",
     "timeline_took": "{name}: το ανέλαβε",
     "timeline_unassigned": "{name}: η ανάθεση αφαιρέθηκε",
+    "timeline_unassigned_person": "{name}: αφαιρέθηκε η ανάθεση από {assignee}",
+    "timeline_left": "{name}: δεν ασχολείται πλέον με αυτό",
     "timeline_done": "{name}: σημειώθηκε ως ολοκληρωμένο",
     "timeline_reopened": "{name}: άνοιξε ξανά",
     "someone": "μέλος της ομάδας",
@@ -4145,7 +4147,11 @@
     "assign_to": "Ανάθεση σε…",
     "unassign": "Κατάργηση ανάθεσης",
     "mark_done": "Σήμανση ως ολοκληρωμένο",
-    "reopen": "Άνοιγμα ξανά"
+    "reopen": "Άνοιγμα ξανά",
+    "unassign_me": "Κατάργηση της ανάθεσής μου",
+    "save": "Αποθήκευση",
+    "assignees_changed": "Οι αναθέσεις άλλαξαν",
+    "unassigned_person": "{name}: δεν είναι πλέον ανατεθειμένο"
   },
   "menuMove": {
     "filter_placeholder": "Εύρεση φακέλου",

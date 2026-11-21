@@ -999,6 +999,8 @@
     "timeline_assigned": "{name} assigned this to {assignee}",
     "timeline_took": "{name} took this",
     "timeline_unassigned": "{name} unassigned this",
+    "timeline_unassigned_person": "{name} took {assignee} off this",
+    "timeline_left": "{name} is no longer on this",
     "timeline_done": "{name} marked this done",
     "timeline_reopened": "{name} reopened this",
     "someone": "a team member",
@@ -4133,7 +4135,11 @@
     "assign_to": "Assign to…",
     "unassign": "Unassign",
     "mark_done": "Mark done",
-    "reopen": "Reopen"
+    "reopen": "Reopen",
+    "unassign_me": "Unassign me",
+    "save": "Save",
+    "assignees_changed": "Assignees changed",
+    "unassigned_person": "{name} is no longer assigned"
   },
   "menuMove": {
     "filter_placeholder": "Find a folder",

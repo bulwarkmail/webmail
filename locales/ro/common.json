@@ -999,6 +999,8 @@
     "timeline_assigned": "{name} a atribuit asta lui {assignee}",
     "timeline_took": "{name} a preluat asta",
     "timeline_unassigned": "{name} a anulat atribuirea",
+    "timeline_unassigned_person": "{name} a anulat atribuirea către {assignee}",
+    "timeline_left": "{name} nu se mai ocupă de asta",
     "timeline_done": "{name} a marcat asta ca rezolvat",
     "timeline_reopened": "{name} a redeschis asta",
     "someone": "un membru al echipei",
@@ -4133,7 +4135,11 @@
     "assign_to": "Atribuie către…",
     "unassign": "Elimină atribuirea",
     "mark_done": "Marchează ca gata",
-    "reopen": "Redeschide"
+    "reopen": "Redeschide",
+    "unassign_me": "Elimină atribuirea mea",
+    "save": "Salvează",
+    "assignees_changed": "Atribuire modificată",
+    "unassigned_person": "{name} nu mai este atribuit"
   },
   "menuMove": {
     "filter_placeholder": "Caută un folder",

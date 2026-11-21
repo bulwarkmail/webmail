@@ -17,7 +17,7 @@ vi.mock('../use-team', async (importOriginal) => ({
 
 const result = (kind: string, extra: Record<string, unknown> = {}) => ({ kind, changed: true, keywords: {}, patch: {}, undo: vi.fn(async () => {}), timeline: Promise.resolve('n'), ...extra });
 const store = vi.hoisted(() => ({
-  assignToMe: vi.fn(), assign: vi.fn(), unassign: vi.fn(), markDone: vi.fn(), reopen: vi.fn(),
+  assignToMe: vi.fn(), assign: vi.fn(), unassign: vi.fn(), markDone: vi.fn(), reopen: vi.fn(), setAssignees: vi.fn(), unassignPerson: vi.fn(),
 }));
 vi.mock('@/stores/team-mailbox-store', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/stores/team-mailbox-store')>()),
@@ -53,6 +53,34 @@ describe('team actions', () => {
     expect(keys(open)).toEqual(['extra:team_assign_me', 'extra:team_assign_to', 'extra:team_done']);
     const mineDone = renderHook(() => useTeamActions(email({ '$assigned:me': true, $done: true }))).result.current;
     expect(keys(mineDone)).toEqual(['extra:team_assign_to', 'extra:team_unassign', 'extra:team_reopen']);
+  });
+
+  it('takes only the user off with Unassign me when others have it too, and everyone off with Unassign when the user hasn\'t', async () => {
+    store.unassignPerson.mockResolvedValue(result('unassigned', { removed: { id: 'me', name: 'Alice', me: true } }));
+    store.unassign.mockResolvedValue(result('unassigned'));
+    const unassignEntry = (entries: unknown[]) => entries.find((e) => (e as { key?: string }).key === 'extra:team_unassign') as { label: string; run: () => void };
+    const shared = unassignEntry(renderHook(() => useTeamActions(email({ '$assigned:me': true, '$assigned:cj': true }))).result.current);
+    expect(shared.label).toBe('unassign_me');
+    await act(async () => { shared.run(); });
+    expect(store.unassignPerson).toHaveBeenCalledWith(ref.key, expect.objectContaining({ id: 'e1' }), 'me');
+    expect(store.unassign).not.toHaveBeenCalled();
+    const others = unassignEntry(renderHook(() => useTeamActions(email({ '$assigned:cj': true, '$assigned:ck': true }))).result.current);
+    expect(others.label).toBe('unassign');
+    await act(async () => { others.run(); });
+    expect(store.unassign).toHaveBeenCalledWith(ref.key, expect.objectContaining({ id: 'e1' }));
+  });
+
+  it('sets the people ticked in Assign to…, and says the assignees changed when it cannot name them all', async () => {
+    store.setAssignees.mockResolvedValue(result('assigned', {
+      assignee: { id: 'cj', name: 'Josh', me: false },
+      added: [{ id: 'cj', name: 'Josh', me: false }, { id: 'cx', name: '', me: false }],
+    }));
+    render(<TeamAssignDialogHost />);
+    const entries = renderHook(() => useTeamActions(email({ '$assigned:ck': true }))).result.current;
+    act(() => { (entries.find((e) => (e as { key?: string }).key === 'extra:team_assign_to') as { run: () => void }).run(); });
+    await act(async () => { screen.getByRole('button', { name: 'save' }).click(); });
+    expect(store.setAssignees).toHaveBeenCalledWith(ref.key, expect.objectContaining({ id: 'e1' }), ['ck'], {});
+    expect(toasts.success).toHaveBeenCalledWith('assignees_changed', expect.anything());
   });
 
   it('offers nothing outside a team mailbox or where the folder doesn\'t let the user change messages', () => {

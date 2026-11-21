@@ -999,6 +999,8 @@
     "timeline_assigned": "{name} atribuiu isto a {assignee}",
     "timeline_took": "{name} assumiu isto",
     "timeline_unassigned": "{name} removeu a atribuição",
+    "timeline_unassigned_person": "{name} removeu a atribuição de {assignee}",
+    "timeline_left": "{name} não cuida mais disto",
     "timeline_done": "{name} marcou isto como concluído",
     "timeline_reopened": "{name} reabriu isto",
     "someone": "um membro da equipe",
@@ -4133,7 +4135,11 @@
     "assign_to": "Atribuir a…",
     "unassign": "Remover atribuição",
     "mark_done": "Marcar como concluído",
-    "reopen": "Reabrir"
+    "reopen": "Reabrir",
+    "unassign_me": "Remover minha atribuição",
+    "save": "Salvar",
+    "assignees_changed": "Atribuição alterada",
+    "unassigned_person": "{name} não está mais atribuído"
   },
   "menuMove": {
     "filter_placeholder": "Encontrar uma pasta",

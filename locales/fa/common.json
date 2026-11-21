@@ -999,6 +999,8 @@
     "timeline_assigned": "{name} این را به {assignee} سپرد",
     "timeline_took": "{name} این را برعهده گرفت",
     "timeline_unassigned": "{name} سپردن را لغو کرد",
+    "timeline_unassigned_person": "{name} سپردن به {assignee} را لغو کرد",
+    "timeline_left": "{name} دیگر مسئول این نیست",
     "timeline_done": "{name} این را انجام‌شده علامت زد",
     "timeline_reopened": "{name} این را دوباره باز کرد",
     "someone": "یکی از اعضای تیم",
@@ -4133,7 +4135,11 @@
     "assign_to": "واگذاری به…",
     "unassign": "لغو واگذاری",
     "mark_done": "علامت انجام‌شده",
-    "reopen": "بازکردن دوباره"
+    "reopen": "بازکردن دوباره",
+    "unassign_me": "لغو واگذاری به من",
+    "save": "ذخیره",
+    "assignees_changed": "واگذاری تغییر کرد",
+    "unassigned_person": "{name} دیگر واگذارشده نیست"
   },
   "menuMove": {
     "filter_placeholder": "یافتن پوشه",

@@ -999,6 +999,8 @@
     "timeline_assigned": "{name} määras selle kasutajale {assignee}",
     "timeline_took": "{name} võttis selle enda peale",
     "timeline_unassigned": "{name} eemaldas määrangu",
+    "timeline_unassigned_person": "{name} eemaldas määrangu kasutajalt {assignee}",
+    "timeline_left": "{name} ei tegele sellega enam",
     "timeline_done": "{name} märkis selle tehtuks",
     "timeline_reopened": "{name} avas selle uuesti",
     "someone": "meeskonnaliige",
@@ -4133,7 +4135,11 @@
     "assign_to": "Määra…",
     "unassign": "Eemalda määramine",
     "mark_done": "Märgi tehtuks",
-    "reopen": "Ava uuesti"
+    "reopen": "Ava uuesti",
+    "unassign_me": "Eemalda minu määramine",
+    "save": "Salvesta",
+    "assignees_changed": "Määramine muudetud",
+    "unassigned_person": "{name} pole enam määratud"
   },
   "menuMove": {
     "filter_placeholder": "Otsi kausta",

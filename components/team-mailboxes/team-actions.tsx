@@ -23,11 +23,12 @@ import { assignedTo, assigneesOf, isDone } from '@/lib/team-mailboxes/keywords';
 import type { TeamRef } from '@/lib/team-mailboxes/team';
 import type { Person } from '@/lib/team-mailboxes/names';
 import {
-  assign,
   assignToMe,
   markDone,
   reopen,
+  setAssignees,
   unassign,
+  unassignPerson,
   type AssignableEmail,
   type AssignmentResult,
 } from '@/stores/team-mailbox-store';
@@ -82,7 +83,7 @@ function applyRow(context: TeamContext, email: ActionEmail, keywords: Record<str
 }
 
 /** Runs one change and tells the user; Undo puts the message back as it was. */
-async function run(
+export async function run(
   context: TeamContext,
   email: ActionEmail,
   change: () => Promise<AssignmentResult>,
@@ -108,7 +109,7 @@ async function run(
   });
 }
 
-function useTexts() {
+export function useTexts() {
   const t = useTranslations('team_assign');
   const tTeam = useTranslations('team_mailboxes');
   return useMemo(() => ({
@@ -116,7 +117,12 @@ function useTexts() {
     failed: t('change_failed'),
     undo: tTeam('undo'),
     doneText: (r: AssignmentResult) => {
+      if (r.kind === 'assigned' && (r.added?.length ?? 0) > 1) {
+        const names = r.added!.map((p) => (p.me ? t('you') : p.name)).filter(Boolean);
+        return names.length === r.added!.length ? t('assigned_to', { name: names.join(', ') }) : t('assignees_changed');
+      }
       if (r.kind === 'assigned') return r.assignee?.me ? t('assigned_to_you') : r.assignee?.name ? t('assigned_to', { name: r.assignee.name }) : t('assigned_unknown');
+      if (r.kind === 'unassigned' && r.removed && !r.removed.me && r.removed.name) return t('unassigned_person', { name: r.removed.name });
       if (r.kind === 'unassigned') return t('no_longer_assigned');
       if (r.kind === 'done') return t('marked_done');
       return t('reopened');
@@ -145,7 +151,9 @@ export function useTeamActions(email: ActionEmail | null | undefined): MessageAc
     const entries: MessageActionEntry[] = [];
     if (!mine) entries.push({ kind: 'item', key: TEAM_ACTION_KEYS.assignMe, icon: UserCheck, label: texts.t('assign_to_me'), run: go(() => assignToMe(context.ref.key, target)), testId: 'team-assign-me' });
     entries.push({ kind: 'item', key: TEAM_ACTION_KEYS.assignTo, icon: UserPlus, label: texts.t('assign_to'), run: () => useAssignRequest.setState({ request: { context, email } }), testId: 'team-assign-to' });
-    if (assigned) entries.push({ kind: 'item', key: TEAM_ACTION_KEYS.unassign, icon: UserMinus, label: texts.t('unassign'), run: go(() => unassign(context.ref.key, target)), testId: 'team-unassign' });
+    // Several people can have it: Unassign me leaves the others on it.
+    if (mine) entries.push({ kind: 'item', key: TEAM_ACTION_KEYS.unassign, icon: UserMinus, label: texts.t('unassign_me'), run: go(() => unassignPerson(context.ref.key, target, selfId)), testId: 'team-unassign' });
+    else if (assigned) entries.push({ kind: 'item', key: TEAM_ACTION_KEYS.unassign, icon: UserMinus, label: texts.t('unassign'), run: go(() => unassign(context.ref.key, target)), testId: 'team-unassign' });
     if (!done) entries.push({ kind: 'item', key: TEAM_ACTION_KEYS.done, icon: CheckCircle, label: texts.t('mark_done'), run: go(() => markDone(context.ref.key, target)), testId: 'team-done' });
     else entries.push({ kind: 'item', key: TEAM_ACTION_KEYS.reopen, icon: RotateCcw, label: texts.t('reopen'), run: go(() => reopen(context.ref.key, target)), testId: 'team-reopen' });
     return entries;
@@ -160,11 +168,12 @@ export function TeamAssignDialogHost() {
   if (!request) return null;
   const { context, email } = request;
   const close = () => useAssignRequest.setState({ request: null });
-  const onPick = (person: { id: string; name?: string; email?: string }) => {
-    const known: Person | null = person.name || person.email ? { name: person.name ?? '', email: person.email ?? '' } : null;
-    void run(context, email, () => assign(context.ref.key, asAssignable(email), person.id, known), { done: texts.doneText, failed: texts.failed, undo: texts.undo });
+  const onSave = (ids: string[], people: Record<string, { name: string; email: string }>) => {
+    const named: Record<string, Person> = {};
+    for (const [id, p] of Object.entries(people)) named[id] = { name: p.name, email: p.email };
+    void run(context, email, () => setAssignees(context.ref.key, asAssignable(email), ids, named), { done: texts.doneText, failed: texts.failed, undo: texts.undo });
   };
-  return <AssignDialog isOpen onClose={close} onPick={onPick} team={context.ref} client={context.client as IJMAPClient} />;
+  return <AssignDialog isOpen onClose={close} onSave={onSave} assigned={assigneesOf(email.keywords)} team={context.ref} client={context.client as IJMAPClient} />;
 }
 
 /** For tests. */

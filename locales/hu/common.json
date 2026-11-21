@@ -999,6 +999,8 @@
     "timeline_assigned": "{name} kiosztotta neki: {assignee}",
     "timeline_took": "{name} átvette",
     "timeline_unassigned": "{name} megszüntette a kiosztást",
+    "timeline_unassigned_person": "{name} megszüntette {assignee} kiosztását",
+    "timeline_left": "{name} már nem foglalkozik ezzel",
     "timeline_done": "{name} késznek jelölte",
     "timeline_reopened": "{name} újranyitotta",
     "someone": "egy csapattag",
@@ -4133,7 +4135,11 @@
     "assign_to": "Hozzárendelés…",
     "unassign": "Hozzárendelés megszüntetése",
     "mark_done": "Késznek jelölés",
-    "reopen": "Újranyitás"
+    "reopen": "Újranyitás",
+    "unassign_me": "Saját hozzárendelésem megszüntetése",
+    "save": "Mentés",
+    "assignees_changed": "Hozzárendelés módosítva",
+    "unassigned_person": "{name} már nincs hozzárendelve"
   },
   "menuMove": {
     "filter_placeholder": "Mappa keresése",

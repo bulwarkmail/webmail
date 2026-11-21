@@ -999,6 +999,8 @@
     "timeline_assigned": "{name} to přidělil(a) {assignee}",
     "timeline_took": "{name} to převzal(a)",
     "timeline_unassigned": "{name} zrušil(a) přidělení",
+    "timeline_unassigned_person": "{name} zrušil(a) přidělení pro {assignee}",
+    "timeline_left": "{name} už na tom nepracuje",
     "timeline_done": "{name} to označil(a) jako hotové",
     "timeline_reopened": "{name} to znovu otevřel(a)",
     "someone": "členovi týmu",
@@ -4133,7 +4135,11 @@
     "assign_to": "Přiřadit…",
     "unassign": "Zrušit přiřazení",
     "mark_done": "Označit jako hotové",
-    "reopen": "Znovu otevřít"
+    "reopen": "Znovu otevřít",
+    "unassign_me": "Zrušit mé přiřazení",
+    "save": "Uložit",
+    "assignees_changed": "Přiřazení změněno",
+    "unassigned_person": "{name} už není přiřazen(a)"
   },
   "menuMove": {
     "filter_placeholder": "Najít složku",

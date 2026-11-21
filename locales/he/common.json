@@ -943,6 +943,8 @@
     "timeline_assigned": "{name} הקצה את זה ל{assignee}",
     "timeline_took": "{name} לקח את זה",
     "timeline_unassigned": "{name} ביטל את ההקצאה",
+    "timeline_unassigned_person": "{name} ביטל את ההקצאה ל{assignee}",
+    "timeline_left": "{name} כבר לא מטפל בזה",
     "timeline_done": "{name} סימן את זה כבוצע",
     "timeline_reopened": "{name} פתח את זה מחדש",
     "someone": "חבר צוות",
@@ -4078,7 +4080,11 @@
     "assign_to": "הקצאה אל…",
     "unassign": "ביטול הקצאה",
     "mark_done": "סימון כבוצע",
-    "reopen": "פתיחה מחדש"
+    "reopen": "פתיחה מחדש",
+    "unassign_me": "ביטול ההקצאה שלי",
+    "save": "שמירה",
+    "assignees_changed": "ההקצאה השתנתה",
+    "unassigned_person": "{name} כבר לא מוקצה"
   },
   "menuMove": {
     "filter_placeholder": "חיפוש תיקייה",

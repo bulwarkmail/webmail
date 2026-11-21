@@ -999,6 +999,8 @@
     "timeline_assigned": "{name} asignó esto a {assignee}",
     "timeline_took": "{name} se encarga de esto",
     "timeline_unassigned": "{name} quitó la asignación",
+    "timeline_unassigned_person": "{name} quitó a {assignee} de esto",
+    "timeline_left": "{name} ya no se encarga de esto",
     "timeline_done": "{name} marcó esto como hecho",
     "timeline_reopened": "{name} reabrió esto",
     "someone": "un miembro del equipo",
@@ -4133,7 +4135,11 @@
     "assign_to": "Asignar a…",
     "unassign": "Quitar asignación",
     "mark_done": "Marcar como hecho",
-    "reopen": "Reabrir"
+    "reopen": "Reabrir",
+    "unassign_me": "Quitarme la asignación",
+    "save": "Guardar",
+    "assignees_changed": "Asignación cambiada",
+    "unassigned_person": "{name} ya no está asignado"
   },
   "menuMove": {
     "filter_placeholder": "Buscar una carpeta",

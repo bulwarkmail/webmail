@@ -999,6 +999,8 @@
     "timeline_assigned": "{name} heeft dit toegewezen aan {assignee}",
     "timeline_took": "{name} heeft dit opgepakt",
     "timeline_unassigned": "{name} heeft de toewijzing opgeheven",
+    "timeline_unassigned_person": "{name} heeft de toewijzing aan {assignee} opgeheven",
+    "timeline_left": "{name} doet dit niet meer",
     "timeline_done": "{name} heeft dit als afgehandeld gemarkeerd",
     "timeline_reopened": "{name} heeft dit heropend",
     "someone": "een teamlid",
@@ -4133,7 +4135,11 @@
     "assign_to": "Toewijzen aan…",
     "unassign": "Toewijzing opheffen",
     "mark_done": "Markeren als klaar",
-    "reopen": "Heropenen"
+    "reopen": "Heropenen",
+    "unassign_me": "Mijn toewijzing opheffen",
+    "save": "Opslaan",
+    "assignees_changed": "Toewijzing gewijzigd",
+    "unassigned_person": "{name} is niet meer toegewezen"
   },
   "menuMove": {
     "filter_placeholder": "Map zoeken",

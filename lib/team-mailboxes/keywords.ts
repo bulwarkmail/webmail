@@ -2,9 +2,10 @@
  * Assignment and status of a message in a team mailbox, as JMAP keywords on
  * the message, which every member of the group account sees the same (and
  * IMAP clients see as flags). The same keywords as the team-inbox plugin, so
- * nothing it set is lost:
+ * nothing it set is lost; the plugin kept one assignee, Bulwark keeps any
+ * number:
  *
- *   $assigned:<principal id>   who the message is assigned to, one at a time
+ *   $assigned:<principal id>   one per person the message is assigned to
  *   $done                      the message is dealt with
  *
  * Stalwart uses a user's account id as their principal id ("cj"). Ids are
@@ -48,7 +49,7 @@ export function keywordList(keywords: Keywords): string[] {
   return [];
 }
 
-/** Every id the message is assigned to: normally one, two when clients raced. */
+/** Every id the message is assigned to. */
 export function assigneesOf(keywords: Keywords): string[] {
   return [...new Set(keywordList(keywords)
     .filter((k) => k.startsWith(ASSIGNED_PREFIX))
@@ -56,7 +57,7 @@ export function assigneesOf(keywords: Keywords): string[] {
     .filter(isAssigneeId))];
 }
 
-/** Whether the message is assigned to `id` (among others, after a race). */
+/** Whether the message is assigned to `id` (alone or with others). */
 export function assignedTo(keywords: Keywords, id: string | null | undefined): boolean {
   if (!id) return false;
   return assigneesOf(keywords).includes(id.toLowerCase());
@@ -66,18 +67,28 @@ export function isDone(keywords: Keywords): boolean {
   return keywordList(keywords).includes(DONE_KEYWORD);
 }
 
-/**
- * Assigns the message to `id` and to nobody else: every other `$assigned:*`
- * it carries goes, so an Assign after a race leaves one.
- */
+/** Adds `id` to the message's assignees; the others keep it. */
 export function assignChanges(keywords: Keywords, id: string): KeywordPatch {
   const wanted = assignedKeyword(id);
+  return keywordList(keywords).includes(wanted) ? {} : { [wanted]: true };
+}
+
+/** Takes `id` off the message; the other assignees keep it. */
+export function removeAssigneeChanges(keywords: Keywords, id: string): KeywordPatch {
+  const keyword = assignedKeyword(id);
+  return keywordList(keywords).includes(keyword) ? { [keyword]: null } : {};
+}
+
+/** Leaves the message assigned to exactly `ids` (none: to nobody). */
+export function setAssigneesChanges(keywords: Keywords, ids: readonly string[]): KeywordPatch {
+  const wanted = new Set(ids.map((id) => assignedKeyword(id)));
   const changes: KeywordPatch = {};
   for (const other of assigneesOf(keywords)) {
     const keyword = ASSIGNED_PREFIX + other;
-    if (keyword !== wanted) changes[keyword] = null;
+    if (!wanted.has(keyword)) changes[keyword] = null;
   }
-  if (!keywordList(keywords).includes(wanted)) changes[wanted] = true;
+  const have = new Set(keywordList(keywords));
+  for (const keyword of wanted) if (!have.has(keyword)) changes[keyword] = true;
   return changes;
 }
 

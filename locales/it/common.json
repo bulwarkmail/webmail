@@ -999,6 +999,8 @@
     "timeline_assigned": "{name} l’ha assegnato a {assignee}",
     "timeline_took": "{name} se ne occupa",
     "timeline_unassigned": "{name} ha rimosso l’assegnazione",
+    "timeline_unassigned_person": "{name} ha rimosso l’assegnazione a {assignee}",
+    "timeline_left": "{name} non se ne occupa più",
     "timeline_done": "{name} l’ha segnato come fatto",
     "timeline_reopened": "{name} l’ha riaperto",
     "someone": "un membro del team",
@@ -4133,7 +4135,11 @@
     "assign_to": "Assegna a…",
     "unassign": "Rimuovi assegnazione",
     "mark_done": "Segna come fatto",
-    "reopen": "Riapri"
+    "reopen": "Riapri",
+    "unassign_me": "Rimuovi la mia assegnazione",
+    "save": "Salva",
+    "assignees_changed": "Assegnazione modificata",
+    "unassigned_person": "{name} non è più assegnato"
   },
   "menuMove": {
     "filter_placeholder": "Cerca una cartella",

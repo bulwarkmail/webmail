@@ -999,6 +999,8 @@
     "timeline_assigned": "{name} bunu {assignee} kişisine atadı",
     "timeline_took": "{name} bunu üstlendi",
     "timeline_unassigned": "{name} atamayı kaldırdı",
+    "timeline_unassigned_person": "{name}, {assignee} atamasını kaldırdı",
+    "timeline_left": "{name} artık bununla ilgilenmiyor",
     "timeline_done": "{name} bunu tamamlandı olarak işaretledi",
     "timeline_reopened": "{name} bunu yeniden açtı",
     "someone": "bir ekip üyesi",
@@ -4133,7 +4135,11 @@
     "assign_to": "Ata…",
     "unassign": "Atamayı kaldır",
     "mark_done": "Bitti olarak işaretle",
-    "reopen": "Yeniden aç"
+    "reopen": "Yeniden aç",
+    "unassign_me": "Bana atamayı kaldır",
+    "save": "Kaydet",
+    "assignees_changed": "Atama değişti",
+    "unassigned_person": "{name} artık atanmış değil"
   },
   "menuMove": {
     "filter_placeholder": "Klasör bul",

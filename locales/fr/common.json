@@ -999,6 +999,8 @@
     "timeline_assigned": "{name} a attribué ceci à {assignee}",
     "timeline_took": "{name} s’en charge",
     "timeline_unassigned": "{name} a retiré l’attribution",
+    "timeline_unassigned_person": "{name} a retiré {assignee} de l’attribution",
+    "timeline_left": "{name} ne s’en occupe plus",
     "timeline_done": "{name} a marqué ceci comme traité",
     "timeline_reopened": "{name} a rouvert ceci",
     "someone": "un membre de l’équipe",
@@ -4133,7 +4135,11 @@
     "assign_to": "Attribuer à…",
     "unassign": "Retirer l'attribution",
     "mark_done": "Marquer comme terminé",
-    "reopen": "Rouvrir"
+    "reopen": "Rouvrir",
+    "unassign_me": "Retirer mon attribution",
+    "save": "Enregistrer",
+    "assignees_changed": "Attribution modifiée",
+    "unassigned_person": "{name} n'est plus attribué"
   },
   "menuMove": {
     "filter_placeholder": "Rechercher un dossier",

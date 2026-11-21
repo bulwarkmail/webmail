@@ -999,6 +999,8 @@
     "timeline_assigned": "{name} đã giao việc này cho {assignee}",
     "timeline_took": "{name} đã nhận việc này",
     "timeline_unassigned": "{name} đã bỏ giao việc",
+    "timeline_unassigned_person": "{name} đã bỏ giao việc cho {assignee}",
+    "timeline_left": "{name} không còn phụ trách việc này",
     "timeline_done": "{name} đã đánh dấu là xong",
     "timeline_reopened": "{name} đã mở lại việc này",
     "someone": "một thành viên nhóm",
@@ -4145,7 +4147,11 @@
     "assign_to": "Giao cho…",
     "unassign": "Bỏ giao",
     "mark_done": "Đánh dấu xong",
-    "reopen": "Mở lại"
+    "reopen": "Mở lại",
+    "unassign_me": "Bỏ giao cho tôi",
+    "save": "Lưu",
+    "assignees_changed": "Đã thay đổi người được giao",
+    "unassigned_person": "{name} không còn được giao"
   },
   "menuMove": {
     "filter_placeholder": "Tìm thư mục",

@@ -999,6 +999,8 @@
     "timeline_assigned": "{name} ho ha assignat a {assignee}",
     "timeline_took": "{name} se n’encarrega",
     "timeline_unassigned": "{name} ha tret l’assignació",
+    "timeline_unassigned_person": "{name} ha tret {assignee} de l’assignació",
+    "timeline_left": "{name} ja no se n’encarrega",
     "timeline_done": "{name} ho ha marcat com a fet",
     "timeline_reopened": "{name} ho ha reobert",
     "someone": "un membre de l’equip",
@@ -4133,7 +4135,11 @@
     "assign_to": "Assigna a…",
     "unassign": "Desassigna",
     "mark_done": "Marca com a fet",
-    "reopen": "Reobre"
+    "reopen": "Reobre",
+    "unassign_me": "Desassigna'm",
+    "save": "Desa",
+    "assignees_changed": "S'han canviat les persones assignades",
+    "unassigned_person": "{name} ja no hi està assignat"
   },
   "menuMove": {
     "filter_placeholder": "Cerca una carpeta",

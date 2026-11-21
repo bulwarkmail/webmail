@@ -999,6 +999,8 @@
     "timeline_assigned": "{name} 님이 {assignee} 님에게 배정했습니다",
     "timeline_took": "{name} 님이 맡았습니다",
     "timeline_unassigned": "{name} 님이 배정을 해제했습니다",
+    "timeline_unassigned_person": "{name} 님이 {assignee} 님의 배정을 해제했습니다",
+    "timeline_left": "{name} 님이 담당에서 빠졌습니다",
     "timeline_done": "{name} 님이 완료로 표시했습니다",
     "timeline_reopened": "{name} 님이 다시 열었습니다",
     "someone": "팀원",
@@ -4133,7 +4135,11 @@
     "assign_to": "담당자 지정…",
     "unassign": "지정 해제",
     "mark_done": "완료로 표시",
-    "reopen": "다시 열기"
+    "reopen": "다시 열기",
+    "unassign_me": "내 지정 해제",
+    "save": "저장",
+    "assignees_changed": "지정이 변경됨",
+    "unassigned_person": "{name}의 지정이 해제됨"
   },
   "menuMove": {
     "filter_placeholder": "폴더 찾기",

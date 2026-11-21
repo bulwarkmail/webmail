@@ -999,6 +999,8 @@
     "timeline_assigned": "أسند {name} هذا إلى {assignee}",
     "timeline_took": "تولّى {name} هذا",
     "timeline_unassigned": "ألغى {name} الإسناد",
+    "timeline_unassigned_person": "أزال {name} الإسناد عن {assignee}",
+    "timeline_left": "ألغى {name} إسناده لنفسه",
     "timeline_done": "وضع {name} علامة «تم» على هذا",
     "timeline_reopened": "أعاد {name} فتح هذا",
     "someone": "عضو في الفريق",
@@ -4133,7 +4135,11 @@
     "assign_to": "تعيين إلى…",
     "unassign": "إلغاء التعيين",
     "mark_done": "تعليم كمنجزة",
-    "reopen": "إعادة الفتح"
+    "reopen": "إعادة الفتح",
+    "unassign_me": "إلغاء تعييني",
+    "save": "حفظ",
+    "assignees_changed": "تم تغيير المعيّنين",
+    "unassigned_person": "لم يعد {name} معيّنًا"
   },
   "menuMove": {
     "filter_placeholder": "ابحث عن مجلد",

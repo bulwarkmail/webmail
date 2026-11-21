@@ -12,6 +12,8 @@ import {
   reopenChanges,
   reversePatch,
   unassignChanges,
+  removeAssigneeChanges,
+  setAssigneesChanges,
 } from '../keywords';
 
 describe('assignment keywords', () => {
@@ -41,12 +43,23 @@ describe('assignment keywords', () => {
     expect(assignedTo({ '$assigned:cj': true }, null)).toBe(false);
   });
 
-  it('assigns to one person at a time, removing whoever had it', () => {
+  it('adds a person to the assignees, leaving the others on it', () => {
     expect(assignChanges({ $seen: true }, 'cj')).toEqual({ '$assigned:cj': true });
-    expect(assignChanges({ '$assigned:ci': true }, 'cj')).toEqual({ '$assigned:ci': null, '$assigned:cj': true });
-    // Two at once (two clients raced): both others go, one is left.
-    expect(assignChanges(['$assigned:ci', '$assigned:ck', '$assigned:cj'], 'cj')).toEqual({ '$assigned:ci': null, '$assigned:ck': null });
+    expect(assignChanges({ '$assigned:ci': true }, 'cj')).toEqual({ '$assigned:cj': true });
+    expect(assignChanges(['$assigned:ci', '$assigned:ck', '$assigned:cj'], 'cj')).toEqual({});
     expect(assignChanges({ '$assigned:cj': true }, 'CJ')).toEqual({});
+  });
+
+  it('takes one person off, leaving the others on it', () => {
+    expect(removeAssigneeChanges({ '$assigned:ci': true, '$assigned:cj': true }, 'CJ')).toEqual({ '$assigned:cj': null });
+    expect(removeAssigneeChanges({ '$assigned:ci': true }, 'cj')).toEqual({});
+  });
+
+  it('sets exactly the people given: adds the new ones, removes the rest', () => {
+    expect(setAssigneesChanges({ '$assigned:ci': true, '$assigned:cj': true, $seen: true }, ['cj', 'CK']))
+      .toEqual({ '$assigned:ci': null, '$assigned:ck': true });
+    expect(setAssigneesChanges({ '$assigned:ci': true }, [])).toEqual({ '$assigned:ci': null });
+    expect(setAssigneesChanges({ '$assigned:ci': true }, ['ci'])).toEqual({});
   });
 
   it('unassigns everyone', () => {
@@ -62,7 +75,7 @@ describe('assignment keywords', () => {
   });
 
   it('takes a change back exactly', () => {
-    const patch = assignChanges({ '$assigned:ci': true }, 'cj');
+    const patch = setAssigneesChanges({ '$assigned:ci': true }, ['cj']);
     expect(reversePatch(patch)).toEqual({ '$assigned:ci': true, '$assigned:cj': null });
     expect(reversePatch({})).toEqual({});
   });

@@ -999,6 +999,8 @@
     "timeline_assigned": "{name}: призначено — {assignee}",
     "timeline_took": "{name}: взято в роботу",
     "timeline_unassigned": "{name}: призначення знято",
+    "timeline_unassigned_person": "{name}: знято призначення — {assignee}",
+    "timeline_left": "{name} більше цим не займається",
     "timeline_done": "{name}: позначено як готове",
     "timeline_reopened": "{name}: відкрито знову",
     "someone": "учасник команди",
@@ -4133,7 +4135,11 @@
     "assign_to": "Призначити…",
     "unassign": "Зняти призначення",
     "mark_done": "Позначити як готове",
-    "reopen": "Відкрити знову"
+    "reopen": "Відкрити знову",
+    "unassign_me": "Зняти призначення з мене",
+    "save": "Зберегти",
+    "assignees_changed": "Призначення змінено",
+    "unassigned_person": "{name}: призначення знято"
   },
   "menuMove": {
     "filter_placeholder": "Знайти папку",

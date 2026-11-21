@@ -999,6 +999,8 @@
     "timeline_assigned": "{name} hat das {assignee} zugewiesen",
     "timeline_took": "{name} hat das übernommen",
     "timeline_unassigned": "{name} hat die Zuweisung aufgehoben",
+    "timeline_unassigned_person": "{name} hat die Zuweisung an {assignee} aufgehoben",
+    "timeline_left": "{name} hat die eigene Zuweisung aufgehoben",
     "timeline_done": "{name} hat das als erledigt markiert",
     "timeline_reopened": "{name} hat das wieder geöffnet",
     "someone": "einem Teammitglied",
@@ -4133,7 +4135,11 @@
     "assign_to": "Zuweisen an…",
     "unassign": "Zuweisung aufheben",
     "mark_done": "Als erledigt markieren",
-    "reopen": "Wieder öffnen"
+    "reopen": "Wieder öffnen",
+    "unassign_me": "Meine Zuweisung aufheben",
+    "save": "Speichern",
+    "assignees_changed": "Zuweisung geändert",
+    "unassigned_person": "{name} ist nicht mehr zugewiesen"
   },
   "menuMove": {
     "filter_placeholder": "Ordner suchen",

@@ -133,9 +133,15 @@ export function TimelineLine({ note, nameOf }: { note: NoteEntry; nameOf: (princ
   const locale = useLocale();
   const name = displayName(note.author);
   const assignee = note.mentions[0] ? nameOf(note.mentions[0]) : null;
+  // The writer's own id: notes from before 1.22 carry none, then the name decides.
+  const self = (id: string) => (note.author.id ? note.author.id.toLowerCase() === id.toLowerCase() : assignee === name);
+  const about = note.mentions[0];
   const text = note.kind === 'assigned'
-    ? (assignee && assignee === name ? t('timeline_took', { name }) : t('timeline_assigned', { name, assignee: assignee ?? t('someone') }))
-    : note.kind === 'unassigned' ? t('timeline_unassigned', { name })
+    ? (about && self(about) ? t('timeline_took', { name }) : t('timeline_assigned', { name, assignee: assignee ?? t('someone') }))
+    : note.kind === 'unassigned'
+      ? (!about ? t('timeline_unassigned', { name })
+        : self(about) ? t('timeline_left', { name })
+          : t('timeline_unassigned_person', { name, assignee: assignee ?? t('someone') }))
       : note.kind === 'done' ? t('timeline_done', { name })
         : t('timeline_reopened', { name });
   return (

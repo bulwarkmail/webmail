@@ -1089,7 +1089,11 @@
     "assign_to": "มอบหมายให้…",
     "unassign": "ยกเลิกการมอบหมาย",
     "mark_done": "ทำเครื่องหมายว่าเสร็จ",
-    "reopen": "เปิดใหม่"
+    "reopen": "เปิดใหม่",
+    "unassign_me": "ยกเลิกการมอบหมายให้ฉัน",
+    "save": "บันทึก",
+    "assignees_changed": "เปลี่ยนการมอบหมายแล้ว",
+    "unassigned_person": "ยกเลิกการมอบหมายให้ {name} แล้ว"
   },
   "menuMove": {
     "filter_placeholder": "ค้นหาโฟลเดอร์",
@@ -2310,6 +2314,8 @@
     "timeline_assigned": "{name} มอบหมายให้ {assignee}",
     "timeline_took": "{name} รับเรื่องนี้",
     "timeline_unassigned": "{name} ยกเลิกการมอบหมาย",
+    "timeline_unassigned_person": "{name} ยกเลิกการมอบหมายให้ {assignee}",
+    "timeline_left": "{name} ไม่ได้รับผิดชอบเรื่องนี้แล้ว",
     "timeline_done": "{name} ทำเครื่องหมายว่าเสร็จแล้ว",
     "timeline_reopened": "{name} เปิดเรื่องนี้อีกครั้ง",
     "someone": "สมาชิกในทีม",

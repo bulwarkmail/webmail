@@ -999,6 +999,8 @@
     "timeline_assigned": "{name} tildelte dette til {assignee}",
     "timeline_took": "{name} tok dette",
     "timeline_unassigned": "{name} fjernet tildelingen",
+    "timeline_unassigned_person": "{name} fjernet {assignee} fra dette",
+    "timeline_left": "{name} er ikke lenger på dette",
     "timeline_done": "{name} merket dette som ferdig",
     "timeline_reopened": "{name} åpnet dette igjen",
     "someone": "et teammedlem",
@@ -4133,7 +4135,11 @@
     "assign_to": "Tildel til…",
     "unassign": "Fjern tildeling",
     "mark_done": "Merk som ferdig",
-    "reopen": "Åpne igjen"
+    "reopen": "Åpne igjen",
+    "unassign_me": "Fjern min tildeling",
+    "save": "Lagre",
+    "assignees_changed": "Tildeling endret",
+    "unassigned_person": "{name} er ikke lenger tildelt"
   },
   "menuMove": {
     "filter_placeholder": "Finn en mappe",

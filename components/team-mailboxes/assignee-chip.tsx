@@ -23,7 +23,7 @@ const CHIP_CLASS = cn(TAG_LOZENGE_CLASS, "max-w-[8rem] gap-0.5 border");
 /**
  * Who a team message is assigned to, on its row: "Me", the assignee's first
  * name, or "Assigned" while their name isn't known (and asked for); "+N"
- * when clients raced and several have it, the user first. The full sentence
+ * when several people have it, the user first. The full sentence
  * is the title and what a screen reader hears. Nothing when unassigned.
  */
 export function AssigneeChip({ keywords, people, className }: AssigneeChipProps) {

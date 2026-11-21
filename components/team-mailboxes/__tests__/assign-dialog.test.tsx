@@ -48,25 +48,26 @@ function seed() {
   });
 }
 
-function Harness({ onPick }: { onPick: (p: { id: string }) => void }) {
+function Harness({ onSave, assigned = [] }: { onSave: (ids: string[], people: Record<string, unknown>) => void; assigned?: string[] }) {
   const [open, setOpen] = useState(false);
   return (
     <>
       <button type="button" onClick={() => setOpen(true)}>Assign to…</button>
-      <AssignDialog isOpen={open} onClose={() => setOpen(false)} onPick={onPick} team={ref} client={client} />
+      <AssignDialog isOpen={open} onClose={() => setOpen(false)} onSave={onSave} assigned={assigned} team={ref} client={client} />
     </>
   );
 }
 
-function openDialog(onPick = vi.fn()) {
-  render(<Harness onPick={onPick} />);
+function openDialog(onSave = vi.fn(), assigned: string[] = []) {
+  render(<Harness onSave={onSave} assigned={assigned} />);
   const opener = screen.getByRole('button', { name: 'Assign to…' });
   opener.focus();
   fireEvent.click(opener);
-  return { onPick, opener };
+  return { onSave, opener };
 }
 
 const options = () => within(screen.getByRole('listbox', { name: 'people' })).getAllByRole('option').map((o) => o.textContent);
+const ticked = () => screen.getAllByRole('option').filter((o) => o.getAttribute('aria-selected') === 'true').map((o) => o.textContent);
 
 beforeEach(() => {
   resetTeamMailboxStore();
@@ -85,6 +86,7 @@ describe('Assign to…', () => {
     const dialog = screen.getByRole('dialog', { name: 'dialog_title' });
     const field = within(dialog).getByRole('combobox', { name: 'search_label' });
     expect(document.activeElement).toBe(field);
+    expect(within(dialog).getByRole('listbox')).toHaveAttribute('aria-multiselectable', 'true');
     expect(options()).toEqual([
       'Alice Archer(you)tm-alice@example.org',
       'Mabel Mossmabel@example.org',
@@ -93,27 +95,46 @@ describe('Assign to…', () => {
     expect(screen.getAllByTestId('avatar')).toHaveLength(3);
   });
 
-  it('assigns with one click on a person and closes, giving the focus back', () => {
-    const { onPick, opener } = openDialog();
+  it('ticks several people with clicks, unticks with a second click, and Save hands over everyone ticked', () => {
+    const { onSave, opener } = openDialog();
     fireEvent.click(screen.getByRole('option', { name: /Josh Jones/ }));
-    expect(onPick).toHaveBeenCalledWith({ id: 'cj', name: 'Josh Jones', email: 'josh@example.org' });
+    fireEvent.click(screen.getByRole('option', { name: /Mabel Moss/ }));
+    fireEvent.click(screen.getByRole('option', { name: /Alice Archer/ }));
+    fireEvent.click(screen.getByRole('option', { name: /Josh Jones/ }));
+    expect(ticked()).toEqual(['Alice Archer(you)tm-alice@example.org', 'Mabel Mossmabel@example.org']);
+    // Ticking alone changes nothing yet.
+    expect(onSave).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: 'save' }));
+    expect(onSave).toHaveBeenCalledWith(['cm', 'ca'], {
+      cm: { id: 'cm', name: 'Mabel Moss', email: 'mabel@example.org' },
+      ca: { id: 'ca', name: 'Alice Archer', email: 'tm-alice@example.org' },
+    });
     expect(screen.queryByRole('dialog')).toBeNull();
     expect(document.activeElement).toBe(opener);
   });
 
-  it('moves with the arrow keys and picks with Enter', () => {
-    const { onPick } = openDialog();
+  it('opens with the people the message has ticked, and keeps one nobody named', () => {
+    const { onSave } = openDialog(vi.fn(), ['cm', 'zz']);
+    expect(ticked()).toEqual(['Mabel Mossmabel@example.org', 'assigned_unknown']);
+    fireEvent.click(screen.getByRole('option', { name: /Mabel Moss/ }));
+    fireEvent.click(screen.getByRole('button', { name: 'save' }));
+    expect(onSave).toHaveBeenCalledWith(['zz'], {});
+  });
+
+  it('moves with the arrow keys, ticks with Enter and saves with Ctrl+Enter', () => {
+    const { onSave } = openDialog();
     const field = screen.getByRole('combobox');
-    expect(screen.getAllByRole('option')[0]).toHaveAttribute('aria-selected', 'true');
+    expect(field).toHaveAttribute('aria-activedescendant', screen.getAllByRole('option')[0].id);
     fireEvent.keyDown(field, { key: 'ArrowDown' });
     fireEvent.keyDown(field, { key: 'ArrowDown' });
     fireEvent.keyDown(field, { key: 'ArrowDown' });
-    const selected = screen.getAllByRole('option')[2];
-    expect(selected).toHaveAttribute('aria-selected', 'true');
-    expect(field).toHaveAttribute('aria-activedescendant', selected.id);
+    expect(field).toHaveAttribute('aria-activedescendant', screen.getAllByRole('option')[2].id);
     fireEvent.keyDown(field, { key: 'ArrowUp' });
     fireEvent.keyDown(field, { key: 'Enter' });
-    expect(onPick).toHaveBeenCalledWith(expect.objectContaining({ id: 'cm' }));
+    expect(ticked()).toEqual(['Mabel Mossmabel@example.org']);
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+    fireEvent.keyDown(field, { key: 'Enter', ctrlKey: true });
+    expect(onSave).toHaveBeenCalledWith(['cm'], expect.objectContaining({ cm: expect.objectContaining({ name: 'Mabel Moss' }) }));
     expect(screen.queryByRole('dialog')).toBeNull();
   });
 
@@ -127,13 +148,13 @@ describe('Assign to…', () => {
     expect(screen.getByRole('status')).toHaveTextContent('no_one_found');
   });
 
-  it('picks the first directory match with Enter after the arrow keys were used on an empty list', async () => {
+  it('ticks the first directory match with Enter after the arrow keys were used on an empty list, and keeps its name', async () => {
     vi.useFakeTimers();
     vi.mocked(scope.loadScopedPrincipalDirectory).mockResolvedValue({
       principals: [{ id: 'cx', type: 'individual', name: 'xavier', description: 'Xavier Xu', email: 'xavier@example.org' }],
       status: 'ok',
     });
-    const { onPick } = openDialog();
+    const { onSave } = openDialog();
     const field = screen.getByRole('combobox');
     fireEvent.change(field, { target: { value: 'xav' } });
     // Waiting for the directory: no "No one found." yet.
@@ -142,7 +163,10 @@ describe('Assign to…', () => {
     await act(async () => { await vi.advanceTimersByTimeAsync(DIRECTORY_SEARCH_DELAY_MS + 50); });
     expect(field).toHaveAttribute('aria-activedescendant', screen.getAllByRole('option')[0].id);
     fireEvent.keyDown(field, { key: 'Enter' });
-    expect(onPick).toHaveBeenCalledWith(expect.objectContaining({ id: 'cx' }));
+    // Another search: the ticked person is still named on Save.
+    fireEvent.change(field, { target: { value: '' } });
+    fireEvent.click(screen.getByRole('button', { name: 'save' }));
+    expect(onSave).toHaveBeenCalledWith(['cx'], { cx: { id: 'cx', name: 'Xavier Xu', email: 'xavier@example.org' } });
   });
 
   it('adds directory matches from 3 characters, after a pause', async () => {
@@ -166,22 +190,24 @@ describe('Assign to…', () => {
     expect(options()).toEqual(['Xavier Xuxavier@example.org']);
   });
 
-  it('closes with Escape without picking, and keeps the key from the mail shortcuts', () => {
-    const { onPick, opener } = openDialog();
+  it('closes with Escape without saving, and keeps the key from the mail shortcuts', () => {
+    const { onSave, opener } = openDialog();
+    fireEvent.click(screen.getByRole('option', { name: /Josh Jones/ }));
     // The modal dialog owns the keyboard: the mail shortcuts check this (lib/keyboard.ts).
     expect(isKeyboardLayerOpen()).toBe(true);
     fireEvent.keyDown(screen.getByRole('combobox'), { key: 'Escape' });
     expect(isKeyboardLayerOpen()).toBe(false);
-    expect(onPick).not.toHaveBeenCalled();
+    expect(onSave).not.toHaveBeenCalled();
     expect(screen.queryByRole('dialog')).toBeNull();
     expect(document.activeElement).toBe(opener);
   });
 
   it('closes with Cancel', () => {
-    const { onPick } = openDialog();
+    const { onSave } = openDialog();
+    fireEvent.click(screen.getByRole('option', { name: /Josh Jones/ }));
     fireEvent.click(screen.getByRole('button', { name: 'cancel' }));
     expect(screen.queryByRole('dialog')).toBeNull();
-    expect(onPick).not.toHaveBeenCalled();
+    expect(onSave).not.toHaveBeenCalled();
   });
 
   it('leaves out people it has no name or address for', () => {

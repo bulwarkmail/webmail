@@ -999,6 +999,8 @@
     "timeline_assigned": "{name} to piešķīra: {assignee}",
     "timeline_took": "{name} to uzņēmās",
     "timeline_unassigned": "{name} atcēla piešķīrumu",
+    "timeline_unassigned_person": "{name} atcēla piešķīrumu: {assignee}",
+    "timeline_left": "{name} ar to vairs nenodarbojas",
     "timeline_done": "{name} atzīmēja to kā paveiktu",
     "timeline_reopened": "{name} to atvēra no jauna",
     "someone": "komandas dalībnieks",
@@ -4133,7 +4135,11 @@
     "assign_to": "Piešķirt…",
     "unassign": "Atcelt piešķiršanu",
     "mark_done": "Atzīmēt kā pabeigtu",
-    "reopen": "Atvērt atkārtoti"
+    "reopen": "Atvērt atkārtoti",
+    "unassign_me": "Atcelt manu piešķiršanu",
+    "save": "Saglabāt",
+    "assignees_changed": "Piešķiršana mainīta",
+    "unassigned_person": "{name} vairs nav piešķirts"
   },
   "menuMove": {
     "filter_placeholder": "Meklēt mapi",
