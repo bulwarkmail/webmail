@@ -417,6 +417,42 @@ async function proxyFetch(credentialId: string, url: string, init: ProxyFetchIni
   }
 }
 
+// ─── api.http.eventSource ────────────────────────────────────
+
+interface EventSourceInit {
+  /** Sent with every connection, e.g. Authorization. */
+  headers?: Record<string, string>;
+  /** Each event the server sends; `type` is "message" when the server names none. */
+  onEvent: (event: { type: string; data: string; lastEventId: string }) => void;
+  /** The connection stands (again, after a reconnect). */
+  onOpen?: () => void;
+  /**
+   * The connection failed or the server ended it. `closed: false`: the host
+   * reconnects by itself. `closed: true`: it gave up (the server refused,
+   * `status` says how); subscribe anew, e.g. with a fresh token.
+   */
+  onError?: (error: { message: string; status?: number; closed: boolean }) => void;
+}
+const eventSources = new Map<string, EventSourceInit>();
+
+async function openEventSource(url: string, init: EventSourceInit): Promise<{ close: () => void }> {
+  if (!init || typeof init.onEvent !== 'function') throw new Error('onEvent must be a function');
+  const streamId = uid().replace(/[^a-z0-9]/g, '').slice(0, 24);
+  eventSources.set(streamId, init);
+  try {
+    await callApi('http.openEventStream', [url, { headers: init.headers, streamId }]);
+  } catch (err) {
+    eventSources.delete(streamId);
+    throw err;
+  }
+  return {
+    close: () => {
+      if (!eventSources.delete(streamId)) return;
+      void callApi('http.closeEventStream', [streamId]).catch(() => {});
+    },
+  };
+}
+
 function invokeHostCallback(callbackId: string, args: unknown[]): Promise<unknown> {
   const id = uid();
   return new Promise((resolve, reject) => {
@@ -605,6 +641,13 @@ function buildCoreApi(manifest: PluginManifest) {
       post: (path: string, body: Record<string, unknown> | Blob, options?: { headers?: Record<string, string> }) =>
         callApi('http.post', [path, body, options], NETWORK_API_TIMEOUT_MS),
       fetch: (url: string, init?: unknown) => callApi('http.fetch', [url, init], NETWORK_API_TIMEOUT_MS),
+      /**
+       * Subscribes to Server-Sent Events from one of the manifest's
+       * `httpOrigins` (permission `http:fetch`). The host holds the
+       * connection, reconnects by itself and closes it with this frame.
+       * Rejects as `fetch` does for an address the plugin may not reach.
+       */
+      eventSource: (url: string, init: EventSourceInit) => openEventSource(url, init),
     },
     // Safe keyword methods are available to untrusted plugins with the
     // matching email permission. Raw blob/submission methods remain restricted
@@ -1757,6 +1800,19 @@ function handleHostMessage(ev: MessageEvent): void {
         if (msg.error) entry?.controller?.error(new Error(msg.error));
         else entry?.controller?.close();
       } catch { /* already closed */ }
+      break;
+    }
+
+    case 'event-stream': {
+      const source = eventSources.get(msg.streamId);
+      if (!source) break;
+      const e = msg.event;
+      if (e.kind === 'error' && e.closed) eventSources.delete(msg.streamId);
+      try {
+        if (e.kind === 'open') source.onOpen?.();
+        else if (e.kind === 'event') source.onEvent({ type: e.type, data: e.data, lastEventId: e.lastEventId });
+        else source.onError?.({ message: e.message, ...(e.status ? { status: e.status } : {}), closed: e.closed });
+      } catch { /* plugin's own error */ }
       break;
     }
 

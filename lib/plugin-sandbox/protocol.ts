@@ -300,6 +300,20 @@ export interface StreamEndMsg { type: 'stream-end'; streamId: string; error?: st
 /** Host → sandbox: upload progress of an api.proxy.fetch request. */
 export interface StreamProgressMsg { type: 'stream-progress'; streamId: string; loaded: number; total: number; }
 
+/**
+ * Host → sandbox: news of an api.http.eventSource subscription: the
+ * connection stands, an event arrived, or the connection failed (`closed`:
+ * for good; else the host is reconnecting).
+ */
+export interface EventStreamMsg {
+  type: 'event-stream';
+  streamId: string;
+  event:
+    | { kind: 'open' }
+    | { kind: 'event'; type: string; data: string; lastEventId: string }
+    | { kind: 'error'; message: string; status?: number; closed: boolean };
+}
+
 export interface FloatingDropdownSelectMsg {
   type: 'floating-dropdown-select';
   id: string;
@@ -322,6 +336,7 @@ export type HostToSandbox =
   | StreamChunkMsg
   | StreamEndMsg
   | StreamProgressMsg
+  | EventStreamMsg
   | ApiResponseMsg
   | CallbackResponseMsg
   | HookInvokeMsg

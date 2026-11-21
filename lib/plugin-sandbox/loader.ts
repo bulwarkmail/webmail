@@ -37,6 +37,7 @@ import { clearSidePanel } from './side-panels';
 import { closeNoticesFor } from './notices';
 import { closePluginFilesOf } from './file-viewer';
 import { cancelPluginProxyRequests } from './proxy-client';
+import { closePluginEventStreams } from './event-streams';
 import { cancelConnectFor } from './connect-dialog';
 import { isHookHandedOver } from './host-features';
 import { hookArgsFor, hookResultFor } from './hook-payload';
@@ -513,6 +514,7 @@ export function unloadSandboxedPlugin(pluginId: string): void {
   closeNoticesFor(pluginId);
   closePluginFilesOf(pluginId);
   cancelPluginProxyRequests(pluginId);
+  closePluginEventStreams(pluginId);
   cancelConnectFor(pluginId);
   try { entry.background.destroy(); } catch { /* ignore */ }
   cancelPluginDialogs(pluginId);

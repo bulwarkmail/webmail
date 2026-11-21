@@ -14,6 +14,7 @@ import '../device-policy';
 import { doAppGetSettings, doAppSearchSettings } from './host-api-app';
 import { mayOfferSlot, pluginHasPermission } from './permissions';
 import { doGetCheckText, doRecheck, doRegisterChecker, doSetAnnotations, doUnregisterChecker, doUpdateChecker } from './host-api-checker';
+import { closeEventStream, openEventStream, type EventStreamSink } from './event-streams';
 import { proxyAccounts, proxyCancel, proxyConnect, proxyDisconnect, proxyFetch, type StreamSink } from './proxy-client';
 import { checkActions, isActionSurface, setPluginActions } from './actions';
 import { checkDayLabels, setDayLabels } from './day-labels';
@@ -147,6 +148,8 @@ export const PERM_PER_METHOD: Readonly<Record<string, Permission | null>> = {
   // http
   'http.post': 'http:post',
   'http.fetch': 'http:fetch',
+  'http.openEventStream': 'http:fetch',
+  'http.closeEventStream': 'http:fetch',
   // jmap (privileged-tier only; see PRIVILEGED_ONLY_METHODS)
   'jmap.fetchBlob': 'email:blob-read',
   'jmap.uploadBlob': 'email:blob-write',
@@ -784,7 +787,8 @@ async function readCapped(res: Response, limit: number): Promise<ArrayBuffer> {
   return out.buffer;
 }
 
-async function doHttpFetch(plugin: InstalledPlugin, rawUrl: string, init?: PluginFetchInit) {
+/** The address a plugin may reach from the browser, or the reason it may not. */
+function outsideTarget(plugin: InstalledPlugin, rawUrl: unknown): { url: URL; allowlist: string[] } {
   // Such a plugin isn't started in the no-third-party mode; this is the
   // second lock in case one runs anyway (#903). A plugin the mode lets run
   // (admin-entered servers through the proxy) has no outside fetch either.
@@ -799,6 +803,11 @@ async function doHttpFetch(plugin: InstalledPlugin, rawUrl: string, init?: Plugi
   if (!originMatchesAllowlist(url, allowlist)) {
     throw new Error(`Origin ${url.origin} not in plugin httpOrigins allowlist`);
   }
+  return { url, allowlist };
+}
+
+async function doHttpFetch(plugin: InstalledPlugin, rawUrl: string, init?: PluginFetchInit) {
+  const { url, allowlist } = outsideTarget(plugin, rawUrl);
   const safeHeaders: Record<string, string> = {};
   if (init?.headers) {
     for (const [k, v] of Object.entries(init.headers)) {
@@ -2096,7 +2105,7 @@ export async function dispatchApiCall(
   plugin: InstalledPlugin,
   method: string,
   args: unknown[],
-  opts?: { privileged?: boolean; sink?: StreamSink; toastSignal?: AbortSignal; frame?: 'background' | 'slot' },
+  opts?: { privileged?: boolean; sink?: StreamSink; eventSink?: EventStreamSink; toastSignal?: AbortSignal; frame?: 'background' | 'slot' },
 ): Promise<unknown> {
   // Tier gate: privileged-only methods are refused for untrusted (null-origin)
   // instances even if the permission is somehow present. Defence-in-depth on
@@ -2175,6 +2184,12 @@ export async function dispatchApiCall(
 
     case 'http.post':  return doHttpPost(plugin, args[0] as string, args[1], args[2] as PluginHttpPostOptions | undefined);
     case 'http.fetch': return doHttpFetch(plugin, args[0] as string, args[1] as PluginFetchInit | undefined);
+    case 'http.openEventStream': {
+      const { url, allowlist } = outsideTarget(plugin, args[0]);
+      openEventStream(plugin.id, url, (to) => originMatchesAllowlist(to, allowlist), args[1], opts?.eventSink ?? null);
+      return undefined;
+    }
+    case 'http.closeEventStream': closeEventStream(plugin.id, args[0]); return undefined;
 
     case 'jmap.fetchBlob': return doJmapFetchBlob(args[0] as string, args[1] as { name?: string; type?: string, rangeHeader?: number } | undefined);
     case 'jmap.uploadBlob': return doJmapUploadBlob(args[0], args[1], args[2]);
