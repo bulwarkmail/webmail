@@ -85,9 +85,9 @@
   --color-info-foreground: #ffffff;
 
   /* Team notes: internal notes between the messages, clearly not mail */
-  --color-note: #fef9c3;
-  --color-note-foreground: #422006;
-  --color-note-border: #eab308;
+  --color-note: #fefce8;
+  --color-note-foreground: #0a0a0a;
+  --color-note-border: #fde68a;
 
   /* Selection states */
   --color-selection: var(--brand-accent, #dbeafe);
