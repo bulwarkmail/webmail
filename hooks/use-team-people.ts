@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { IJMAPClient } from "@/lib/jmap/client-interface";
 import type { TeamRef } from "@/lib/team-mailboxes/team";
-import { ensureTeamNames, lookUpNames, mergeTeamPeople, useTeamNamesStore, type TeamPeople } from "@/lib/team-mailboxes/names";
+import { ensureTeamNames, listDirectoryPeople, lookUpNames, mergeTeamPeople, useTeamNamesStore, type TeamPeople, type TeamPerson } from "@/lib/team-mailboxes/names";
 import { useTeamMailboxStore } from "@/stores/team-mailbox-store";
 
 export interface TeamPeopleView extends TeamPeople {
@@ -45,4 +45,24 @@ export function useTeamPeople(ref: TeamRef | null | undefined, client: IJMAPClie
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key, client, author, list, notes, directory]);
+}
+
+const NO_PEOPLE: TeamPerson[] = [];
+
+/**
+ * The people of the server's directory, for the @ list: read once `enabled`
+ * turns true (the note field is in use), not on every message opened.
+ * Empty where the server allows no directory lookups.
+ */
+export function useDirectoryPeople(client: IJMAPClient | null | undefined, enabled: boolean): TeamPerson[] {
+  const [people, setPeople] = useState<{ client: IJMAPClient | null; list: TeamPerson[] }>({ client: null, list: NO_PEOPLE });
+  useEffect(() => {
+    if (!enabled || !client || people.client === client) return;
+    let live = true;
+    void listDirectoryPeople(client).then((list) => {
+      if (live) setPeople({ client, list });
+    });
+    return () => { live = false; };
+  }, [enabled, client, people.client]);
+  return people.client === client ? people.list : NO_PEOPLE;
 }

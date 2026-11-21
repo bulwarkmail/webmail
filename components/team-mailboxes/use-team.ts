@@ -19,6 +19,7 @@ import { registerSelf } from '@/lib/team-mailboxes/names';
 import { noteKeyFor, type NoteEntry } from '@/lib/team-mailboxes/note-format';
 import {
   ensureTeamLoaded,
+  registerMember,
   notesOf,
   pendingOf,
   useTeamMailboxStore,
@@ -68,9 +69,10 @@ export function useTeamOf(email: Stamped): TeamContext | null {
   }, [resolved, rawPolicy, groupsRevision]);
   useEffect(() => {
     if (!context) return;
-    void ensureTeamLoaded(context.ref, context.client);
-    // The first visit puts the user on the team's names list, so the others
-    // can pick them in Assign to… and @ before anyone assigned them anything.
+    // The first visit puts the user on the team's names list (or, where the
+    // server keeps none, writes a member entry), so the others can pick them
+    // in Assign to… and @ before anyone assigned them anything.
+    void ensureTeamLoaded(context.ref, context.client).then(() => registerMember(context.ref.key));
     void registerSelf(context.ref, context.client);
   }, [context]);
   // Ask the server which accounts are groups, outside render (the answer

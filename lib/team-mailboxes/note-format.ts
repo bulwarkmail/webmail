@@ -21,14 +21,23 @@
  * their notes without loading the conversation. No In-Reply-To or References,
  * so the server never threads a note into the customer's conversation.
  * Timeline entries (assigned, done, ...) are notes of that kind with no text;
- * for `assigned` the mentions header names the assignee, but only kind
- * `note` ever notifies anyone.
+ * for `assigned` and `unassigned` the mentions header names the person, but
+ * only kind `note` ever notifies anyone.
+ *
+ * Kind `member` says only "I am in this team": a member writes one, keyed
+ * MEMBER_KEY and about no message, the first time they open the team
+ * mailbox on a server that keeps no names list (Stalwart 0.16), so the
+ * others can @ them and assign them before they wrote anything. It shows
+ * nowhere; clients before it drop the unknown kind.
  */
 
 import { NOTE_KEYWORD } from './hidden-folders';
 
-export type NoteKind = 'note' | 'assigned' | 'unassigned' | 'done' | 'reopened';
-export const NOTE_KINDS: readonly NoteKind[] = ['note', 'assigned', 'unassigned', 'done', 'reopened'];
+export type NoteKind = 'note' | 'assigned' | 'unassigned' | 'done' | 'reopened' | 'member';
+export const NOTE_KINDS: readonly NoteKind[] = ['note', 'assigned', 'unassigned', 'done', 'reopened', 'member'];
+
+/** The For value of a `member` entry: no message has it, so no conversation shows it. */
+export const MEMBER_KEY = 'member@notes.bulwark.invalid';
 
 /** Longest note that can be written. Longer ones from other clients are shown cut. */
 export const MAX_NOTE_CHARS = 4000;

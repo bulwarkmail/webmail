@@ -39,7 +39,7 @@ import {
 import { isOwnNote } from '@/lib/team-mailboxes/note-format';
 import { NoteCard, PendingNoteCard, TeamOnlyLine, TimelineLine, displayName } from './note-cards';
 import { NoteField, type NoteFieldHandle } from './note-field';
-import { useTeamPeople } from '@/hooks/use-team-people';
+import { useDirectoryPeople, useTeamPeople } from '@/hooks/use-team-people';
 import { mentionsIn } from '@/lib/team-mailboxes/mentions';
 import { useMentionPicker } from './mention-picker';
 import {
@@ -331,14 +331,21 @@ export function TeamNoteArea({ className, messages }: { className?: string; mess
   const convKey = value ? conversationKeyOf(conversationKeys(messages, value.context.ref.accountId).keys, conversationKeys(messages, value.context.ref.accountId).threadIds) : '';
   const draft = value?.draft ?? '';
   const setDraft = value?.setDraft;
-  // @ mentions: the team's people (the same people Assign to… offers).
+  // @ mentions: the team's people (the same people Assign to… offers), then
+  // the directory, read once the first @ is typed.
   const people = useTeamPeople(value?.context.ref ?? null, value?.context.client ?? null);
   const candidates = useMemo(
     () => people.people.filter((p) => !!p.id).map((p) => ({ id: p.id as string, name: p.name ?? '', email: p.email ?? '' })),
     [people.people],
   );
+  const directory = useDirectoryPeople(value?.context.client ?? null, draft.includes('@'));
+  const more = useMemo(
+    () => directory.filter((p) => !!p.id).map((p) => ({ id: p.id as string, name: p.name ?? '', email: p.email ?? '' })),
+    [directory],
+  );
   const mention = useMentionPicker({
     people: candidates,
+    more,
     selfId: value?.context.client.getAccountId().toLowerCase() ?? null,
     text: draft,
     setText: (text, caret) => {
@@ -370,7 +377,7 @@ export function TeamNoteArea({ className, messages }: { className?: string; mess
     const target = value.target;
     if (!text || !target) return;
     // Only people still named in the text, and only people of the team.
-    const mentions = mentionsIn(text, mention.picked, new Set(candidates.map((c) => c.id.toLowerCase())));
+    const mentions = mentionsIn(text, mention.picked, new Set([...candidates, ...more].map((c) => c.id.toLowerCase())));
     value.setDraft('');
     mention.reset();
     void writeNote(key, {

@@ -38,6 +38,7 @@ import {
 import { addToTeamNames, useTeamNamesStore, type Person } from '@/lib/team-mailboxes/names';
 import { NOTE_KEYWORD, TEAM_NOTES_FOLDER_NAME, isTeamNotesFolder } from '@/lib/team-mailboxes/hidden-folders';
 import {
+  MEMBER_KEY,
   NOTES_KEYWORD,
   NOTE_INDEX_PROPERTIES,
   buildNoteEmail,
@@ -615,6 +616,31 @@ export function discardPending(key: string, localId: string): void {
   });
 }
 
+/**
+ * Says "I am in this team" once, where the server keeps no names list
+ * (Stalwart 0.16 has no metadata): a `member` entry in the notes folder,
+ * unless a note the index already holds names the user's principal id.
+ * Only for members who may write; never throws. Resolves with whether it wrote.
+ */
+export async function registerMember(key: string): Promise<boolean> {
+  const runtime = runtimes.get(key);
+  const t = team(key);
+  if (!runtime || !t || t.status !== 'ready' || t.canWrite === false || !t.author) return false;
+  const { client } = runtime;
+  if (client.supportsBulwarkMetadata?.(t.ref.accountId) === true) return false;
+  if (client.getAccountInfo?.(t.ref.accountId)?.isReadOnly === true) return false;
+  const selfId = client.getAccountId().toLowerCase();
+  if (Object.values(t.notes).some((n) => n.author.id?.toLowerCase() === selfId)) return false;
+  if (registering.has(key)) return false;
+  registering.add(key);
+  const id = await writeNote(key, { emailId: '', key: MEMBER_KEY, threadId: null, subject: 'Team member' }, { kind: 'member' })
+    .catch(() => null);
+  // Failed: a later visit tries again.
+  if (!id) registering.delete(key);
+  return !!id;
+}
+const registering = new Set<string>();
+
 // ── Assignment ────────────────────────────────────────────────────────
 
 /** The message an assignment is about, in the group account, with the keywords it has now. */
@@ -1087,6 +1113,7 @@ export function rowNotesInfo(t: TeamState, threadId: string | null | undefined, 
 /** Forgets every team: on sign-out and account switches, and in tests. */
 export function resetTeamMailboxStore(): void {
   runtimes.clear();
+  registering.clear();
   arrivalListeners.clear();
   for (const entry of seenLogins.values()) if (entry.timer) clearTimeout(entry.timer);
   seenLogins.clear();

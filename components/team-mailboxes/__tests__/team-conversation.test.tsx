@@ -31,6 +31,12 @@ vi.mock('@/stores/team-mailbox-store', async (importOriginal) => {
   };
 });
 
+vi.mock('@/lib/directory-scope', async (importOriginal) => {
+  const real = await importOriginal<typeof import('@/lib/directory-scope')>();
+  return { ...real, loadScopedPrincipalDirectory: vi.fn(async () => ({ principals: [], status: 'ok' })) };
+});
+const directoryScope = await import('@/lib/directory-scope');
+
 const toastSuccess = vi.fn();
 vi.mock('@/stores/toast-store', () => ({ toast: { success: (...a: unknown[]) => toastSuccess(...a), error: vi.fn(), info: vi.fn() } }));
 
@@ -172,6 +178,36 @@ describe('the note field', () => {
     fireEvent.change(field, { target: { value: 'ask @Carol Cooper please' } });
     await act(async () => { fireEvent.keyDown(field, { key: 'Enter' }); });
     expect(writeNote).toHaveBeenCalledWith(ref.key, expect.anything(), { text: 'ask @Carol Cooper please', mentions: ['hw'] });
+    useTeamNamesStore.setState({ lists: {}, directory: {} });
+  });
+
+  it('offers the directory after the team\'s people once an @ is typed, and can mention someone from it', async () => {
+    const { useTeamNamesStore } = await import('@/lib/team-mailboxes/names');
+    useTeamNamesStore.setState({ lists: { [ref.key]: { hw: { name: 'Carol Cooper', email: 'tm-carol@example.org' } } }, directory: {} });
+    vi.mocked(directoryScope.loadScopedPrincipalDirectory).mockResolvedValue({
+      principals: [
+        { id: 'ab', type: 'individual', name: 'aaron', description: 'Aaron Abbot', email: 'aaron@example.org' },
+        { id: 'grp', type: 'group', name: 'team', email: 'tm-team@example.org' },
+      ],
+      status: 'ok',
+    });
+    teamContext = { ref, client: { ...client, supportsPrincipals: () => true } };
+    seed([]);
+    render(<Conversation />);
+    fireEvent.click(screen.getByRole('button', { name: 'note' }));
+    const field = screen.getByLabelText('field_label') as HTMLTextAreaElement;
+    await act(async () => { fireEvent.change(field, { target: { value: '@' } }); });
+    field.setSelectionRange(1, 1);
+    await act(async () => { fireEvent.keyUp(field, { key: '@' }); });
+    const options = within(screen.getByRole('listbox', { name: 'mention_list' })).getAllByRole('option').map((o) => o.textContent);
+    // The team's people first, then the directory; never the group itself.
+    expect(options).toEqual([expect.stringContaining('Carol Cooper'), expect.stringContaining('Aaron Abbot')]);
+    fireEvent.keyDown(field, { key: 'ArrowDown' });
+    fireEvent.keyDown(field, { key: 'Enter' });
+    expect(field.value).toBe('@Aaron Abbot ');
+    fireEvent.change(field, { target: { value: '@Aaron Abbot can you?' } });
+    await act(async () => { fireEvent.keyDown(field, { key: 'Enter' }); });
+    expect(writeNote).toHaveBeenCalledWith(ref.key, expect.anything(), { text: '@Aaron Abbot can you?', mentions: ['ab'] });
     useTeamNamesStore.setState({ lists: {}, directory: {} });
   });
 

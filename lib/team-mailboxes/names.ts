@@ -402,6 +402,33 @@ export async function searchDirectory(client: IJMAPClient, text: string): Promis
   }
 }
 
+/** Most people the @ list takes from the directory. */
+export const MAX_DIRECTORY_PEOPLE = 500;
+
+/**
+ * Everyone in the directory the user may see (without groups), for the @
+ * list, which filters as the user types from the first letter. Empty where
+ * the server doesn't allow directory lookups. The listing is shared and kept
+ * for a few minutes (lib/jmap/principal-directory.ts).
+ */
+export async function listDirectoryPeople(client: IJMAPClient): Promise<TeamPerson[]> {
+  if (!client.supportsPrincipals?.()) return [];
+  try {
+    const listing = await loadScopedPrincipalDirectory(client);
+    if (listing.status !== 'ok') return [];
+    const out: TeamPerson[] = [];
+    for (const principal of listing.principals) {
+      const p = asTeamPerson(principal);
+      if (p) out.push(p);
+      if (out.length >= MAX_DIRECTORY_PEOPLE) break;
+    }
+    return out;
+  } catch (error) {
+    debug.warn('team-mailboxes', 'Listing the directory failed:', error);
+    return [];
+  }
+}
+
 interface LookupState {
   pending: Set<string>;
   asked: Set<string>;

@@ -6,14 +6,20 @@ import { Avatar } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import { insertMention, mentionCandidates, mentionQueryAt, type MentionCandidate, type PickedMention } from '@/lib/team-mailboxes/mentions';
 
+/** People the @ list shows at most. */
+const MENTION_LIMIT = 8;
+
 /**
  * The @ list of the note field: while the user types @ and a few letters,
  * the team's people that fit show under the field. Up and Down move, Enter
  * or Tab pick, Escape closes the list only; a tap or click picks. The field
  * is a combobox for screen readers while the list is open.
  */
-export function useMentionPicker({ people, selfId, text, setText }: {
+export function useMentionPicker({ people, more = [], selfId, text, setText }: {
+  /** The team's people, offered first. */
   people: readonly MentionCandidate[];
+  /** Others who may be in the team (the directory), after the team's people. */
+  more?: readonly MentionCandidate[];
   selfId: string | null;
   text: string;
   setText: (text: string, caret: number) => void;
@@ -25,7 +31,13 @@ export function useMentionPicker({ people, selfId, text, setText }: {
   const [closedAt, setClosedAt] = useState<number | null>(null);
   const [picked, setPicked] = useState<PickedMention[]>([]);
   const at = mentionQueryAt(text, caret);
-  const candidates = useMemo(() => (at ? mentionCandidates(people, at.query, selfId) : []), [at?.query, at?.start, people, selfId]); // eslint-disable-line react-hooks/exhaustive-deps
+  const candidates = useMemo(() => {
+    if (!at) return [];
+    const first = mentionCandidates(people, at.query, selfId);
+    const known = new Set(first.map((p) => p.id.toLowerCase()));
+    const rest = mentionCandidates(more.filter((p) => !known.has(p.id.toLowerCase())), at.query, selfId, MENTION_LIMIT - first.length);
+    return [...first, ...rest];
+  }, [at?.query, at?.start, people, more, selfId]); // eslint-disable-line react-hooks/exhaustive-deps
   const open = !!at && candidates.length > 0 && closedAt !== at.start;
   const current = Math.min(active, Math.max(0, candidates.length - 1));
 
