@@ -42,6 +42,7 @@ import { NoteField, type NoteFieldHandle } from './note-field';
 import { useDirectoryPeople, useTeamPeople } from '@/hooks/use-team-people';
 import { mentionsIn } from '@/lib/team-mailboxes/mentions';
 import { useMentionPicker } from './mention-picker';
+import { assignMentioned, useTexts } from './team-actions';
 import {
   conversationKeys,
   useConversationNotes,
@@ -331,6 +332,7 @@ export function TeamNoteArea({ className, messages }: { className?: string; mess
   const convKey = value ? conversationKeyOf(conversationKeys(messages, value.context.ref.accountId).keys, conversationKeys(messages, value.context.ref.accountId).threadIds) : '';
   const draft = value?.draft ?? '';
   const setDraft = value?.setDraft;
+  const assignTexts = useTexts();
   // @ mentions: the team's people (the same people Assign to… offers), then
   // the directory, read once the first @ is typed.
   const people = useTeamPeople(value?.context.ref ?? null, value?.context.client ?? null);
@@ -383,6 +385,14 @@ export function TeamNoteArea({ className, messages }: { className?: string; mess
     void writeNote(key, {
       emailId: target.id, key: noteKeyFor(target, value.context.ref.accountId), threadId: target.threadId ?? null, subject: target.subject,
     }, { text, mentions });
+    // Whoever is mentioned gets the message too.
+    if (mentions.length > 0) {
+      const named: Record<string, { name: string; email: string }> = {};
+      for (const p of [...more, ...candidates]) if (mentions.includes(p.id.toLowerCase())) named[p.id.toLowerCase()] = { name: p.name, email: p.email };
+      void assignMentioned(value.context, target as unknown as Parameters<typeof assignMentioned>[1], mentions, named, {
+        done: assignTexts.doneText, failed: assignTexts.failed, undo: assignTexts.undo,
+      });
+    }
     field.current?.focus();
   };
   const close = () => {

@@ -19,6 +19,7 @@ vi.mock('../use-team', async (importOriginal) => ({
 const writeNote = vi.fn(async () => 'n-new');
 const deleteNote = vi.fn(async () => async () => true);
 const reloadTeam = vi.fn(async () => {});
+const setAssignees = vi.fn(async (..._args: unknown[]) => ({ kind: 'assigned', changed: true, keywords: {}, patch: {}, undo: async () => {}, timeline: Promise.resolve(null) }));
 vi.mock('@/stores/team-mailbox-store', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/stores/team-mailbox-store')>();
   return {
@@ -28,6 +29,7 @@ vi.mock('@/stores/team-mailbox-store', async (importOriginal) => {
     writeNote: (...args: unknown[]) => writeNote(...(args as [])),
     deleteNote: (...args: unknown[]) => deleteNote(...(args as [])),
     reloadTeam: (...args: unknown[]) => reloadTeam(...(args as [])),
+    setAssignees: (...args: unknown[]) => setAssignees(...args),
   };
 });
 
@@ -86,6 +88,7 @@ beforeEach(() => {
   writeNote.mockClear();
   deleteNote.mockClear();
   reloadTeam.mockClear();
+  setAssignees.mockClear();
   toastSuccess.mockClear();
 });
 afterEach(() => useTeamMailboxStore.setState({ teams: {} }));
@@ -178,6 +181,8 @@ describe('the note field', () => {
     fireEvent.change(field, { target: { value: 'ask @Carol Cooper please' } });
     await act(async () => { fireEvent.keyDown(field, { key: 'Enter' }); });
     expect(writeNote).toHaveBeenCalledWith(ref.key, expect.anything(), { text: 'ask @Carol Cooper please', mentions: ['hw'] });
+    // Mentioning someone assigns the message to them as well.
+    expect(setAssignees).toHaveBeenCalledWith(ref.key, expect.objectContaining({ id: 'm2' }), ['hw'], { hw: { name: 'Carol Cooper', email: 'tm-carol@example.org' } });
     useTeamNamesStore.setState({ lists: {}, directory: {} });
   });
 
@@ -208,6 +213,30 @@ describe('the note field', () => {
     fireEvent.change(field, { target: { value: '@Aaron Abbot can you?' } });
     await act(async () => { fireEvent.keyDown(field, { key: 'Enter' }); });
     expect(writeNote).toHaveBeenCalledWith(ref.key, expect.anything(), { text: '@Aaron Abbot can you?', mentions: ['ab'] });
+    useTeamNamesStore.setState({ lists: {}, directory: {} });
+  });
+
+  it('keeps whoever has the message when a mention assigns it, and assigns nobody twice', async () => {
+    const { useTeamNamesStore } = await import('@/lib/team-mailboxes/names');
+    useTeamNamesStore.setState({ lists: { [ref.key]: { hv: { name: 'Bob Baker', email: 'tm-bob@example.org' }, hw: { name: 'Carol Cooper', email: 'tm-carol@example.org' } } }, directory: {} });
+    seed([]);
+    const held = message('m2', '2026-11-20T12:00:00Z', { keywords: { '$assigned:hv': true } });
+    render(<Conversation messages={[m1, held]} />);
+    fireEvent.click(screen.getByRole('button', { name: 'note' }));
+    const field = screen.getByLabelText('field_label') as HTMLTextAreaElement;
+    const mention = async (typed: string) => {
+      fireEvent.change(field, { target: { value: typed } });
+      field.setSelectionRange(typed.length, typed.length);
+      fireEvent.keyUp(field, { key: 'x' });
+      fireEvent.keyDown(field, { key: 'Enter' });
+      await act(async () => { fireEvent.keyDown(field, { key: 'Enter' }); });
+    };
+    await mention('@Car');
+    expect(setAssignees).toHaveBeenCalledWith(ref.key, expect.objectContaining({ id: 'm2' }), ['hv', 'hw'], expect.anything());
+    setAssignees.mockClear();
+    await mention('@Bo');
+    expect(writeNote).toHaveBeenLastCalledWith(ref.key, expect.anything(), { text: '@Bob Baker', mentions: ['hv'] });
+    expect(setAssignees).not.toHaveBeenCalled();
     useTeamNamesStore.setState({ lists: {}, directory: {} });
   });
 
