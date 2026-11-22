@@ -79,7 +79,7 @@
     "ioredis": "^5.11.1",
     "jalaali-js": "^2.0.1",
     "jszip": "^3.10.2",
-    "next": "^16.4.3",
+    "next": "^16.4.6",
     "next-intl": "^4.13.3",
     "otpauth": "^9.5.2",
     "pdfjs-dist": "^6.5.438",
