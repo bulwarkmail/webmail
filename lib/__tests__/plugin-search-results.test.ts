@@ -159,7 +159,33 @@ describe('provideSearchResults', () => {
     await vi.advanceTimersByTimeAsync(0);
     expect(answers).toEqual([{ pluginId: 'ok', keys: ['a'] }]);
 
-    await vi.advanceTimersByTimeAsync(10_000);
+    await vi.advanceTimersByTimeAsync(20_000);
     expect(answers).toEqual([{ pluginId: 'ok', keys: ['a'] }, { pluginId: 'hung', keys: [] }]);
+  });
+
+  it('waits past the 5s default for a plugin that searches elsewhere', async () => {
+    vi.useFakeTimers();
+    emailHooks.onProvideSearchResults.register('slow', () => new Promise((resolve) => {
+      setTimeout(() => resolve([{ key: 's', title: 'S' }]), 8_000);
+    }));
+
+    const { answers } = ask();
+    await vi.advanceTimersByTimeAsync(7_900);
+    expect(answers).toEqual([]);
+
+    await vi.advanceTimersByTimeAsync(200);
+    expect(answers).toEqual([{ pluginId: 'slow', keys: ['s'] }]);
+  });
+
+  it('gives up on a plugin after 15s', async () => {
+    vi.useFakeTimers();
+    emailHooks.onProvideSearchResults.register('hung', () => new Promise(() => {}));
+
+    const { answers } = ask();
+    await vi.advanceTimersByTimeAsync(14_900);
+    expect(answers).toEqual([]);
+
+    await vi.advanceTimersByTimeAsync(200);
+    expect(answers).toEqual([{ pluginId: 'hung', keys: [] }]);
   });
 });

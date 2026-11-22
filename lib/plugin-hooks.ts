@@ -70,6 +70,12 @@ const INTERCEPT_TIMEOUT_MS = 60_000;
 // takes minutes on a slow line. Two minutes cut off large offloads and
 // counted them toward auto-disable.
 const BLOB_UPLOAD_TIMEOUT_MS = 15 * 60_000;
+// onProvideSearchResults handlers search elsewhere (a CRM's search by
+// meaning: an embedding, a vector index, a reranker), which takes longer than
+// a list transform. Nobody waits on them: the message list shows at once and
+// the block above it stays pending until each plugin answers, so the default
+// 5s only turned a slow answer into none and counted it toward auto-disable.
+const SEARCH_RESULTS_TIMEOUT_MS = 15_000;
 
 /**
  * The longest a hook may stay waiting on a dialog or an OS prompt, from its start. A
@@ -550,8 +556,8 @@ export const emailHooks = {
   // Lets plugins contribute results from elsewhere to a search, drawn above
   // its message list (lib/plugin-search-results.ts). Each handler is asked
   // on its own with an empty ExternalSearchResult[] and { query, filters },
-  // so a click can go back to the plugin that gave the entry.
-  onProvideSearchResults: new HookBus(),
+  // so a click can go back to the plugin that gave the entry; each has 15s.
+  onProvideSearchResults: new HookBus(SEARCH_RESULTS_TIMEOUT_MS),
   // Observer fired (debounced) when the composer draft body, subject, or
   // recipients change. Handler receives a DraftView snapshot. Use for AI
   // assistants, grammar checkers, etc.
