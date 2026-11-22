@@ -5654,6 +5654,12 @@ export function EmailComposer({
       // Same for the "@" recipient list in the body: this handler runs in the
       // capture phase, before the editor could close the list itself.
       if (isRecipientMentionActive(editorRef.current)) return;
+      // Same for an armed format painter: Escape puts it down (its own
+      // handler), and only the next Escape closes the composer. The painter
+      // is armed across renders, so the editor's element says whether it is
+      // (the painter's state itself lives inside the editor component).
+      if (editorRef.current && !editorRef.current.isDestroyed
+        && editorRef.current.view.dom.hasAttribute("data-format-painter")) return;
       // And for proofreading's popup and panel: Escape closes only them.
       if (proofreading.popup || proofreading.panel) return;
       e.preventDefault();

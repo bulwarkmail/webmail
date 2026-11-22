@@ -10,7 +10,8 @@ import { RichTextEditor } from '../rich-text-editor';
 // processor); a double click keeps it armed; Escape or another click puts
 // it down. A selection dragged with the mouse grows one step at a time,
 // firing selectionUpdate at every step, so the apply waits for the
-// selection to settle — the mouse button coming up, or 250ms of quiet.
+// selection to be finished: the pointer coming up, or the Shift key after
+// a shift+arrows extension. Block formatting (headings, lists) stays out.
 
 async function setup(content: string) {
   let editor: Editor | null = null;
@@ -20,36 +21,39 @@ async function setup(content: string) {
   const button = () =>
     screen.getByRole('toolbar', { name: 'formatting' }).querySelector<HTMLButtonElement>('[data-toolbar-item="format-painter"]')!;
   const select = (from: number, to: number) => act(() => { ed.commands.setTextSelection({ from, to }); });
-  // Releasing the mouse over the editor paints at once.
-  const mouseUp = () => act(() => { ed.view.dom.dispatchEvent(new MouseEvent('mouseup', { bubbles: true })); });
-  return { editor: ed, button, select, mouseUp };
+  // Releasing the pointer over the editor paints at once — the end of a
+  // drag, of a double click, of a long-press.
+  const pointerUp = () => fireEvent.pointerUp(ed.view.dom);
+  // The end of a shift+arrows extension.
+  const shiftUp = () => fireEvent.keyUp(ed.view.dom, { key: 'Shift' });
+  return { editor: ed, button, select, pointerUp, shiftUp };
 }
 
 describe('the format painter', () => {
   it('copies a mark onto the next selection once, then puts itself down', async () => {
     // "bold" (strong) is 1–5, " plain" is 5–11.
-    const { editor, button, select, mouseUp } = await setup('<p><strong>bold</strong> plain</p>');
+    const { editor, button, select, pointerUp } = await setup('<p><strong>bold</strong> plain</p>');
 
     select(1, 5);
     fireEvent.click(button());
     expect(button()).toHaveAttribute('aria-pressed', 'true');
 
     select(6, 11);
-    mouseUp();
+    pointerUp();
     expect(editor.getHTML()).toContain('<strong>plain</strong>');
     expect(button()).toHaveAttribute('aria-pressed', 'false');
 
     // One shot: a further selection isn't painted again (nothing left to copy).
     editor.commands.setContent('<p><strong>bold</strong> more</p>');
     select(6, 10);
-    mouseUp();
+    pointerUp();
     expect(editor.getHTML()).not.toContain('<strong>more');
   });
 
   it('waits for a dragged selection to finish before painting it', async () => {
     // Dragging extends the selection a step at a time; only the settled
     // range is painted, not the first character the drag covered.
-    const { editor, button, select, mouseUp } = await setup('<p><strong>bold</strong> hello</p>');
+    const { editor, button, select, pointerUp } = await setup('<p><strong>bold</strong> hello</p>');
 
     select(1, 5);
     fireEvent.click(button());
@@ -59,24 +63,27 @@ describe('the format painter', () => {
     select(6, 11);
     expect(editor.getHTML()).not.toContain('<strong>hello');
 
-    mouseUp();
+    pointerUp();
     expect(editor.getHTML()).toContain('<strong>hello</strong>');
   });
 
-  it('paints a keyboard selection once it settles', async () => {
-    const { editor, button, select } = await setup('<p><strong>bold</strong> plain</p>');
+  it('paints a shift+arrows selection when the Shift key comes up', async () => {
+    const { editor, button, select, shiftUp } = await setup('<p><strong>bold</strong> plain</p>');
 
     select(1, 5);
     fireEvent.click(button());
     // Let the focus restore (tiptap does it in a rAF) run before selecting.
     await act(async () => { await new Promise((r) => setTimeout(r, 50)); });
-    // No mouseup: the 250ms of quiet after the last selectionUpdate applies.
+    // Extending with shift+arrows fires selectionUpdate at every step, and
+    // none of them paint — the Shift key coming up ends the selection.
     select(6, 11);
-    await waitFor(() => expect(editor.getHTML()).toContain('<strong>plain</strong>'), { timeout: 2000 });
+    expect(editor.getHTML()).not.toContain('<strong>plain');
+    shiftUp();
+    expect(editor.getHTML()).toContain('<strong>plain</strong>');
   });
 
   it('stays armed after a double click, until Escape', async () => {
-    const { editor, button, select, mouseUp } = await setup('<p><strong>bold</strong> one two</p>');
+    const { editor, button, select, pointerUp } = await setup('<p><strong>bold</strong> one two</p>');
 
     select(1, 5);
     // The sequence a browser dispatches for a double click: two clicks, the
@@ -87,9 +94,9 @@ describe('the format painter', () => {
     fireEvent.doubleClick(button());
 
     select(6, 9);
-    mouseUp();
+    pointerUp();
     select(10, 13);
-    mouseUp();
+    pointerUp();
     expect(editor.getHTML()).toContain('<strong>one</strong>');
     expect(editor.getHTML()).toContain('<strong>two</strong>');
 
@@ -98,7 +105,7 @@ describe('the format painter', () => {
   });
 
   it('a second click cancels it without painting anything', async () => {
-    const { editor, button, select, mouseUp } = await setup('<p><strong>bold</strong> plain</p>');
+    const { editor, button, select, pointerUp } = await setup('<p><strong>bold</strong> plain</p>');
 
     select(1, 5);
     fireEvent.click(button());
@@ -106,18 +113,18 @@ describe('the format painter', () => {
     expect(button()).toHaveAttribute('aria-pressed', 'false');
 
     select(6, 11);
-    mouseUp();
+    pointerUp();
     expect(editor.getHTML()).not.toContain('<strong>plain');
   });
 
   it('copies the text colour, and takes off what the source did not have', async () => {
     // "red" is 1–4, " bold" is 4–9.
-    const { editor, button, select, mouseUp } = await setup('<p><span style="color:#ff0000">red</span> <strong>bold</strong></p>');
+    const { editor, button, select, pointerUp } = await setup('<p><span style="color:#ff0000">red</span> <strong>bold</strong></p>');
 
     select(1, 4);
     fireEvent.click(button());
     select(5, 9);
-    mouseUp();
+    pointerUp();
 
     const html = editor.getHTML();
     // The colour reached the target (the browser serialises it as rgb()).
@@ -126,16 +133,34 @@ describe('the format painter', () => {
     expect(html).not.toContain('<strong>');
   });
 
-  it('copies a heading level onto the selected paragraphs', async () => {
+  it('leaves block formatting alone: a heading word onto a paragraph', async () => {
     // "Title" is 1–6 in the h1 (node size 8), "para" is 9–13.
-    const { editor, button, select, mouseUp } = await setup('<h1>Title</h1><p>para</p>');
+    const { editor, button, select, pointerUp } = await setup('<h1>Title</h1><p>para</p>');
 
     select(1, 6);
     fireEvent.click(button());
     select(9, 13);
-    mouseUp();
+    pointerUp();
 
-    expect(editor.getHTML()).toMatch(/<h1[^>]*>para<\/h1>/);
+    // The paragraph keeps its block: painting a word out of a heading used
+    // to turn its whole target paragraph into one.
+    expect(editor.getHTML()).toMatch(/<p[^>]*>para<\/p>/);
+    expect(editor.getHTML()).not.toMatch(/<h1[^>]*>para/);
+  });
+
+  it('leaves block formatting alone: a heading word onto a list item', async () => {
+    // "T" is 1–2 in the h1 (node size 8), "one" is 9–12 in the list item.
+    const { editor, button, select, pointerUp } = await setup('<h1>T</h1><ul><li>one</li></ul>');
+
+    select(1, 2);
+    fireEvent.click(button());
+    select(9, 12);
+    pointerUp();
+
+    // The item keeps its list: painting a heading onto it used to lift it
+    // out of the list.
+    expect(editor.getHTML()).toMatch(/<li[^>]*><p[^>]*>one<\/p>/);
+    expect(editor.getHTML()).not.toMatch(/<h1[^>]*>one/);
   });
 
   // A span styled with a font size or background colour, but no colour of its
@@ -146,24 +171,24 @@ describe('the format painter', () => {
   // applied nothing at all unless the source also had a colour.
   it('copies a font size from text with no colour of its own', async () => {
     // "big" is 1–4, " plain" is 4–10; paint onto "plain" (5–10).
-    const { editor, button, select, mouseUp } = await setup('<p><span style="font-size: 20px">big</span> plain</p>');
+    const { editor, button, select, pointerUp } = await setup('<p><span style="font-size: 20px">big</span> plain</p>');
 
     select(1, 4);
     fireEvent.click(button());
     select(5, 10);
-    mouseUp();
+    pointerUp();
 
     expect(editor.getHTML()).toMatch(/<span style="font-size: 20px[^"]*">plain<\/span>/);
   });
 
   it('copies a background colour from text with no colour of its own', async () => {
     // "bg" is 1–3, " plain" is 3–9; paint onto "plain" (4–9).
-    const { editor, button, select, mouseUp } = await setup('<p><span style="background-color: yellow">bg</span> plain</p>');
+    const { editor, button, select, pointerUp } = await setup('<p><span style="background-color: yellow">bg</span> plain</p>');
 
     select(1, 3);
     fireEvent.click(button());
     select(4, 9);
-    mouseUp();
+    pointerUp();
 
     expect(editor.getHTML()).toMatch(/<span style="background-color: yellow[^"]*">plain<\/span>/);
   });

@@ -277,9 +277,10 @@ const ToolbarButton = React.forwardRef<HTMLButtonElement, {
 });
 
 /**
- * What the format painter copies: the four marks the toolbar toggles, the
- * three textStyle attributes, and the heading level (only ever applied —
- * flattening the target's headings would take its lists and code with them).
+ * What the format painter copies: the four marks the toolbar toggles and
+ * the three textStyle attributes. Block formatting stays out: painting a
+ * word out of a heading would turn its whole paragraph into one, and a
+ * heading painted onto a list item lifts it out of its list.
  */
 type PaintedFormat = {
   bold: boolean;
@@ -289,7 +290,6 @@ type PaintedFormat = {
   color: string | null;
   backgroundColor: string | null;
   fontSize: string | null;
-  heading: 1 | 2 | null;
 };
 
 /** The painter while armed: the copied format, the selection it came from
@@ -895,8 +895,6 @@ export function RichTextEditor({
         color: style.color || null,
         backgroundColor: style.backgroundColor || null,
         fontSize: style.fontSize || null,
-        heading: editor.isActive("heading", { level: 1 }) ? 1
-          : editor.isActive("heading", { level: 2 }) ? 2 : null,
       },
       from: editor.state.selection.from,
       to: editor.state.selection.to,
@@ -912,11 +910,13 @@ export function RichTextEditor({
   // Applying is replace semantics, as in a word processor: the marks the
   // source didn't have come off the target too. A selection being dragged or
   // extended with shift+arrows fires selectionUpdate at every step, so the
-  // apply waits for it to settle — 250ms of quiet, or the mouse button
-  // coming up, whichever comes first.
+  // apply waits for the selection to be finished: the pointer coming up, or
+  // the Shift key after a shift+arrows extension (a pause mid-drag, or a
+  // slow step of the extension, would otherwise paint the half-made
+  // selection). A long-press on a phone ends the same way, with the finger
+  // coming up.
   useEffect(() => {
     if (!editor || !painter) return;
-    let timer: ReturnType<typeof setTimeout> | null = null;
     const apply = () => {
       const { from, to, empty } = editor.state.selection;
       // Still the selection it was armed with, or just a caret: keep waiting.
@@ -938,24 +938,15 @@ export function RichTextEditor({
       } else {
         chain = chain.unsetMark("textStyle");
       }
-      if (format.heading) chain = chain.setHeading({ level: format.heading });
       chain.run();
       if (!painter.sticky) setPainter(null);
     };
-    const settle = () => {
-      if (timer) clearTimeout(timer);
-      timer = setTimeout(() => { timer = null; apply(); }, 250);
-    };
-    const onMouseUp = () => {
-      if (timer) { clearTimeout(timer); timer = null; }
-      apply();
-    };
-    editor.on("selectionUpdate", settle);
-    editor.view.dom.addEventListener("mouseup", onMouseUp);
+    const onKeyUp = (event: KeyboardEvent) => { if (event.key === "Shift") apply(); };
+    editor.view.dom.addEventListener("pointerup", apply);
+    editor.view.dom.addEventListener("keyup", onKeyUp);
     return () => {
-      editor.off("selectionUpdate", settle);
-      editor.view.dom.removeEventListener("mouseup", onMouseUp);
-      if (timer) clearTimeout(timer);
+      editor.view.dom.removeEventListener("pointerup", apply);
+      editor.view.dom.removeEventListener("keyup", onKeyUp);
     };
   }, [editor, painter]);
   useEffect(() => {
@@ -964,6 +955,17 @@ export function RichTextEditor({
     document.addEventListener("keydown", onKey);
     return () => { document.removeEventListener("keydown", onKey); };
   }, [painter]);
+  // While armed, the editor's element says so. The composer handles Escape
+  // in the capture phase, before this editor could, and closes on it; with
+  // the attribute it leaves that one Escape to the painter instead, as it
+  // already does for the "@" recipient list (the next Escape is the
+  // composer's again).
+  useEffect(() => {
+    if (!editor || !painter) return;
+    const dom = editor.view.dom;
+    dom.setAttribute("data-format-painter", "armed");
+    return () => dom.removeAttribute("data-format-painter");
+  }, [editor, painter]);
 
   // The toolbar is one Tab stop (roving tabindex): the button that had the
   // focus last keeps it, the arrows, Home and End move inside.
@@ -1687,6 +1689,10 @@ export function RichTextEditor({
               item="more-formatting"
               popup="dialog"
               expanded={moreOpen}
+              // The armed painter sits behind this button when its group is
+              // folded away: light the button up, or nothing on the row
+              // would say the painter is on.
+              active={painter !== null && folded.has("history")}
               onClick={() => setMoreOpen((v) => !v)}
               title={tWindows("more_formatting")}
             >
