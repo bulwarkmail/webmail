@@ -244,6 +244,40 @@ describe('service worker with offline mode on', () => {
     expect(await (await worker.request({ url: `${ORIGIN}/en/mail`, mode: 'navigate' }))!.text()).toBe('<html>/en/mail</html>');
   });
 
+  it('answers the encoded chunk address the page loads from the bracketed one it precached (#1626)', async () => {
+    const caches = new FakeCaches();
+    await shellOn(caches, true);
+    let online = true;
+    const fetchMock = vi.fn(async (url: unknown) => {
+      if (!online) throw new TypeError('Failed to fetch');
+      return sameOrigin(`file ${decodeURIComponent(new URL(String(url)).pathname)}`, 'text/javascript');
+    });
+    const worker = loadWorker({ buildId: 'a', caches, clients: [], fetch: fetchMock });
+    await settle();
+    // As the build's file list names them: the folders as they are on disk.
+    const listed = [
+      '/_next/static/chunks/app/(main)/[locale]/layout-1.js',
+      '/_next/static/chunks/app/(main)/[locale]/mail/[[...segments]]/page-2.js',
+    ];
+    await worker.dispatch('message', { data: { type: 'offline-shell', on: true, urls: listed, buildId: 'a' } });
+    await vi.waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
+    await settle();
+
+    online = false;
+    // As the page asks for them: every segment through encodeURIComponent.
+    const asked = [
+      '/_next/static/chunks/app/(main)/%5Blocale%5D/layout-1.js',
+      '/_next/static/chunks/app/(main)/%5Blocale%5D/mail/%5B%5B...segments%5D%5D/page-2.js',
+      // Also when a client encodes the parentheses or leaves the brackets.
+      '/_next/static/chunks/app/%28main%29/%5Blocale%5D/layout-1.js',
+      '/_next/static/chunks/app/(main)/[locale]/layout-1.js',
+    ];
+    for (const url of asked) {
+      const answer = await worker.request({ url: `${ORIGIN}${url}` });
+      expect(await answer!.text()).toBe(`file ${decodeURIComponent(url)}`);
+    }
+  });
+
   it('keeps nothing for a page that redirects out of the app', async () => {
     const caches = new FakeCaches();
     const fetchMock = vi.fn(async () => {

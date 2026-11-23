@@ -132,6 +132,23 @@ function staticPath(url) {
   return url.pathname === BASE_PATH + "/store-worker.js" || url.pathname.startsWith(BASE_PATH + "/sqlite3mc/");
 }
 
+/**
+ * Where a static file is kept: its address with every path segment encoded
+ * the way Next.js writes it into the page (encodeURIComponent per segment).
+ * The build's file list names /chunks/app/(main)/[locale]/page.js and the
+ * page loads /chunks/app/(main)/%5Blocale%5D/page.js; both land on one key.
+ */
+function staticKey(url) {
+  const path = url.pathname.split("/").map((segment) => {
+    try {
+      return encodeURIComponent(decodeURIComponent(segment));
+    } catch (_) {
+      return segment;
+    }
+  }).join("/");
+  return url.origin + path + url.search;
+}
+
 /** Where a page of the app is kept: its address without the query. */
 function documentKey(url) {
   return url.origin + url.pathname.replace(/\/+$/, "");
@@ -191,12 +208,13 @@ async function respondWithDocument(request) {
 }
 
 async function respondWithStatic(request) {
-  const hit = await caches.match(request.url);
+  const key = staticKey(new URL(request.url));
+  const hit = await caches.match(key);
   if (hit) return hit;
   const response = await fetch(request);
   if (response.ok && response.type === "basic") {
     const copy = response.clone();
-    caches.open(shellCacheFor(response)).then((cache) => cache.put(request.url, copy)).catch(() => {});
+    caches.open(shellCacheFor(response)).then((cache) => cache.put(key, copy)).catch(() => {});
   }
   return response;
 }
@@ -245,7 +263,7 @@ async function precacheShell(urls, buildId) {
         const url = new URL(u, self.location.origin);
         if (url.origin !== self.location.origin) return;
         const page = appPagePath(url) !== null && !staticPath(url);
-        const key = page ? documentKey(url) : url.href;
+        const key = page ? documentKey(url) : staticKey(url);
         if (await cache.match(key)) return;
         const response = await fetch(url.href, { credentials: "same-origin" });
         if (!response.ok || response.type !== "basic") return;
