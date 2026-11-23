@@ -658,8 +658,10 @@ function EmailCard({
                 {t("email_viewer.forward")}
               </Button>
             )}
-            {/* One ⋮ per message: Print and the plugins' reader actions share it. */}
+            {/* One ⋮ per message: message and plugin actions share it. */}
             <ConversationMessageMenu
+              email={email}
+              blobSource={blobSource}
               onPrint={onPrint}
               hasExtra={readerActions.length > 0}
               className="w-auto h-8 px-2 flex-shrink-0 rounded-md border border-border"

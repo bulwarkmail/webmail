@@ -926,8 +926,9 @@ function MvConversationCard({ email, onOpen, timeFormat, compact, shortDates }: 
   );
 }
 
-/** True when a click landed on something inside `container` that acts on its own (a button, a link, a field). */
-function isInteractiveClick(target: EventTarget | null, container: HTMLElement): boolean {
+/** Ignore action controls and clicks that bubble from a portalled menu or dialog. */
+function ignoreConversationHeaderClick(target: EventTarget | null, container: HTMLElement): boolean {
+  if (!(target instanceof Node) || !container.contains(target)) return true;
   const el = target instanceof Element ? target.closest('button, a, input, textarea, select, [role="button"], [role="menuitem"]') : null;
   return !!el && el !== container && container.contains(el);
 }
@@ -1016,7 +1017,7 @@ export function MvExpandedConversationCard({
         tabIndex={0}
         aria-expanded
         onClick={(e) => {
-          if (isInteractiveClick(e.target, e.currentTarget)) return;
+          if (ignoreConversationHeaderClick(e.target, e.currentTarget)) return;
           if (window.getSelection()?.toString()) return;
           onCollapse(email);
         }}
@@ -1060,7 +1061,7 @@ export function MvExpandedConversationCard({
             phone={compact}
           />
         </span>
-        {(showReplies || onPrint) && (
+        {(showReplies || onPrint || (email.blobId && !devices.noExport)) && (
           <span className="flex items-center gap-1 -my-2 -me-2 flex-shrink-0" data-mv-conversation-actions="">
             {showReplies && onReply && (
               <button
@@ -1095,7 +1096,7 @@ export function MvExpandedConversationCard({
                 <Forward className="w-5 h-5" />
               </button>
             )}
-            <ConversationMessageMenu onPrint={onPrint} />
+            <ConversationMessageMenu email={email} blobSource={blobSource} onPrint={onPrint} />
           </span>
         )}
       </div>
@@ -5556,7 +5557,7 @@ export function EmailViewer({
         onClick={mvOpenIndex >= 0 ? (e) => {
           // In a conversation, a click on the sender line folds the open
           // message, as Gmail does; its buttons and links keep their own job.
-          if (isInteractiveClick(e.target, e.currentTarget)) return;
+          if (ignoreConversationHeaderClick(e.target, e.currentTarget)) return;
           if (window.getSelection()?.toString()) return;
           setMvOpenFolded(true);
         } : undefined}
@@ -5683,7 +5684,11 @@ export function EmailViewer({
                         )}
                         {/* This message's own ⋮, as each message of the conversation has. */}
                         {mvBefore.length + mvAfter.length > 0 && (
-                          <ConversationMessageMenu onPrint={devices.noPrint ? undefined : () => handlePrint()} />
+                          <ConversationMessageMenu
+                            email={email}
+                            blobSource={blobSource}
+                            onPrint={devices.noPrint ? undefined : () => handlePrint()}
+                          />
                         )}
                       </span>
                     )}
@@ -5717,7 +5722,7 @@ export function EmailViewer({
           data-mv-open-header-mobile={mvOpenIndex >= 0 ? "" : undefined}
           data-plugin-list-avoid=""
           onClick={mvOpenIndex >= 0 ? (e) => {
-            if (isInteractiveClick(e.target, e.currentTarget)) return;
+            if (ignoreConversationHeaderClick(e.target, e.currentTarget)) return;
             if (window.getSelection()?.toString()) return;
             setMvOpenFolded(true);
           } : undefined}

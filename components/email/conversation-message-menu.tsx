@@ -1,13 +1,23 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
+import { useShallow } from "zustand/react/shallow";
 import { useTranslations } from "next-intl";
-import { MoreVertical, Printer } from "@/components/icons";
+import { Code, MoreVertical, Printer } from "@/components/icons";
 import { ContextMenu, ContextMenuItem } from "@/components/ui/context-menu";
 import { useContextMenu } from "@/hooks/use-context-menu";
+import { useDevicePolicy } from "@/hooks/use-device-policy";
+import { useEmailExport } from "@/hooks/use-message-file-actions";
+import type { Email } from "@/lib/jmap/types";
+import { useAuthStore } from "@/stores/auth-store";
+import { resolveEmailBlobContext, useEmailStore, type EmailBlobContext } from "@/stores/email-store";
+import { ViewSourceDialog } from "./view-source-dialog";
 import { cn } from "@/lib/utils";
 
 interface ConversationMessageMenuProps {
+  email: Email;
+  /** The route captured for this message when the conversation was opened. */
+  blobSource?: EmailBlobContext;
   /** Prints this message alone. Left out: no Print (the organisation turned printing off). */
   onPrint?: () => void;
   /** The look of the ⋮ button, to match the buttons next to it. */
@@ -15,18 +25,28 @@ interface ConversationMessageMenuProps {
   iconClassName?: string;
   /** More items for the same menu, such as plugins' reader actions, so a message has one ⋮. */
   children?: ReactNode;
-  /** Whether `children` has anything to show; the ⋮ shows for Print or for these. */
+  /** Whether `children` has anything to show; the ⋮ shows for built-in or extra actions. */
   hasExtra?: boolean;
 }
 
 /**
  * One conversation message's own ⋮: what applies to that message rather
- * than the whole conversation, such as printing it alone.
+ * than the whole conversation.
  */
-export function ConversationMessageMenu({ onPrint, className, iconClassName, children, hasExtra }: ConversationMessageMenuProps) {
+export function ConversationMessageMenu({ email, blobSource, onPrint, className, iconClassName, children, hasExtra }: ConversationMessageMenuProps) {
   const t = useTranslations("email_viewer");
   const menu = useContextMenu<null>();
-  if (!onPrint && !hasExtra) return null;
+  const { client } = useAuthStore(useShallow((state) => ({
+    client: state.client, revision: state.connectedAccountsRevision,
+  })));
+  const source = useEmailStore(useShallow(() => blobSource ?? resolveEmailBlobContext(email, client)));
+  const devices = useDevicePolicy(source.clientAccountId ?? email);
+  const exportEmail = useEmailExport();
+  const [sourceTarget, setSourceTarget] = useState<{ emailId: string; blobId: string; route: EmailBlobContext } | null>(null);
+  const canViewSource = !!email.blobId && !devices.noExport;
+  const sourceOpen = canViewSource && sourceTarget?.emailId === email.id
+    && sourceTarget.blobId === email.blobId && sourceTarget.route === source;
+  if (!onPrint && !canViewSource && !hasExtra) return null;
   return (
     <>
       <button
@@ -53,8 +73,28 @@ export function ConversationMessageMenu({ onPrint, className, iconClassName, chi
             onClick={() => { menu.closeContextMenu(); onPrint(); }}
           />
         )}
+        {canViewSource && (
+          <ContextMenuItem
+            icon={Code}
+            label={t("view_source")}
+            onClick={() => {
+              menu.closeContextMenu();
+              if (email.blobId) setSourceTarget({ emailId: email.id, blobId: email.blobId, route: source });
+            }}
+          />
+        )}
         {hasExtra && <div onClickCapture={() => menu.closeContextMenu()}>{children}</div>}
       </ContextMenu>
+      {sourceOpen && (
+        <ViewSourceDialog
+          isOpen
+          onClose={() => setSourceTarget(null)}
+          blobId={sourceTarget.blobId}
+          client={source.client}
+          accountId={source.accountId}
+          onDownload={() => void exportEmail(email, undefined, source)}
+        />
+      )}
     </>
   );
 }
