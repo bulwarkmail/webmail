@@ -165,7 +165,8 @@ export interface FilterMetadata {
   /** See VacationForward; kept while switched off, so the card remembers it. */
   vacationForward?: VacationForward;
   /**
-   * The script runs the server-managed "vacation" script via `include`.
+   * The script runs the server's vacation script ("vacation", or "managed"
+   * on Stalwart 1.2) via `include`.
    * Servers like Stalwart keep one active script, so a VacationResponse
    * that activates its own script would otherwise switch the filters off.
    */

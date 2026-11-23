@@ -19,8 +19,10 @@ export interface ParseResult {
   isOpaque: boolean;
   vacation?: VacationSieveConfig;
   externalRequires: string[];
-  /** The script runs the server's "vacation" script via `include`. */
+  /** The script runs the server's vacation script ("vacation", or "managed" on Stalwart 1.2) via `include`. */
   includeVacation?: boolean;
+  /** The script that include names, as written; read as "vacation" where it is not found. */
+  vacationScriptName?: string;
   /** Forwarding from the vacation card, on or off. */
   vacationForward?: VacationForward;
   /** Who gets the auto-reply, when not everyone. */
@@ -939,6 +941,23 @@ export function parseScript(content: string): ParseResult {
       return true;
     });
 
+    // The script the vacation block includes, so that a save keeps it:
+    // "vacation", or "managed" on Stalwart 1.2.
+    let vacationScriptName: string | undefined;
+    if (metadata.includeVacation === true) {
+      for (const r of external.rules) {
+        const raw = r.rawBlock || '';
+        if (!/#\s*Vacation auto-reply/i.test(raw)) continue;
+        // The statement on its own line: an audience domain like
+        // "include.example" on the test above it is not one.
+        const name = raw.match(/^[ \t]*include\b[^;"]*"((?:[^"\\]|\\.)*)"[ \t]*;/m)?.[1];
+        if (name) {
+          vacationScriptName = name.replace(/\\([\s\S])/g, '$1');
+          break;
+        }
+      }
+    }
+
     // "include" belongs to the vacation include, which the generator adds
     // back on its own; keep it only if an external rule uses it too, so that
     // turning the auto-reply off drops it from the script.
@@ -952,7 +971,7 @@ export function parseScript(content: string): ParseResult {
       isOpaque: false,
       vacation: metadata.vacation,
       externalRequires,
-      ...(metadata.includeVacation === true ? { includeVacation: true } : {}),
+      ...(metadata.includeVacation === true ? { includeVacation: true, ...(vacationScriptName ? { vacationScriptName } : {}) } : {}),
       ...(metadata.vacationForward ? { vacationForward: metadata.vacationForward } : {}),
       ...(metadata.vacationAudience ? { vacationAudience: metadata.vacationAudience } : {}),
     };

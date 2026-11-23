@@ -101,6 +101,23 @@ async function saveAndReadBack(dialog: ReturnType<typeof within>) {
   return { stored: useFilterStore.getState().rules[0], script: updateSieveScript.mock.calls[0][1] as string };
 }
 
+describe('the note that the auto-reply is on', () => {
+  it('goes by an included "vacation" script, not by an included "managed"', () => {
+    const noteFor = (state: Record<string, unknown>) => {
+      useFilterStore.setState(state);
+      showSettings(rule());
+      const shown = screen.queryByText('vacation_active') !== null;
+      cleanup();
+      return shown;
+    };
+    // Up to Stalwart 1.1 the filters include "vacation" only while it is on.
+    expect(noteFor({ includeVacation: true, vacationScriptName: 'vacation' })).toBe(true);
+    expect(noteFor({ includeVacation: false, vacationScriptName: 'vacation' })).toBe(false);
+    // An include of Stalwart 1.2's "managed" stays while it is off.
+    expect(noteFor({ includeVacation: true, vacationScriptName: 'managed' })).toBe(false);
+  });
+});
+
 describe('saving an edited rule on the settings page', () => {
   it('drops an end that was cleared, along with a moved start', async () => {
     // 1 Oct 05:14 - 07:14 in Berlin; then the start goes to 2 Oct 05:14 and

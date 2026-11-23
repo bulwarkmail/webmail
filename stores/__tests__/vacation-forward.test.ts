@@ -230,6 +230,7 @@ describe('readVacationFilters', () => {
     ]);
     expect(await readVacationFilters(server.client, 'b')).toEqual({
       includesVacation: true,
+      stalwartVacation: { blobId: expect.any(String), isActive: false },
       forward: forward(),
       forwardAvailable: true,
       audience: null,
