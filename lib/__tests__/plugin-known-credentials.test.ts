@@ -25,7 +25,7 @@ vi.mock('@/lib/plugin-secrets/vault', () => ({
   userKey: () => 'user',
 }));
 
-import { declaredUserCredential } from '@/lib/plugin-secrets/known-plugins';
+import { declaredUserCredential, declaringPlugins } from '@/lib/plugin-secrets/known-plugins';
 import { resolveCredential } from '@/lib/plugin-secrets/proxy';
 
 const USER = { username: 'alice@example.org', serverUrl: 'https://mail.example.org' };
@@ -50,6 +50,15 @@ describe('declaredUserCredential', () => {
     approvals.push({ pluginId: 'upload', status: 'pending', manifest: { credentials: { cloud: CLOUD } } });
     expect(await declaredUserCredential('upload', 'cloud')).toBeNull();
     approvals.push({ pluginId: 'upload', status: 'approved', manifest: { credentials: { cloud: CLOUD } } });
+    expect(await declaredUserCredential('upload', 'cloud')).toEqual(CLOUD);
+  });
+
+  it('names every approved version of an upload, the first one first', async () => {
+    const newer = { ...CLOUD, label: 'Nextcloud 2' };
+    approvals.push({ pluginId: 'upload', status: 'approved', manifest: { credentials: { cloud: CLOUD } } });
+    approvals.push({ pluginId: 'upload', status: 'denied', manifest: { credentials: { cloud: CLOUD } } });
+    approvals.push({ pluginId: 'upload', status: 'approved', manifest: { credentials: { cloud: newer } } });
+    expect((await declaringPlugins('upload', 'cloud')).map((plugin) => plugin.spec)).toEqual([CLOUD, newer]);
     expect(await declaredUserCredential('upload', 'cloud')).toEqual(CLOUD);
   });
 

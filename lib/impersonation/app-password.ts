@@ -83,14 +83,17 @@ async function callStalwart(
 
 /**
  * Create an app password on the mailbox `authHeader` opens. Without
- * `expiresAt` it lives until the user deletes it. `trusted` is false for a
- * user-chosen server, which must be reached through the rebinding-safe fetch.
+ * `expiresAt` it lives until the user deletes it. Without `permissions` it
+ * has the account's rights; with them only those (Stalwart's `Replace`; it
+ * refuses any the account lacks). `trusted` is false for a user-chosen
+ * server, which must be reached through the rebinding-safe fetch.
  */
 export async function createAppPassword(opts: {
   serverUrl: string;
   authHeader: string;
   description: string;
   expiresAt?: string;
+  permissions?: Record<string, true>;
   trusted?: boolean;
 }): Promise<{ id: string; secret: string }> {
   const result = await callStalwart(
@@ -98,7 +101,15 @@ export async function createAppPassword(opts: {
     opts.authHeader,
     [
       'x:AppPassword/set',
-      { create: { imp: { description: opts.description, ...(opts.expiresAt ? { expiresAt: opts.expiresAt } : {}) } } },
+      {
+        create: {
+          imp: {
+            description: opts.description,
+            ...(opts.expiresAt ? { expiresAt: opts.expiresAt } : {}),
+            ...(opts.permissions ? { permissions: { '@type': 'Replace', permissions: opts.permissions } } : {}),
+          },
+        },
+      },
       '0',
     ],
     opts.trusted ?? true,
@@ -108,7 +119,59 @@ export async function createAppPassword(opts: {
     const failed = (result.notCreated as Record<string, { type?: string; description?: string }> | undefined)?.imp;
     throw new ImpersonationCredentialError(failed?.description || failed?.type || 'App password was not created');
   }
+  if (opts.permissions) await keepOnlyIfLimited({ ...opts, id: created.id, permissions: opts.permissions });
   return { id: created.id, secret: created.secret };
+}
+
+/**
+ * Read back what Stalwart made, and delete it again unless it is limited to
+ * the permissions asked for. A server that ignored `permissions` (an older
+ * release) would otherwise hand out the account's full rights unnoticed.
+ */
+async function keepOnlyIfLimited(opts: {
+  serverUrl: string;
+  authHeader: string;
+  id: string;
+  permissions: Record<string, true>;
+  trusted?: boolean;
+}): Promise<void> {
+  let limited = false;
+  try {
+    const result = await callStalwart(
+      opts.serverUrl,
+      opts.authHeader,
+      ['x:AppPassword/get', { ids: [opts.id], properties: ['permissions'] }, '0'],
+      opts.trusted ?? true,
+    );
+    const item = (result.list as { id?: string; permissions?: unknown }[] | undefined)?.find((p) => p.id === opts.id);
+    limited = isLimitedTo(item?.permissions, opts.permissions);
+  } catch {
+    // Not readable is not known to be limited.
+  }
+  if (limited) return;
+  try {
+    await deleteAppPassword({ serverUrl: opts.serverUrl, authHeader: opts.authHeader, id: opts.id, trusted: opts.trusted });
+  } catch {
+    // Reported below; the user can still delete it under Settings → Security.
+  }
+  throw new ImpersonationCredentialError('The mail server did not limit the app password to the permissions asked for');
+}
+
+/**
+ * `Replace` with no permission beyond those asked for (Stalwart may grant
+ * fewer, never more). Only the shape asked for counts: a map of permission
+ * names to true or false, and nothing beside it. Anything else may mean
+ * rights this cannot read, so it is not limited.
+ */
+function isLimitedTo(stored: unknown, asked: Record<string, true>): boolean {
+  if (!isPlainObject(stored)) return false;
+  const { '@type': type, permissions, ...rest } = stored;
+  if (type !== 'Replace' || Object.keys(rest).length > 0 || !isPlainObject(permissions)) return false;
+  return Object.entries(permissions).every(([name, on]) => on === false || (on === true && asked[name] === true));
+}
+
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return !!value && typeof value === 'object' && !Array.isArray(value);
 }
 
 /** Delete an app password on the mailbox `authHeader` opens. */
