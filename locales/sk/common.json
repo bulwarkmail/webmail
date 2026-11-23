@@ -1764,6 +1764,7 @@
         "extra_compact": "Veľmi kompaktné",
         "compact": "Kompaktné",
         "regular": "Bežné",
+        "regular_no_avatars": "Bežné bez avatarov",
         "comfortable": "Pohodlné"
       },
       "interface_layout": {

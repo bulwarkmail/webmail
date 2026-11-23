@@ -33,7 +33,7 @@ export const RESTRICTION_KEYS: readonly RestrictionKeyDef[] = [
   // purpose: an admin can preset them (policy defaults) but not lock or hide
   // them, see UNLOCKABLE_SETTING_KEYS in lib/accessibility-settings.ts. The
   // presets live in lib/admin/policy-settings.ts.
-  { key: 'density', label: 'Density', category: 'Appearance', type: 'enum', allowedValues: ['extra-compact', 'compact', 'regular', 'comfortable'], page: 'policy', defaultValue: 'regular' },
+  { key: 'density', label: 'Density', category: 'Appearance', type: 'enum', allowedValues: ['extra-compact', 'compact', 'regular', 'regular-no-avatars', 'comfortable'], page: 'policy', defaultValue: 'regular' },
   { key: 'interfaceLayout', label: 'Interface Layout', category: 'Appearance', type: 'enum', allowedValues: ['default', 'mountain-view'], page: 'policy', defaultValue: 'default' },
   {
     key: 'singleKeyShortcuts',

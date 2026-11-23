@@ -3,16 +3,16 @@
 import { useTranslations } from "next-intl";
 import { cn, formatFileSize } from "@/lib/utils";
 import { LIST_COLUMN_CLASS } from "@/hooks/use-list-row-shape";
-import type { Density } from "@/stores/settings-store";
+import { densityShowsAvatar, type Density } from "@/lib/density";
 
 /**
  * The width of what leads a list row before its From cell: the small avatar,
- * or under extra-compact the checkbox once something is ticked (nothing
+ * or in a density without avatars the checkbox once something is ticked (nothing
  * otherwise). The header and the message sub-rows reserve the same width so
  * their columns start where the rows' do.
  */
 export function listLeadClass(density: Density, selecting: boolean): string | null {
-  if (density !== 'extra-compact') return 'w-8';
+  if (densityShowsAvatar(density)) return 'w-8';
   return selecting ? 'w-10 lg:w-6' : null;
 }
 

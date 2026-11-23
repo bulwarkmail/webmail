@@ -1761,6 +1761,7 @@
         "extra_compact": "超紧凑",
         "compact": "紧凑",
         "regular": "默认",
+        "regular_no_avatars": "默认（无头像）",
         "comfortable": "宽松"
       },
       "interface_layout": {

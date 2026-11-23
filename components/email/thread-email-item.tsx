@@ -24,6 +24,7 @@ import { TagBadge } from "./tag-badge";
 import { ROW_TAG_GROUP_CLASS } from "./row-tag-classes";
 import { useListRowShape, LIST_COLUMN_CLASS } from "@/hooks/use-list-row-shape";
 import { SizeCell, listLeadClass } from "./list-columns";
+import { densityShowsAvatar } from "@/lib/density";
 import { rowA11yProps, rowLabel } from "./list-a11y";
 
 interface ThreadEmailItemProps {
@@ -290,14 +291,14 @@ export function ThreadEmailItem({
         {isUnread && (
           <div
             className="absolute start-7 -translate-y-1/2"
-            style={{ top: `calc(var(--density-item-py) + ${density === 'extra-compact' ? '0.625rem' : '1rem'})` }}
+            style={{ top: `calc(var(--density-item-py) + ${densityShowsAvatar(density) ? '1rem' : '0.625rem'})` }}
           >
             <Circle className="w-1.5 h-1.5 fill-unread text-unread" />
           </div>
         )}
 
         {/* Small Avatar */}
-        {density !== 'extra-compact' && (
+        {densityShowsAvatar(density) && (
           <Avatar
             name={sender?.name}
             email={sender?.email}

@@ -103,7 +103,7 @@ describe('the lock list (lib/admin/restriction-keys.ts)', () => {
     // The store checks only the type of these, so the list has to match
     // the unions in stores/settings-store.ts by hand.
     const expected: Record<string, string[]> = {
-      density: ['extra-compact', 'compact', 'regular', 'comfortable'],
+      density: ['extra-compact', 'compact', 'regular', 'regular-no-avatars', 'comfortable'],
       interfaceLayout: ['default', 'mountain-view'],
       deleteAction: ['trash', 'trash-and-read', 'permanent'],
       mailLayout: ['split', 'focus', 'horizontal'],

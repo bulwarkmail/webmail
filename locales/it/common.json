@@ -1761,6 +1761,7 @@
         "extra_compact": "Molto compatto",
         "compact": "Compatto",
         "regular": "Normale",
+        "regular_no_avatars": "Normale senza avatar",
         "comfortable": "Comodo"
       },
       "interface_layout": {

@@ -1761,6 +1761,7 @@
         "extra_compact": "Īpaši kompakts",
         "compact": "Kompakts",
         "regular": "Parasts",
+        "regular_no_avatars": "Parasts bez avatāriem",
         "comfortable": "Plašs"
       },
       "interface_layout": {

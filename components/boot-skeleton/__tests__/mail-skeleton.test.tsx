@@ -35,6 +35,7 @@ describe('mail skeleton', () => {
     ['extra-compact', 0, 0],
     ['compact', 16, 0],
     ['regular', 16, 16],
+    ['regular-no-avatars', 0, 16],
     ['comfortable', 16, 32],
   ] as const)('draws %s stacked rows with %i avatars and %i preview lines', (density, avatars, previewLines) => {
     const rows = html(<MailListRowsSkeleton shape="stacked" density={density} preview />);
@@ -49,7 +50,7 @@ describe('mail skeleton', () => {
 
   it('draws every shape for the boot page and lets the boot attributes pick', () => {
     const rows = html(<MailListRowsSkeleton />);
-    expect(rows.querySelector('.boot-density-xc\\:hidden')).not.toBeNull();
+    expect(rows.querySelector('.boot-no-avatar\\:hidden')).not.toBeNull();
     expect(rows.querySelector('.boot-dense\\:hidden')).not.toBeNull();
     expect(rows.querySelector('.boot-one-preview-line\\:hidden')).not.toBeNull();
     expect(rows.querySelector('.desk\\:mv\\:block')).not.toBeNull();

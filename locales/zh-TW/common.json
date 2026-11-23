@@ -1764,6 +1764,7 @@
         "extra_compact": "超緊湊",
         "compact": "緊湊",
         "regular": "預設",
+        "regular_no_avatars": "預設（無頭像）",
         "comfortable": "寬鬆"
       },
       "interface_layout": {

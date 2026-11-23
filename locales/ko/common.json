@@ -1761,6 +1761,7 @@
         "extra_compact": "매우 좁게",
         "compact": "좁게",
         "regular": "보통",
+        "regular_no_avatars": "보통 (아바타 없음)",
         "comfortable": "넓게"
       },
       "interface_layout": {

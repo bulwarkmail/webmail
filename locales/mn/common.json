@@ -1764,6 +1764,7 @@
         "extra_compact": "Нэмэлт авсаархан",
         "compact": "Компакт",
         "regular": "Тогтмол",
+        "regular_no_avatars": "Тогтмол, аватаргүй",
         "comfortable": "Тав тухтай"
       },
       "interface_layout": {

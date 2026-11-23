@@ -119,6 +119,7 @@ describe('boot script: layout settings', () => {
     ['extra-compact', 'auto', '2px', '0px'],
     ['compact', 'auto', '4px', '1px'],
     ['regular', '48px', '12px', '4px'],
+    ['regular-no-avatars', '48px', '12px', '4px'],
     ['comfortable', '64px', '16px', '6px'],
   ])('writes the %s density variables', (density, height, py, sidebar) => {
     settings({ density });

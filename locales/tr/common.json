@@ -1761,6 +1761,7 @@
         "extra_compact": "Çok Sıkışık",
         "compact": "Sıkışık",
         "regular": "Normal",
+        "regular_no_avatars": "Normal, avatarsız",
         "comfortable": "Rahat"
       },
       "interface_layout": {

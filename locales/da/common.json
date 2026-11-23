@@ -1764,6 +1764,7 @@
         "extra_compact": "Ekstra kompakt",
         "compact": "Kompakt",
         "regular": "Almindelig",
+        "regular_no_avatars": "Almindelig uden avatarer",
         "comfortable": "Komfortabel"
       },
       "interface_layout": {

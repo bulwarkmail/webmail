@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { densityVarsFor } from '@/lib/density';
+import { densityVarsFor, type Density } from '@/lib/density';
 import { persist } from 'zustand/middleware';
 import { useThemeStore } from './theme-store';
 import { useLocaleStore } from './locale-store';
@@ -510,7 +510,7 @@ function toKeywordViews(keywords: KeywordDefinition[]): { id: string; name: stri
 }
 
 export type { FontSize } from '@/lib/accessibility-settings';
-export type Density = 'extra-compact' | 'compact' | 'regular' | 'comfortable';
+export type { Density } from '@/lib/density';
 /**
  * Which interface layout drives the shell's geometry. `default` is the app's
  * own layout; `mountain-view` is an optional alternative arrangement of the

@@ -1764,6 +1764,7 @@
         "extra_compact": "خیلی فشرده",
         "compact": "فشرده",
         "regular": "معمولی",
+        "regular_no_avatars": "معمولی بدون آواتار",
         "comfortable": "راحت"
       },
       "interface_layout": {

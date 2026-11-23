@@ -37,7 +37,7 @@ import {
 } from "@/components/icons";
 import { cn } from "@/lib/cn";
 import { ServerMarkup } from "./server-markup";
-import type { Density } from "@/lib/density";
+import { densityShowsAvatar, type Density } from "@/lib/density";
 import { Bar, Block, Circle, SkeletonRegion, repeat, textWidth } from "./kit";
 import { AppShellSkeleton, type RailLabels } from "./shell";
 
@@ -187,8 +187,8 @@ interface RowOptions {
 
 /** Classes for the avatar, or null where the density has none. */
 function avatarClass(o: RowOptions): string | null {
-  if (o.density === undefined) return "boot-density-xc:hidden";
-  return o.density === "extra-compact" ? null : "";
+  if (o.density === undefined) return "boot-no-avatar:hidden";
+  return densityShowsAvatar(o.density) ? "" : null;
 }
 
 /** Classes for the two preview lines, or null where the row has none. */
