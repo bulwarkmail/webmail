@@ -13,6 +13,13 @@ export const MAX_APP_PASSWORD_PERMISSIONS = 128;
 /** The user's own data over JMAP, WebDAV, IMAP, POP3, ManageSieve. */
 const DATA_PERMISSION_RE = /^(jmap|dav|imap|pop3|sieve)[A-Z][A-Za-z0-9]{1,62}$/;
 
+/**
+ * Names the pattern above takes that are not the user's own data: Stalwart
+ * 0.16 lists creating, changing and deleting accounts as JMAP Principal
+ * permissions.
+ */
+const NOT_OWN_DATA_RE = /^jmapPrincipal(Create|Update|Destroy|Set)$/;
+
 /** Further ones a plugin may list; anything else is refused. */
 const OTHER_PERMISSIONS = new Set([
   SIGN_IN_PERMISSION,
@@ -37,7 +44,7 @@ export function checkAppPasswordPermissions(value: unknown): { permissions: stri
   }
   const out: string[] = [];
   for (const name of list) {
-    if (typeof name !== 'string' || !(DATA_PERMISSION_RE.test(name) || OTHER_PERMISSIONS.has(name))) {
+    if (typeof name !== 'string' || NOT_OWN_DATA_RE.test(name) || !(DATA_PERMISSION_RE.test(name) || OTHER_PERMISSIONS.has(name))) {
       return { error: `appPassword.permissions: "${String(name)}" is not a permission a plugin may have` };
     }
     if (!out.includes(name)) out.push(name);

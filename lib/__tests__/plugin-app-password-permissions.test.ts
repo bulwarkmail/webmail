@@ -20,7 +20,11 @@ describe('app password permissions', () => {
   });
 
   it('refuse the administration, other credentials, impersonation and blobs not the account\'s', () => {
-    for (const name of ['sysAppPasswordCreate', 'sysApiKeyCreate', 'sysAccountGet', 'impersonate', 'fetchAnyBlob', 'scimAccess', 'actionReloadSettings']) {
+    for (const name of [
+      'sysAppPasswordCreate', 'sysApiKeyCreate', 'sysAccountGet', 'impersonate', 'fetchAnyBlob', 'scimAccess', 'actionReloadSettings',
+      // Stalwart 0.16's account management, named like data.
+      'jmapPrincipalCreate', 'jmapPrincipalUpdate', 'jmapPrincipalDestroy',
+    ]) {
       expect(checkAppPasswordPermissions({ permissions: [name] })).toEqual({ error: expect.stringContaining(`"${name}"`) });
     }
   });
