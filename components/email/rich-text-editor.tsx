@@ -942,11 +942,24 @@ export function RichTextEditor({
       if (!painter.sticky) setPainter(null);
     };
     const onKeyUp = (event: KeyboardEvent) => { if (event.key === "Shift") apply(); };
-    editor.view.dom.addEventListener("pointerup", apply);
-    editor.view.dom.addEventListener("keyup", onKeyUp);
+    // A drag that starts in the text can end outside it (below the last
+    // line, over the toolbar), where the pointer comes up on another element:
+    // a press that began in the text counts wherever it ends.
+    const dom = editor.view.dom;
+    let pressedInText = false;
+    const onPointerDown = () => { pressedInText = true; };
+    const onPointerUp = (event: PointerEvent) => {
+      const fromText = pressedInText || dom.contains(event.target as Node | null);
+      pressedInText = false;
+      if (fromText) apply();
+    };
+    dom.addEventListener("pointerdown", onPointerDown);
+    dom.ownerDocument.addEventListener("pointerup", onPointerUp);
+    dom.addEventListener("keyup", onKeyUp);
     return () => {
-      editor.view.dom.removeEventListener("pointerup", apply);
-      editor.view.dom.removeEventListener("keyup", onKeyUp);
+      dom.removeEventListener("pointerdown", onPointerDown);
+      dom.ownerDocument.removeEventListener("pointerup", onPointerUp);
+      dom.removeEventListener("keyup", onKeyUp);
     };
   }, [editor, painter]);
   useEffect(() => {

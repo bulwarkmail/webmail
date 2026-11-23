@@ -2,6 +2,7 @@ import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { describe, expect, it } from 'vitest';
 import React from 'react';
 import type { Editor } from '@tiptap/core';
+import { closeHistory, undoDepth } from '@tiptap/pm/history';
 
 import { RichTextEditor } from '../rich-text-editor';
 
@@ -65,6 +66,54 @@ describe('the format painter', () => {
 
     pointerUp();
     expect(editor.getHTML()).toContain('<strong>hello</strong>');
+  });
+
+  it('paints a dragged selection whose drag ends outside the text', async () => {
+    const { editor, button, select } = await setup('<p><strong>bold</strong> hello</p>');
+
+    select(1, 5);
+    fireEvent.click(button());
+
+    // The press starts in the text, the drag runs past the last line and the
+    // button comes up over something else.
+    fireEvent.pointerDown(editor.view.dom);
+    select(6, 11);
+    fireEvent.pointerUp(document.body);
+    expect(editor.getHTML()).toContain('<strong>hello</strong>');
+  });
+
+  it('ignores a pointer that comes up outside the text after a press outside it', async () => {
+    const { editor, button, select } = await setup('<p><strong>bold</strong> hello</p>');
+
+    select(1, 5);
+    fireEvent.click(button());
+    select(6, 11);
+    // A click somewhere else on the page (another field, a button).
+    fireEvent.pointerDown(document.body);
+    fireEvent.pointerUp(document.body);
+    expect(editor.getHTML()).not.toContain('<strong>hello');
+    expect(button()).toHaveAttribute('aria-pressed', 'true');
+  });
+
+  it('paints in one step that a single undo takes back', async () => {
+    const { editor, button, select, pointerUp } = await setup('<p><strong>bold</strong> plain</p>');
+
+    // Loading the content already left a step in the history: close it, so
+    // the paint can't merge into it and an undo of that step can't pass
+    // for the undo of the paint.
+    act(() => { editor.view.dispatch(closeHistory(editor.state.tr)); });
+    const depth = undoDepth(editor.state);
+
+    select(1, 5);
+    fireEvent.click(button());
+    select(6, 11);
+    pointerUp();
+    expect(editor.getHTML()).toContain('<strong>plain</strong>');
+    expect(undoDepth(editor.state)).toBe(depth + 1);
+
+    act(() => { editor.commands.undo(); });
+    expect(editor.getHTML()).not.toContain('<strong>plain');
+    expect(editor.getHTML()).toContain('<strong>bold</strong>');
   });
 
   it('paints a shift+arrows selection when the Shift key comes up', async () => {
