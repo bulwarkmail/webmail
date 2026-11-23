@@ -46,10 +46,12 @@ function cacheKey(email: Email, source: string, listeners: number, generation: n
  * The login and JMAP account a row's message is in, as one string. A stamped
  * row (merged views) says where it is from; an unstamped row is in the shared
  * account of the folder listed, or else the browsed login's own account.
+ * Without a badge handler it reads nothing: every list row runs this.
  */
-function useRowSource(email: Email): string {
+function useRowSource(email: Email, enabled: boolean): string {
   const activeLogin = useAuthStore((state) => state.activeAccountId);
   return useEmailStore((state) => {
+    if (!enabled) return "";
     if (email.sourceClientAccountId && email.sourceAccountId) {
       return `${email.sourceClientAccountId}/${email.sourceAccountId}`;
     }
@@ -139,7 +141,7 @@ export function clearRowBadgeCache(): void {
 export function usePluginRowBadges(email: Email): EmailListBadge[] {
   const listeners = renderHooks.onEmailListItemRender.size;
   const generation = useSyncExternalStore(subscribeRowBadges, rowBadgeGeneration, rowBadgeGeneration);
-  const source = useRowSource(email);
+  const source = useRowSource(email, listeners > 0);
   const key = listeners > 0 ? cacheKey(email, source, listeners, generation) : null;
   const [state, setState] = useState<{ key: string | null; badges: EmailListBadge[] }>(() => ({
     key,
