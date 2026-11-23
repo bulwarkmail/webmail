@@ -96,6 +96,21 @@ describe('notification bell', () => {
     expect(links[0].closest('button')).toBeNull();
   });
 
+  // A calendar notice such as 'Alex Example cancelled "Quarterly planning ..."'
+  // was cut at one line, and an entry has nothing that shows more (#1834).
+  it('shows the whole title and body of an entry, wrapped', () => {
+    act(() => add({ level: 'warning', title: 'Alex cancelled "Quarterly planning"', body: 'Moved to next week' }));
+    render(<NavigationRail collapsed />);
+    fireEvent.click(bell());
+
+    const title = screen.getByText('Alex cancelled "Quarterly planning"');
+    expect(title).not.toHaveClass('truncate');
+    expect(title).toHaveClass('wrap-anywhere');
+    const body = screen.getByText('Moved to next week');
+    expect(body.className).not.toMatch(/line-clamp/);
+    expect(body).toHaveClass('wrap-anywhere');
+  });
+
   it('marks all read and clears', () => {
     act(() => {
       add({ level: 'warning', title: 'a', body: '' });

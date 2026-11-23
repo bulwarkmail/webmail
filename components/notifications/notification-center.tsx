@@ -90,12 +90,13 @@ export function NotificationPanel({ onClose, className, sheet = false }: { onClo
                 <span className="mt-0.5 flex-shrink-0" aria-hidden="true"><EntryIcon entry={entry} /></span>
                 <span className="flex-1 min-w-0">
                   <span className="flex items-baseline gap-2">
-                    <span className={cn("flex-1 min-w-0 truncate text-sm", !entry.read && "font-semibold")}>{entry.title}</span>
+                    {/* The whole text, wrapped: an entry has nothing that shows more (#1834). */}
+                    <span className={cn("flex-1 min-w-0 wrap-anywhere text-sm", !entry.read && "font-semibold")}>{entry.title}</span>
                     <time dateTime={new Date(entry.time).toISOString()} className="flex-shrink-0 text-[0.6875rem] text-muted-foreground tabular-nums">
                       {format.relativeTime(new Date(entry.time), now)}
                     </time>
                   </span>
-                  {entry.body && <span className="block text-xs text-muted-foreground line-clamp-2 break-words">{entry.body}</span>}
+                  {entry.body && <span className="block text-xs text-muted-foreground wrap-anywhere">{entry.body}</span>}
                   <span className="block text-[0.6875rem] text-muted-foreground truncate">
                     {entry.level !== "info" && <span className="sr-only">{t(entry.level === "error" ? "level_error" : "level_warning")}: </span>}
                     {source}

@@ -345,9 +345,9 @@ export function ToastItem({ toast, onClose, held = false, stackHovered = false, 
           of squeezing the text to a word per line. */}
       <div data-toast-body="" className="flex-1 min-w-0 flex flex-wrap items-start gap-x-4 gap-y-1.5">
         <div className="flex-1 min-w-[6rem] pt-px">
-          <p id={titleId} className="text-[0.84375rem] font-medium text-foreground leading-snug">{toast.title}</p>
+          <p id={titleId} className="text-[0.84375rem] font-medium text-foreground leading-snug wrap-anywhere">{toast.title}</p>
           {toast.message && (
-            <p className="text-[0.78125rem] mt-0.5 text-muted-foreground leading-snug">{toast.message}</p>
+            <p className="text-[0.78125rem] mt-0.5 text-muted-foreground leading-snug wrap-anywhere">{toast.message}</p>
           )}
           {toast.pluginId && (
             <p className="mt-1 flex items-center gap-1 text-[0.6875rem] text-muted-foreground" data-toast-source="">

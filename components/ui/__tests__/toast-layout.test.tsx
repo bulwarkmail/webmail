@@ -270,4 +270,14 @@ describe('toasts and the focused element', () => {
     expect(toastContainer()).not.toHaveAttribute('data-dodging');
     expect(toastContainer().style.top).toBe('');
   });
+
+  // A name or title without spaces (an address, a link) ran past the card's
+  // edge, which hides what overflows (#1834).
+  it('wraps a long word in the title and message instead of cutting it off', () => {
+    render(<Toasts />);
+    const long = 'alexander.example@long-company-name.example.org';
+    act(() => { toast.warning(`${long} cancelled "Planning"`, long); });
+    expect(screen.getByText(`${long} cancelled "Planning"`)).toHaveClass('wrap-anywhere');
+    expect(screen.getByText(long)).toHaveClass('wrap-anywhere');
+  });
 });
