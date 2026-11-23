@@ -1763,6 +1763,7 @@
         "extra_compact": "مضغوط جدًا",
         "compact": "مضغوط",
         "regular": "عادي",
+        "regular_no_avatars": "عادي بدون صور رمزية",
         "comfortable": "مريح"
       },
       "interface_layout": {

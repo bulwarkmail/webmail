@@ -701,7 +701,7 @@ export function EmailList({
     const measured = shape ? measuredRowHeights.current.get(shape.key) : undefined;
     if (measured !== undefined) return measured;
     if (isFocusedMailLayout) {
-      return { 'extra-compact': 28, compact: 40, regular: 56, comfortable: 64 }[density];
+      return { 'extra-compact': 28, compact: 40, regular: 56, 'regular-no-avatars': 56, comfortable: 64 }[density];
     }
     // Rows the list has not measured yet are placed by this guess, and each
     // one it gets wrong shifts the list when it is measured on the way back
@@ -709,8 +709,8 @@ export function EmailList({
     // The rows' heights as Chromium lays them out (line heights, so the same
     // at any zoom): a guess off by a pixel moved every row when it was measured
     // and drew the first list a second time.
-    let size = { 'extra-compact': 53, compact: 57, regular: 73, comfortable: 81 }[density];
-    if (showPreview && (density === 'regular' || density === 'comfortable')) {
+    let size = { 'extra-compact': 53, compact: 57, regular: 73, 'regular-no-avatars': 73, comfortable: 81 }[density];
+    if (showPreview && (density === 'regular' || density === 'regular-no-avatars' || density === 'comfortable')) {
       // A preview line; comfortable rows show a second one (mail-15). A mail
       // without a preview draws one line, "No preview available".
       size += density === 'comfortable' && !shape?.emptyPreview ? 45.5 : 22.75;

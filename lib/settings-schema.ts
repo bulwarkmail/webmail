@@ -164,7 +164,7 @@ const ENTRIES: SettingSchemaEntry[] = [
   // --- Appearance ---
   choice('theme', 'appearance', `${AP}theme.label`, opts(`${AP}theme.`, ['light', 'dark', 'system']), { store: 'theme' }),
   choice('density', 'appearance', `${AP}list_density.label`,
-    opts(`${AP}list_density.`, ['extra-compact', 'compact', 'regular', 'comfortable'], { 'extra-compact': 'extra_compact' })),
+    opts(`${AP}list_density.`, ['extra-compact', 'compact', 'regular', 'regular-no-avatars', 'comfortable'], { 'extra-compact': 'extra_compact', 'regular-no-avatars': 'regular_no_avatars' })),
   choice('interfaceLayout', 'appearance', `${AP}interface_layout.label`,
     opts(`${AP}interface_layout.`, ['default', 'mountain-view'], { 'mountain-view': 'mountain_view' })),
   choice('mailLayout', 'appearance', `${EB}mail_layout.label`, opts(`${EB}mail_layout.`, ['split', 'focus', 'horizontal'])),

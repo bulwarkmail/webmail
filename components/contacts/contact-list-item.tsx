@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 import type { ContactCard } from "@/lib/jmap/types";
 import { getContactDisplayName, getContactPhotoRef, getContactPrimaryEmail } from "@/stores/contact-store";
 import { CheckSquare, Square } from "@/components/icons";
-import type { Density } from "@/stores/settings-store";
+import { densityShowsAvatar, type Density } from "@/lib/density";
 
 interface ContactListItemProps {
   contact: ContactCard;
@@ -112,7 +112,7 @@ export function ContactListItem({ contact, isSelected, isChecked, hasSelection, 
         </button>
       )}
 
-      {density !== 'extra-compact' && (
+      {densityShowsAvatar(density) && (
         <Avatar name={name} email={email} contactPhoto={getContactPhotoRef(contact) ?? null} size="sm" className="flex-shrink-0" />
       )}
 

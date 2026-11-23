@@ -1775,6 +1775,7 @@
         "extra_compact": "Πολύ συμπαγής",
         "compact": "Συμπαγής",
         "regular": "Κανονική",
+        "regular_no_avatars": "Κανονική χωρίς avatar",
         "comfortable": "Άνετη"
       },
       "interface_layout": {

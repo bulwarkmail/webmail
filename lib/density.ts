@@ -6,10 +6,23 @@
  * the first paint so the skeleton and the loaded page share one row rhythm.
  */
 
-export type Density = 'extra-compact' | 'compact' | 'regular' | 'comfortable';
+/**
+ * `regular-no-avatars` is `regular` with the avatar left out of each row:
+ * same spacing, same lines, same chips.
+ */
+export type Density = 'extra-compact' | 'compact' | 'regular' | 'regular-no-avatars' | 'comfortable';
 export type InterfaceLayout = 'default' | 'mountain-view';
 
 export type DensityVars = Record<string, string>;
+
+const REGULAR_DENSITY: DensityVars = {
+  '--list-item-height': '48px',
+  '--density-item-py': '12px',
+  '--density-item-gap': '12px',
+  '--density-header-py': '12px',
+  '--density-card-p': '16px',
+  '--density-sidebar-py': '4px',
+};
 
 export const DEFAULT_DENSITY: Record<Density, DensityVars> = {
   'extra-compact': {
@@ -28,14 +41,8 @@ export const DEFAULT_DENSITY: Record<Density, DensityVars> = {
     '--density-card-p': '10px',
     '--density-sidebar-py': '1px',
   },
-  regular: {
-    '--list-item-height': '48px',
-    '--density-item-py': '12px',
-    '--density-item-gap': '12px',
-    '--density-header-py': '12px',
-    '--density-card-p': '16px',
-    '--density-sidebar-py': '4px',
-  },
+  regular: REGULAR_DENSITY,
+  'regular-no-avatars': { ...REGULAR_DENSITY },
   comfortable: {
     '--list-item-height': '64px',
     '--density-item-py': '16px',
@@ -48,18 +55,22 @@ export const DEFAULT_DENSITY: Record<Density, DensityVars> = {
 
 /**
  * Mountain View's rows come in three rhythms - 32, 40 and 48 pixels - and the
- * app offers four densities. The four are laid over that scale: `compact`,
+ * app offers four row spacings. The four are laid over that scale: `compact`,
  * `regular` and `comfortable` land on the three exactly, and `extra-compact`
  * continues the series a step below, so every density still does something.
+ * `regular-no-avatars` shares `regular`'s spacing.
  *
  * Only the vertical rhythm is restated. Everything else a density touches -
  * gaps, card padding, the sidebar's own row padding - keeps its default value;
  * a navigation row is already pinned to 32px by the layout's own token.
  */
+const MOUNTAIN_VIEW_REGULAR: DensityVars = { ...DEFAULT_DENSITY.regular, '--list-item-height': '40px', '--density-item-py': '10px' };
+
 export const MOUNTAIN_VIEW_DENSITY: Record<Density, DensityVars> = {
   'extra-compact': { ...DEFAULT_DENSITY['extra-compact'], '--list-item-height': '28px', '--density-item-py': '4px' },
   compact: { ...DEFAULT_DENSITY.compact, '--list-item-height': '32px', '--density-item-py': '6px' },
-  regular: { ...DEFAULT_DENSITY.regular, '--list-item-height': '40px', '--density-item-py': '10px' },
+  regular: MOUNTAIN_VIEW_REGULAR,
+  'regular-no-avatars': { ...MOUNTAIN_VIEW_REGULAR },
   comfortable: { ...DEFAULT_DENSITY.comfortable, '--list-item-height': '48px', '--density-item-py': '14px' },
 };
 
@@ -73,5 +84,13 @@ export function densityVarsFor(density: Density, layout: InterfaceLayout): Densi
  * attachment, and the chips come back at regular and comfortable (#1706).
  */
 export function densityShowsAttachmentChips(density: Density): boolean {
-  return density === 'regular' || density === 'comfortable';
+  return density === 'regular' || density === 'regular-no-avatars' || density === 'comfortable';
+}
+
+/**
+ * Whether list rows draw the avatar (or sender logo) at their start.
+ * Extra-compact leaves it out to save room, `regular-no-avatars` by choice.
+ */
+export function densityShowsAvatar(density: Density): boolean {
+  return density !== 'extra-compact' && density !== 'regular-no-avatars';
 }

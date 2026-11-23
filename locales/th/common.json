@@ -5136,6 +5136,7 @@
         "extra_compact": "กะทัดรัดพิเศษ",
         "compact": "กะทัดรัด",
         "regular": "ปกติ",
+        "regular_no_avatars": "ปกติ ไม่มีอวตาร",
         "comfortable": "โปร่งสบาย"
       },
       "interface_layout": {

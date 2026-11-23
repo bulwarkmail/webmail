@@ -266,8 +266,10 @@
 
 /* contacts, files, apps */
 
-/* List density (data-boot-density, the settings' density): contact rows drop
-   the avatar and the second line in extra compact. */
+/* List density (data-boot-density, the settings' density): rows have no avatar
+   in extra compact and normal without avatars (boot-no-avatar, mail rows
+   too), and contact rows drop the second line in extra compact. */
+@custom-variant boot-no-avatar (&:where([data-boot-density="extra-compact"] *, [data-boot-density="regular-no-avatars"] *));
 @custom-variant boot-density-xc (&:where([data-boot-density="extra-compact"] *));
 
 /* /contacts/new: the new-contact form (data-boot-pane="create"). */
@@ -392,9 +394,9 @@
 
 /* mail */
 
-/* List density (the density setting, data-boot-density): extra-compact rows
-   (boot-density-xc, defined with contacts above) have no avatar, compact and
-   extra-compact ones no preview. */
+/* List density (the density setting, data-boot-density): extra-compact and
+   regular-no-avatars rows (boot-no-avatar, defined with contacts above) have
+   no avatar, compact and extra-compact ones no preview. */
 @custom-variant boot-dense (&:where([data-boot-density="compact"] *, [data-boot-density="extra-compact"] *));
 /* Message previews turned off (showPreview). */
 @custom-variant boot-no-preview (&:where([data-boot-preview="off"] *));

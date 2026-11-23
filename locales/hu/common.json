@@ -1763,6 +1763,7 @@
         "extra_compact": "Extra kompakt",
         "compact": "Kompakt",
         "regular": "Normál",
+        "regular_no_avatars": "Normál, avatarok nélkül",
         "comfortable": "Kényelmes"
       },
       "interface_layout": {

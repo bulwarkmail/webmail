@@ -1771,6 +1771,7 @@
         "extra_compact": "Ekstra kompakt",
         "compact": "Kompakt",
         "regular": "Vanleg",
+        "regular_no_avatars": "Vanleg utan avatarar",
         "comfortable": "Romsleg"
       },
       "interface_layout": {

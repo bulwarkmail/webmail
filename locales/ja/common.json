@@ -1760,6 +1760,7 @@
         "extra_compact": "極小",
         "compact": "コンパクト",
         "regular": "標準",
+        "regular_no_avatars": "標準（アバターなし）",
         "comfortable": "ゆったり"
       },
       "interface_layout": {

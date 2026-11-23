@@ -18,6 +18,7 @@ const DENSITY_PREVIEW: Record<Density, { py: string; gap: string; showAvatar: bo
   'extra-compact': { py: 'py-0.5', gap: 'gap-1.5', showAvatar: false, showPreview: false },
   compact:         { py: 'py-1',   gap: 'gap-2',   showAvatar: true,  showPreview: false },
   regular:         { py: 'py-2.5', gap: 'gap-3',   showAvatar: true,  showPreview: true },
+  'regular-no-avatars': { py: 'py-2.5', gap: 'gap-3', showAvatar: false, showPreview: true },
   comfortable:     { py: 'py-4',   gap: 'gap-4',   showAvatar: true,  showPreview: true },
 };
 
@@ -113,6 +114,7 @@ export function AppearanceSettings() {
               { value: 'extra-compact', label: t('list_density.extra_compact') },
               { value: 'compact', label: t('list_density.compact') },
               { value: 'regular', label: t('list_density.regular') },
+              { value: 'regular-no-avatars', label: t('list_density.regular_no_avatars') },
               { value: 'comfortable', label: t('list_density.comfortable') },
             ]}
           />

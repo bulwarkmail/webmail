@@ -1763,6 +1763,7 @@
         "extra_compact": "Extra compact",
         "compact": "Compact",
         "regular": "Regular",
+        "regular_no_avatars": "Regular without avatars",
         "comfortable": "Comfortable"
       },
       "interface_layout": {

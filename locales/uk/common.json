@@ -1760,6 +1760,7 @@
         "extra_compact": "Дуже компактний",
         "compact": "Компактний",
         "regular": "Регулярний",
+        "regular_no_avatars": "Регулярний без аватарів",
         "comfortable": "Комфортно"
       },
       "interface_layout": {

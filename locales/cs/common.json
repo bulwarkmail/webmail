@@ -1760,6 +1760,7 @@
         "extra_compact": "Velmi kompaktní",
         "compact": "Kompaktní",
         "regular": "Běžná",
+        "regular_no_avatars": "Běžná bez avatarů",
         "comfortable": "Pohodlná"
       },
       "interface_layout": {

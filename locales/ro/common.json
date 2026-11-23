@@ -1763,6 +1763,7 @@
         "extra_compact": "Extra compact",
         "compact": "Compact",
         "regular": "Regulat",
+        "regular_no_avatars": "Regulat fără avatare",
         "comfortable": "Confortabil"
       },
       "interface_layout": {

@@ -1,5 +1,5 @@
 import { ArrowLeft, Book, BookUser, ChevronDown, Filter, Menu, Plus, Printer, Square, X } from "@/components/icons";
-import type { Density } from "@/lib/density";
+import { densityShowsAvatar, type Density } from "@/lib/density";
 import { cn } from "@/lib/cn";
 import { Bar, Block, Circle, repeat, textWidth } from "./kit";
 import { AppShellSkeleton, type RailLabels } from "./shell";
@@ -45,6 +45,7 @@ export function ContactRowsSkeleton({
   letters?: boolean;
   count?: number;
 }) {
+  const avatarHide = density === undefined ? "boot-no-avatar:hidden" : densityShowsAvatar(density) ? undefined : "hidden";
   const compactHide = density === undefined ? "boot-density-xc:hidden" : density === "extra-compact" ? "hidden" : undefined;
   return (
     <div aria-hidden="true" data-testid="contact-list-skeleton">
@@ -57,7 +58,7 @@ export function ContactRowsSkeleton({
       ) : null}
       {repeat(count, (i) => (
         <div className="w-full flex items-center border-b border-border" style={CONTACT_ROW_STYLE}>
-          <Circle className={cn("w-8 h-8", compactHide)} />
+          <Circle className={cn("w-8 h-8", avatarHide)} />
           <div className="flex-1 min-w-0">
             <div className="flex items-center h-5">
               <Bar className="h-3.5" w={textWidth(i, 35, 30)} />

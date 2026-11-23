@@ -83,6 +83,17 @@ describe('ContactListItem', () => {
     expect(container.querySelector('[data-testid="avatar"]') || container.querySelector('.rounded-full')).toBeNull();
   });
 
+  it('hides avatar but keeps the email line in regular-no-avatars density', () => {
+    const { container } = render(<ContactListItem contact={contact} {...baseProps} density="regular-no-avatars" />);
+    expect(container.querySelector('.rounded-full')).toBeNull();
+    expect(screen.getByText('alice@example.com')).toBeInTheDocument();
+  });
+
+  it('draws the avatar in regular density', () => {
+    const { container } = render(<ContactListItem contact={contact} {...baseProps} />);
+    expect(container.querySelector('.rounded-full')).not.toBeNull();
+  });
+
   it('opens the row menu on long-press without leaking the press state onto the row', () => {
     const errors = vi.spyOn(console, 'error').mockImplementation(() => {});
     vi.useFakeTimers();

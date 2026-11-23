@@ -64,6 +64,7 @@ import { usePrintListener, usePrinting } from "@/components/print/print-root";
 import { FilePen } from "@/components/icons";
 import { editAccountOf, useEditAttachment } from "@/hooks/use-edit-attachment";
 import { useSettingsStore } from "@/stores/settings-store";
+import { densityShowsAvatar } from "@/lib/density";
 import { useContactStore } from "@/stores/contact-store";
 import { useEmailStore, resolveEmailBlobContext, type EmailBlobContext } from "@/stores/email-store";
 import { useAuthStore } from "@/stores/auth-store";
@@ -495,7 +496,7 @@ function EmailCard({
         )}
         style={{ gap: 'var(--density-item-gap)', padding: 'var(--density-card-p)' }}
       >
-        {density !== 'extra-compact' && (
+        {densityShowsAvatar(density) && (
           <Avatar
             name={sender?.name}
             email={sender?.email}

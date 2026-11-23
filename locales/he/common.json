@@ -1704,6 +1704,7 @@
         "extra_compact": "קומפקטי במיוחד",
         "compact": "קומפקטי",
         "regular": "רגיל",
+        "regular_no_avatars": "רגיל ללא אווטארים",
         "comfortable": "נוח"
       },
       "interface_layout": {

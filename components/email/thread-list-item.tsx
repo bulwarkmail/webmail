@@ -12,7 +12,7 @@ import { cn } from "@/lib/utils";
 import { ListAttachmentChips, useListHasAttachment } from "./attachment-chips";
 import { VerificationCodeChip, useListVerificationCode } from "./verification-code-chip";
 import type { Attachment } from "@/lib/jmap/types";
-import { densityShowsAttachmentChips } from "@/lib/density";
+import { densityShowsAttachmentChips, densityShowsAvatar } from "@/lib/density";
 import type { LoadListAttachments } from "@/lib/list-attachments";
 import { SelectableAvatar } from "@/components/email/selectable-avatar";
 import { ArrowDown, Paperclip, Star, Pin, Circle, ChevronRight, ChevronDown, Loader2, MessageSquare, CheckSquare, Square, Reply, Forward, CalendarClock, Folder, Archive, Trash2, MailOpen, ShieldAlert, MoreHorizontal } from "@/components/icons";
@@ -833,8 +833,8 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
           className={cn('px-3', showRowActionButton && onContextMenu && 'pe-12', oneLineRow ? 'flex items-center' : 'flex items-start', mvRow && 'min-h-[var(--list-item-height)]', swipeEnabled && 'relative z-10 bg-inherit')}
           style={{ gap: 'var(--density-item-gap)', paddingBlock: mvRow ? undefined : 'var(--density-item-py)', transform: swipeEnabled && offsetX ? `translateX(${offsetX}px)` : undefined, transition: swipeEnabled && offsetX === 0 ? 'transform 200ms ease-out' : undefined }}
         >
-          {/* Checkbox - only for extra-compact density (no avatar) while in selection mode */}
-          {!mvRow && density === 'extra-compact' && selecting && (
+          {/* Checkbox - only for the densities without an avatar while in selection mode */}
+          {!mvRow && !densityShowsAvatar(density) && selecting && (
             <button
               onClick={handleCheckboxClick}
               role="checkbox"
@@ -868,7 +868,7 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
             />
           )}
 
-          {!mvRow && density !== 'extra-compact' && (
+          {!mvRow && densityShowsAvatar(density) && (
             <AvatarGutter onToggle={handleCheckboxClick}>
               <div className="relative flex flex-shrink-0">
                 <SelectableAvatar
@@ -890,7 +890,7 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
             </AvatarGutter>
           )}
 
-          {isUnread && !mvRow && density === 'extra-compact' && (
+          {isUnread && !mvRow && !densityShowsAvatar(density) && (
             <UnreadDot besideAvatar={false} />
           )}
 
@@ -1579,8 +1579,8 @@ const ConversationRow = React.forwardRef<HTMLDivElement, ThreadListItemProps>(
             className={cn('px-3', showRowActionButton && onContextMenu && 'pe-12', oneLineRow ? 'flex items-center' : 'flex items-start', mvRow && 'min-h-[var(--list-item-height)]', threadSwipeEnabled && 'relative z-10 bg-inherit')}
             style={{ gap: 'var(--density-item-gap)', paddingBlock: mvRow ? undefined : 'var(--density-item-py)', transform: threadSwipeEnabled && threadOffsetX ? `translateX(${threadOffsetX}px)` : undefined, transition: threadSwipeEnabled && threadOffsetX === 0 ? 'transform 200ms ease-out' : undefined }}
           >
-            {/* Checkbox for thread selection - only for extra-compact density (no avatar) while in selection mode */}
-            {!mvRow && density === 'extra-compact' && selecting && (
+            {/* Checkbox for thread selection - only for the densities without an avatar while in selection mode */}
+            {!mvRow && !densityShowsAvatar(density) && selecting && (
               <button
                 onClick={handleThreadCheckboxClick}
                 role="checkbox"
@@ -1614,7 +1614,7 @@ const ConversationRow = React.forwardRef<HTMLDivElement, ThreadListItemProps>(
               />
             )}
 
-            {!mvRow && density !== 'extra-compact' && (
+            {!mvRow && densityShowsAvatar(density) && (
               <AvatarGutter onToggle={handleThreadCheckboxClick}>
                 <div className="relative flex-shrink-0">
                   <SelectableAvatar
@@ -1661,7 +1661,7 @@ const ConversationRow = React.forwardRef<HTMLDivElement, ThreadListItemProps>(
               </AvatarGutter>
             )}
 
-            {hasUnread && !mvRow && density === 'extra-compact' && (
+            {hasUnread && !mvRow && !densityShowsAvatar(density) && (
               <UnreadDot besideAvatar={false} />
             )}
 
