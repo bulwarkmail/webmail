@@ -142,6 +142,19 @@ export interface ThemePolicy {
   lockColorMode: boolean;
 }
 
+/** An admin theme as clients download it: what /api/plugins lists for each theme. */
+export interface SignInTheme {
+  id: string;
+  name: string;
+  version: string;
+  author: string;
+  description: string;
+  variants: string[];
+  forceEnabled: boolean;
+  hasSkin: boolean;
+  contentHash?: string;
+}
+
 export const DEFAULT_THEME_POLICY: ThemePolicy = {
   disabledBuiltinThemes: [],
   disabledThemes: [],
@@ -204,6 +217,11 @@ export interface SettingsPolicy {
   approvedPlugins: string[];
   /** Theme IDs that are force-enabled (users cannot deactivate) */
   forceEnabledThemes: string[];
+  /**
+   * Only in the answer to visitors who are not signed in: the admin theme
+   * the sign-in page shows (lib/admin/sign-in-theme.ts), null for none.
+   */
+  signInTheme?: SignInTheme | null;
   /**
    * Extra Web Push relays offered alongside the built-in default. Users pick
    * from this list; only admins can introduce a relay URL.

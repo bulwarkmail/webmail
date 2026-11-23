@@ -51,9 +51,10 @@ vi.mock('@/lib/version-check', () => ({
   loadState: async () => ({ status: STATUS, lastCheckedAt: null, lastSuccessAt: null }),
   freshStatus: (state: { status: unknown }) => state.status,
 }));
+const themeRegistry = vi.hoisted(() => ({ themes: [] as Record<string, unknown>[] }));
 vi.mock('@/lib/admin/plugin-registry', () => ({
   getPluginRegistry: async () => ({ plugins: [] }),
-  getThemeRegistry: async () => ({ themes: [] }),
+  getThemeRegistry: async () => themeRegistry,
 }));
 vi.mock('@/lib/admin/plugin-dev', () => ({ listDevPlugins: async () => [] }));
 
@@ -68,6 +69,7 @@ const req = (path: string) => new NextRequest(`https://mail.example${path}`);
 beforeEach(() => {
   gate.signedIn = false;
   config.values = {};
+  themeRegistry.themes = [];
 });
 
 afterEach(() => {
@@ -128,5 +130,18 @@ describe('endpoints for visitors who are not signed in', () => {
     const full = await policy(req('/api/admin/policy'));
     expect(full.headers.get('x-bulwark-policy-scope')).toBeNull();
     expect(await full.json()).toEqual({ ...POLICY, scopes: [] });
+  });
+
+  it('the policy names the theme switched on for everyone, for the sign-in page (#1846)', async () => {
+    themeRegistry.themes = [
+      { id: 'brand', name: 'Brand', version: '1.0.0', author: 'IT', description: '', variants: ['light'], enabled: true, forceEnabled: true, contentHash: 'h' },
+      { id: 'other', name: 'Other', version: '1.0.0', author: 'IT', description: '', variants: ['light'], enabled: true },
+    ];
+    const body = await (await policy(req('/api/admin/policy'))).json();
+    expect(body.signInTheme).toMatchObject({ id: 'brand', forceEnabled: true, contentHash: 'h' });
+    expect(JSON.stringify(body)).not.toContain('Other');
+
+    gate.signedIn = true;
+    expect(await (await policy(req('/api/admin/policy'))).json()).not.toHaveProperty('signInTheme');
   });
 });

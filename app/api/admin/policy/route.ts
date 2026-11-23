@@ -11,6 +11,7 @@ import { isStoreUnavailable, storeUnavailableResponse } from '@/lib/auth/store-u
 import { scopesVisibleTo } from '@/lib/admin/policy-scopes';
 import { configReadOnlyResponse } from '@/lib/admin/config-read-only-response';
 import { stripFeedUrls } from '@/lib/admin/company-feeds';
+import { signInThemeFor } from '@/lib/admin/sign-in-theme';
 
 /** The policy version as an HTTP entity tag. */
 function policyETag(version: string): string {
@@ -74,10 +75,13 @@ export async function GET(request: NextRequest) {
       // The login page needs the theme policy and gates; the plugin lists,
       // push relays, sidebar app URLs and hidden account names map the
       // deployment and are only used after signing in, when the client fetches
-      // the policy again.
+      // the policy again. The admin's theme for the sign-in page comes along
+      // (#1846): without it, a browser that never signed in shows the stock colours.
+      const signInTheme = await signInThemeFor(policy).catch(() => undefined);
       return NextResponse.json(
         {
           ...policy,
+          signInTheme,
           forceEnabledPlugins: [],
           approvedPlugins: [],
           pushRelays: [],
