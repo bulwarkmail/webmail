@@ -882,7 +882,8 @@ body[data-theme-skin="builtin-aurora-glass"] [role="menu"] [role="menuitem"]:foc
 body[data-theme-skin="builtin-aurora-glass"] [data-menu-row][data-unread="false"].bg-background:not([data-mv-row]):not([data-mv-mobile-row]):not(:hover) {
   background-color: color-mix(in srgb, var(--color-accent) 30%, transparent);
 }
-body[data-theme-skin="builtin-aurora-glass"] [data-menu-row][data-unread="true"].bg-accent\\/30:not([data-mv-row]):not([data-mv-mobile-row]):not(:hover) {
+/* A selected unread row keeps bg-accent/30 as its selection colour. */
+body[data-theme-skin="builtin-aurora-glass"] [data-menu-row][data-unread="true"].bg-accent\\/30:not([aria-current]):not([data-mv-row]):not([data-mv-mobile-row]):not(:hover) {
   background-color: var(--color-background);
   background-image:
     radial-gradient(60rem 60rem at 12% -10%, rgba(109, 92, 255, 0.22), transparent 60%),
@@ -890,7 +891,7 @@ body[data-theme-skin="builtin-aurora-glass"] [data-menu-row][data-unread="true"]
     radial-gradient(55rem 55rem at 80% 110%, rgba(236, 72, 153, 0.16), transparent 60%),
     radial-gradient(45rem 45rem at -5% 95%, rgba(16, 185, 129, 0.12), transparent 55%);
 }
-.dark body[data-theme-skin="builtin-aurora-glass"] [data-menu-row][data-unread="true"].bg-accent\\/30:not([data-mv-row]):not([data-mv-mobile-row]):not(:hover) {
+.dark body[data-theme-skin="builtin-aurora-glass"] [data-menu-row][data-unread="true"].bg-accent\\/30:not([aria-current]):not([data-mv-row]):not([data-mv-mobile-row]):not(:hover) {
   background-image:
     radial-gradient(60rem 60rem at 12% -10%, rgba(109, 92, 255, 0.16), transparent 58%),
     radial-gradient(50rem 50rem at 105% 5%, rgba(6, 182, 212, 0.11), transparent 52%),
