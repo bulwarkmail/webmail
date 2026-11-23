@@ -207,6 +207,12 @@ export function CalendarWeekView({
   }, [colWidth]);
 
   const stripWidth = gutterWidth + colCount * colWidth;
+  // Every column on screen (free scrolling off, or a week that fits): there is
+  // nothing to scroll sideways. The fractional column width still rounded the
+  // strip a pixel past the pane, which put up a horizontal scrollbar on
+  // Windows and took its height from the hours.
+  const fitsPane = !isMobile && viewportWidth > 0 && colCount <= columnsPerPage
+    && stripWidth <= viewportWidth + gutterWidth + 1;
   const columnsStyle = { gridTemplateColumns: `repeat(${colCount}, ${colWidth}px)` };
 
   const calendarMap = useMemo(() => {
@@ -490,6 +496,7 @@ export function CalendarWeekView({
     <div
       ref={rootRef}
       className="flex min-h-0 min-w-0 flex-col flex-1 overflow-auto [overflow-anchor:none] max-md:pb-20"
+      style={fitsPane ? { overflowX: "hidden" } : undefined}
       onScroll={handleStripScroll}
       role="grid"
       aria-label={t("views.week")}

@@ -57,4 +57,14 @@ describe('Week view in a narrow pane', () => {
     expect(columnWidth()).toBeCloseTo((1366 - 56) / 7);
     expect(screen.queryByRole('button', { name: 'week_all_days' })).toBeNull();
   });
+
+  // With every day on screen the fractional columns still rounded the strip a
+  // pixel past the pane, and Windows showed a horizontal scrollbar.
+  it('scrolls sideways only when there are days off screen', () => {
+    renderAt(1366);
+    expect(screen.getByRole('grid', { name: 'views.week' }).style.overflowX).toBe('hidden');
+    cleanup();
+    renderAt(800);
+    expect(screen.getByRole('grid', { name: 'views.week' }).style.overflowX).toBe('');
+  });
 });
