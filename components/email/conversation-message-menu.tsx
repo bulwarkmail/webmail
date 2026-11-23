@@ -30,20 +30,29 @@ interface ConversationMessageMenuProps {
 }
 
 /**
+ * The login and account a conversation message is read from, and whether
+ * its source may be shown there. Callers that lay out room for the ⋮ use
+ * this too, so they and the menu ask the same account's policy.
+ */
+export function useConversationMessageSource(email: Email, blobSource?: EmailBlobContext) {
+  const { client } = useAuthStore(useShallow((state) => ({
+    client: state.client, revision: state.connectedAccountsRevision,
+  })));
+  const source = useEmailStore(useShallow(() => blobSource ?? resolveEmailBlobContext(email, client)));
+  const devices = useDevicePolicy(source.clientAccountId ?? email);
+  return { source, canViewSource: !!email.blobId && !devices.noExport };
+}
+
+/**
  * One conversation message's own ⋮: what applies to that message rather
  * than the whole conversation.
  */
 export function ConversationMessageMenu({ email, blobSource, onPrint, className, iconClassName, children, hasExtra }: ConversationMessageMenuProps) {
   const t = useTranslations("email_viewer");
   const menu = useContextMenu<null>();
-  const { client } = useAuthStore(useShallow((state) => ({
-    client: state.client, revision: state.connectedAccountsRevision,
-  })));
-  const source = useEmailStore(useShallow(() => blobSource ?? resolveEmailBlobContext(email, client)));
-  const devices = useDevicePolicy(source.clientAccountId ?? email);
+  const { source, canViewSource } = useConversationMessageSource(email, blobSource);
   const exportEmail = useEmailExport();
   const [sourceTarget, setSourceTarget] = useState<{ emailId: string; blobId: string; route: EmailBlobContext } | null>(null);
-  const canViewSource = !!email.blobId && !devices.noExport;
   const sourceOpen = canViewSource && sourceTarget?.emailId === email.id
     && sourceTarget.blobId === email.blobId && sourceTarget.route === source;
   if (!onPrint && !canViewSource && !hasExtra) return null;

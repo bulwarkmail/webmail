@@ -15,10 +15,14 @@ vi.mock('@/hooks/use-media-query', () => ({
   useMediaQuery: () => false,
   useIsMobile: () => false,
 }));
-const noExport = vi.hoisted(() => ({ value: false }));
+// exportOnlyFor: export is allowed for that login alone, off for every other subject.
+const noExport = vi.hoisted(() => ({ value: false, noPrint: false, exportOnlyFor: null as string | null }));
 vi.mock('@/hooks/use-device-policy', async (load) => ({
   ...await load<typeof import('@/hooks/use-device-policy')>(),
-  useDevicePolicy: () => ({ noExport: noExport.value, noPrint: false }),
+  useDevicePolicy: (subject?: unknown) => ({
+    noExport: noExport.exportOnlyFor ? subject !== noExport.exportOnlyFor : noExport.value,
+    noPrint: noExport.noPrint,
+  }),
 }));
 vi.mock('@/components/tour/tour-provider', () => ({
   useTour: () => ({ activeTour: null, startTour: vi.fn(), endTour: vi.fn(), registerStep: vi.fn() }),
@@ -27,7 +31,7 @@ vi.mock('@/components/plugins/plugin-slot', () => ({ PluginSlot: () => null }));
 vi.mock('@/hooks/use-plugin-slot-offers', () => ({ usePluginSlotOffers: () => [] }));
 vi.stubGlobal('ResizeObserver', class { observe() {} unobserve() {} disconnect() {} });
 
-const { EmailViewer } = await import('../email-viewer');
+const { EmailViewer, MvExpandedConversationCard } = await import('../email-viewer');
 const { ThreadConversationView } = await import('../thread-conversation-view');
 
 const mailboxes = [
@@ -91,6 +95,8 @@ beforeEach(() => {
 
 afterEach(() => {
   noExport.value = false;
+  noExport.noPrint = false;
+  noExport.exportOnlyFor = null;
   act(() => { window.dispatchEvent(new Event('afterprint')); });
   delete (HTMLElement.prototype as unknown as { checkVisibility?: unknown }).checkVisibility;
   vi.restoreAllMocks();
@@ -222,5 +228,21 @@ describe('viewing the source of one conversation message (#1833)', () => {
     expect(screen.getByTestId('conversation-message-print')).toBeInTheDocument();
     expect(screen.queryByText('view_source')).not.toBeInTheDocument();
     expect(fetchBlob).not.toHaveBeenCalled();
+  });
+
+  it("shows the ⋮ when only the login the message is read through allows its source", () => {
+    // The card and its menu must ask the same account: here the message has
+    // no stamp, the conversation was read through login-b, and only login-b
+    // allows export. With no replies and no Print, the ⋮ holds View source alone.
+    noExport.exportOnlyFor = 'login-b';
+    noExport.noPrint = true;
+    const { container } = render(
+      <MvExpandedConversationCard email={older()} timeFormat="24h" onCollapse={() => {}}
+        blobSource={{ ...blobSource, clientAccountId: 'login-b' }} />,
+    );
+    const card = container.querySelector<HTMLElement>('[data-mv-conversation-expanded]')!;
+    fireEvent.click(within(card).getByRole('button', { name: 'more_actions' }));
+    expect(screen.getByText('view_source')).toBeInTheDocument();
+    expect(screen.queryByTestId('conversation-message-print')).not.toBeInTheDocument();
   });
 });

@@ -17,7 +17,7 @@ import { ReaderAttachments, type AttachmentDragProps } from "./reader-attachment
 import { editAccountOf, useEditAttachment } from "@/hooks/use-edit-attachment";
 import { ReaderViewDialog } from "./reader-view-dialog";
 import { MessagePrint, type MessagePrintFields } from "./message-print";
-import { ConversationMessageMenu } from "./conversation-message-menu";
+import { ConversationMessageMenu, useConversationMessageSource } from "./conversation-message-menu";
 import { CONVERSATION_MESSAGE_ATTR, conversationPrintSource, focusedConversationMessageId, printConversationMessage, printLabels } from "./conversation-print";
 import { buildMessagePrintFields } from "./message-print-fields";
 import { printMessageInWindow } from "./message-print-window";
@@ -1003,6 +1003,7 @@ export function MvExpandedConversationCard({
   useMarkReadWhenShown(email, true, onMarkRead ? () => onMarkRead(email) : undefined);
   // Print in its own ⋮: this message alone, once its body is here.
   const devices = useDevicePolicy(email);
+  const { canViewSource } = useConversationMessageSource(email, blobSource);
   const onPrint = devices.noPrint || !hasBody
     ? undefined
     : () => { printConversationMessage(email.id, printLabels(t)); };
@@ -1061,7 +1062,7 @@ export function MvExpandedConversationCard({
             phone={compact}
           />
         </span>
-        {(showReplies || onPrint || (email.blobId && !devices.noExport)) && (
+        {(showReplies || onPrint || canViewSource) && (
           <span className="flex items-center gap-1 -my-2 -me-2 flex-shrink-0" data-mv-conversation-actions="">
             {showReplies && onReply && (
               <button
