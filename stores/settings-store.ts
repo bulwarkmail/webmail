@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { densityVarsFor, type Density } from '@/lib/density';
+import { densityVarsFor, isDensity, type Density } from '@/lib/density';
 import { persist } from 'zustand/middleware';
 import { useThemeStore } from './theme-store';
 import { useLocaleStore } from './locale-store';
@@ -1587,6 +1587,7 @@ function isAllowedPolicyValue(key: string, value: unknown, restriction?: Setting
   if (key === 'composePlacement' && !isComposePlacement(value)) return false;
   if (key === 'replyQuoteDisplay' && !isReplyQuoteDisplay(value)) return false;
   if (key === 'messageDoubleClick' && !MESSAGE_DOUBLE_CLICK.includes(value as MessageDoubleClick)) return false;
+  if (key === 'density' && !isDensity(value)) return false;
   if (key === 'calendarMonthTimedEvents' && !MONTH_TIMED_EVENT_STYLES.includes(value as MonthTimedEventStyle)) return false;
   if (!isAllowedAccessibilityValue(key, value)) return false;
   if (restriction && typeof restriction === 'object') {
@@ -2199,6 +2200,9 @@ export const useSettingsStore = create<SettingsState>()(
               if (!isAllowedAccessibilityValue(key, settings[key])) {
                 return;
               }
+              if (key === 'density' && !isDensity(settings[key])) {
+                return;
+              }
               // Validity of the zone id itself is checked at use time
               // (lib/timezone resolveTimeZone falls back to the browser zone),
               // so only reject non-strings here.
@@ -2685,6 +2689,8 @@ export const useSettingsStore = create<SettingsState>()(
             if (state.messageListOrderScope !== 'inbox' && state.messageListOrderScope !== 'all') {
               state.messageListOrderScope = 'inbox';
             }
+            // Left behind by a newer build (a downgrade) or a newer synced copy.
+            if (!isDensity(state.density)) state.density = 'regular';
             if (!isSearchDefaultScope(state.searchDefaultScope)) {
               state.searchDefaultScope = 'all';
             }

@@ -294,6 +294,8 @@ describe('accessibility settings and the admin policy', () => {
   it('ignores a preset value the page does not know', () => {
     loadPolicy({ defaults: { fontSize: 'enormous' } });
     expect(settings().fontSize).toBe('medium');
+    loadPolicy({ defaults: { density: 'future-density' } });
+    expect(settings().density).toBe('regular');
   });
 
   it('keeps toasts at least as long as the minimum an admin sets', () => {

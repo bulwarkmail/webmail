@@ -11,6 +11,13 @@
  * same spacing, same lines, same chips.
  */
 export type Density = 'extra-compact' | 'compact' | 'regular' | 'regular-no-avatars' | 'comfortable';
+export const DENSITIES: readonly Density[] = ['extra-compact', 'compact', 'regular', 'regular-no-avatars', 'comfortable'];
+
+/** True for a density this build knows; a newer build's value is not one. */
+export function isDensity(value: unknown): value is Density {
+  return DENSITIES.includes(value as Density);
+}
+
 export type InterfaceLayout = 'default' | 'mountain-view';
 
 export type DensityVars = Record<string, string>;
@@ -75,7 +82,8 @@ export const MOUNTAIN_VIEW_DENSITY: Record<Density, DensityVars> = {
 };
 
 export function densityVarsFor(density: Density, layout: InterfaceLayout): DensityVars {
-  return (layout === 'mountain-view' ? MOUNTAIN_VIEW_DENSITY : DEFAULT_DENSITY)[density];
+  const table = layout === 'mountain-view' ? MOUNTAIN_VIEW_DENSITY : DEFAULT_DENSITY;
+  return table[density] ?? table.regular;
 }
 
 /**
