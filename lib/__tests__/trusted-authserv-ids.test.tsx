@@ -2,7 +2,9 @@
 // Authentication-Results count when the header is the topmost one, its authserv-id is in the list,
 // and every Received line above it was written after that server checked the message: by the
 // receiving Stalwart, by a listed server, or as a handoff inside a server (no `from` clause).
-// A header with a listed name below a server outside the list may be the sender's own.
+// A header with a listed name below a server outside the list may be the sender's own. With no
+// Received line above it (GMX writes its results above its own line), the line right below must be
+// a listed server taking the message in.
 import { renderHook } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { JMAPClient } from '@/lib/jmap/client';
@@ -86,6 +88,18 @@ const gatewayWithStalwartResults: Header[] = [
   h('From', ' PayPal <service@paypal.com>'),
 ];
 
+/** A GMX mailbox read through legacy-proxy: GMX writes its results above its own Received line. */
+const GMX = ['gmx.net', 'mx-ha.gmx.net'];
+const GMX_RECEIVED = ' from mail.client.example ([198.51.100.7]) by mx-ha.gmx.net (mxgmx007\r\n [212.227.15.9]) with ESMTPS (Nemesis) id 1MxYz2-1a2B3c4D5e-00AbCd for\r\n <reader@gmx.net>; Mon, 16 Nov 2026 10:00:00 +0100';
+const GMX_PASS = ' gmx.net; dkim=pass header.i=@client.example header.s=s1 header.b=abc;\r\n spf=pass smtp.mailfrom=anna@client.example; dmarc=pass (p=REJECT) header.from=client.example';
+const GMX_FAIL = ' gmx.net; spf=fail smtp.mailfrom=service@paypal.com; dmarc=fail (p=REJECT) header.from=paypal.com';
+const gmxHeaders = (results: string, from = ' Anna <anna@client.example>'): Header[] => [
+  h('Return-Path', ' <anna@client.example>'),
+  h('Authentication-Results', results),
+  h('Received', GMX_RECEIVED),
+  h('From', from),
+];
+
 describe('the setting', () => {
   it('takes comma- or space-separated hostnames, in any case, and nothing else', () => {
     expect(parseTrustedAuthservIds(' MX.Google.com., gw.filter.example  mx.google.com,*.example.com,,mail_x.example')).toEqual(['mx.google.com', 'gw.filter.example']);
@@ -133,6 +147,27 @@ describe('a trusted server\'s results', () => {
     expect(authenticationResultsOnReceipt([h('Authentication-Results', GMAIL_PASS)], GMAIL)).toBe(false);
   });
 
+  it('count above a listed server\'s own Received line, as GMX writes them', () => {
+    expect(authenticationResultsOnReceipt(gmxHeaders(GMX_PASS), GMX)).toBe(true);
+    // The results and the server that took the message in must both be listed.
+    expect(authenticationResultsOnReceipt(gmxHeaders(GMX_PASS), [])).toBe(false);
+    expect(authenticationResultsOnReceipt(gmxHeaders(GMX_PASS), ['gmx.net'])).toBe(false);
+    expect(authenticationResultsOnReceipt(gmxHeaders(GMX_PASS), ['mx-ha.gmx.net'])).toBe(false);
+  });
+
+  it('do not count with nothing above them unless a listed server took the message in right below', () => {
+    const top = (below: string) => [h('Authentication-Results', GMX_PASS), h('Received', below), h('From', ' Anna <anna@client.example>')];
+    // A host outside the list, a listed name only in a comment, a submission, a handoff without `from`.
+    expect(authenticationResultsOnReceipt(top(' from attacker.example by relay.other.example with ESMTP id 1; Mon, 16 Nov 2026 09:00:00 +0000'), GMX)).toBe(false);
+    expect(authenticationResultsOnReceipt(top(' from attacker.example (by mx-ha.gmx.net) by relay.other.example with ESMTP id 1; Mon, 16 Nov 2026 09:00:00 +0000'), GMX)).toBe(false);
+    expect(authenticationResultsOnReceipt(top(' from [198.51.100.7] by mx-ha.gmx.net with ESMTPSA id 1; Mon, 16 Nov 2026 09:00:00 +0000'), GMX)).toBe(false);
+    expect(authenticationResultsOnReceipt(top(' by mx-ha.gmx.net with SMTP id 1; Mon, 16 Nov 2026 09:00:00 +0000'), GMX)).toBe(false);
+    // Results of a server outside the list above a listed server's line.
+    expect(authenticationResultsOnReceipt([h('Authentication-Results', ' relay.other.example; dmarc=pass header.from=paypal.com'), h('Received', GMX_RECEIVED)], [...GMX, 'other.example'])).toBe(false);
+    // Only the line right below counts: a listed line further down is no receipt for these results.
+    expect(authenticationResultsOnReceipt([h('Authentication-Results', GMX_PASS), h('Received', ' from attacker.example by relay.other.example with ESMTP id 1; Mon, 16 Nov 2026 09:00:00 +0000'), h('Received', GMX_RECEIVED)], GMX)).toBe(false);
+  });
+
   it('only count as the topmost header', () => {
     // Stalwart's own results come first and decide; the gateway's below them don't count.
     expect(authenticationResultsOnReceipt(gatewayWithStalwartResults, GATEWAY)).toBe(true);
@@ -147,6 +182,8 @@ describe('a trusted server\'s results', () => {
     expect(row(viaGateway(GATEWAY_PASS), [])).toBe(false);
     expect(row(gmailHeaders(GMAIL_PASS), GMAIL)).toBe(true);
     expect(row(forgedBelowUntrusted, GMAIL)).toBe(false);
+    expect(row(gmxHeaders(GMX_PASS), GMX)).toBe(true);
+    expect(row(gmxHeaders(GMX_PASS), ['gmx.net'])).toBe(false);
   });
 });
 
@@ -181,6 +218,8 @@ const MESSAGES = {
   gateway: { headers: viaGateway(GATEWAY_PASS), from: 'anna@client.example' },
   gatewayFail: { headers: viaGateway(GATEWAY_FAIL, ' PayPal <service@paypal.com>'), from: 'service@paypal.com' },
   imported: { headers: viaGateway(GATEWAY_FAIL, ' PayPal <service@paypal.com>'), from: 'service@paypal.com', keywords: { $imported: true } },
+  gmx: { headers: gmxHeaders(GMX_PASS), from: 'anna@client.example' },
+  gmxFail: { headers: gmxHeaders(GMX_FAIL, ' PayPal <service@paypal.com>'), from: 'service@paypal.com' },
 };
 
 const warning = (email: Email | undefined) => renderHook(() => useSenderWarning(email)).result.current;
@@ -227,6 +266,18 @@ describe('with trusted mail servers configured', () => {
     expect(warning(byId.gateway)).toBeUndefined();
     expect(byId.gateway.authenticationResults).toMatchObject({ dmarc: { result: 'pass' } });
     expect(warning(byId.gatewayFail)).toBe('failed_label');
+  });
+
+  it('a GMX mailbox gets GMX\'s verdict when opened and in the list', async () => {
+    setTrustedAuthservIds('gmx.net mx-ha.gmx.net');
+    const c = client(MESSAGES);
+    const failed = (await c.getEmail('gmxFail'))!;
+    expect(failed.authenticationResultsOnReceipt).toBe(true);
+    expect(warning(failed)).toBe('failed_label');
+    const passed = (await c.getEmail('gmx'))!;
+    expect(passed.authenticationResults).toMatchObject({ dmarc: { result: 'pass' } });
+    const rows = await c.getSomeEmails(['gmxFail']);
+    expect(warning(rows[0])).toBe('failed_label');
   });
 
   it('a message from an imported file still gets no verdict', async () => {

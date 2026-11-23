@@ -249,15 +249,32 @@ function trustedHop(received: string, trusted: ReadonlySet<string>, ownHost: str
 }
 
 /**
+ * Whether a Received line records a server in the trusted list taking the
+ * message in from another server: a `from` clause, a listed host after `by`,
+ * and not an authenticated submission.
+ */
+function trustedReceipt(received: string, trusted: ReadonlySet<string>): boolean {
+  if (SUBMISSION_PROTOCOL_RE.test(received)) return false;
+  const { from, by } = receivedClauses(received);
+  return from && by !== undefined && trusted.has(by);
+}
+
+/**
  * Whether results with these Received lines above them (in message order)
  * count: the receiving Stalwart's own, or those of a server in the trusted
- * list with only trusted hops (trustedHop) above them.
+ * list with only trusted hops (trustedHop) above them. With no Received line
+ * above, as in a mailbox of a server that prepends its results above its
+ * own Received line (GMX, a Postfix milter) read through legacy-proxy, the
+ * results of a listed server count when `receipt`, the Received line right
+ * below them, is a listed server taking the message in (trustedReceipt).
  */
-function resultsOnReceipt(above: readonly string[], results: string, trusted: readonly string[]): boolean {
-  if (above.length === 0) return false;
-  if (above.every((line) => receivedByAuthservHost(line, results))) return true;
+function resultsOnReceipt(above: readonly string[], results: string, trusted: readonly string[], receipt?: string): boolean {
   const id = authservId(results);
   const list = new Set(trusted);
+  if (above.length === 0) {
+    return id !== undefined && list.has(id) && receipt !== undefined && trustedReceipt(receipt, list);
+  }
+  if (above.every((line) => receivedByAuthservHost(line, results))) return true;
   if (id === undefined || !list.has(id)) return false;
   const ownHost = stalwartReceivedHost(above[0]);
   return above.every((line) => trustedHop(line, list, ownHost));
@@ -286,7 +303,15 @@ function resultsOnReceipt(above: readonly string[], results: string, trusted: re
  * is in the list and every Received line above them is a trusted hop
  * (trustedHop): a header with a listed name below a server outside the list
  * may be the sender's own. A gateway's results are only topmost when
- * Stalwart writes none of its own for what the gateway relays.
+ * Stalwart writes none of its own for what the gateway relays. A listed
+ * server that writes its results above its own Received line leaves
+ * nothing above them: then the line right below must be a listed server
+ * taking the message in from another (GMX writes `gmx.net` results above
+ * `by mx-ha.gmx.net`, so both go in the list). The sender can't put a
+ * header above the first server's Received line. Whoever can (IMAP APPEND,
+ * a mail import by another client, a signed-in user of the same server)
+ * can as well write a Received line above it that passes trustedHop, so
+ * this lets no forgery through that the rule above would stop.
  *
  * This only catches a forged header on its own. Stalwart (0.16 and 1.0)
  * keeps both headers when a signed-in user writes them into a mail they
@@ -303,7 +328,8 @@ export function authenticationResultsOnReceipt(
   const above = headers.slice(0, index)
     .filter((header) => header.name.toLowerCase() === 'received')
     .map((header) => header.value);
-  return resultsOnReceipt(above, headers[index].value, trusted);
+  const receipt = headers.slice(index + 1).find((header) => header.name.toLowerCase() === 'received')?.value;
+  return resultsOnReceipt(above, headers[index].value, trusted, receipt);
 }
 
 /**
@@ -312,7 +338,9 @@ export function authenticationResultsOnReceipt(
  * message order) and so can't see which comes first: the topmost Received
  * line must be the receiving Stalwart's, for the host the topmost
  * Authentication-Results header names, or a trusted hop (trustedHop) when
- * that header's authserv-id is in the trusted list. A forged header that
+ * that header's authserv-id is in the trusted list (for a listed server
+ * that writes its results above its own line, that line is the topmost
+ * Received). A forged header that
  * passes this can only take a warning off the row, which a header the check
  * turns down does too.
  */
