@@ -177,6 +177,17 @@ class Failed extends Error {
   }
 }
 
+/**
+ * `text` as UTF-8 bytes, one character per byte. A header value is a byte
+ * string: fetch() refuses an id such as "€7" as it is, and EventSource
+ * sends it UTF-8 encoded.
+ */
+function utf8ByteString(text: string): string {
+  let out = '';
+  for (const byte of new TextEncoder().encode(text)) out += String.fromCharCode(byte);
+  return out;
+}
+
 /** One connection: resolves when the server ends it, throws when it fails. */
 async function connect(
   url: URL,
@@ -194,7 +205,7 @@ async function connect(
       headers: {
         ...headers,
         Accept: 'text/event-stream',
-        ...(parser.lastEventId ? { 'Last-Event-ID': parser.lastEventId } : {}),
+        ...(parser.lastEventId ? { 'Last-Event-ID': utf8ByteString(parser.lastEventId) } : {}),
       },
       credentials: 'omit',
       mode: 'cors',

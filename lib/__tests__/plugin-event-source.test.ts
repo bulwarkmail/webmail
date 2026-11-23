@@ -211,6 +211,26 @@ describe('http.eventSource', () => {
     expect(fetchSpy.mock.calls[1][1].headers).toMatchObject({ 'Last-Event-ID': '41' });
   });
 
+  it('sends back an id outside Latin-1 as UTF-8, a value fetch accepts', async () => {
+    const first = stream();
+    const fetchSpy = vi.fn()
+      .mockResolvedValueOnce(first.res)
+      .mockResolvedValue(stream().res);
+    vi.stubGlobal('fetch', fetchSpy);
+
+    await open(frame());
+    await pass();
+    first.write('id: €7\ndata: a\n\n');
+    await pass();
+    first.drop();
+    await pass(DEFAULT_RETRY_MS);
+
+    expect(fetchSpy).toHaveBeenCalledTimes(2);
+    const headers = fetchSpy.mock.calls[1][1].headers as Record<string, string>;
+    expect(headers['Last-Event-ID']).toBe(String.fromCharCode(0xe2, 0x82, 0xac) + '7');
+    expect(() => new Headers(headers)).not.toThrow();
+  });
+
   it('reconnects after the server ends the stream, a 503 or a network error, waiting longer each time', async () => {
     const first = stream();
     const last = stream();
