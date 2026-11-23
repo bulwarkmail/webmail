@@ -113,7 +113,7 @@ describe('sanitizeScopes', () => {
       { id: 'Sales', label: ' Sales ', match: { domains: ['Example.ORG.', 'not a domain', 'http://x.org'], groups: ['Sales@Example.org', 'nope'] },
         policy: { features: { calendarEnabled: false, pluginsEnabled: true, madeUp: true, contactsEnabled: 'no' },
           restrictions: { density: { locked: true, value: 'compact', junk: 1 }, __proto__: { locked: true } },
-          defaults: { density: 'compact', list: [1] },
+          defaults: { density: 'compact', list: [NaN] },
           organisation: { session: { idleMinutes: -5, extra: 1 }, unknown: {} } } },
       { id: 'sales', label: 'Duplicate', match: {}, policy: {} },
       { id: '../x', label: 'Bad', match: {}, policy: {} },
