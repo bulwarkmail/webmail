@@ -318,6 +318,26 @@ describe('composer with the @ recipient list', () => {
     expect(await screen.findByRole('alertdialog')).toHaveTextContent('save_failed_close');
   });
 
+  it('lets Escape put down an armed format painter, not close the composer', async () => {
+    const { editor, onClose } = await renderComposer();
+    // Arm the painter on the body's "Hallo" word (1–6).
+    const painter = screen.getByRole('toolbar', { name: 'formatting' })
+      .querySelector<HTMLButtonElement>('[data-toolbar-item="format-painter"]')!;
+    act(() => { editor.commands.setTextSelection({ from: 1, to: 6 }); });
+    fireEvent.click(painter);
+    expect(editor.view.dom.hasAttribute('data-format-painter')).toBe(true);
+
+    press(editor, 'Escape');
+    // The painter went down; the composer stayed.
+    await waitFor(() => expect(editor.view.dom.hasAttribute('data-format-painter')).toBe(false));
+    expect(onClose).not.toHaveBeenCalled();
+    expect(screen.queryByRole('alertdialog')).toBeNull();
+
+    // The next Escape is the composer's again: its save fails here, so it asks.
+    press(editor, 'Escape');
+    expect(await screen.findByRole('alertdialog')).toHaveTextContent('save_failed_close');
+  });
+
   it('keeps Ctrl+Enter as the send shortcut while the list is open', async () => {
     const { editor } = await renderComposer();
     await typeInto(editor, ' @');
