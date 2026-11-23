@@ -16,9 +16,14 @@ describe('sanitizePolicyDefaults (#1248)', () => {
       .toEqual({ hoverActions: ['delete', 'spam'], empty: [] });
   });
 
+  it('keeps short lists of finite numbers, such as the working days (#1672)', () => {
+    expect(sanitizePolicyDefaults({ calendarWorkingDays: [0, 1, 2, 3, 4] }))
+      .toEqual({ calendarWorkingDays: [0, 1, 2, 3, 4] });
+  });
+
   it('drops lists of other things, and long ones', () => {
     expect(sanitizePolicyDefaults({
-      a: [1],
+      a: [Number.NaN],
       b: [{ c: 1 }],
       c: Array.from({ length: 51 }, () => 'x'),
       d: ['x'.repeat(101)],

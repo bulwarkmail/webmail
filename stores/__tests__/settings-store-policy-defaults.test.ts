@@ -130,6 +130,43 @@ describe('admin policy defaults (#1248)', () => {
     expect(settings().hoverActions).toEqual(['delete', 'star', 'markRead', 'archive']);
   });
 
+  it('presets the attachment reminder words for a user who never changed them (#1672)', () => {
+    loadPolicy({ defaults: { attachmentReminderKeywords: ['anbei', 'In der Anlage ', 'beigefügt'] } });
+    expect(settings().attachmentReminderKeywords).toEqual(['anbei', 'in der anlage', 'beigefügt']);
+    expect(settings().explicitSettings).toEqual([]);
+  });
+
+  it('keeps attachment reminder words the user saved over the preset (#1672)', () => {
+    settings().updateSetting('attachmentReminderKeywords', ['anhang']);
+    loadPolicy({ defaults: { attachmentReminderKeywords: ['anbei', 'beigefügt'] } });
+    expect(settings().attachmentReminderKeywords).toEqual(['anhang']);
+  });
+
+  it('skips attachment reminder words that are repeated or too long, and says so (#1672)', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const builtIn = [...settings().attachmentReminderKeywords];
+    loadPolicy({ defaults: { attachmentReminderKeywords: ['anbei', 'Anbei'] } });
+    expect(settings().attachmentReminderKeywords).toEqual(builtIn);
+    loadPolicy({ defaults: { attachmentReminderKeywords: ['x'.repeat(41)] } });
+    expect(settings().attachmentReminderKeywords).toEqual(builtIn);
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('defaults.attachmentReminderKeywords'));
+    warn.mockRestore();
+  });
+
+  it('presets the working days, a list of numbers (#1672)', () => {
+    loadPolicy({ defaults: { calendarWorkingDays: [0, 1, 2, 3, 4] } });
+    expect(settings().calendarWorkingDays).toEqual([0, 1, 2, 3, 4]);
+  });
+
+  it('skips working days that are no day of the week', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    loadPolicy({ defaults: { calendarWorkingDays: [1, 7] } });
+    expect(settings().calendarWorkingDays).toEqual([1, 2, 3, 4, 5]);
+    loadPolicy({ defaults: { calendarWorkingDays: [] } });
+    expect(settings().calendarWorkingDays).toEqual([1, 2, 3, 4, 5]);
+    warn.mockRestore();
+  });
+
   it('respects the allowed values of a restriction', () => {
     loadPolicy({
       defaults: { emailsPerPage: 500 },
@@ -206,6 +243,17 @@ describe('admin policy defaults and the server copy (#1248)', () => {
     expect(settings().showSharedMailAccounts).toBe(true);
     loadPolicy({ defaults: { showSharedMailAccounts: false } });
     expect(settings().showSharedMailAccounts).toBe(false);
+  });
+
+  it('gives a list preset to an account without a server copy, and keeps a saved list (#1672)', async () => {
+    loadPolicy({ defaults: { attachmentReminderKeywords: ['anbei', 'beigefügt'] } });
+    await signIn('new@example.com');
+    expect(settings().attachmentReminderKeywords).toEqual(['anbei', 'beigefügt']);
+
+    useSettingsStore.getState().disableSync();
+    serverFiles['old@example.com'] = { attachmentReminderKeywords: ['anhang'], explicitSettings: ['attachmentReminderKeywords'] };
+    await signIn('old@example.com');
+    expect(settings().attachmentReminderKeywords).toEqual(['anhang']);
   });
 });
 

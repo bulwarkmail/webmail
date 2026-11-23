@@ -1482,13 +1482,25 @@ const DEFAULT_SETTINGS = {
 const hasOwn = (obj: object, key: string) => Object.prototype.hasOwnProperty.call(obj, key);
 const builtInDefault = (key: string) => (DEFAULT_SETTINGS as Record<string, unknown>)[key];
 
+const HOVER_ACTION_IDS: readonly unknown[] = ALL_HOVER_ACTIONS.map((action) => action.id);
+
 /**
- * The list settings a policy may set too (#1564), with the entries each may
- * hold. The tag list has its own check (policyKeywordList). Other lists and
- * maps (folder icons, per-account maps) stay the user's own.
+ * The list settings a policy may set too (#1564, #1672), each with the check
+ * its entries must pass (the ones the settings pages and lib/settings-schema
+ * hold them to). Every list also has each entry once. The tag list has its
+ * own check (policyKeywordList). Other lists and maps (folder icons,
+ * per-account maps) stay the user's own.
  */
-const POLICY_LIST_SETTINGS: Record<string, readonly string[]> = {
-  hoverActions: ALL_HOVER_ACTIONS.map((action) => action.id),
+const POLICY_LIST_SETTINGS: Record<string, (value: unknown[]) => boolean> = {
+  // Known actions only; an empty list is a choice too.
+  hoverActions: (value) => value.every((entry) => HOVER_ACTION_IDS.includes(entry)),
+  // Up to 50 lowercase words, each at most 40 characters on one line.
+  attachmentReminderKeywords: (value) => value.length <= 50 && value.every((word) =>
+    typeof word === 'string' && word.length >= 1 && word.length <= 40
+    && word === word.trim() && word === word.toLowerCase() && !/\p{Cc}/u.test(word)),
+  // Days as Date.getDay() numbers, at least one.
+  calendarWorkingDays: (value) => value.length >= 1 && value.every((day) =>
+    typeof day === 'number' && Number.isInteger(day) && day >= 0 && day <= 6),
 };
 
 /** Settings a policy may give a default but never lock (#1612). */
@@ -1519,9 +1531,17 @@ function policyKeywordList(value: unknown): KeywordDefinition[] | null {
   return out;
 }
 
-/** A policy value as it is applied: a tag list without the fields it can't set. */
+/**
+ * A policy value as it is applied: a tag list without the fields it can't
+ * set, the attachment reminder's words trimmed and in lowercase (they match
+ * without case, and policy.json is written by hand).
+ */
 function policyValueFor(key: string, value: unknown): unknown {
-  return key === 'emailKeywords' ? policyKeywordList(value) ?? value : value;
+  if (key === 'emailKeywords') return policyKeywordList(value) ?? value;
+  if (key === 'attachmentReminderKeywords' && Array.isArray(value)) {
+    return value.map((word) => (typeof word === 'string' ? word.trim().toLowerCase() : word));
+  }
+  return value;
 }
 
 /** Same tag: id, name and colour. */
@@ -1556,9 +1576,7 @@ function isAllowedPolicyValue(key: string, value: unknown, restriction?: Setting
   if (!isPolicySettingKey(key)) return false;
   if (key === 'emailKeywords') return policyKeywordList(value) !== null;
   if (hasOwn(POLICY_LIST_SETTINGS, key)) {
-    // Known entries only, each once; an empty list is a choice too.
-    const known = POLICY_LIST_SETTINGS[key];
-    return Array.isArray(value) && value.every((entry) => known.includes(entry)) && new Set(value).size === value.length;
+    return Array.isArray(value) && POLICY_LIST_SETTINGS[key](value) && new Set(value).size === value.length;
   }
   if (typeof value !== typeof builtInDefault(key)) return false;
   if (typeof value === 'number' && !Number.isFinite(value)) return false;
@@ -1687,17 +1705,17 @@ export function adminPolicyPatch(
   const patch: Record<string, unknown> = {};
   for (const [key, raw] of Object.entries(defaults)) {
     if (explicit.has(key)) continue;
-    if (!isAllowedPolicyValue(key, raw, restrictionFor(key))) {
+    const value = policyValueFor(key, raw);
+    if (!isAllowedPolicyValue(key, value, restrictionFor(key))) {
       warnSkippedDefault(key);
       continue;
     }
-    const value = policyValueFor(key, raw);
     if (!sameSettingValue(state[key], value)) patch[key] = value;
   }
   for (const [key, restriction] of Object.entries(restrictions)) {
     if (!isPlainRecord(restriction) || restriction.locked !== true) continue;
     if (POLICY_DEFAULT_ONLY_KEYS.has(key)) continue;
-    const value = hasOwn(restriction, 'value') ? restriction.value : hasOwn(defaults, key) ? defaults[key] : undefined;
+    const value = policyValueFor(key, hasOwn(restriction, 'value') ? restriction.value : hasOwn(defaults, key) ? defaults[key] : undefined);
     if (!isAllowedPolicyValue(key, value, restriction)) continue;
     // Text size, contrast, motion and the other reading aids can't be
     // locked: a lock on one of them works as a default the user may change.
@@ -1728,7 +1746,7 @@ export function adminPolicyReleasePatch(
     for (const [key, value] of Object.entries(defaults)) out.set(key, policyValueFor(key, value));
     for (const [key, restriction] of Object.entries(restrictions)) {
       if (!isPlainRecord(restriction) || restriction.locked !== true || POLICY_DEFAULT_ONLY_KEYS.has(key)) continue;
-      out.set(key, hasOwn(restriction, 'value') ? restriction.value : hasOwn(defaults, key) ? defaults[key] : undefined);
+      out.set(key, policyValueFor(key, hasOwn(restriction, 'value') ? restriction.value : hasOwn(defaults, key) ? defaults[key] : undefined));
     }
     return out;
   };
