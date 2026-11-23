@@ -1,6 +1,7 @@
 import type { ContactCard, NameComponent, ContactOnlineService, AnniversaryDate, PartialDate } from "@/lib/jmap/types";
 import { generateUUID } from "@/lib/utils";
 import { parseBase64DataUri } from "@/lib/data-uri";
+import { contactKeywordNames } from "@/lib/contacts/keywords";
 
 // Convert RFC 9553 AnniversaryDate (PartialDate|Timestamp|string) to a vCard
 // 4.0 date, which uses the ISO 8601 basic format (RFC 6350 §4.3.1): 19850412,
@@ -1412,7 +1413,7 @@ function generateSingleVCard(contact: ContactCard): string {
   }
 
   if (contact.keywords) {
-    const cats = Object.keys(contact.keywords).filter(k => contact.keywords![k]);
+    const cats = contactKeywordNames(contact.keywords);
     if (cats.length > 0) {
       lines.push(`CATEGORIES:${cats.map(encodeValue).join(",")}`);
     }

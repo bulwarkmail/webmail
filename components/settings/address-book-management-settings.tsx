@@ -19,6 +19,7 @@ import { useConfirmDialog } from "@/hooks/use-confirm-dialog";
 import { useDeleteCategory } from "@/hooks/use-delete-category";
 import { ContextMenu, ContextMenuItem, ContextMenuSeparator } from "@/components/ui/context-menu";
 import { useContextMenu } from "@/hooks/use-context-menu";
+import { contactKeywordNames } from "@/lib/contacts/keywords";
 
 function AddressBookEditRow({
   initial,
@@ -303,9 +304,9 @@ export function AddressBookManagementSettings() {
   // Collect keywords with counts
   const keywordCounts: Record<string, number> = {};
   for (const c of contacts) {
-    if (c.kind === "group" || !c.keywords) continue;
-    for (const [kw, active] of Object.entries(c.keywords)) {
-      if (active) keywordCounts[kw] = (keywordCounts[kw] || 0) + 1;
+    if (c.kind === "group") continue;
+    for (const kw of contactKeywordNames(c.keywords)) {
+      keywordCounts[kw] = (keywordCounts[kw] || 0) + 1;
     }
   }
   const sortedKeywords = Object.entries(keywordCounts).sort(([a], [b]) => a.localeCompare(b));

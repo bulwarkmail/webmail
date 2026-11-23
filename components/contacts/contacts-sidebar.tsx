@@ -13,6 +13,7 @@ import type { ContactCard, AddressBook } from "@/lib/jmap/types";
 import { getContactDisplayName, TRUSTED_SENDERS_BOOK_NAME } from "@/stores/contact-store";
 import { useAccountStore } from "@/stores/account-store";
 import { useCollectionNames } from "@/hooks/use-collection-names";
+import { contactKeywordNames } from "@/lib/contacts/keywords";
 import { AccountScopeLabel } from "@/components/layout/account-scope-label";
 
 export type ContactCategory = "all" | "directory" | { groupId: string } | { addressBookId: string } | { keyword: string } | "uncategorized";
@@ -243,9 +244,7 @@ export function ContactsSidebar({
   const allKeywords = useMemo(() => {
     const counts: Record<string, number> = {};
     for (const contact of individuals) {
-      if (!contact.keywords) continue;
-      for (const [kw, active] of Object.entries(contact.keywords)) {
-        if (!active) continue;
+      for (const kw of contactKeywordNames(contact.keywords)) {
         counts[kw] = (counts[kw] || 0) + 1;
       }
     }
@@ -254,7 +253,7 @@ export function ContactsSidebar({
 
   // Count of contacts without any keywords
   const uncategorizedCount = useMemo(() => {
-    return individuals.filter(c => !c.keywords || Object.keys(c.keywords).filter(k => c.keywords![k]).length === 0).length;
+    return individuals.filter(c => contactKeywordNames(c.keywords).length === 0).length;
   }, [individuals]);
 
   // Resolve actual group member counts against living contacts

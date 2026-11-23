@@ -11,6 +11,7 @@ import { formatContactDate } from "@/lib/contact-dates";
 import { cn } from "@/lib/utils";
 import type { ContactCard } from "@/lib/jmap/types";
 import { memberKeys, planMerge, type MergePlan } from "@/lib/contacts/merge";
+import { contactKeywordNames } from "@/lib/contacts/keywords";
 import { getContactDisplayName, getContactPrimaryEmail } from "@/stores/contact-store";
 import { useSettingsStore } from "@/stores/settings-store";
 
@@ -159,7 +160,7 @@ export function ContactMergeDialog({ cards: initialCards, pickFor, candidates = 
     { label: tc("detail.crypto_keys"), values: Object.keys(r.cryptoKeys ?? {}).length > 0 ? [tm("merge_kept")] : [] },
     { label: tm("merge_photo"), values: Object.keys(r.media ?? {}).length > 0 ? [tm("merge_kept")] : [] },
     { label: t("t_notes"), values: Object.values(r.notes ?? {}).map((n) => n.note).filter(Boolean), multiline: true },
-    { label: t("t_categories"), values: Object.keys(r.keywords ?? {}).filter((k) => r.keywords?.[k]) },
+    { label: t("t_categories"), values: contactKeywordNames(r.keywords) },
     { label: t("groups"), values: groupNames },
   ].filter((row) => row.values.length > 0);
 

@@ -17,6 +17,7 @@ import type { ContactCard, ContactOnlineService, ContactAnniversary, ContactPers
 import { useCollectionNames } from "@/hooks/use-collection-names";
 import { AccountGroupedOptions } from "@/components/calendar/calendar-select";
 import { matchOrganizationNames } from "@/lib/contacts/organization-names";
+import { blankContactKeywords, contactKeywordNames } from "@/lib/contacts/keywords";
 
 // Each row of a list field keeps the `key` of the card's entry it was read
 // from, so Save can send an entry the user didn't touch back unchanged.
@@ -519,7 +520,7 @@ export function ContactForm({ contact, addressBooks, allKeywords, allOrganizatio
   });
 
   const [keywordsStr, setKeywordsStr] = useState(
-    contact?.keywords ? Object.keys(contact.keywords).filter(k => contact.keywords![k]).join(", ") : ""
+    contactKeywordNames(contact?.keywords).join(", ")
   );
   // Text typed in the Categories field but not added with Enter yet: Save
   // adds it, so it isn't lost.
@@ -791,7 +792,8 @@ export function ContactForm({ contact, addressBooks, allKeywords, allOrganizatio
       }),
     );
 
-    const keywordsMap: Record<string, boolean> = {};
+    // Blank categories (from iOS) aren't shown in the form, but stay on the card.
+    const keywordsMap: Record<string, boolean> = blankContactKeywords(contact?.keywords);
     keywordsStr.split(",").map(k => k.trim()).filter(Boolean).forEach(k => {
       keywordsMap[k] = true;
     });

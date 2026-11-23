@@ -177,3 +177,30 @@ describe('ContactsSidebar — row menus without a right-click', () => {
     }
   });
 });
+
+// iOS writes an empty CATEGORIES: line, which the server keeps as "": true.
+describe('ContactsSidebar — blank categories', () => {
+  it('lists no blank category and counts such a card as uncategorized', () => {
+    const blankOnly = { id: 'b1', addressBookIds: {}, name: { full: 'Ann' }, keywords: { '': true } } as unknown as ContactCard;
+    const withFriends = { id: 'b2', addressBookIds: {}, name: { full: 'Ben' }, keywords: { ' ': true, Friends: true } } as unknown as ContactCard;
+    render(
+      <ContactsSidebar
+        groups={[]}
+        individuals={[blankOnly, withFriends]}
+        addressBooks={[]}
+        activeCategory="all"
+        onSelectCategory={vi.fn()}
+        onCreateGroup={vi.fn()}
+        onCreateContact={vi.fn()}
+        onEditGroup={vi.fn()}
+        onDeleteGroup={vi.fn()}
+      />,
+    );
+    const noCategory = screen.getByText('no_category').closest('button')!;
+    expect(noCategory).toHaveTextContent('1');
+    // The section holds its header, "No category" and one row per category.
+    const section = noCategory.parentElement!;
+    expect(section.children).toHaveLength(3);
+    expect(within(section).getByText('Friends')).toBeInTheDocument();
+  });
+});

@@ -23,6 +23,7 @@ import { PluginSlot } from "@/components/plugins/plugin-slot";
 import { contactHooks } from "@/lib/plugin-hooks";
 import { contactToView } from "@/lib/plugin-projection";
 import { gateLinkClick } from "@/lib/plugin-hook-result";
+import { contactKeywordNames } from "@/lib/contacts/keywords";
 
 interface ContactDetailProps {
   contact: ContactCard | null;
@@ -140,7 +141,7 @@ export function ContactDetail({ contact, onEdit, onDelete, onAddToGroup, onMerge
   const jobTitles = titles.filter(t => t.kind !== "role");
   const onlineServices = contact.onlineServices ? Object.values(contact.onlineServices) : [];
   const anniversaries = contact.anniversaries ? Object.values(contact.anniversaries) : [];
-  const keywords = contact.keywords ? Object.keys(contact.keywords).filter(k => contact.keywords![k]) : [];
+  const keywords = contactKeywordNames(contact.keywords);
 
   const relatedTo = contact.relatedTo ? Object.entries(contact.relatedTo) : [];
   const preferredLanguages = contact.preferredLanguages ? Object.values(contact.preferredLanguages) : [];

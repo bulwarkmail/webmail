@@ -84,6 +84,7 @@ import {
   DirectoryListPrint,
 } from "@/components/contacts/contact-print-views";
 import { useCollectionNames } from "@/hooks/use-collection-names";
+import { contactKeywordNames } from "@/lib/contacts/keywords";
 
 type View =
   | "list"
@@ -450,10 +451,7 @@ function ContactsAppContent({ linkSegments: routeSegments }: ContactsAppProps = 
   const allKeywords = useMemo(() => {
     const kws = new Set<string>();
     for (const contact of individuals) {
-      if (!contact.keywords) continue;
-      for (const [kw, active] of Object.entries(contact.keywords)) {
-        if (active) kws.add(kw);
-      }
+      for (const kw of contactKeywordNames(contact.keywords)) kws.add(kw);
     }
     return Array.from(kws).sort((a, b) => a.localeCompare(b));
   }, [individuals]);
@@ -463,7 +461,7 @@ function ContactsAppContent({ linkSegments: routeSegments }: ContactsAppProps = 
   const displayedContacts = useMemo(() => {
     if (activeCategory === "all" || activeCategory === "directory") return individuals;
     if (activeCategory === "uncategorized") {
-      return individuals.filter(c => !c.keywords || Object.keys(c.keywords).filter(k => c.keywords![k]).length === 0);
+      return individuals.filter(c => contactKeywordNames(c.keywords).length === 0);
     }
     if ("addressBookId" in activeCategory) {
       const bookId = activeCategory.addressBookId;

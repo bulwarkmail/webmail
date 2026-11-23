@@ -115,6 +115,20 @@ describe('ContactForm', () => {
     expect(onSave.mock.calls[0][0].keywords).toEqual({ Friends: true, Gym: true });
   });
 
+  // iOS writes an empty CATEGORIES: line, which the server keeps as "": true.
+  it('keeps a blank category on the card when the categories are edited', async () => {
+    const onSave = vi.fn().mockResolvedValue(undefined);
+    const contact: ContactCard = { ...existingContact, keywords: { '': true, Friends: true } };
+    render(<ContactForm contact={contact} onSave={onSave} onCancel={vi.fn()} />);
+
+    // The section starts open, since the card has a category.
+    fireEvent.change(screen.getByRole('textbox', { name: 'categories' }), { target: { value: 'Gym' } });
+    fireEvent.submit(screen.getByText('save').closest('form')!);
+
+    await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
+    expect(onSave.mock.calls[0][0].keywords).toEqual({ '': true, Friends: true, Gym: true });
+  });
+
   it('counts a typed category as a change, so leaving asks first', () => {
     const onDirtyChange = vi.fn();
     render(<ContactForm contact={existingContact} onSave={vi.fn()} onCancel={vi.fn()} onDirtyChange={onDirtyChange} />);
