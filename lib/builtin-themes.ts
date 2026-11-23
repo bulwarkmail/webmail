@@ -746,7 +746,7 @@ body[data-theme-skin="builtin-aurora-glass"] {
    a fixed body::before with z-indexed children - avoids creating stacking
    contexts on portaled popups/dialogs (Radix portals render as direct <body>
    children), which would otherwise break their layering. */
-body[data-theme-skin="builtin-aurora-glass"] .bg-background.overflow-hidden {
+body[data-theme-skin="builtin-aurora-glass"] .bg-background.overflow-hidden:not([data-menu-row]) {
   background-color: var(--color-background);
   background-image:
     radial-gradient(60rem 60rem at 12% -10%, rgba(109, 92, 255, 0.22), transparent 60%),
@@ -754,7 +754,7 @@ body[data-theme-skin="builtin-aurora-glass"] .bg-background.overflow-hidden {
     radial-gradient(55rem 55rem at 80% 110%, rgba(236, 72, 153, 0.16), transparent 60%),
     radial-gradient(45rem 45rem at -5% 95%, rgba(16, 185, 129, 0.12), transparent 55%);
 }
-.dark body[data-theme-skin="builtin-aurora-glass"] .bg-background.overflow-hidden {
+.dark body[data-theme-skin="builtin-aurora-glass"] .bg-background.overflow-hidden:not([data-menu-row]) {
   background-image:
     radial-gradient(60rem 60rem at 12% -10%, rgba(109, 92, 255, 0.16), transparent 58%),
     radial-gradient(50rem 50rem at 105% 5%, rgba(6, 182, 212, 0.11), transparent 52%),
@@ -876,6 +876,26 @@ body[data-theme-skin="builtin-aurora-glass"] [role="menu"] [role="menuitem"]:foc
 .dark body[data-theme-skin="builtin-aurora-glass"] [role="menu"] [role="menuitem"]:focus,
 .dark body[data-theme-skin="builtin-aurora-glass"] [role="menu"] [role="menuitem"]:focus-visible {
   background-color: rgba(139, 123, 255, 0.22) !important;
+}
+
+/* ── Message list: unread rows stand out, read rows recede ─────── */
+body[data-theme-skin="builtin-aurora-glass"] [data-menu-row][data-unread="false"].bg-background:not([data-mv-row]):not([data-mv-mobile-row]):not(:hover) {
+  background-color: color-mix(in srgb, var(--color-accent) 30%, transparent);
+}
+body[data-theme-skin="builtin-aurora-glass"] [data-menu-row][data-unread="true"].bg-accent\\/30:not([data-mv-row]):not([data-mv-mobile-row]):not(:hover) {
+  background-color: var(--color-background);
+  background-image:
+    radial-gradient(60rem 60rem at 12% -10%, rgba(109, 92, 255, 0.22), transparent 60%),
+    radial-gradient(50rem 50rem at 105% 5%, rgba(6, 182, 212, 0.18), transparent 55%),
+    radial-gradient(55rem 55rem at 80% 110%, rgba(236, 72, 153, 0.16), transparent 60%),
+    radial-gradient(45rem 45rem at -5% 95%, rgba(16, 185, 129, 0.12), transparent 55%);
+}
+.dark body[data-theme-skin="builtin-aurora-glass"] [data-menu-row][data-unread="true"].bg-accent\\/30:not([data-mv-row]):not([data-mv-mobile-row]):not(:hover) {
+  background-image:
+    radial-gradient(60rem 60rem at 12% -10%, rgba(109, 92, 255, 0.16), transparent 58%),
+    radial-gradient(50rem 50rem at 105% 5%, rgba(6, 182, 212, 0.11), transparent 52%),
+    radial-gradient(55rem 55rem at 80% 110%, rgba(236, 72, 153, 0.10), transparent 58%),
+    radial-gradient(45rem 45rem at -5% 95%, rgba(16, 185, 129, 0.07), transparent 52%);
 }`;
 
 export const BUILTIN_THEMES: InstalledTheme[] = [
