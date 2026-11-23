@@ -82,6 +82,23 @@ describe('formatting toolbar in a narrow composer', () => {
     expect(rowStops).toHaveLength(1);
   });
 
+  it('lights up "More formatting" while the format painter behind it is armed', async () => {
+    await setup();
+    await resize(561);
+    const more = rowItem('more-formatting') as HTMLButtonElement;
+    expect(more).not.toHaveAttribute('data-active');
+
+    fireEvent.click(more);
+    const painter = toolbar().querySelector<HTMLButtonElement>('[data-toolbar-item="format-painter"]')!;
+    fireEvent.click(painter);
+    expect(painter).toHaveAttribute('aria-pressed', 'true');
+    expect(more).toHaveAttribute('data-active', 'true');
+
+    // Put down again: nothing left to show.
+    fireEvent.click(painter);
+    expect(more).not.toHaveAttribute('data-active');
+  });
+
   it('brings everything back into the row when the composer gets wider', async () => {
     await setup();
     await resize(400);
