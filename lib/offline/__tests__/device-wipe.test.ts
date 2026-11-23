@@ -1,5 +1,6 @@
 import 'fake-indexeddb/auto';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { consumeSignedOut } from '@/lib/auto-sso-guards';
 
 // What a wipe removes and what makes one happen. Real auth store, real offline
 // mode, the store's real engine, real IndexedDB (fake-indexeddb): only the
@@ -964,7 +965,7 @@ describe('the wipe from settings', () => {
   it('marks that the user signed out, so a provider session doesn\'t sign them straight back in', async () => {
     respond = () => json(200, { ok: true });
     await wipe.wipeWholeDevice('user');
-    expect(sessionStorage.getItem('signed_out')).toBe('true');
+    expect(consumeSignedOut()).toBe(true);
   });
 });
 

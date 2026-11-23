@@ -67,6 +67,7 @@ import {
   saveLiteBasicSession,
 } from '@/lib/auth/lite-tokens';
 import { clearLiteOAuthFlow, readLiteOAuthFlow } from '@/lib/auth/lite-oauth';
+import { consumeSignedOut, markSignedOut } from '@/lib/auto-sso-guards';
 
 /** config.json `oauthRevokeOnSignOut`: whether Lite revokes refresh tokens it lets go of. */
 const liteRevokesTokens = () => getCachedConfig()?.oauthRevokeOnSignOut !== false;
@@ -1258,35 +1259,14 @@ function markSessionExpired(): void {
   saveRedirectAfterLogin();
 }
 
-const SIGNED_OUT_KEY = 'signed_out';
-
-/**
- * True once after the user signed out on purpose. The login page then skips
- * automatic SSO: it would sign the user straight back in whenever the
- * provider's session outlived the sign-out (#905).
- */
-export function consumeSignedOut(): boolean {
-  try {
-    const signedOut = sessionStorage.getItem(SIGNED_OUT_KEY) === 'true';
-    sessionStorage.removeItem(SIGNED_OUT_KEY);
-    return signedOut;
-  } catch {
-    return false;
-  }
-}
+export { consumeSignedOut };
 
 /**
  * Leave the app after a full sign-out: through the identity provider's logout
  * when there is one to end, otherwise straight to the login page.
  */
 function finishSignOut(endSessionUrl: string | null, userInitiated: boolean): void {
-  if (userInitiated) {
-    try {
-      sessionStorage.setItem(SIGNED_OUT_KEY, 'true');
-    } catch {
-      /* noop */
-    }
-  }
+  if (userInitiated) markSignedOut();
   if (endSessionUrl) {
     // The desktop build signs in through the system browser, so the provider's
     // session lives there. The window itself goes straight to the login page.

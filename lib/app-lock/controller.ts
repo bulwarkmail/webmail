@@ -21,6 +21,7 @@ import { getDesktopBridge } from '@/lib/desktop/bridge';
 import { setAppLockCheck } from '@/lib/desktop/app-lock-state';
 import { restoreUrlFor } from '@/lib/desktop/window-restore';
 import { IS_LITE } from '@/lib/lite';
+import { markSignedOut } from '@/lib/auto-sso-guards';
 import { useOfflineStore } from '@/lib/offline/state';
 import { keepRescuedDraft } from '@/lib/popout/rescued-drafts';
 import { closePopoutWindow, isPopoutWindow } from '@/lib/popout/window-role';
@@ -1140,11 +1141,7 @@ export async function forgetEverything(): Promise<boolean> {
   if (member && !(await member.forget())) return false;
   markCookiesToClear();
   requireFreshLogin();
-  try {
-    sessionStorage.setItem('signed_out', 'true');
-  } catch {
-    // Only the login page's automatic redirect goes by it.
-  }
+  markSignedOut();
   const { forgetDeviceRows } = await import('@/lib/offline/device-wipe');
   await forgetDeviceRows().catch(() => {});
   const { useAccountStore } = await import('@/stores/account-store');

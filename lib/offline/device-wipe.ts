@@ -43,6 +43,7 @@ import { clearAllPluginStorage, clearPluginStorageForAccount } from '@/lib/plugi
 import { fileStorage } from '@/lib/plugin-storage';
 import { clearHandoffs } from '@/lib/launch-handoff';
 import { apiFetch } from '@/lib/browser-navigation';
+import { markSignedOut } from '@/lib/auto-sso-guards';
 import { SW_SCOPE } from '@/lib/app-update';
 import { devicesForAccount, devicesForNoOne } from '@/lib/device-policy';
 import { getDesktopBridge } from '@/lib/desktop/bridge';
@@ -464,11 +465,7 @@ async function finishInMain(): Promise<void> {
 
 function signalSignedOut(): void {
   // The login page would otherwise sign straight back in through a provider session.
-  try {
-    sessionStorage.setItem('signed_out', 'true');
-  } catch {
-    /* noop */
-  }
+  markSignedOut();
 }
 
 /** One object for sending and hearing: a channel doesn't hear itself, so this window doesn't reload. */

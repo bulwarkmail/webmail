@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import { IconButton } from "@/components/ui/icon-button";
 import { Input } from "@/components/ui/input";
 import { useAuthStore, consumeSignedOut, SESSION_EXPIRED_DRAFTS_UNSAVED_KEY } from "@/stores/auth-store";
+import { claimAutoSsoAttempt } from "@/lib/auto-sso-guards";
 import { consumeLost } from "@/lib/offline/lost";
 import { consumeWipeNote, onRefusedLoginsChanged, refusedWaits, type RefusedWait, type WipeNote } from "@/lib/devices/wipe-state";
 import { wipeNoteText } from "@/components/offline/device-wipe-host";
@@ -907,13 +908,9 @@ function LoginPageContent() {
     // unreachable. Let them choose and press the button instead (issue #799).
     if (jmapServers.length > 1) return;
 
-    // Guard against redirect loops
-    try {
-      if (sessionStorage.getItem("sso_attempted")) return;
-      sessionStorage.setItem("sso_attempted", "1");
-      // Clear the flag after 30 seconds so retries are possible
-      setTimeout(() => { try { sessionStorage.removeItem("sso_attempted"); } catch { /* ignore */ } }, 30000);
-    } catch { /* sessionStorage unavailable */ }
+    // Guard against redirect loops: a round trip that comes back here soon
+    // after the last one failed, so stay on the page (#1819).
+    if (!claimAutoSsoAttempt()) return;
 
     autoSsoTriggered.current = true;
     startServerSideSso();

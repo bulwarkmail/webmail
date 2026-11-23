@@ -162,7 +162,7 @@ describe('single-account sign-out and the identity provider', () => {
     await useAuthStore.getState().logout();
 
     expect(replaceSpy).toHaveBeenCalledWith('/en/login');
-    expect(sessionStorage.getItem('signed_out')).toBe('true');
+    expect(consumeSignedOut()).toBe(true);
   });
 
   it.each([
