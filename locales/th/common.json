@@ -2295,7 +2295,7 @@
     "note": "บันทึก",
     "add_note": "เพิ่มบันทึก",
     "field_label": "บันทึก",
-    "placeholder": "เขียนบันทึกถึงทีมของคุณ",
+    "placeholder": "โน้ตถึงทีม พิมพ์ @ เพื่อกล่าวถึง",
     "chars_left": "{count, plural, other {เหลือ # ตัวอักษร}}",
     "too_long": "{count, plural, other {เกิน # ตัวอักษร}}",
     "sending": "กำลังส่ง…",

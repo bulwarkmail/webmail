@@ -977,7 +977,7 @@
     "note": "Märkus",
     "add_note": "Lisa märkus",
     "field_label": "Märkus",
-    "placeholder": "Kirjuta oma meeskonnale märkus",
+    "placeholder": "Märkus meeskonnale, @ mainimiseks",
     "chars_left": "{count, plural, one {Jäänud # märk} other {Jäänud # märki}}",
     "too_long": "{count, plural, one {# märk liiga pikk} other {# märki liiga pikk}}",
     "sending": "Saatmine…",

@@ -977,7 +977,7 @@
     "note": "Notiz",
     "add_note": "Notiz hinzufügen",
     "field_label": "Notiz",
-    "placeholder": "Notiz für Ihr Team schreiben",
+    "placeholder": "Notiz fürs Team, @ zum Erwähnen",
     "chars_left": "{count, plural, one {Noch # Zeichen} other {Noch # Zeichen}}",
     "too_long": "{count, plural, one {# Zeichen zu lang} other {# Zeichen zu lang}}",
     "sending": "Wird gesendet…",

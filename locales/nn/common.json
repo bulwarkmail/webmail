@@ -977,7 +977,7 @@
     "note": "Notat",
     "add_note": "Legg til notat",
     "field_label": "Notat",
-    "placeholder": "Skriv eit notat til teamet ditt",
+    "placeholder": "Notat til teamet, @ for å nemne",
     "chars_left": "{count, plural, one {# teikn att} other {# teikn att}}",
     "too_long": "{count, plural, one {# teikn for langt} other {# teikn for langt}}",
     "sending": "Sender…",

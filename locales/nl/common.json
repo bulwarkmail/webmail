@@ -977,7 +977,7 @@
     "note": "Notitie",
     "add_note": "Notitie toevoegen",
     "field_label": "Notitie",
-    "placeholder": "Schrijf een notitie voor je team",
+    "placeholder": "Notitie voor je team, @ om te vermelden",
     "chars_left": "{count, plural, one {Nog # teken} other {Nog # tekens}}",
     "too_long": "{count, plural, one {# teken te lang} other {# tekens te lang}}",
     "sending": "Bezig met verzenden…",

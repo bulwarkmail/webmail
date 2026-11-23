@@ -101,8 +101,10 @@ describe('mailFrameCss', () => {
   it('is empty when nothing is asked for', () => {
     expect(mailFrameCss({ reduceMotion: false })).toBe('');
   });
+  // A 0.01ms transition still makes the dark-mode pass read the colour from
+  // before the pending class came off, so the text stays dark (#1832).
   it('stops animations and transitions for reduce motion', () => {
-    expect(mailFrameCss({ reduceMotion: true })).toMatch(/animation-duration:0\.01ms!important.*transition-duration:0\.01ms!important/);
+    expect(mailFrameCss({ reduceMotion: true })).toMatch(/animation-duration:0\.01ms!important.*transition-duration:0s!important/);
   });
 });
 

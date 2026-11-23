@@ -977,7 +977,7 @@
     "note": "Nota",
     "add_note": "Afegeix la nota",
     "field_label": "Nota",
-    "placeholder": "Escriu una nota per al teu equip",
+    "placeholder": "Nota per a l'equip, @ per esmentar",
     "chars_left": "{count, plural, one {Queda # caràcter} many {Queden # caràcters} other {Queden # caràcters}}",
     "too_long": "{count, plural, one {Sobra # caràcter} many {Sobren # caràcters} other {Sobren # caràcters}}",
     "sending": "S’està enviant…",

@@ -43,6 +43,13 @@ export function splitFileName(name: string): [stem: string, ext: string] {
   return [name.slice(0, dot), name.slice(dot)];
 }
 
+const HOVER_ACTIONS = cn(
+  "flex max-w-0 items-center overflow-hidden opacity-0 transition-opacity",
+  "group-hover:max-w-none group-hover:overflow-visible group-hover:opacity-100",
+  "group-focus-within:max-w-none group-focus-within:overflow-visible group-focus-within:opacity-100",
+  "pointer-coarse:max-w-none pointer-coarse:overflow-visible pointer-coarse:opacity-100",
+);
+
 interface ReaderAttachmentsProps<T extends ReaderAttachmentItem> {
   attachments: T[];
   /** Object URLs of image attachments, keyed by attachment id. */
@@ -183,8 +190,9 @@ export function ReaderAttachments<T extends ReaderAttachmentItem>({
           </span>
         </button>
         <div className="relative z-10 flex shrink-0 items-center">
-          {/* The less common actions wait for hover or focus, so a tile reads as one file with one download button. */}
-          <div className="flex items-center opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100 pointer-coarse:opacity-100">
+          {/* The less common actions wait for hover or focus, so a tile reads as one file with one download button.
+              Until then they take no width, so the name gets the whole tile; they stay in the tab order and for screen readers. */}
+          <div data-testid="attachment-more-actions" className={HOVER_ACTIONS}>
             {onSaveToFiles && attachment.blobId && (
               <IconButton label={t("save_to_files.title")} className="text-muted-foreground hover:text-foreground" onClick={() => onSaveToFiles(attachment)}>
                 <CloudUpload className="h-4 w-4" />

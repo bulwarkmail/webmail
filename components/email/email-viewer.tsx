@@ -6151,8 +6151,9 @@ export function EmailViewer({
             </div>
           )}
 
-          {/* Team mailboxes: the Note button and field, at the conversation's newest end. */}
-          {!isDraft && !isScheduled && <TeamNoteArea messages={teamMessages} />}
+          {/* Team mailboxes: the note line at the conversation's newest end,
+              where there is no reply box to sit above. */}
+          {!isDraft && !isScheduled && !showQuickReply && <TeamNoteArea messages={teamMessages} />}
 
           {/* Mountain View: a reply being written in place. */}
           {mvViewer && mvInlineComposer && (
@@ -6207,6 +6208,8 @@ export function EmailViewer({
 
           {/* Quick Reply Section - hidden for drafts and while loading a new email */}
           {showQuickReply && (<div ref={quickReplyBoxRef} data-quick-reply-box="" data-toast-avoid="bottom" className="bg-background border-t border-border px-6 mt-auto max-sm:scroll-mb-16" style={{ paddingBlock: 'var(--density-header-py)' }}>
+            {/* Team mailboxes: the note line right above the reply box. */}
+            {!isDraft && !isScheduled && <TeamNoteArea messages={teamMessages} docked />}
             <div className="flex items-start" style={{ gap: 'var(--density-item-gap)' }}>
               <div className="flex-shrink-0">
                 <Avatar

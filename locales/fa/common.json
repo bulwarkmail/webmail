@@ -977,7 +977,7 @@
     "note": "یادداشت",
     "add_note": "افزودن یادداشت",
     "field_label": "یادداشت",
-    "placeholder": "یادداشتی برای تیم خود بنویسید",
+    "placeholder": "یادداشت برای تیم، @ برای اشاره",
     "chars_left": "{count, plural, one {# نویسه باقی مانده} other {# نویسه باقی مانده}}",
     "too_long": "{count, plural, one {# نویسه بیش از حد} other {# نویسه بیش از حد}}",
     "sending": "در حال ارسال…",

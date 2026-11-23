@@ -66,10 +66,23 @@ describe('the reader in a team mailbox', () => {
     render(<EmailViewer email={email} isLoading={false} mailboxes={mailboxes} selectedMailbox="g:inbox" currentMailboxRole="inbox" onDelete={() => {}} />);
     expect(document.querySelector('[data-team-notes-after="e1"]')?.textContent).toContain('my job');
     expect(document.querySelector('[data-team-notes-summary]')).toBeTruthy();
+    // The note line is there from the start; the toolbar's Note puts the focus in it.
+    const line = screen.getByLabelText('field_label');
     const toolbarNote = document.querySelector('[data-team-note-toolbar]') as HTMLElement;
     expect(toolbarNote).toBeTruthy();
     await act(async () => { fireEvent.click(toolbarNote); });
-    expect(screen.getByLabelText('field_label')).toBeTruthy();
+    expect(document.activeElement).toBe(line);
+  });
+
+  it('puts the note line right above the reply box, and no Note band before it', () => {
+    seed();
+    render(<EmailViewer email={email} isLoading={false} mailboxes={mailboxes} selectedMailbox="g:inbox" currentMailboxRole="inbox" onDelete={() => {}} onQuickReply={async () => true} />);
+    const box = document.querySelector('[data-quick-reply-box]') as HTMLElement;
+    expect(box).toBeTruthy();
+    const areas = document.querySelectorAll('[data-team-note-area]');
+    expect(areas).toHaveLength(1);
+    expect(box.contains(areas[0])).toBe(true);
+    expect(box.firstElementChild).toBe(areas[0]);
   });
 
   it('shows none of it outside a team mailbox', () => {

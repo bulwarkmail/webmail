@@ -977,7 +977,7 @@
     "note": "Notatka",
     "add_note": "Dodaj notatkę",
     "field_label": "Notatka",
-    "placeholder": "Napisz notatkę dla zespołu",
+    "placeholder": "Notatka dla zespołu, @ aby wspomnieć",
     "chars_left": "{count, plural, one {Został # znak} few {Zostały # znaki} many {Zostało # znaków} other {Zostało # znaku}}",
     "too_long": "{count, plural, one {Za długo o # znak} few {Za długo o # znaki} many {Za długo o # znaków} other {Za długo o # znaku}}",
     "sending": "Wysyłanie…",

@@ -977,7 +977,7 @@
     "note": "Jegyzet",
     "add_note": "Jegyzet hozzáadása",
     "field_label": "Jegyzet",
-    "placeholder": "Írjon jegyzetet a csapatának",
+    "placeholder": "Jegyzet a csapatnak, @ az említéshez",
     "chars_left": "{count, plural, one {# karakter maradt} other {# karakter maradt}}",
     "too_long": "{count, plural, one {# karakterrel hosszabb} other {# karakterrel hosszabb}}",
     "sending": "Küldés…",

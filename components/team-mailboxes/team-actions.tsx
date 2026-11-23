@@ -113,6 +113,25 @@ export async function run(
   });
 }
 
+/**
+ * After a note that @ mentions people: the message is assigned to them too
+ * (the others keep it), with the usual toast and Undo. Nothing where the
+ * user may not change the message or everyone mentioned has it already.
+ */
+export function assignMentioned(
+  context: TeamContext,
+  email: ActionEmail,
+  ids: readonly string[],
+  people: Readonly<Record<string, Person>>,
+  texts: { done: (r: AssignmentResult) => string; failed: string; undo: string },
+): Promise<void> {
+  if (!maySetKeywords(email, context.ref.accountId, context.client)) return Promise.resolve();
+  const current = assigneesOf(email.keywords);
+  const missing = [...new Set(ids.map((id) => id.toLowerCase()))].filter((id) => !current.includes(id));
+  if (missing.length === 0) return Promise.resolve();
+  return run(context, email, () => setAssignees(context.ref.key, asAssignable(email), [...current, ...missing], people), texts);
+}
+
 export function useTexts() {
   const t = useTranslations('team_assign');
   const tTeam = useTranslations('team_mailboxes');

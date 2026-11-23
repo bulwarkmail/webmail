@@ -977,7 +977,7 @@
     "note": "メモ",
     "add_note": "メモを追加",
     "field_label": "メモ",
-    "placeholder": "チーム向けのメモを書く",
+    "placeholder": "チームへのメモ、@ でメンション",
     "chars_left": "{count, plural, other {残り # 文字}}",
     "too_long": "{count, plural, other {# 文字オーバー}}",
     "sending": "送信中…",

@@ -977,7 +977,7 @@
     "note": "備註",
     "add_note": "新增備註",
     "field_label": "備註",
-    "placeholder": "為團隊寫一則備註",
+    "placeholder": "給團隊的備註，輸入 @ 提及",
     "chars_left": "{count, plural, other {還可輸入 # 個字元}}",
     "too_long": "{count, plural, other {超出 # 個字元}}",
     "sending": "正在傳送…",

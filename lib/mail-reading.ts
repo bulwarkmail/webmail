@@ -186,7 +186,7 @@ export interface MailFrameCssOptions {
 }
 
 /** Stops CSS animations and transitions in a mail (reduce motion). */
-export const MAIL_REDUCED_MOTION_CSS = '*,*::before,*::after{animation-duration:0.01ms!important;animation-iteration-count:1!important;animation-delay:0s!important;transition-duration:0.01ms!important;transition-delay:0s!important;scroll-behavior:auto!important}';
+export const MAIL_REDUCED_MOTION_CSS = '*,*::before,*::after{animation-duration:0.01ms!important;animation-iteration-count:1!important;animation-delay:0s!important;transition-duration:0s!important;transition-delay:0s!important;scroll-behavior:auto!important}';
 
 /** Same values the app uses (app/accessibility.css); "normal" is our body default. */
 const LINE_HEIGHT: Record<LineSpacing, number> = { normal: 1.6, relaxed: 1.6, loose: 1.9 };

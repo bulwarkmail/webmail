@@ -977,7 +977,7 @@
     "note": "备注",
     "add_note": "添加备注",
     "field_label": "备注",
-    "placeholder": "为团队写一条备注",
+    "placeholder": "给团队的备注，输入 @ 提及",
     "chars_left": "{count, plural, other {还可输入 # 个字符}}",
     "too_long": "{count, plural, other {超出 # 个字符}}",
     "sending": "正在发送…",

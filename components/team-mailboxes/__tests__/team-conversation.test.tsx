@@ -19,6 +19,7 @@ vi.mock('../use-team', async (importOriginal) => ({
 const writeNote = vi.fn(async () => 'n-new');
 const deleteNote = vi.fn(async () => async () => true);
 const reloadTeam = vi.fn(async () => {});
+const setAssignees = vi.fn(async (..._args: unknown[]) => ({ kind: 'assigned', changed: true, keywords: {}, patch: {}, undo: async () => {}, timeline: Promise.resolve(null) }));
 vi.mock('@/stores/team-mailbox-store', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/stores/team-mailbox-store')>();
   return {
@@ -28,6 +29,7 @@ vi.mock('@/stores/team-mailbox-store', async (importOriginal) => {
     writeNote: (...args: unknown[]) => writeNote(...(args as [])),
     deleteNote: (...args: unknown[]) => deleteNote(...(args as [])),
     reloadTeam: (...args: unknown[]) => reloadTeam(...(args as [])),
+    setAssignees: (...args: unknown[]) => setAssignees(...args),
   };
 });
 
@@ -86,6 +88,7 @@ beforeEach(() => {
   writeNote.mockClear();
   deleteNote.mockClear();
   reloadTeam.mockClear();
+  setAssignees.mockClear();
   toastSuccess.mockClear();
 });
 afterEach(() => useTeamMailboxStore.setState({ teams: {} }));
@@ -129,34 +132,52 @@ describe('notes in the conversation', () => {
     seed([note('a', '2026-11-20T10:00:00Z', 'my job')]);
     render(<Conversation />);
     expect(document.querySelector('[data-team-notes-after]')).toBeNull();
-    expect(screen.queryByRole('button', { name: 'note' })).toBeNull();
+    expect(screen.queryByLabelText('field_label')).toBeNull();
   });
 });
 
 describe('the note field', () => {
-  it('opens in place with one click; Enter sends, Shift+Enter is a new line, Escape keeps the text', async () => {
+  it('is always there as one line, grows when used; Enter sends, Shift+Enter is a new line, Escape keeps the text, Cancel empties it', async () => {
     seed([]);
     render(<Conversation />);
-    fireEvent.click(screen.getByRole('button', { name: 'note' }));
     const field = screen.getByLabelText('field_label') as HTMLTextAreaElement;
-    expect(document.activeElement).toBe(field);
+    const box = () => document.querySelector('[data-team-note-field]') as HTMLElement;
+    // One line, no buttons, until it is used.
+    expect(box()).not.toHaveAttribute('data-expanded');
+    expect(field.rows).toBe(1);
+    expect(screen.queryByRole('button', { name: 'add_note' })).toBeNull();
     expect(field.placeholder).toBe('placeholder');
+    act(() => field.focus());
+    expect(box()).toHaveAttribute('data-expanded');
+    expect(screen.getByRole('button', { name: 'add_note' })).toBeTruthy();
 
     fireEvent.change(field, { target: { value: 'my job' } });
     fireEvent.keyDown(field, { key: 'Enter', shiftKey: true });
     expect(writeNote).not.toHaveBeenCalled();
     fireEvent.keyDown(field, { key: 'Escape' });
-    expect(screen.queryByLabelText('field_label')).toBeNull();
-    // Focus goes back to the Note button, not the page.
-    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'note' }));
+    expect(document.activeElement).not.toBe(field);
+    expect(field.value).toBe('my job');
 
-    fireEvent.click(screen.getByRole('button', { name: 'note' }));
-    const again = screen.getByLabelText('field_label') as HTMLTextAreaElement;
-    expect(again.value).toBe('my job');
-    await act(async () => { fireEvent.keyDown(again, { key: 'Enter' }); });
+    act(() => field.focus());
+    await act(async () => { fireEvent.keyDown(field, { key: 'Enter' }); });
     // About the newest message of the conversation.
     expect(writeNote).toHaveBeenCalledWith(ref.key, expect.objectContaining({ emailId: 'm2', key: 'm2@client.example', threadId: 't1' }), { text: 'my job', mentions: [] });
-    expect(again.value).toBe('');
+    expect(field.value).toBe('');
+
+    fireEvent.change(field, { target: { value: 'never mind' } });
+    fireEvent.click(screen.getByRole('button', { name: 'cancel' }));
+    expect(field.value).toBe('');
+    expect(box()).not.toHaveAttribute('data-expanded');
+  });
+
+  it('comes into view focused when the toolbar\'s Note asks for it', async () => {
+    const { requestNoteField } = await import('../use-team');
+    seed([]);
+    render(<Conversation />);
+    const field = screen.getByLabelText('field_label');
+    expect(document.activeElement).not.toBe(field);
+    act(() => requestNoteField('m1'));
+    expect(document.activeElement).toBe(field);
   });
 
   it('offers the team after @, picks by keyboard, and stores the picked person as a mention', async () => {
@@ -164,7 +185,7 @@ describe('the note field', () => {
     useTeamNamesStore.setState({ lists: { [ref.key]: { hv: { name: 'Bob Baker', email: 'tm-bob@example.org' }, hw: { name: 'Carol Cooper', email: 'tm-carol@example.org' } } }, directory: {} });
     seed([]);
     render(<Conversation />);
-    fireEvent.click(screen.getByRole('button', { name: 'note' }));
+    act(() => (screen.getByLabelText('field_label') as HTMLTextAreaElement).focus());
     const field = screen.getByLabelText('field_label') as HTMLTextAreaElement;
     fireEvent.change(field, { target: { value: 'ask @ca' } });
     field.setSelectionRange(7, 7);
@@ -178,6 +199,8 @@ describe('the note field', () => {
     fireEvent.change(field, { target: { value: 'ask @Carol Cooper please' } });
     await act(async () => { fireEvent.keyDown(field, { key: 'Enter' }); });
     expect(writeNote).toHaveBeenCalledWith(ref.key, expect.anything(), { text: 'ask @Carol Cooper please', mentions: ['hw'] });
+    // Mentioning someone assigns the message to them as well.
+    expect(setAssignees).toHaveBeenCalledWith(ref.key, expect.objectContaining({ id: 'm2' }), ['hw'], { hw: { name: 'Carol Cooper', email: 'tm-carol@example.org' } });
     useTeamNamesStore.setState({ lists: {}, directory: {} });
   });
 
@@ -194,7 +217,7 @@ describe('the note field', () => {
     teamContext = { ref, client: { ...client, supportsPrincipals: () => true } };
     seed([]);
     render(<Conversation />);
-    fireEvent.click(screen.getByRole('button', { name: 'note' }));
+    act(() => (screen.getByLabelText('field_label') as HTMLTextAreaElement).focus());
     const field = screen.getByLabelText('field_label') as HTMLTextAreaElement;
     await act(async () => { fireEvent.change(field, { target: { value: '@' } }); });
     field.setSelectionRange(1, 1);
@@ -211,11 +234,35 @@ describe('the note field', () => {
     useTeamNamesStore.setState({ lists: {}, directory: {} });
   });
 
+  it('keeps whoever has the message when a mention assigns it, and assigns nobody twice', async () => {
+    const { useTeamNamesStore } = await import('@/lib/team-mailboxes/names');
+    useTeamNamesStore.setState({ lists: { [ref.key]: { hv: { name: 'Bob Baker', email: 'tm-bob@example.org' }, hw: { name: 'Carol Cooper', email: 'tm-carol@example.org' } } }, directory: {} });
+    seed([]);
+    const held = message('m2', '2026-11-20T12:00:00Z', { keywords: { '$assigned:hv': true } });
+    render(<Conversation messages={[m1, held]} />);
+    act(() => (screen.getByLabelText('field_label') as HTMLTextAreaElement).focus());
+    const field = screen.getByLabelText('field_label') as HTMLTextAreaElement;
+    const mention = async (typed: string) => {
+      fireEvent.change(field, { target: { value: typed } });
+      field.setSelectionRange(typed.length, typed.length);
+      fireEvent.keyUp(field, { key: 'x' });
+      fireEvent.keyDown(field, { key: 'Enter' });
+      await act(async () => { fireEvent.keyDown(field, { key: 'Enter' }); });
+    };
+    await mention('@Car');
+    expect(setAssignees).toHaveBeenCalledWith(ref.key, expect.objectContaining({ id: 'm2' }), ['hv', 'hw'], expect.anything());
+    setAssignees.mockClear();
+    await mention('@Bo');
+    expect(writeNote).toHaveBeenLastCalledWith(ref.key, expect.anything(), { text: '@Bob Baker', mentions: ['hv'] });
+    expect(setAssignees).not.toHaveBeenCalled();
+    useTeamNamesStore.setState({ lists: {}, directory: {} });
+  });
+
   it('puts the caret after a kept draft when the field is focused again', async () => {
     const { NoteField } = await import('../note-field');
     const { createRef } = await import('react');
     const handle = createRef<import('../note-field').NoteFieldHandle>();
-    render(<NoteField ref={handle} value="half written" onChange={() => {}} onSubmit={() => {}} onClose={() => {}} />);
+    render(<NoteField ref={handle} value="half written" onChange={() => {}} onSubmit={() => {}} onClose={() => {}} onCancel={() => {}} />);
     const field = screen.getByLabelText('field_label') as HTMLTextAreaElement;
     field.setSelectionRange(0, 0);
     act(() => handle.current!.focus());
@@ -226,7 +273,7 @@ describe('the note field', () => {
   it('never sends while an input method is composing', () => {
     seed([]);
     render(<Conversation />);
-    fireEvent.click(screen.getByRole('button', { name: 'note' }));
+    act(() => (screen.getByLabelText('field_label') as HTMLTextAreaElement).focus());
     const field = screen.getByLabelText('field_label');
     fireEvent.change(field, { target: { value: '日本' } });
     fireEvent.keyDown(field, { key: 'Enter', isComposing: true });
@@ -234,7 +281,7 @@ describe('the note field', () => {
     expect(writeNote).not.toHaveBeenCalled();
   });
 
-  it('gives a read-only member no Note button, and one sentence where notes are', () => {
+  it('gives a read-only member no note line, and one sentence where notes are', () => {
     seed([note('a', '2026-11-20T10:00:00Z', 'my job')], { canWrite: false });
     const view = render(<Conversation />);
     expect(screen.getByText('read_only_member')).toBeTruthy();
@@ -247,17 +294,17 @@ describe('the note field', () => {
     expect(container.querySelector('[data-team-note-area]')!.textContent).toBe('');
   });
 
-  it('gives no Note button in an account shared read-only, even before the notes have loaded', () => {
+  it('gives no note line in an account shared read-only, even before the notes have loaded', () => {
     teamContext = { ref, client: { ...client, getAccountInfo: () => ({ isReadOnly: true }) } };
     seed([], { canWrite: null });
     render(<Conversation />);
-    expect(screen.queryByRole('button', { name: 'note' })).toBeNull();
+    expect(screen.queryByLabelText('field_label')).toBeNull();
   });
 
   it('keeps the field open and its text when a reply joins the conversation', () => {
     seed([]);
     const view = render(<Conversation />);
-    fireEvent.click(screen.getByRole('button', { name: 'note' }));
+    act(() => (screen.getByLabelText('field_label') as HTMLTextAreaElement).focus());
     fireEvent.change(screen.getByLabelText('field_label'), { target: { value: 'half written' } });
     view.rerender(<Conversation messages={[m1, m2, message('m3', '2026-11-20T15:00:00Z')]} />);
     expect((screen.getByLabelText('field_label') as HTMLTextAreaElement).value).toBe('half written');

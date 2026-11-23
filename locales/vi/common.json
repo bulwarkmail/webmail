@@ -977,7 +977,7 @@
     "note": "Ghi chú",
     "add_note": "Thêm ghi chú",
     "field_label": "Ghi chú",
-    "placeholder": "Viết ghi chú cho nhóm của bạn",
+    "placeholder": "Ghi chú cho nhóm, @ để nhắc đến",
     "chars_left": "{count, plural, other {Còn # ký tự}}",
     "too_long": "{count, plural, other {Quá # ký tự}}",
     "sending": "Đang gửi…",

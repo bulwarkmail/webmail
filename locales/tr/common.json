@@ -977,7 +977,7 @@
     "note": "Not",
     "add_note": "Not ekle",
     "field_label": "Not",
-    "placeholder": "Ekibiniz için bir not yazın",
+    "placeholder": "Ekibiniz için not, anmak için @",
     "chars_left": "{count, plural, one {# karakter kaldı} other {# karakter kaldı}}",
     "too_long": "{count, plural, one {# karakter fazla} other {# karakter fazla}}",
     "sending": "Gönderiliyor…",

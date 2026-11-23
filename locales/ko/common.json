@@ -977,7 +977,7 @@
     "note": "메모",
     "add_note": "메모 추가",
     "field_label": "메모",
-    "placeholder": "팀에게 남길 메모를 쓰세요",
+    "placeholder": "팀 메모, @로 언급",
     "chars_left": "{count, plural, other {# 자 남음}}",
     "too_long": "{count, plural, other {# 자 초과}}",
     "sending": "보내는 중…",

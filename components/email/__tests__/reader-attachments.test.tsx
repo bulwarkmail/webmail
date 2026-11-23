@@ -108,6 +108,19 @@ describe('ReaderAttachments bar', () => {
     expect(ext.className).not.toContain('truncate');
   });
 
+  it('gives the hidden hover actions no width, but keeps them reachable', () => {
+    renderBar([file('a', 'google.com!teelicht.pro!1795132800!1795219199!001.json.gz')], { onSaveToFiles: vi.fn(), onRename: vi.fn() });
+    const more = screen.getByTestId('attachment-more-actions');
+    // Until hover or focus they must not take space from the name.
+    expect(more.className.split(' ')).toEqual(expect.arrayContaining(['max-w-0', 'overflow-hidden']));
+    expect(more.className).toContain('group-hover:max-w-none');
+    expect(more.className).toContain('group-focus-within:max-w-none');
+    expect(more.className).toContain('pointer-coarse:max-w-none');
+    // Collapsed, not removed: Tab and screen readers still find them.
+    expect(within(more).getAllByRole('button')).toHaveLength(2);
+    expect(more.className).not.toMatch(/(^|\s)hidden(\s|$)/);
+  });
+
   it('shows the type once, on the preview, and the size under the name', () => {
     renderBar([file('a', 'Invoice-2026-089.pdf', 'application/pdf', 51200)]);
     const tile = screen.getByTestId('attachment');
