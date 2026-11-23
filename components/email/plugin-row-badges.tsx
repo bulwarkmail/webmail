@@ -7,6 +7,9 @@ import { renderHooks } from "@/lib/plugin-hooks";
 import { emailSummary } from "@/lib/plugin-projection";
 import { rowBadgeGeneration, subscribeRowBadges } from "@/lib/plugin-sandbox/row-badges";
 import { PLUGIN_ICON_RE } from "@/lib/plugin-sandbox/actions";
+import { isFilterEmpty } from "@/lib/jmap/search-utils";
+import { mailboxesInView, resolveUnstampedEmailAccountId, useEmailStore } from "@/stores/email-store";
+import { useAuthStore } from "@/stores/auth-store";
 import { cn } from "@/lib/utils";
 import { iconForName } from "@/components/icons";
 import { TAG_GROUP_CLASS, TAG_LOZENGE_CLASS } from "./tag-badge";
@@ -16,7 +19,8 @@ import { TAG_GROUP_CLASS, TAG_LOZENGE_CLASS } from "./tag-badge";
 // The hook is async and would otherwise run for every row on every render, so
 // the answer is kept per message and keyword state: scrolling a row back into
 // view, or re-rendering the list, reuses it. A keyword change (read, flagged,
-// a tag) asks again, since that is what most badges are about.
+// a tag) asks again, since that is what most badges are about. A message is
+// named by its login, account and id, since ids repeat across accounts.
 
 /** At most this many plugin badges per row; the row has little room. */
 export const MAX_ROW_BADGES = 3;
@@ -27,7 +31,7 @@ const CACHE_LIMIT = 2000;
 const cache = new Map<string, EmailListBadge[]>();
 const inflight = new Map<string, Promise<EmailListBadge[]>>();
 
-function cacheKey(email: Email, listeners: number, generation: number): string {
+function cacheKey(email: Email, source: string, listeners: number, generation: number): string {
   const keywords = Object.keys(email.keywords ?? {})
     .filter((k) => email.keywords?.[k])
     .sort()
@@ -35,7 +39,28 @@ function cacheKey(email: Email, listeners: number, generation: number): string {
   // The listener count is part of the key so a plugin being switched on or
   // off doesn't leave the old answer behind.
   // The generation moves on when a plugin asks for a refresh.
-  return `${generation}|${listeners}|${email.id}|${keywords}`;
+  return `${generation}|${listeners}|${source}|${email.id}|${keywords}`;
+}
+
+/**
+ * The login and JMAP account a row's message is in, as one string. A stamped
+ * row (merged views) says where it is from; an unstamped row is in the shared
+ * account of the folder listed, or else the browsed login's own account.
+ */
+function useRowSource(email: Email): string {
+  const activeLogin = useAuthStore((state) => state.activeAccountId);
+  return useEmailStore((state) => {
+    if (email.sourceClientAccountId && email.sourceAccountId) {
+      return `${email.sourceClientAccountId}/${email.sourceAccountId}`;
+    }
+    const account = resolveUnstampedEmailAccountId({
+      mailboxes: mailboxesInView(state),
+      selectedMailbox: state.selectedMailbox,
+      searchActive: !!state.searchQuery || !isFilterEmpty(state.searchFilters),
+      searchMailboxId: state.searchMailboxId,
+    });
+    return `${state.viewingAccountId ?? activeLogin ?? ""}/${account ?? ""}`;
+  });
 }
 
 // A colour the badge may use: hex, rgb()/hsl() with plain numbers, a CSS
@@ -114,7 +139,8 @@ export function clearRowBadgeCache(): void {
 export function usePluginRowBadges(email: Email): EmailListBadge[] {
   const listeners = renderHooks.onEmailListItemRender.size;
   const generation = useSyncExternalStore(subscribeRowBadges, rowBadgeGeneration, rowBadgeGeneration);
-  const key = listeners > 0 ? cacheKey(email, listeners, generation) : null;
+  const source = useRowSource(email);
+  const key = listeners > 0 ? cacheKey(email, source, listeners, generation) : null;
   const [state, setState] = useState<{ key: string | null; badges: EmailListBadge[] }>(() => ({
     key,
     badges: key ? cache.get(key) ?? [] : [],

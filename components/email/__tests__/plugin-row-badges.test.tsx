@@ -8,7 +8,7 @@ import { useUIStore } from '@/stores/ui-store';
 import { groupEmailsByThread } from '@/lib/thread-utils';
 import { renderHooks, clearAllHooks } from '@/lib/plugin-hooks';
 import { refreshRowBadges, resetRowBadgeRefresh } from '@/lib/plugin-sandbox/row-badges';
-import type { Email } from '@/lib/jmap/types';
+import type { Email, Mailbox } from '@/lib/jmap/types';
 
 // onEmailListItemRender: plugins add small badges next to a row's subject.
 
@@ -17,9 +17,12 @@ vi.mock('@/hooks/use-email-drag', () => ({
 }));
 
 vi.mock('@/stores/auth-store', () => {
-  const state = { identities: [], username: null };
+  const state = { identities: [], username: null, activeAccountId: 'login-1', getClientForAccount: () => undefined };
   return {
-    useAuthStore: (selector?: (s: typeof state) => unknown) => (selector ? selector(state) : state),
+    useAuthStore: Object.assign(
+      (selector?: (s: typeof state) => unknown) => (selector ? selector(state) : state),
+      { getState: () => state },
+    ),
   };
 });
 
@@ -171,6 +174,44 @@ describe('plugin badges in message-list rows', () => {
     // Marking it unread is a new keyword state: ask again.
     render(row([{ ...email, keywords: {} }]));
     await waitFor(() => expect(handler).toHaveBeenCalledTimes(2));
+  });
+
+  it('keeps the answers for messages of different accounts that share an id apart', async () => {
+    // JMAP ids are unique within an account only: two shared accounts can
+    // each hold a message "m1".
+    renderHooks.onEmailListItemRender.register('test', async (badges: unknown[], { email }: { email: { subject: string } }) => (
+      email.subject === 'Badged message' ? [...badges, { key: 'k', label: 'Badge' }] : badges
+    ));
+    const shared = (accountId: string) => ({
+      id: `${accountId}:inbox`, name: 'Inbox', role: 'inbox', accountId, isShared: true,
+    }) as unknown as Mailbox;
+    useEmailStore.setState({ mailboxes: [shared('acc-a'), shared('acc-b')], selectedMailbox: 'acc-a:inbox' });
+
+    const view = render(row([makeEmail({ id: 'm1', subject: 'Badged message' })]));
+    await screen.findByText('Badge');
+    view.unmount();
+
+    // The same id listed in another account's folder.
+    act(() => { useEmailStore.setState({ selectedMailbox: 'acc-b:inbox' }); });
+    render(row([makeEmail({ id: 'm1', subject: 'Other message' })]));
+    await screen.findByText('Other message');
+    await act(async () => {});
+    expect(screen.queryByText('Badge')).toBeNull();
+  });
+
+  it('keeps the answers for rows of a merged view apart by the account each comes from', async () => {
+    renderHooks.onEmailListItemRender.register('test', async (badges: unknown[], { email }: { email: { subject: string } }) => (
+      email.subject === 'Badged message' ? [...badges, { key: 'k', label: 'Badge' }] : badges
+    ));
+
+    const view = render(row([makeEmail({ id: 'm1', subject: 'Badged message', sourceClientAccountId: 'login-1', sourceAccountId: 'acc-a' })]));
+    await screen.findByText('Badge');
+    view.unmount();
+
+    render(row([makeEmail({ id: 'm1', subject: 'Other message', sourceClientAccountId: 'login-1', sourceAccountId: 'acc-b' })]));
+    await screen.findByText('Other message');
+    await act(async () => {});
+    expect(screen.queryByText('Badge')).toBeNull();
   });
 
   it('does nothing without a handler', async () => {
