@@ -8000,7 +8000,9 @@
       "added": "주소를 추가했습니다.",
       "saved": "주소를 저장했습니다.",
       "deleted": "주소를 삭제했습니다.",
-      "delete_title": "이 주소를 삭제할까요?"
+      "delete_title": "이 주소를 삭제할까요?",
+      "offer_new_mail": "새 메일에 표시. 끄면: 이 주소로 온 메일에 답장할 때만 사용해요.",
+      "offer_new_mail_named": "새 메일에 {address} 표시"
     },
     "signatures": {
       "title": "서명",

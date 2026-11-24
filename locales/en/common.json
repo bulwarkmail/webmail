@@ -8000,7 +8000,9 @@
       "added": "Address added.",
       "saved": "Address saved.",
       "deleted": "Address deleted.",
-      "delete_title": "Delete this address?"
+      "delete_title": "Delete this address?",
+      "offer_new_mail": "Offer for new mail. Off: only used to reply to mail sent to this address.",
+      "offer_new_mail_named": "Offer {address} for new mail"
     },
     "signatures": {
       "title": "Signatures",

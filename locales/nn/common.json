@@ -8008,7 +8008,9 @@
       "added": "Adresse lagt til.",
       "saved": "Adresse lagra.",
       "deleted": "Adresse sletta.",
-      "delete_title": "Slett denne adressa?"
+      "delete_title": "Slett denne adressa?",
+      "offer_new_mail": "Tilby for ny e-post. Av: berre brukt til å svare på e-post send til denne adressa.",
+      "offer_new_mail_named": "Tilby {address} for ny e-post"
     },
     "signatures": {
       "title": "Signaturar",

@@ -8012,7 +8012,9 @@
       "added": "Đã thêm địa chỉ.",
       "saved": "Đã lưu địa chỉ.",
       "deleted": "Đã xóa địa chỉ.",
-      "delete_title": "Xóa địa chỉ này?"
+      "delete_title": "Xóa địa chỉ này?",
+      "offer_new_mail": "Đề xuất cho thư mới. Tắt: chỉ dùng để trả lời thư gửi đến địa chỉ này.",
+      "offer_new_mail_named": "Đề xuất {address} cho thư mới"
     },
     "signatures": {
       "title": "Chữ ký",

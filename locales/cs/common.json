@@ -8000,7 +8000,9 @@
       "added": "Adresa přidána.",
       "saved": "Adresa uložena.",
       "deleted": "Adresa smazána.",
-      "delete_title": "Smazat tuto adresu?"
+      "delete_title": "Smazat tuto adresu?",
+      "offer_new_mail": "Nabízet pro nové e-maily. Vypnuto: jen pro odpovědi na poštu poslanou na tuto adresu.",
+      "offer_new_mail_named": "Nabízet {address} pro nové e-maily"
     },
     "signatures": {
       "title": "Podpisy",

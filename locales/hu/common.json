@@ -8000,7 +8000,9 @@
       "added": "Cím hozzáadva.",
       "saved": "Cím mentve.",
       "deleted": "Cím törölve.",
-      "delete_title": "Törli ezt a címet?"
+      "delete_title": "Törli ezt a címet?",
+      "offer_new_mail": "Felajánlás új levelekhez. Ki: csak az erre a címre küldött levelek megválaszolására.",
+      "offer_new_mail_named": "{address} felajánlása új levelekhez"
     },
     "signatures": {
       "title": "Aláírások",

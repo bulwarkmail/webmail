@@ -162,6 +162,7 @@ import { whenPolicySettled } from "@/stores/policy-store";
 import { ClassificationLabelPicker, type ClassificationPickerHandle } from "./classification-label-picker";
 import { useComposerClassification } from "./use-composer-classification";
 import { findComposeIdentityId, findDraftIdentityId, findReplyIdentityId, resolveReplyFrom } from "@/lib/reply-identity";
+import { isReplyOnlyIdentity } from "@/lib/reply-only-identities";
 import { askReplyIdentity, hasReplyIdentityPlugins } from "@/lib/plugin-reply-identity";
 import { buildReplyRecipients, isSelfSent, ownReplyAddresses } from "@/lib/reply-recipients";
 import { computeReplyThreadingHeaders, type ReplyThreadingHeaders } from "@/lib/email-threading";
@@ -825,6 +826,14 @@ export function EmailComposer({
   const identityGroups = multiAccountIdentities.enabled
     ? multiAccountIdentities.groups
     : [];
+  // Addresses marked "replies only" (#1673) are not offered for new mail:
+  // neither listed in From nor picked from the open mailbox. Replies and
+  // forwards still match them, and list them.
+  const replyOnlyIdentities = useSettingsStore((state) => state.replyOnlyIdentities);
+  const offeredForNewMail = useCallback((identity: Identity) => {
+    const { localAccountId, rawId } = stripCrossAccountIdentityPrefix(identity.id);
+    return !isReplyOnlyIdentity(replyOnlyIdentities, localAccountId ?? composerAccountIdRef.current, rawId);
+  }, [replyOnlyIdentities]);
   const primaryIdentity = activeIdentities[0] ?? null;
   // The account this composer belongs to (see composerAccountIdRef above).
   const activeAccountId = composerAccountIdRef.current;
@@ -1485,6 +1494,10 @@ export function EmailComposer({
   const titleMode: 'compose' | 'reply' | 'replyAll' | 'forward' = replyKindSwitched ?? (mode !== 'compose'
     ? mode
     : initialData?.kind ?? (initialData?.inReplyTo?.length ? 'reply' : 'compose'));
+  // The From list of a new message leaves out reply-only addresses, but
+  // never the one it is sent from (a re-opened draft keeps its sender).
+  const listedInFrom = (identity: Identity) =>
+    titleMode !== 'compose' || identity.id === currentIdentity?.id || offeredForNewMail(identity);
   // Classification label (enterprise pack): the labels of the account and
   // identity the message goes out from; replies and forwards start with
   // the original's label, re-opened drafts with theirs.
@@ -1823,7 +1836,7 @@ export function EmailComposer({
         ? useAccountStore.getState().getAccountById(activeAccountId)?.email?.trim().toLowerCase()
         : undefined;
       if (loginEmail && composeFromAccountEmail?.trim().toLowerCase() === loginEmail) return;
-      const composeIdentityId = findComposeIdentityId(identities, composeFromAccountEmail);
+      const composeIdentityId = findComposeIdentityId(identities.filter(offeredForNewMail), composeFromAccountEmail);
       if (composeIdentityId) {
         setSelectedIdentityId(composeIdentityId);
       }
@@ -1925,6 +1938,7 @@ export function EmailComposer({
     composeFromAccountEmail,
     fromOverrideEnabled,
     identities,
+    offeredForNewMail,
     sourceAccountIdentities,
     sourceAccountId,
     activeAccountId,
@@ -5959,7 +5973,9 @@ export function EmailComposer({
                     </option>
                   )}
                   {identityGroups.length > 0
-                    ? identityGroups.map((group) => (
+                    ? identityGroups.map((group) => ({ ...group, identities: group.identities.filter(listedInFrom) }))
+                      .filter((group) => group.identities.length > 0)
+                      .map((group) => (
                         <optgroup key={group.localAccountId} label={toUnicodeEmail(group.accountLabel)}>
                           {group.identities.map((identity) => {
                             const displayEmail = toUnicodeEmail(subAddressTag
@@ -5973,7 +5989,7 @@ export function EmailComposer({
                           })}
                         </optgroup>
                       ))
-                    : identities.map((identity) => {
+                    : identities.filter(listedInFrom).map((identity) => {
                         const displayEmail = toUnicodeEmail(subAddressTag
                           ? generateSubAddress(identity.email, subAddressTag, subAddressDelimiter)
                           : identity.email);

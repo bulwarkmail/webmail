@@ -8000,7 +8000,9 @@
       "added": "アドレスを追加しました。",
       "saved": "アドレスを保存しました。",
       "deleted": "アドレスを削除しました。",
-      "delete_title": "このアドレスを削除しますか?"
+      "delete_title": "このアドレスを削除しますか?",
+      "offer_new_mail": "新規メールで選択肢に表示。オフ: このアドレス宛てのメールへの返信にのみ使います。",
+      "offer_new_mail_named": "{address} を新規メールで選択肢に表示"
     },
     "signatures": {
       "title": "署名",

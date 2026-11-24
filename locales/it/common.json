@@ -8000,7 +8000,9 @@
       "added": "Indirizzo aggiunto.",
       "saved": "Indirizzo salvato.",
       "deleted": "Indirizzo eliminato.",
-      "delete_title": "Eliminare questo indirizzo?"
+      "delete_title": "Eliminare questo indirizzo?",
+      "offer_new_mail": "Proponi per le nuove email. Disattivato: solo per rispondere alle email inviate a questo indirizzo.",
+      "offer_new_mail_named": "Proponi {address} per le nuove email"
     },
     "signatures": {
       "title": "Firme",

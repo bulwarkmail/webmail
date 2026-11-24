@@ -361,6 +361,52 @@ describe('composer reply addressing', () => {
     });
   });
 
+  // #1673: an address marked "replies only" (a group address every member
+  // gets) is not offered for new mail, but still answers mail sent to it.
+  describe('a reply-only address', () => {
+    const authStore = useAuthStore as unknown as { setState: (p: Record<string, unknown>) => void };
+    const accountStore = useAccountStore as unknown as { setState: (p: Record<string, unknown>) => void };
+    const settings = useSettingsStore as unknown as { setState: (p: Record<string, unknown>) => void };
+    const fromOptions = () => Array.from(identitySelect().options).map((o) => o.value).filter((v) => v.startsWith('id-'));
+
+    beforeEach(() => {
+      authStore.setState({ activeAccountId: 'local-1' });
+      settings.setState({ replyOnlyIdentities: { 'local-1': ['id-info'] } });
+    });
+
+    afterEach(() => {
+      setAutoSelect(false);
+      authStore.setState({ activeAccountId: null });
+      accountStore.setState({ accounts: [] });
+      settings.setState({ replyOnlyIdentities: {} });
+    });
+
+    it('is left out of From for a new message', () => {
+      render(<EmailComposer mode="compose" />);
+      expect(fromOptions()).toEqual(['id-me']);
+    });
+
+    it('is not picked from the open mailbox for a new message', () => {
+      setAutoSelect(true);
+      accountStore.setState({ accounts: [{ id: 'local-1', email: 'login@example.com', isConnected: true }] });
+      render(<EmailComposer mode="compose" composeFromAccountEmail="info@example.com" />);
+      expect(identitySelect().value).toBe('id-me');
+      expect(fromOptions()).toEqual(['id-me']);
+    });
+
+    it('still answers mail sent to it, and is listed there', () => {
+      render(<EmailComposer mode="reply" replyTo={RECEIVED_SHARED} />);
+      expect(identitySelect().value).toBe('id-info');
+      expect(fromOptions()).toEqual(['id-me', 'id-info']);
+    });
+
+    it('is only left out for its own login', () => {
+      settings.setState({ replyOnlyIdentities: { 'local-2': ['id-info'] } });
+      render(<EmailComposer mode="compose" />);
+      expect(fromOptions()).toEqual(['id-me', 'id-info']);
+    });
+  });
+
   // The catch-all From REWRITE is a different behaviour and stays opt-in: it
   // puts an address the user has NOT configured into From, and on a multi-user
   // domain that address can be a colleague's.

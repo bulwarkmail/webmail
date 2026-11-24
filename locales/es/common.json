@@ -8000,7 +8000,9 @@
       "added": "Dirección añadida.",
       "saved": "Dirección guardada.",
       "deleted": "Dirección eliminada.",
-      "delete_title": "¿Eliminar esta dirección?"
+      "delete_title": "¿Eliminar esta dirección?",
+      "offer_new_mail": "Ofrecer para correo nuevo. Desactivado: solo para responder a correo enviado a esta dirección.",
+      "offer_new_mail_named": "Ofrecer {address} para correo nuevo"
     },
     "signatures": {
       "title": "Firmas",

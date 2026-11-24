@@ -8000,7 +8000,9 @@
       "added": "Aadress lisatud.",
       "saved": "Aadress salvestatud.",
       "deleted": "Aadress kustutatud.",
-      "delete_title": "Kas kustutada see aadress?"
+      "delete_title": "Kas kustutada see aadress?",
+      "offer_new_mail": "Paku uute kirjade jaoks. Väljas: ainult vastamiseks sellele aadressile saadetud kirjadele.",
+      "offer_new_mail_named": "Paku aadressi {address} uute kirjade jaoks"
     },
     "signatures": {
       "title": "Allkirjad",

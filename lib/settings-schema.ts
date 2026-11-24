@@ -449,7 +449,7 @@ export const DENIED_SETTINGS: readonly string[] = [
   'readAloudVoice',
   // Maps and lists keyed by server ids.
   'allMailFolderIds', 'hiddenSharedMailAccounts', 'sharedMailAccountOrder', 'unifiedExcludedSharedAccounts', 'notificationMutes', 'hiddenCompanyCalendars', 'sharedCalendarColors', 'calendarVisibility',
-  'folderIcons', 'folderCountModes', 'preferredIdentityIds',
+  'folderIcons', 'folderCountModes', 'preferredIdentityIds', 'replyOnlyIdentities',
   // App bookkeeping and UI state, not preferences.
   'onboardingCompleted', 'tourCompleted', 'emailKeywordsChoiceTracked', 'mvUnreadSectionCollapsed', 'mvEverythingElseCollapsed',
   'vacationCalendarBlocks', 'explicitSettings', 'proofreadingNoticeSeen',

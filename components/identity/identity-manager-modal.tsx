@@ -31,6 +31,8 @@ import { toUnicodeEmail } from '@/lib/idn';
 import { getPlainTextSignature } from '@/lib/signature-utils';
 import { sortIdentities } from '@/lib/identity-order';
 import { useRestriction } from '@/hooks/use-restriction';
+import { ToggleSwitch } from '@/components/settings/settings-section';
+import { isReplyOnlyIdentity, setIdentityReplyOnly } from '@/lib/reply-only-identities';
 
 interface IdentityFormData {
   name: string;
@@ -59,6 +61,14 @@ export function IdentityManagerModal({ isOpen, onClose }: IdentityManagerModalPr
   const _preferredPrimaryId = useIdentityStore((state) => state.preferredPrimaryId);
   const setPreferredPrimary = useIdentityStore((state) => state.setPreferredPrimary);
   const syncIdentities = useSyncIdentities();
+  // Addresses kept for replies only (#1673), per login like the default sender.
+  const loginId = useAccountStore((state) => state.activeAccountId);
+  const replyOnlyIdentities = useSettingsStore((state) => state.replyOnlyIdentities);
+  const setReplyOnly = useCallback((identity: Identity, replyOnly: boolean) => {
+    if (!loginId) return;
+    const current = useSettingsStore.getState().replyOnlyIdentities;
+    useSettingsStore.getState().updateSetting('replyOnlyIdentities', setIdentityReplyOnly(current, loginId, identity.id, replyOnly));
+  }, [loginId]);
 
   const refreshIdentitiesFromServer = useRefreshIdentities();
 
@@ -205,6 +215,11 @@ export function IdentityManagerModal({ isOpen, onClose }: IdentityManagerModalPr
         ...current,
         [activeAccountId]: identity.id,
       });
+      // New mail goes out from the default address: it can't be for replies only.
+      const replyOnly = useSettingsStore.getState().replyOnlyIdentities;
+      if (isReplyOnlyIdentity(replyOnly, activeAccountId, identity.id)) {
+        useSettingsStore.getState().updateSetting('replyOnlyIdentities', setIdentityReplyOnly(replyOnly, activeAccountId, identity.id, false));
+      }
     }
     // Re-sort: move the preferred identity to the front
     const reordered = [identity, ...identities.filter((id) => id.id !== identity.id)];
@@ -345,6 +360,19 @@ export function IdentityManagerModal({ isOpen, onClose }: IdentityManagerModalPr
                         )}
                       </div>
                     </div>
+
+                    {/* Not for the default address, which new mail starts from. */}
+                    {loginId && identities.length > 1 && identities[0]?.id !== identity.id && (
+                      <div className="mt-3 flex items-center justify-between gap-3">
+                        <span className="text-sm text-muted-foreground">{tAddr('offer_new_mail')}</span>
+                        <ToggleSwitch
+                          checked={!isReplyOnlyIdentity(replyOnlyIdentities, loginId, identity.id)}
+                          onChange={(offered) => setReplyOnly(identity, !offered)}
+                          ariaLabel={tAddr('offer_new_mail_named', { address: toUnicodeEmail(identity.email) })}
+                          testId="identity-offer-new-mail"
+                        />
+                      </div>
+                    )}
 
                     {!identity.mayDelete && (
                       <p className="text-xs text-amber-600 dark:text-amber-400 mt-2 flex items-center gap-1">

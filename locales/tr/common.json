@@ -8000,7 +8000,9 @@
       "added": "Adres eklendi.",
       "saved": "Adres kaydedildi.",
       "deleted": "Adres silindi.",
-      "delete_title": "Bu adres silinsin mi?"
+      "delete_title": "Bu adres silinsin mi?",
+      "offer_new_mail": "Yeni postalar için sun. Kapalı: yalnızca bu adrese gönderilen postaları yanıtlamak için.",
+      "offer_new_mail_named": "{address} adresini yeni postalar için sun"
     },
     "signatures": {
       "title": "İmzalar",

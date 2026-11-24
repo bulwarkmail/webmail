@@ -8000,7 +8000,9 @@
       "added": "Adresa a fost adăugată.",
       "saved": "Adresa a fost salvată.",
       "deleted": "Adresa a fost ștearsă.",
-      "delete_title": "Ștergeți această adresă?"
+      "delete_title": "Ștergeți această adresă?",
+      "offer_new_mail": "Propune pentru e-mailuri noi. Dezactivat: doar pentru răspunsuri la e-mailurile trimise la această adresă.",
+      "offer_new_mail_named": "Propune {address} pentru e-mailuri noi"
     },
     "signatures": {
       "title": "Semnături",

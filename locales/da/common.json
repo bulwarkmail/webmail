@@ -8000,7 +8000,9 @@
       "added": "Adressen er tilføjet.",
       "saved": "Adressen er gemt.",
       "deleted": "Adressen er slettet.",
-      "delete_title": "Slet denne adresse?"
+      "delete_title": "Slet denne adresse?",
+      "offer_new_mail": "Tilbyd til ny post. Fra: bruges kun til at svare på post sendt til denne adresse.",
+      "offer_new_mail_named": "Tilbyd {address} til ny post"
     },
     "signatures": {
       "title": "Signaturer",

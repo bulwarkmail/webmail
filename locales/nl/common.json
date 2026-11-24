@@ -8000,7 +8000,9 @@
       "added": "Adres toegevoegd.",
       "saved": "Adres opgeslagen.",
       "deleted": "Adres verwijderd.",
-      "delete_title": "Dit adres verwijderen?"
+      "delete_title": "Dit adres verwijderen?",
+      "offer_new_mail": "Aanbieden voor nieuwe mail. Uit: alleen om te antwoorden op mail aan dit adres.",
+      "offer_new_mail_named": "{address} aanbieden voor nieuwe mail"
     },
     "signatures": {
       "title": "Handtekeningen",

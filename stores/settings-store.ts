@@ -619,7 +619,7 @@ const DEVICE_LOCAL_SETTING_KEYS = new Set<string>(['proInterface']);
  * Maps keyed by account id. Every account's server copy carries one, and a
  * server load takes only the loading account's entry.
  */
-const PER_ACCOUNT_MAP_KEYS = new Set<string>(['preferredIdentityIds', 'allMailFolderIds', 'hiddenSharedMailAccounts', 'sharedMailAccountOrder', 'unifiedExcludedSharedAccounts', 'calendarVisibility']);
+const PER_ACCOUNT_MAP_KEYS = new Set<string>(['preferredIdentityIds', 'replyOnlyIdentities', 'allMailFolderIds', 'hiddenSharedMailAccounts', 'sharedMailAccountOrder', 'unifiedExcludedSharedAccounts', 'calendarVisibility']);
 
 /** A map of plugin id → boolean, whatever came in (sync, import, storage). */
 function booleanRecord(value: unknown): Record<string, boolean> {
@@ -1039,6 +1039,9 @@ interface SettingsState extends AccessibilitySettings {
   // site data and follows the user across browsers/devices (issue #507). Kept
   // per account because JMAP identity ids are account-scoped and would collide.
   preferredIdentityIds: Record<string, string>;
+  // Addresses left out of From for new mail, kept for replies (#1673):
+  // AccountEntry.id -> JMAP Identity ids (lib/reply-only-identities.ts).
+  replyOnlyIdentities: Record<string, string[]>;
 
   // Email Display
   disableThreading: boolean; // Show emails as individual messages instead of grouped by conversation
@@ -1390,6 +1393,7 @@ const DEFAULT_SETTINGS = {
 
   allMailFolderIds: {} as Record<string, string[]>,
   preferredIdentityIds: {} as Record<string, string>,
+  replyOnlyIdentities: {} as Record<string, string[]>,
 
   enableCrossUnreadView: false,
   enableCrossStarredView: false,
@@ -2003,6 +2007,7 @@ export const useSettingsStore = create<SettingsState>()(
           unifiedCrossAccount: state.unifiedCrossAccount,
           allMailFolderIds: state.allMailFolderIds,
           preferredIdentityIds: state.preferredIdentityIds,
+          replyOnlyIdentities: state.replyOnlyIdentities,
           enableCrossUnreadView: state.enableCrossUnreadView,
           enableCrossStarredView: state.enableCrossStarredView,
           enableCrossAllView: state.enableCrossAllView,
@@ -2256,7 +2261,7 @@ export const useSettingsStore = create<SettingsState>()(
               if (key === 'writingLanguage' && !isWritingLanguage(settings[key])) {
                 return;
               }
-              if ((key === 'hiddenSharedMailAccounts' || key === 'sharedMailAccountOrder' || key === 'unifiedExcludedSharedAccounts') && !isPlainRecord(settings[key])) {
+              if ((key === 'hiddenSharedMailAccounts' || key === 'sharedMailAccountOrder' || key === 'unifiedExcludedSharedAccounts' || key === 'replyOnlyIdentities') && !isPlainRecord(settings[key])) {
                 return;
               }
               if (key === 'calendarVisibility') {
@@ -2716,6 +2721,9 @@ export const useSettingsStore = create<SettingsState>()(
             state.calendarVisibility = sanitizeVisibilityChoices(state.calendarVisibility);
             if (!isPlainRecord(state.unifiedExcludedSharedAccounts)) {
               state.unifiedExcludedSharedAccounts = {};
+            }
+            if (!isPlainRecord(state.replyOnlyIdentities)) {
+              state.replyOnlyIdentities = {};
             }
             if (!Array.isArray(state.explicitSettings)) {
               state.explicitSettings = [];

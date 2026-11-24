@@ -8000,7 +8000,9 @@
       "added": "S'ha afegit l'adreça.",
       "saved": "S'ha desat l'adreça.",
       "deleted": "S'ha suprimit l'adreça.",
-      "delete_title": "Voleu suprimir aquesta adreça?"
+      "delete_title": "Voleu suprimir aquesta adreça?",
+      "offer_new_mail": "Oferir per a correus nous. Desactivat: només per respondre correus enviats a aquesta adreça.",
+      "offer_new_mail_named": "Oferir {address} per a correus nous"
     },
     "signatures": {
       "title": "Signatures",

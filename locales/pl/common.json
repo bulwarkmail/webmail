@@ -8000,7 +8000,9 @@
       "added": "Dodano adres.",
       "saved": "Zapisano adres.",
       "deleted": "Usunięto adres.",
-      "delete_title": "Usunąć ten adres?"
+      "delete_title": "Usunąć ten adres?",
+      "offer_new_mail": "Proponuj dla nowych wiadomości. Wyłączone: tylko do odpowiedzi na pocztę wysłaną na ten adres.",
+      "offer_new_mail_named": "Proponuj {address} dla nowych wiadomości"
     },
     "signatures": {
       "title": "Podpisy",

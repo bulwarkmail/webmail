@@ -8000,7 +8000,9 @@
       "added": "地址已添加。",
       "saved": "地址已保存。",
       "deleted": "地址已删除。",
-      "delete_title": "删除这个地址?"
+      "delete_title": "删除这个地址?",
+      "offer_new_mail": "用于新邮件。关闭后：只在回复发到此地址的邮件时使用。",
+      "offer_new_mail_named": "将 {address} 用于新邮件"
     },
     "signatures": {
       "title": "签名",

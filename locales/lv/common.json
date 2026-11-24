@@ -8000,7 +8000,9 @@
       "added": "Adrese pievienota.",
       "saved": "Adrese saglabāta.",
       "deleted": "Adrese izdzēsta.",
-      "delete_title": "Vai dzēst šo adresi?"
+      "delete_title": "Vai dzēst šo adresi?",
+      "offer_new_mail": "Piedāvāt jaunām vēstulēm. Izslēgts: tikai atbildēm uz vēstulēm, kas sūtītas uz šo adresi.",
+      "offer_new_mail_named": "Piedāvāt {address} jaunām vēstulēm"
     },
     "signatures": {
       "title": "Paraksti",
