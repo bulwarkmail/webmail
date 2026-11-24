@@ -604,6 +604,76 @@ describe('account-security-store', () => {
         useAccountSecurityStore.getState().createAppPassword({ description: 'x' })
       ).rejects.toThrow(/did not return/i);
     });
+
+    // Stalwart 1.1/1.2 with an OAuth session that lacks the "full" scope (#1853).
+    const refusal = (names: string) => [
+      'x:AppPassword/set',
+      { notCreated: { new: { type: 'forbidden', description: `You are not authorized to grant permissions: ${names}` } } },
+      '0',
+    ];
+    const authInfo = [
+      ['x:AccountPassword/get', { list: [{ otpAuth: {} }] }, '0'],
+      ['x:AppPassword/query', { ids: [] }, '1'],
+      ['x:ApiKey/query', { ids: [] }, '2'],
+    ];
+
+    it('leaves out the permissions the session may not grant and asks again', async () => {
+      mockedJmap
+        .mockResolvedValueOnce([refusal('interactAi, sysArchivedItemQuery, sysArchivedItemDestroy, sysArchivedItemUpdate, sysArchivedItemGet')])
+        .mockResolvedValueOnce([['x:AppPassword/set', { created: { new: { id: 'p', secret: 's' } } }, '0']])
+        .mockResolvedValueOnce(authInfo);
+
+      const result = await useAccountSecurityStore.getState().createAppPassword({ description: 'Phone' });
+
+      expect(result).toEqual({ id: 'p', secret: 's' });
+      expect(mockedJmap.mock.calls[0][0][0][1].create.new).toEqual({ description: 'Phone' });
+      expect(mockedJmap.mock.calls[1][0][0][1].create.new).toEqual({
+        description: 'Phone',
+        permissions: {
+          '@type': 'Disable',
+          permissions: {
+            interactAi: true, sysArchivedItemQuery: true, sysArchivedItemDestroy: true,
+            sysArchivedItemUpdate: true, sysArchivedItemGet: true,
+          },
+        },
+      });
+      expect(useAccountSecurityStore.getState().error).toBeNull();
+    });
+
+    it('keeps asking while the server names more than five', async () => {
+      mockedJmap
+        .mockResolvedValueOnce([refusal('a1, a2, a3, a4, a5 and 2 more')])
+        .mockResolvedValueOnce([refusal('a6, a7')])
+        .mockResolvedValueOnce([['x:AppPassword/set', { created: { new: { id: 'p', secret: 's' } } }, '0']])
+        .mockResolvedValueOnce(authInfo);
+
+      await useAccountSecurityStore.getState().createAppPassword({ description: 'Phone' });
+
+      expect(Object.keys(mockedJmap.mock.calls[2][0][0][1].create.new.permissions.permissions))
+        .toEqual(['a1', 'a2', 'a3', 'a4', 'a5', 'a6', 'a7']);
+    });
+
+    it('gives up when the server refuses the same permissions again', async () => {
+      mockedJmap
+        .mockResolvedValueOnce([refusal('interactAi')])
+        .mockResolvedValueOnce([refusal('interactAi')]);
+
+      await expect(
+        useAccountSecurityStore.getState().createAppPassword({ description: 'x' })
+      ).rejects.toThrow('You are not authorized to grant permissions: interactAi');
+      expect(mockedJmap).toHaveBeenCalledTimes(2);
+    });
+
+    it('does not ask again after any other refusal', async () => {
+      mockedJmap.mockResolvedValueOnce([
+        ['x:AppPassword/set', { notCreated: { new: { type: 'forbidden', description: 'Too many app passwords' } } }, '0'],
+      ]);
+
+      await expect(
+        useAccountSecurityStore.getState().createAppPassword({ description: 'x' })
+      ).rejects.toThrow('Too many app passwords');
+      expect(mockedJmap).toHaveBeenCalledTimes(1);
+    });
   });
 
   describe('removeAppPassword', () => {

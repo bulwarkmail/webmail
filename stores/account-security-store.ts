@@ -217,6 +217,24 @@ function buildCreateBody(input: AppCredentialInput): Record<string, unknown> {
   return body;
 }
 
+/**
+ * The permissions Stalwart names when it refuses a credential, from its
+ * "You are not authorized to grant permissions: a, b, c and 3 more". Null for
+ * any other refusal.
+ */
+function refusedGrantPermissions(description: string | undefined): string[] | null {
+  const match = /^You are not authorized to grant permissions: (.+)$/.exec(description ?? '');
+  if (!match) return null;
+  return match[1].replace(/ and \d+ more$/, '').split(', ').map((name) => name.trim()).filter(Boolean);
+}
+
+/**
+ * Rounds of leaving out what the server refused. Stalwart names up to five
+ * per answer; a session that lacks more than this many is not one to make
+ * credentials from.
+ */
+const MAX_GRANT_ROUNDS = 10;
+
 type SetMethod = 'x:AppPassword/set' | 'x:ApiKey/set';
 
 type StoreGet = () => AccountSecurityState;
@@ -234,19 +252,35 @@ async function createCredential(
   try {
     const { accountId, request } = getManagementContext();
     const tmpId = 'new';
-    const responses = await request([
-      [method, { accountId, create: { [tmpId]: buildCreateBody(input) } }, '0'],
-    ]);
-    const result = requireResult<{
-      created?: Record<string, { id: string; secret: string; createdAt?: string }>;
-      notCreated?: Record<string, { type: string; description?: string }>;
-    }>(responses, method);
+    // Without `permissions` the credential gets all of the account's. A
+    // session that holds less (an OAuth sign-in without Stalwart's "full"
+    // scope) may not grant that, so leave out what the server names as
+    // refused and ask again (Stalwart's `Disable`).
+    const leftOut: Record<string, true> = {};
+    let created: { id: string; secret: string } | undefined;
+    for (let round = 0; !created; round++) {
+      const body = buildCreateBody(input);
+      if (round > 0) body.permissions = { '@type': 'Disable', permissions: { ...leftOut } };
+      const responses = await request([
+        [method, { accountId, create: { [tmpId]: body } }, '0'],
+      ]);
+      const result = requireResult<{
+        created?: Record<string, { id: string; secret: string; createdAt?: string }>;
+        notCreated?: Record<string, { type: string; description?: string }>;
+      }>(responses, method);
 
-    const notCreated = result.notCreated?.[tmpId];
-    if (notCreated) {
-      throw new Error(notCreated.description || notCreated.type || fallbackError);
+      const notCreated = result.notCreated?.[tmpId];
+      if (notCreated) {
+        const refused = notCreated.type === 'forbidden' && round < MAX_GRANT_ROUNDS
+          ? refusedGrantPermissions(notCreated.description)?.filter((name) => !leftOut[name])
+          : null;
+        if (!refused?.length) throw new Error(notCreated.description || notCreated.type || fallbackError);
+        for (const name of refused) leftOut[name] = true;
+        continue;
+      }
+      created = result.created?.[tmpId];
+      if (!created) break;
     }
-    const created = result.created?.[tmpId];
     if (!created?.id || !created.secret) {
       throw new Error(`Server did not return created credential`);
     }
