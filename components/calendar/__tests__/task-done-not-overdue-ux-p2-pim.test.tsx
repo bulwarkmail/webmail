@@ -73,3 +73,17 @@ describe('done tasks are never overdue', () => {
     expect(screen.getByText(/^1 tasks\.filter_overdue$/i)).toBeInTheDocument();
   });
 });
+
+describe('task tomorrow label in the display time zone', () => {
+  afterEach(() => useSettingsStore.setState({ timeZone: 'auto' }));
+  it.each([
+    { zone: 'Europe/Athens', now: new Date('2026-11-24T22:30:00Z'), expected: true },
+    { zone: 'America/Los_Angeles', now: new Date('2026-11-25T00:30:00Z'), expected: false },
+    { zone: 'auto', now: new Date(2026, 10, 25, 12), expected: true },
+  ])('labels November 26 using $zone', ({ zone, now, expected }) => {
+    useSettingsStore.setState({ timeZone: zone });
+    vi.setSystemTime(now);
+    render(<TaskListView tasks={[task({ due: '2026-11-26' })]} calendars={calendars} filter="all" onSelectTask={() => {}} onToggleComplete={() => {}} />);
+    expect(Boolean(screen.queryByText('tasks.due_tomorrow'))).toBe(expected);
+  });
+});

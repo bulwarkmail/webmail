@@ -3,14 +3,14 @@
 import { useMemo, useRef, useCallback } from "react";
 import { useTranslations } from "next-intl";
 import { useDisplayDateFormatter } from "@/hooks/use-display-date-formatter";
-import { addDays, format, isTomorrow, startOfDay } from "date-fns";
+import { addDays, format, startOfDay } from "date-fns";
 import { CalendarDays, MapPin, Users } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { cn } from "@/lib/utils";
 import { getEventColor } from "./event-card";
 import { getEventDayBounds, getEventEndDate, getEventStartDate, getPrimaryCalendarId } from "@/lib/calendar-utils";
-import { displayNow, isDisplayToday } from "@/lib/timezone";
+import { displayNow, isDisplayToday, isDisplayTomorrow } from "@/lib/timezone";
 import { getParticipantCount, isDeclinedByUser } from "@/lib/calendar-participants";
 import { useScrollWindow } from "@/hooks/use-scroll-window";
 import type { ScrollWindowViewProps } from "@/lib/calendar-scroll-window";
@@ -197,7 +197,7 @@ export function CalendarAgendaView({
 
   const formatDateHeader = (date: Date): string => {
     if (isDisplayToday(date)) return t("events.today_header");
-    if (isTomorrow(date)) return t("events.tomorrow_header");
+    if (isDisplayTomorrow(date)) return t("events.tomorrow_header");
     return intlFormatter.dateTime(date, { weekday: "long", month: "long", day: "numeric" });
   };
 
@@ -249,7 +249,7 @@ export function CalendarAgendaView({
         const today = isDisplayToday(group.date);
         const relativeLabel = today
           ? t("events.today_header")
-          : isTomorrow(group.date) ? t("events.tomorrow_header") : null;
+          : isDisplayTomorrow(group.date) ? t("events.tomorrow_header") : null;
         return (
         <div
           key={group.dateKey}

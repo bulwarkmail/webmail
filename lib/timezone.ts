@@ -1,4 +1,4 @@
-import { isSameDay } from "date-fns";
+import { addDays, isSameDay } from "date-fns";
 import { useSettingsStore } from "@/stores/settings-store";
 
 /**
@@ -289,6 +289,11 @@ export function displayNow(): Date {
 /** Is the display date `date` on today's calendar day in the effective zone? */
 export function isDisplayToday(date: Date): boolean {
   return isSameDay(date, displayNow());
+}
+
+/** Is the display date `date` on tomorrow's calendar day in the effective zone? */
+export function isDisplayTomorrow(date: Date): boolean {
+  return isSameDay(date, addDays(displayNow(), 1));
 }
 
 // A compact fallback for engines without Intl.supportedValuesOf (Safari < 15.4).
