@@ -180,8 +180,9 @@ export function taskToView(task: CalendarTask): TaskView {
       acknowledged: alert.acknowledged || null,
     }])),
     useDefaultAlerts: !!task.useDefaultAlerts,
-    links: Object.fromEntries(Object.entries(task.links || {}).map(([id, link]) => [id, {
-      href: link.href,
+    // A link to a stored blob (a file attached in another app) has no href to show.
+    links: Object.fromEntries(Object.entries(task.links || {}).filter(([, link]) => typeof link?.href === 'string').map(([id, link]) => [id, {
+      href: link.href as string,
       rel: link.rel || null,
       title: link.title || null,
       contentType: link.contentType || null,

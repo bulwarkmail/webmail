@@ -5227,6 +5227,16 @@
       "subscription_title": "Afmeld kalender?",
       "confirm": "Slet"
     },
+    "attachments": {
+      "title": "Vedhæftninger",
+      "add": "Tilføj fil",
+      "remove": "Fjern {name}",
+      "download": "Download {name}",
+      "unnamed": "Vedhæftet fil",
+      "download_failed": "Den vedhæftede fil kunne ikke hentes.",
+      "upload_failed": "En fil kunne ikke uploades. Begivenheden blev ikke gemt.",
+      "too_large": "\"{name}\" er større, end serveren tillader ({max} pr. fil)"
+    },
     "alerts": {
       "title": "Påmindelse",
       "none": "Ingen påmindelse",

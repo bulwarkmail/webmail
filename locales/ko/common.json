@@ -5227,6 +5227,16 @@
       "subscription_title": "캘린더 구독을 취소할까요?",
       "confirm": "삭제"
     },
+    "attachments": {
+      "title": "첨부파일",
+      "add": "파일 추가",
+      "remove": "{name} 제거",
+      "download": "{name} 다운로드",
+      "unnamed": "첨부 파일",
+      "download_failed": "첨부 파일을 다운로드할 수 없습니다.",
+      "upload_failed": "파일을 업로드할 수 없습니다. 일정이 저장되지 않았습니다.",
+      "too_large": "\"{name}\"이(가) 서버 허용 크기보다 커요(파일당 {max})"
+    },
     "alerts": {
       "title": "알림",
       "none": "알림 없음",

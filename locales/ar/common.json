@@ -5227,6 +5227,16 @@
       "subscription_title": "إلغاء الاشتراك في التقويم؟",
       "confirm": "حذف"
     },
+    "attachments": {
+      "title": "المرفقات",
+      "add": "إضافة ملف",
+      "remove": "إزالة {name}",
+      "download": "تنزيل {name}",
+      "unnamed": "مرفق",
+      "download_failed": "تعذّر تنزيل المرفق.",
+      "upload_failed": "تعذّر رفع ملف. لم يُحفظ الحدث.",
+      "too_large": "\"{name}\" أكبر مما يسمح به الخادم ({max} لكل ملف)"
+    },
     "alerts": {
       "title": "التذكيرات",
       "none": "لا توجد تذكيرات",

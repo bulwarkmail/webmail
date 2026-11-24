@@ -5227,6 +5227,16 @@
       "subscription_title": "Afmelden voor agenda?",
       "confirm": "Verwijderen"
     },
+    "attachments": {
+      "title": "Bijlagen",
+      "add": "Bestand toevoegen",
+      "remove": "{name} verwijderen",
+      "download": "{name} downloaden",
+      "unnamed": "Bijlage",
+      "download_failed": "De bijlage kon niet worden gedownload.",
+      "upload_failed": "Een bestand kon niet worden geüpload. De afspraak is niet opgeslagen.",
+      "too_large": "\"{name}\" is groter dan de server toestaat ({max} per bestand)"
+    },
     "alerts": {
       "title": "Herinnering",
       "none": "Geen herinnering",

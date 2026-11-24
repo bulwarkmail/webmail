@@ -5239,6 +5239,16 @@
       "subscription_title": "Hủy đăng ký khỏi lịch?",
       "confirm": "Xóa"
     },
+    "attachments": {
+      "title": "Tệp đính kèm",
+      "add": "Thêm tệp",
+      "remove": "Bỏ {name}",
+      "download": "Tải xuống {name}",
+      "unnamed": "Tệp đính kèm",
+      "download_failed": "Không thể tải xuống tệp đính kèm.",
+      "upload_failed": "Không thể tải lên một tệp. Sự kiện chưa được lưu.",
+      "too_large": "\"{name}\" vượt quá kích thước máy chủ cho phép ({max} mỗi tệp)"
+    },
     "alerts": {
       "title": "Lời nhắc",
       "none": "Không có lời nhắc",

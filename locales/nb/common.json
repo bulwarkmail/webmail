@@ -5227,6 +5227,16 @@
       "subscription_title": "Vil du fjerne abonnementet på kalenderen?",
       "confirm": "Slett"
     },
+    "attachments": {
+      "title": "Vedlegg",
+      "add": "Legg til fil",
+      "remove": "Fjern {name}",
+      "download": "Last ned {name}",
+      "unnamed": "Vedlegg",
+      "download_failed": "Vedlegget kunne ikke lastes ned.",
+      "upload_failed": "En fil kunne ikke lastes opp. Hendelsen ble ikke lagret.",
+      "too_large": "«{name}» er større enn serveren tillater ({max} per fil)"
+    },
     "alerts": {
       "title": "Påminnelser",
       "none": "Ingen påminnelser",

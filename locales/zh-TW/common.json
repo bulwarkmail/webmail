@@ -5227,6 +5227,16 @@
       "subscription_title": "要取消訂閱行事曆嗎？",
       "confirm": "刪除"
     },
+    "attachments": {
+      "title": "附件",
+      "add": "新增檔案",
+      "remove": "移除 {name}",
+      "download": "下載 {name}",
+      "unnamed": "附件",
+      "download_failed": "無法下載附件。",
+      "upload_failed": "無法上傳檔案。活動未儲存。",
+      "too_large": "「{name}」超過伺服器允許的大小（每個檔案 {max}）"
+    },
     "alerts": {
       "title": "提醒",
       "none": "無提醒",

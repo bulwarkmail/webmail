@@ -5227,6 +5227,16 @@
       "subscription_title": "Kas lõpetada kalendri tellimus?",
       "confirm": "Kustuta"
     },
+    "attachments": {
+      "title": "Manused",
+      "add": "Lisa fail",
+      "remove": "Eemalda {name}",
+      "download": "Laadi alla {name}",
+      "unnamed": "Manus",
+      "download_failed": "Manust ei õnnestunud alla laadida.",
+      "upload_failed": "Faili ei õnnestunud üles laadida. Sündmust ei salvestatud.",
+      "too_large": "„{name}” on suurem, kui server lubab ({max} faili kohta)"
+    },
     "alerts": {
       "title": "Meeldetuletused",
       "none": "Meeldetuletusi pole",

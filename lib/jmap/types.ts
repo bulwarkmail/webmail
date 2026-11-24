@@ -894,7 +894,9 @@ export interface CalendarVirtualLocation {
 
 export interface CalendarLink {
   '@type': 'Link';
-  href: string;
+  /** A link points either to a URL or to a blob the server stores (JSCalendar 2.0). */
+  href?: string;
+  blobId?: string;
   cid: string | null;
   contentType: string | null;
   size: number | null;

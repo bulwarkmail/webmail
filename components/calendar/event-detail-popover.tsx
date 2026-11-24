@@ -39,6 +39,8 @@ import { isSingleKeyShortcutOff } from "@/lib/single-key-shortcuts";
 import { useCvdColor } from "@/hooks/use-cvd-color";
 import { gateLinkClick } from "@/lib/plugin-hook-result";
 import { useCollectionNames } from "@/hooks/use-collection-names";
+import { eventAttachments } from "@/lib/calendar-attachments";
+import { EventAttachmentsRow, useEventAttachmentDownload } from "./event-attachments";
 
 interface EventDetailPopoverProps {
   event: CalendarEvent;
@@ -221,6 +223,8 @@ export function EventDetailPopover({
   const meeting = useMemo(() => findMeetingLink(event), [event]);
   const pluginProps = useMemo(() => ({ event: eventToView(event) }), [event]);
   const description = useMemo(() => descriptionAsText(event), [event]);
+  const attachments = useMemo(() => eventAttachments(event), [event]);
+  const downloadAttachment = useEventAttachmentDownload(event);
   const virtualLocation = meeting?.uri ?? null;
 
   // A URL opens as a link, a location that only names the service joins the
@@ -700,6 +704,8 @@ export function EventDetailPopover({
             <EventDescription text={description} showMore={t("events.show_more")} showLess={t("events.show_less")} />
           </div>
         )}
+
+        <EventAttachmentsRow attachments={attachments} onDownload={downloadAttachment} />
 
         <PluginSlot name="calendar-event-detail" className="w-full" extraProps={pluginProps} />
       </div>

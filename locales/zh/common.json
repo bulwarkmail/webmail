@@ -5227,6 +5227,16 @@
       "subscription_title": "退订日历？",
       "confirm": "删除"
     },
+    "attachments": {
+      "title": "附件",
+      "add": "添加文件",
+      "remove": "移除 {name}",
+      "download": "下载 {name}",
+      "unnamed": "附件",
+      "download_failed": "无法下载附件。",
+      "upload_failed": "无法上传文件。活动未保存。",
+      "too_large": "“{name}”超过了服务器允许的大小（每个文件 {max}）"
+    },
     "alerts": {
       "title": "提醒",
       "none": "无提醒",

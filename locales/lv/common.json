@@ -5226,6 +5226,16 @@
       "subscription_title": "Atteikties no kalendāra abonementa?",
       "confirm": "Dzēst"
     },
+    "attachments": {
+      "title": "Pielikumi",
+      "add": "Pievienot failu",
+      "remove": "Noņemt {name}",
+      "download": "Lejupielādēt {name}",
+      "unnamed": "Pielikums",
+      "download_failed": "Pielikumu neizdevās lejupielādēt.",
+      "upload_failed": "Failu neizdevās augšupielādēt. Notikums netika saglabāts.",
+      "too_large": "“{name}” ir lielāks, nekā serveris atļauj ({max} vienam failam)"
+    },
     "alerts": {
       "title": "Atgādinājums",
       "none": "Bez atgādinājuma",

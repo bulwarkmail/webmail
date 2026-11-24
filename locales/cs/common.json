@@ -5227,6 +5227,16 @@
       "subscription_title": "Zrušit odběr kalendáře?",
       "confirm": "Odstranit"
     },
+    "attachments": {
+      "title": "Přílohy",
+      "add": "Přidat soubor",
+      "remove": "Odebrat {name}",
+      "download": "Stáhnout {name}",
+      "unnamed": "Příloha",
+      "download_failed": "Přílohu se nepodařilo stáhnout.",
+      "upload_failed": "Soubor se nepodařilo nahrát. Událost nebyla uložena.",
+      "too_large": "„{name}“ je větší, než server povoluje ({max} na soubor)"
+    },
     "alerts": {
       "title": "Připomenutí",
       "none": "Žádné připomenutí",

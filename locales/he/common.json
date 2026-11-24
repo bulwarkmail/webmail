@@ -5089,6 +5089,16 @@
       "subscription_title": "לבטל את המנוי ללוח השנה?",
       "confirm": "מחיקה"
     },
+    "attachments": {
+      "title": "קבצים מצורפים",
+      "add": "הוספת קובץ",
+      "remove": "הסרת {name}",
+      "download": "הורדת {name}",
+      "unnamed": "קובץ מצורף",
+      "download_failed": "לא ניתן היה להוריד את הקובץ המצורף.",
+      "upload_failed": "לא ניתן היה להעלות קובץ. האירוע לא נשמר.",
+      "too_large": "\"{name}\" גדול ממה שהשרת מאפשר ({max} לקובץ)"
+    },
     "alerts": {
       "title": "תזכורת",
       "none": "אין תזכורת",

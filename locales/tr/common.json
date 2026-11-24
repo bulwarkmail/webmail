@@ -5227,6 +5227,16 @@
       "subscription_title": "Takvim aboneliği iptal edilsin mi?",
       "confirm": "Sil"
     },
+    "attachments": {
+      "title": "Ekler",
+      "add": "Dosya ekle",
+      "remove": "{name} öğesini kaldır",
+      "download": "{name} dosyasını indir",
+      "unnamed": "Ek",
+      "download_failed": "Ek indirilemedi.",
+      "upload_failed": "Bir dosya yüklenemedi. Etkinlik kaydedilmedi.",
+      "too_large": "\"{name}\" sunucunun izin verdiğinden büyük (dosya başına {max})"
+    },
     "alerts": {
       "title": "Hatırlatıcı",
       "none": "Hatırlatıcı yok",

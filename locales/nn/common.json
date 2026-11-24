@@ -5235,6 +5235,16 @@
       "subscription_title": "Melde av frå kalenderen?",
       "confirm": "Slett"
     },
+    "attachments": {
+      "title": "Vedlegg",
+      "add": "Legg til fil",
+      "remove": "Fjern {name}",
+      "download": "Last ned {name}",
+      "unnamed": "Vedlegg",
+      "download_failed": "Vedlegget kunne ikkje lastast ned.",
+      "upload_failed": "Ei fil kunne ikkje lastast opp. Hendinga vart ikkje lagra.",
+      "too_large": "«{name}» er større enn tenaren tillèt ({max} per fil)"
+    },
     "alerts": {
       "title": "Påminningar",
       "none": "Ingen påminningar",

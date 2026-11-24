@@ -5227,6 +5227,16 @@
       "subscription_title": "Voleu cancel·lar la subscripció al calendari?",
       "confirm": "Suprimeix"
     },
+    "attachments": {
+      "title": "Fitxers adjunts",
+      "add": "Afegeix un fitxer",
+      "remove": "Treu {name}",
+      "download": "Baixa {name}",
+      "unnamed": "Fitxer adjunt",
+      "download_failed": "No s'ha pogut baixar el fitxer adjunt.",
+      "upload_failed": "No s'ha pogut pujar un fitxer. L'esdeveniment no s'ha desat.",
+      "too_large": "«{name}» supera la mida que permet el servidor ({max} per fitxer)"
+    },
     "alerts": {
       "title": "Recordatoris",
       "none": "Cap recordatori",

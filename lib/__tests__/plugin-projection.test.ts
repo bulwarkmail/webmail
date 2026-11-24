@@ -43,6 +43,17 @@ describe('plugin projections', () => {
     expect(eventToView({ id: 'e', uid: 'u', calendarIds: { c: true }, recurrenceRules: [{ frequency: 'yearly' }] } as unknown as CalendarEvent).isRecurring).toBe(true);
     expect(taskToView({ id: 't', uid: 'u', calendarIds: {}, progress: 'completed' } as unknown as CalendarTask).isComplete).toBe(true);
   });
+
+  it("leaves a task's links to stored files out, since a link view always has an href", () => {
+    const view = taskToView({
+      id: 't', uid: 'u', calendarIds: {}, progress: 'needs-action',
+      links: {
+        web: { '@type': 'Link', href: 'https://example.org/spec', rel: null, title: null, contentType: null },
+        file: { '@type': 'Link', blobId: 'b1', rel: 'enclosure', title: 'notes.txt', contentType: 'text/plain' },
+      },
+    } as unknown as CalendarTask);
+    expect(Object.keys(view.links)).toEqual(['web']);
+  });
 });
 
 describe('emailToReadView attachments', () => {

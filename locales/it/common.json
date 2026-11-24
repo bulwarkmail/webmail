@@ -5227,6 +5227,16 @@
       "subscription_title": "Annullare l'abbonamento al calendario?",
       "confirm": "Elimina"
     },
+    "attachments": {
+      "title": "Allegati",
+      "add": "Aggiungi file",
+      "remove": "Rimuovi {name}",
+      "download": "Scarica {name}",
+      "unnamed": "Allegato",
+      "download_failed": "Impossibile scaricare l'allegato.",
+      "upload_failed": "Impossibile caricare un file. L'evento non è stato salvato.",
+      "too_large": "\"{name}\" supera la dimensione consentita dal server ({max} per file)"
+    },
     "alerts": {
       "title": "Promemoria",
       "none": "Nessun promemoria",

@@ -5227,6 +5227,16 @@
       "subscription_title": "Cancelar assinatura do calendário?",
       "confirm": "Excluir"
     },
+    "attachments": {
+      "title": "Anexos",
+      "add": "Adicionar ficheiro",
+      "remove": "Remover {name}",
+      "download": "Fazer o download de {name}",
+      "unnamed": "Anexo",
+      "download_failed": "Não foi possível transferir o anexo.",
+      "upload_failed": "Não foi possível carregar um ficheiro. O evento não foi guardado.",
+      "too_large": "\"{name}\" é maior do que o servidor permite ({max} por arquivo)"
+    },
     "alerts": {
       "title": "Lembretes",
       "none": "Sem lembretes",

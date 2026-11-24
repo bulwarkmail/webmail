@@ -5227,6 +5227,16 @@
       "subscription_title": "¿Cancelar la suscripción al calendario?",
       "confirm": "Eliminar"
     },
+    "attachments": {
+      "title": "Archivos adjuntos",
+      "add": "Añadir archivo",
+      "remove": "Quitar {name}",
+      "download": "Descargar {name}",
+      "unnamed": "Adjunto",
+      "download_failed": "No se pudo descargar el adjunto.",
+      "upload_failed": "No se pudo subir un archivo. El evento no se ha guardado.",
+      "too_large": "\"{name}\" supera el tamaño que permite el servidor ({max} por archivo)"
+    },
     "alerts": {
       "title": "Recordatorio",
       "none": "Sin recordatorio",

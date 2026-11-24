@@ -5227,6 +5227,16 @@
       "subscription_title": "Leiratkozik a naptárról?",
       "confirm": "Törlés"
     },
+    "attachments": {
+      "title": "Csatolmányok",
+      "add": "Fájl hozzáadása",
+      "remove": "{name} eltávolítása",
+      "download": "{name} letöltése",
+      "unnamed": "Melléklet",
+      "download_failed": "A mellékletet nem sikerült letölteni.",
+      "upload_failed": "Egy fájlt nem sikerült feltölteni. Az esemény nem lett mentve.",
+      "too_large": "A(z) „{name}” nagyobb, mint amit a kiszolgáló enged (fájlonként {max})"
+    },
     "alerts": {
       "title": "Emlékeztetők",
       "none": "Nincs emlékeztető",

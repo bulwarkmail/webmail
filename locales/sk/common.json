@@ -5227,6 +5227,16 @@
       "subscription_title": "Zrušiť odber kalendára?",
       "confirm": "Odstrániť"
     },
+    "attachments": {
+      "title": "Prílohy",
+      "add": "Pridať súbor",
+      "remove": "Odstrániť {name}",
+      "download": "Stiahnuť {name}",
+      "unnamed": "Príloha",
+      "download_failed": "Prílohu sa nepodarilo stiahnuť.",
+      "upload_failed": "Súbor sa nepodarilo nahrať. Udalosť nebola uložená.",
+      "too_large": "„{name}“ je väčší, než server povoľuje ({max} na súbor)"
+    },
     "alerts": {
       "title": "Pripomenutia",
       "none": "Žiadne pripomenutia",

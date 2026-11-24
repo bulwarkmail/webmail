@@ -8013,6 +8013,19 @@ export class JMAPClient implements IJMAPClient {
     return Array.isArray(blob?.supportedTypeNames) && blob.supportedTypeNames.includes("ContactCard");
   }
 
+  /**
+   * Whether CalendarEvent/set in the account keeps a link that carries a
+   * blobId, which is how a file is attached to an event. Stalwart 1.0 does
+   * and lists CalendarEvent among the blob capability's supportedTypeNames;
+   * 0.16 lists only Email, Thread and SieveScript, and silently drops such a
+   * link from the event while it keeps links with an href.
+   */
+  supportsCalendarBlobLinks(accountId?: string): boolean {
+    const id = accountId || this.getCalendarsAccountId();
+    const blob = this.getAccountCapability("urn:ietf:params:jmap:blob", id) as { supportedTypeNames?: unknown } | undefined;
+    return Array.isArray(blob?.supportedTypeNames) && blob.supportedTypeNames.includes("CalendarEvent");
+  }
+
   rejectContactBlobMedia(accountId?: string): void {
     this.contactBlobMediaRejected.add(accountId || this.getContactsAccountId());
   }

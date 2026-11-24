@@ -5227,6 +5227,16 @@
       "subscription_title": "اشتراک تقویم لغو شود؟",
       "confirm": "حذف"
     },
+    "attachments": {
+      "title": "پیوست‌ها",
+      "add": "افزودن فایل",
+      "remove": "برداشتن {name}",
+      "download": "دانلود {name}",
+      "unnamed": "پیوست",
+      "download_failed": "پیوست بارگیری نشد.",
+      "upload_failed": "یک فایل بارگذاری نشد. رویداد ذخیره نشد.",
+      "too_large": "«{name}» بزرگ‌تر از حدی است که سرور اجازه می‌دهد ({max} برای هر فایل)"
+    },
     "alerts": {
       "title": "یادآورها",
       "none": "بدون یادآور",

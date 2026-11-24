@@ -5227,6 +5227,16 @@
       "subscription_title": "Vă dezabonați de la calendar?",
       "confirm": "Ștergeți"
     },
+    "attachments": {
+      "title": "Anexe",
+      "add": "Adaugă fișier",
+      "remove": "Elimină {name}",
+      "download": "Descărcați {name}",
+      "unnamed": "Atașament",
+      "download_failed": "Atașamentul nu a putut fi descărcat.",
+      "upload_failed": "Un fișier nu a putut fi încărcat. Evenimentul nu a fost salvat.",
+      "too_large": "„{name}” depășește dimensiunea permisă de server ({max} per fișier)"
+    },
     "alerts": {
       "title": "Memento-uri",
       "none": "Fără mementouri",

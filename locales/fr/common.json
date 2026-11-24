@@ -5227,6 +5227,16 @@
       "subscription_title": "Se désabonner du calendrier ?",
       "confirm": "Supprimer"
     },
+    "attachments": {
+      "title": "Pièces jointes",
+      "add": "Ajouter un fichier",
+      "remove": "Retirer {name}",
+      "download": "Télécharger {name}",
+      "unnamed": "Pièce jointe",
+      "download_failed": "Impossible de télécharger la pièce jointe.",
+      "upload_failed": "Un fichier n'a pas pu être envoyé. L'événement n'a pas été enregistré.",
+      "too_large": "« {name} » dépasse la taille autorisée par le serveur ({max} par fichier)"
+    },
     "alerts": {
       "title": "Rappel",
       "none": "Aucun rappel",

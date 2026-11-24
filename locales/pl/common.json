@@ -5227,6 +5227,16 @@
       "subscription_title": "Anulować subskrypcję kalendarza?",
       "confirm": "Usuń"
     },
+    "attachments": {
+      "title": "Załączniki",
+      "add": "Dodaj plik",
+      "remove": "Usuń {name}",
+      "download": "Pobierz {name}",
+      "unnamed": "Załącznik",
+      "download_failed": "Nie udało się pobrać załącznika.",
+      "upload_failed": "Nie udało się przesłać pliku. Wydarzenie nie zostało zapisane.",
+      "too_large": "„{name}” jest większy, niż pozwala serwer ({max} na plik)"
+    },
     "alerts": {
       "title": "Przypomnienie",
       "none": "Brak przypomnienia",

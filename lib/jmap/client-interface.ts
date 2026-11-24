@@ -673,6 +673,8 @@ export interface IJMAPClient {
 
   // ── Calendars ─────────────────────────────────────────────────
   getCalendarsAccountId(): string;
+  /** Whether CalendarEvent/set in the account keeps links that carry a blobId, so files can be attached (Stalwart 1.0). */
+  supportsCalendarBlobLinks?(accountId?: string): boolean;
   getCalendars(): Promise<Calendar[]>;
   getAllCalendars(): Promise<Calendar[]>;
   getAllCalendarsWithFailures(): Promise<{ calendars: Calendar[]; failedAccountIds: string[] }>;

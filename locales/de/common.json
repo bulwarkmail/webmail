@@ -5227,6 +5227,16 @@
       "subscription_title": "Kalender abbestellen?",
       "confirm": "Löschen"
     },
+    "attachments": {
+      "title": "Anhänge",
+      "add": "Datei hinzufügen",
+      "remove": "{name} entfernen",
+      "download": "{name} herunterladen",
+      "unnamed": "Anhang",
+      "download_failed": "Der Anhang konnte nicht heruntergeladen werden.",
+      "upload_failed": "Eine Datei konnte nicht hochgeladen werden. Der Termin wurde nicht gespeichert.",
+      "too_large": "\"{name}\" ist größer, als der Server erlaubt ({max} pro Datei)"
+    },
     "alerts": {
       "title": "Erinnerung",
       "none": "Keine Erinnerung",

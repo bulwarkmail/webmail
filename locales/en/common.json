@@ -5227,6 +5227,16 @@
       "subscription_title": "Unsubscribe from calendar?",
       "confirm": "Delete"
     },
+    "attachments": {
+      "title": "Attachments",
+      "add": "Add file",
+      "remove": "Remove {name}",
+      "download": "Download {name}",
+      "unnamed": "Attachment",
+      "download_failed": "The attachment could not be downloaded.",
+      "upload_failed": "A file could not be uploaded. The event was not saved.",
+      "too_large": "\"{name}\" is larger than the server allows ({max} per file)"
+    },
     "alerts": {
       "title": "Reminders",
       "none": "No reminders",

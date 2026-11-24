@@ -5227,6 +5227,16 @@
       "subscription_title": "カレンダーの購読を解除しますか？",
       "confirm": "削除"
     },
+    "attachments": {
+      "title": "添付ファイル",
+      "add": "ファイルを追加",
+      "remove": "{name} を外す",
+      "download": "{name} をダウンロード",
+      "unnamed": "添付ファイル",
+      "download_failed": "添付ファイルをダウンロードできませんでした。",
+      "upload_failed": "ファイルをアップロードできませんでした。予定は保存されていません。",
+      "too_large": "「{name}」はサーバーの上限を超えています（1 ファイルあたり {max}）"
+    },
     "alerts": {
       "title": "リマインダー",
       "none": "リマインダーなし",
