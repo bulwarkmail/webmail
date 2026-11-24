@@ -12,6 +12,7 @@ import {
   findCalendarAttachment, findParticipantByEmails, getInvitationMethod,
   type InvitationMethod,
 } from '@/lib/calendar-invitation';
+import { isOrganizer } from '@/lib/calendar-participants';
 
 export type RsvpStatus = 'accepted' | 'tentative' | 'declined';
 export type ParticipantMatch = { id: string; participant: CalendarParticipant };
@@ -159,7 +160,13 @@ export async function answerInvitation(req: RsvpRequest, status: RsvpStatus): Pr
   }
   if (eventForRsvp || !calendarId) return 'failed';
 
-  if (!myParticipant && req.joinAs && !sharedMailAccount && replyTo) {
+  // Joining asks the server to send what the new copy calls for. With one of
+  // the user's own addresses as organiser that is an invitation to everyone
+  // the message lists, sent from the user's account: only add it then.
+  const organisedByUser = req.joinAs
+    ? isOrganizer(parsedEvent as CalendarEvent, [...actingEmails, req.joinAs.email])
+    : false;
+  if (!myParticipant && req.joinAs && !sharedMailAccount && replyTo && !organisedByUser) {
     const joined = joinedInvitation(parsedEvent, req.joinAs, status);
     const count = await store.importEvents(client, [joined], calendarId, { throwIfNoneImported: true, sendSchedulingMessages: true });
     if (count === null) return 'stopped';

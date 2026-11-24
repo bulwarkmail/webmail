@@ -89,6 +89,19 @@ describe('answerInvitation', () => {
     expect(req.store.rsvpEvent).not.toHaveBeenCalled();
   });
 
+  it('only adds an unlisted invitation that names one of the user\'s addresses as organiser', async () => {
+    const outsiders = { p3: { calendarAddress: 'mailto:carol@example.org', roles: { attendee: true } } };
+    const byOrganizerAddress = { ...parsed, organizerCalendarAddress: 'mailto:bob@example.org', participants: outsiders } as unknown as Partial<CalendarEvent>;
+    const byOwner = { ...parsed, organizerCalendarAddress: 'mailto:alice@example.org', participants: { ...outsiders, p1: { calendarAddress: 'mailto:BOB@example.org', roles: { owner: true } } } } as unknown as Partial<CalendarEvent>;
+    for (const parsedEvent of [byOrganizerAddress, byOwner]) {
+      const store = { ...request().store, events: () => [{ id: 'new', uid: 'u1', participants: outsiders } as never] };
+      const req = request({ parsedEvent, myParticipant: null, store, joinAs: { email: 'bob@example.org' } } as never);
+      expect(await answerInvitation(req, 'accepted')).toBe('added');
+      expect(req.store.importEvents).toHaveBeenCalledTimes(1);
+      expect(req.store.importEvents).toHaveBeenCalledWith(req.client, [parsedEvent], 'cal1', { throwIfNoneImported: true });
+    }
+  });
+
   it('only adds an unlisted invitation when there is no one to join as', async () => {
     const forwarded = { ...parsed, participants: { p1: organiser } } as unknown as Partial<CalendarEvent>;
     const store = { ...request().store, events: () => [{ id: 'new', uid: 'u1', participants: { p1: organiser } } as never] };
