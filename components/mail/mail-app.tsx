@@ -14,6 +14,7 @@ import type { ComposerDraftData } from "@/components/email/email-composer";
 import { ReplyDock } from "@/components/mail/reply-dock";
 import { addEcho, isUndoWindow, mergeEchoes, nextSendTime, raiseThreadCount, scheduledShownTotal, sentEcho, settleSent, withoutHeldSend } from "@/lib/held-send";
 import { useQuickReplyRestoreStore } from "@/stores/quick-reply-restore-store";
+import { planArchiveAfterReply, runArchiveAfterReply, type ArchiveAfterReply } from "@/lib/archive-after-reply";
 
 /** What waits with a send in its Undo window (mail-p2-8). */
 type HeldSendExtras = {
@@ -3233,9 +3234,22 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
           toast.info(t('email_composer.file_in_reply_elsewhere', { folder: folderName }));
         }
       };
+      // "Archive after replying": bound now to the login the original was
+      // read through, and run with the flag, so an undone send archives
+      // nothing. Not with "File in folder", which already moves it.
+      const archivePlan = fileFolder ? null : planArchiveAfterReply({
+        mode: effectiveMode,
+        email: composerSourceEmail,
+        emailId: originalEmailId,
+        client: answeredSource?.clientAccountId ? loginClientOf(answeredSource.clientAccountId) : client,
+        accountId: answeredSource?.accountId,
+      });
+      // Kept in the offline outbox: the reply hasn't gone, so the original stays.
+      if (archivePlan && result.queued) toast.info(t('email_composer.archive_after_reply_queued'));
       const answerAndFile = async () => {
         await markAnswered();
         await fileWithOriginal();
+        if (archivePlan && !result.queued) await archiveAfterReply(archivePlan);
       };
       const held = holdSend(result, {
         answer: answerAndFile,
@@ -3686,6 +3700,19 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     if (!held) return;
     heldSendsRef.current.delete(submissionId);
     void held.answer?.();
+  };
+  // "Archive after replying", once the reply has gone, with Undo in its toast.
+  // No "Confirm before archiving": the user asked for it with the setting,
+  // and after an Undo window the dialog would come up in the middle of
+  // whatever they do by then.
+  const archiveAfterReply = async (plan: ArchiveAfterReply) => {
+    try {
+      const restore = await runArchiveAfterReply(plan, useAuthStore.getState().client);
+      if (restore) toastWithUndo(t('mail_list_extra.archived'), undoMoveAction(plan.client, restore, undo));
+    } catch (error) {
+      debug.error('Archive after replying failed:', error);
+      toast.error(t('notifications.error_archiving'), error instanceof Error ? error.message : undefined);
+    }
   };
   /** True when the send waits in its Undo window; `extras` then wait with it. */
   const holdSend = (result: SendEmailResult, extras: Omit<HeldSendExtras, 'emailId'>): boolean => {
@@ -5561,11 +5588,24 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
         debug.error('Failed to set $answered keyword:', e);
       }
     };
+    // "Archive after replying", as after the composer's send.
+    const archivePlan = planArchiveAfterReply({
+      mode: 'reply',
+      email: selectedEmail,
+      emailId: originalEmailId,
+      client: originalSource.clientAccountId ? loginClientOf(originalSource.clientAccountId) : client,
+      accountId: originalSource.accountId,
+    });
+    if (archivePlan && result.queued) toast.info(t('email_composer.archive_after_reply_queued'));
+    const answerAndArchive = async () => {
+      await markAnswered();
+      if (archivePlan && !result.queued) await archiveAfterReply(archivePlan);
+    };
     const held = holdSend(result, {
-      answer: markAnswered,
+      answer: answerAndArchive,
       origin: { kind: 'quick-reply', emailId: originalEmailId, text: body },
     });
-    if (!held) await markAnswered();
+    if (!held) await answerAndArchive();
     echoSentReply(selectedEmail, {
       emailId: result.emailId, to: recipients, subject: labelled.subject, text: finalBody,
       fromEmail: headerFromEmail, fromName: headerFromName,

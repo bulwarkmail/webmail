@@ -1181,6 +1181,7 @@
     "show_less": "Vis mindre",
     "send_failed": "Klarte ikkje sende e-posten",
     "send_offline": "Du ser ut til å vere fråkopla. Meldinga ligg her enno, send ho på nytt når du er på nett igjen.",
+    "archive_after_reply_queued": "Meldinga di blir send når du er på nett igjen. Originalen blir verande i innboksen.",
     "send_timeout": "Tenaren slutta å svare. Sjekk Sendt-mappa før du sender på nytt — meldinga kan ha gått ut.",
     "submission_quota": "Tenaren har for mange postar med sende meldingar for denne kontoen. Bulwark fjerna dei han kunne; viss dette held fram, be administratoren din auke grensa for e-postinnsending.",
     "submission_limit": "Tenaren nekta å sende meldinga fordi ei grense vart nådd: {reason}",
@@ -2351,6 +2352,10 @@
       "placeholder_warning": {
         "label": "Åtvaring om plasshaldarar",
         "description": "Be om stadfesting før du sender ei melding som framleis har plasshaldarar som [TID] eller [Namnet ditt], malfelt som er lasta tomme, eller uferdig tekst som TODO eller TBD."
+      },
+      "archive_after_reply": {
+        "label": "Arkiver etter svar",
+        "description": "Når du svarar på eller vidaresender ei melding frå innboksen, blir ho arkivert når meldinga di er send."
       },
       "recipient_mentions": {
         "label": "Omtal mottakarar med @",
