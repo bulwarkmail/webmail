@@ -1,13 +1,13 @@
 'use client';
 
-import { useEffect, useLayoutEffect, useMemo, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { cn } from '@/lib/utils';
 import { useManagedSidebarApps, useResolvedSidebarApps } from '@/hooks/use-resolved-sidebar-apps';
 import { useStrictestDevices } from '@/hooks/use-device-policy';
 import { appFrameRights } from '@/lib/sidebar-apps';
 import { useAuthStore } from '@/stores/auth-store';
 import { usePolicyStore } from '@/stores/policy-store';
-import { useSidebarAppFramesStore } from '@/stores/sidebar-app-frames-store';
+import { parseAppBadgeMessage, useSidebarAppFramesStore } from '@/stores/sidebar-app-frames-store';
 
 interface Box {
   top: number;
@@ -50,6 +50,9 @@ function useViewportBox(el: HTMLElement | null): Box | null {
  * giving its pane to the store (InlineAppView) and the frame is laid over that
  * pane, so moving between Mail, Calendar and the other pages keeps the app's
  * document: its session, its socket and whatever was typed into it.
+ *
+ * Apps may report an unread count to the rail with a `bulwark:app-badge`
+ * message. Only the app's own frame is heard, and only from the app's origin.
  */
 export function SidebarAppFramesHost() {
   const frames = useSidebarAppFramesStore((s) => s.frames);
@@ -58,6 +61,7 @@ export function SidebarAppFramesHost() {
   const resolvedApps = useResolvedSidebarApps();
   const downloadsOff = useStrictestDevices().noDownloads;
   const box = useViewportBox(shown?.slot ?? null);
+  const frameRefs = useRef(new Map<string, HTMLIFrameElement>());
 
   // Until an app's first load its frame holds the initial about:blank. That
   // document's color scheme is "normal" while the frame element inherits the
@@ -92,11 +96,33 @@ export function SidebarAppFramesHost() {
     () =>
       useAuthStore.subscribe((state, prev) => {
         if (prev.isAuthenticated && !state.isAuthenticated) {
-          useSidebarAppFramesStore.setState({ frames: [] });
+          useSidebarAppFramesStore.setState({ frames: [], badges: {} });
         }
       }),
     []
   );
+
+  useEffect(() => {
+    const onMessage = (event: MessageEvent) => {
+      if (!event.source) return;
+      for (const app of useSidebarAppFramesStore.getState().frames) {
+        const frame = frameRefs.current.get(app.id);
+        if (!frame || frame.contentWindow !== event.source) continue;
+        let origin: string;
+        try {
+          origin = new URL(app.url).origin;
+        } catch {
+          return;
+        }
+        if (event.origin !== origin) return;
+        const badge = parseAppBadgeMessage(event.data);
+        if (badge !== undefined) useSidebarAppFramesStore.getState().setBadge(app.id, badge);
+        return;
+      }
+    };
+    window.addEventListener('message', onMessage);
+    return () => window.removeEventListener('message', onMessage);
+  }, []);
 
   if (frames.length === 0) return null;
 
@@ -113,6 +139,10 @@ export function SidebarAppFramesHost() {
         return (
           <iframe
             key={app.id}
+            ref={(el) => {
+              if (el) frameRefs.current.set(app.id, el);
+              else frameRefs.current.delete(app.id);
+            }}
             src={app.url}
             title={app.name}
             className={cn(

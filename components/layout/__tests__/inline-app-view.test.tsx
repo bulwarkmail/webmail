@@ -19,7 +19,7 @@ const asSetting = (app: { id: string; url: string; name: string }): SidebarApp =
 const initialPolicy = usePolicyStore.getState().policy;
 
 beforeEach(() => {
-  useSidebarAppFramesStore.setState({ frames: [], shown: null });
+  useSidebarAppFramesStore.setState({ frames: [], shown: null, badges: {} });
   useSettingsStore.setState({ sidebarApps: apps.map(asSetting), keepAppsLoaded: true });
   usePolicyStore.setState({ policy: initialPolicy, loaded: true });
 });
@@ -138,6 +138,43 @@ describe('frames across pages', () => {
     render(<Page app={null} />);
     act(() => useAuthStore.setState({ isAuthenticated: false } as never));
     expect(screen.queryByTitle('App A')).toBeNull();
+  });
+});
+
+describe('app badges', () => {
+  const post = (data: unknown, origin: string, source: Window | null) =>
+    act(() => {
+      window.dispatchEvent(new MessageEvent('message', { data, origin, source }));
+    });
+  const msg = { type: 'bulwark:app-badge', version: 1, state: 'ok', count: 4, mentions: 1 };
+
+  it('takes a count from the app\'s own frame on the app\'s origin', () => {
+    open(apps[0]);
+    render(<Page app={apps[0]} />);
+    const frame = screen.getByTitle('App A') as HTMLIFrameElement;
+    post(msg, 'https://a.example.com', frame.contentWindow);
+    expect(useSidebarAppFramesStore.getState().badges.a).toEqual({ count: 4, mentions: 1 });
+  });
+
+  it('ignores a message from another origin, or from another window', () => {
+    open(apps[0]);
+    open(apps[1]);
+    render(<Page app={apps[0]} />);
+    const a = screen.getByTitle('App A') as HTMLIFrameElement;
+    const b = screen.getByTitle('App B') as HTMLIFrameElement;
+    post(msg, 'https://evil.example.com', a.contentWindow);
+    post(msg, 'https://a.example.com', b.contentWindow);
+    post(msg, 'https://a.example.com', window);
+    expect(useSidebarAppFramesStore.getState().badges).toEqual({});
+  });
+
+  it('clears the count when the app says it is signed out', () => {
+    open(apps[0]);
+    render(<Page app={apps[0]} />);
+    const frame = screen.getByTitle('App A') as HTMLIFrameElement;
+    post(msg, 'https://a.example.com', frame.contentWindow);
+    post({ type: 'bulwark:app-badge', version: 1, state: 'signed-out' }, 'https://a.example.com', frame.contentWindow);
+    expect(useSidebarAppFramesStore.getState().badges.a).toBeUndefined();
   });
 });
 

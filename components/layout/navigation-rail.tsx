@@ -39,6 +39,7 @@ import { useAllInboxesUnread } from "@/hooks/use-all-inboxes-unread";
 import { writeRailHints, type RailHint } from "@/lib/boot-skeleton/hints";
 import { usePrefetchAfterStart } from "@/hooks/use-prefetch-after-start";
 import { savePendingMailto } from "@/lib/protocol-handlers/session";
+import { appBadgeMark, useSidebarAppFramesStore } from "@/stores/sidebar-app-frames-store";
 
 /** The built-in apps and Settings, as the rail and its host name them. */
 export type RailItemId = 'mail' | 'calendar' | 'tasks' | 'contacts' | 'files' | 'settings';
@@ -324,6 +325,11 @@ export function NavigationRail({
   // at all. A dot keeps the count in the link's name; hidden drops it too.
   const unreadCountStyle = useSettingsStore((s) => s.unreadCountStyle);
   const badgeShown = (item: NavItem) => item.badge != null && item.badge > 0 && unreadCountStyle !== 'hidden';
+  // Counts that inline apps report from their frame (bulwark:app-badge).
+  const appBadges = useSidebarAppFramesStore((s) => s.badges);
+  const appMark = (appId: string) => (unreadCountStyle === 'hidden' ? null : appBadgeMark(appBadges[appId]));
+  const appName = (app: { id: string; name: string }) =>
+    appMark(app.id) ? tShell("name_unread", { name: app.name, count: appBadges[app.id]?.count ?? 0 }) : undefined;
   // "Mail, 3 unread": the badge itself is hidden from screen readers.
   const itemName = (item: NavItem) =>
     badgeShown(item) ? tShell("name_unread", { name: t(item.labelKey), count: item.badge ?? 0 }) : t(item.labelKey);
@@ -532,9 +538,21 @@ export function NavigationRail({
                   ? "text-primary"
                   : "text-muted-foreground hover:text-foreground"
               )}
+              aria-label={appName(app)}
             >
               <div className="relative">
                 <SidebarAppIcon app={app} className="w-5 h-5" />
+                {(() => {
+                  const mark = appMark(app.id);
+                  if (!mark) return null;
+                  return unreadCountStyle === 'dot' || 'dot' in mark ? (
+                    <span aria-hidden="true" data-testid="rail-app-dot" className="absolute -top-0.5 -end-1 w-2.5 h-2.5 rounded-full bg-red-500" />
+                  ) : (
+                    <span aria-hidden="true" data-testid="rail-app-count" className="absolute -top-1.5 -end-2.5 flex items-center justify-center min-w-[16px] h-4 text-[0.625rem] font-bold rounded-full bg-red-600 text-white px-1">
+                      {mark.number > 99 ? "99+" : mark.number}
+                    </span>
+                  );
+                })()}
                 {isActive && (
                   <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-4 h-0.5 rounded-full bg-primary" />
                 )}
@@ -794,10 +812,28 @@ export function NavigationRail({
                   : "text-muted-foreground hover:bg-muted hover:text-foreground"
               )}
               title={collapsed ? app.name : undefined}
+              aria-label={appName(app)}
               style={collapsed ? undefined : { paddingBlock: 'var(--density-sidebar-py)' }}
             >
               <SidebarAppIcon app={app} className={cn("w-[18px] h-[18px] flex-shrink-0", isActive && "text-primary")} />
               {!collapsed && <span className="truncate">{app.name}</span>}
+              {(() => {
+                const mark = appMark(app.id);
+                if (!mark) return null;
+                return unreadCountStyle === 'dot' || 'dot' in mark ? (
+                  <span aria-hidden="true" data-testid="rail-app-dot" className={cn(
+                    "absolute w-2.5 h-2.5 rounded-full bg-red-500",
+                    collapsed ? "top-1 end-1" : "end-2.5"
+                  )} />
+                ) : (
+                  <span aria-hidden="true" data-testid="rail-app-count" className={cn(
+                    "absolute flex items-center justify-center min-w-[16px] h-4 text-[0.625rem] font-bold rounded-full bg-red-600 text-white px-1",
+                    collapsed ? "-top-0.5 -end-0.5" : "end-1.5"
+                  )}>
+                    {mark.number > 99 ? "99+" : mark.number}
+                  </span>
+                );
+              })()}
             </button>
           );
         })}
