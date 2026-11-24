@@ -1222,14 +1222,14 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     onNextEmail: () => {
       const next = stepFrom(1);
       if (next) {
-        void handleEmailSelect(next);
+        void handleEmailSelect(next, { cursor: mvShell });
         if (mvShell) setCursorOnly(true);
       }
     },
     onPreviousEmail: () => {
       const previous = stepFrom(-1);
       if (previous) {
-        void handleEmailSelect(previous);
+        void handleEmailSelect(previous, { cursor: mvShell });
         if (mvShell) setCursorOnly(true);
       }
     },
@@ -6018,6 +6018,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
 
   const handleEmailSelect = async (
     email: { id: string } & Partial<Pick<Email, 'sourceClientAccountId' | 'sourceAccountId'>>,
+    opts?: { cursor?: boolean },
   ): Promise<OpenEmailOutcome> => {
     if (!client || !email) return new Error('the mail page is not ready');
     setCursorOnly(false);
@@ -6076,8 +6077,10 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     // Paint the header from the row at once (subject, sender and date are in
     // hand) and let the body follow; the viewer shows a row without body
     // values as loading. Mountain View shows the message inside its
-    // conversation, which is fetched alongside, so it waits for both.
-    const rowEmail = !readerConversationView && listEmail && 'receivedAt' in listEmail ? listEmail as Email : null;
+    // conversation, which is fetched alongside, so it waits for both. Its
+    // list cursor shows no message, so it moves at once: otherwise a ticked
+    // row showed the tick colour until the fetch came back (#1847).
+    const rowEmail = (!readerConversationView || opts?.cursor) && listEmail && 'receivedAt' in listEmail ? listEmail as Email : null;
     if (rowEmail) {
       beginOpenEmail(rowEmail);
     } else {
@@ -6927,7 +6930,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
                 onRowTick={mvShell ? (email) => {
                   const open = useEmailStore.getState().selectedEmail;
                   if (open && (!cursorOnly || emailKeyFor(open) === emailKeyFor(email))) return;
-                  void handleEmailSelect(email);
+                  void handleEmailSelect(email, { cursor: true });
                   setCursorOnly(true);
                 } : undefined}
                 selectedEmailKey={selectedEmail ? emailKeyFor(selectedEmail) : undefined}
