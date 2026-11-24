@@ -280,7 +280,8 @@ export const useVacationStore = create<VacationStore>()((set, get) => ({
     const answersAnew = (vacationUpdates.isEnabled ?? before.isEnabled) && (
       !before.isEnabled || moves(vacationUpdates.fromDate, before.fromDate) || moves(vacationUpdates.toDate, before.toDate)
     );
-    if (answersAnew && before.audience && audience !== null && hasSieve(client, accountId)) {
+    const ahead = !!answersAnew && !!before.audience && audience !== null && hasSieve(client, accountId);
+    if (ahead) {
       await syncVacationWithFilters(client, true, accountId, undefined, undefined, 'pending').catch((error) => {
         debug.error('Failed to narrow the vacation include ahead of the auto-reply:', error);
       });
@@ -288,6 +289,21 @@ export const useVacationStore = create<VacationStore>()((set, get) => ({
     try {
       await client.setVacationResponse(vacationUpdates, accountId);
     } catch (error) {
+      // The filters were narrowed for an auto-reply the server did not take.
+      // They go back in line with what the server has, or a save that failed
+      // would keep its own rules to the chosen senders. Where the server
+      // cannot be asked, they stay narrowed: that answers nobody else, and
+      // the next save of the card sets it right.
+      if (ahead) {
+        try {
+          const kept = await client.getVacationResponse(accountId);
+          await syncVacationWithFilters(
+            client, before.isEnabled, accountId, undefined, undefined, { from: kept.fromDate, until: kept.toDate },
+          );
+        } catch (syncError) {
+          debug.error('Failed to bring the filters back in line with the vacation response:', syncError);
+        }
+      }
       set(superseded()
         ? { isSaving: false }
         : { isSaving: false, error: error instanceof Error ? error.message : 'save_error' });

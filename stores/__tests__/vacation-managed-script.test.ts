@@ -414,6 +414,40 @@ describe('Stalwart 1.2: who the auto-reply is for, and forwarding', () => {
     expect(vacation().notRunning).toBe(false);
   });
 
+  it('puts the include back as it was when the server refuses the save it was narrowed for', async () => {
+    // Turned on: narrowed ahead of the save, which the server then refuses.
+    const off = await offAgain();
+    off.client.setVacationResponse.mockRejectedValueOnce(new Error('refused'));
+    await expect(vacation().updateVacationResponse(off.client, { isEnabled: true }, 'b')).rejects.toThrow('refused');
+    expect(off.active()).toBe('filters');
+    expect(off.content('filters')).toContain(FOR_EVERYONE);
+    expect(off.content('filters')).not.toContain(AUDIENCE);
+    expect(await card(off)).toEqual({ isEnabled: false, notRunning: false, audience: external, forwarding: false });
+
+    // Other dates: the test goes back to the period the server still has.
+    const on = account([{ name: 'filters', content: filters([rule('a')]), isActive: true }]);
+    await vacation().updateVacationResponse(on.client, { isEnabled: true, fromDate: FROM, toDate: UNTIL, audience: external }, 'b');
+    const block = replyBlock(on.content('filters'));
+    on.client.setVacationResponse.mockRejectedValueOnce(new Error('refused'));
+    await expect(vacation().updateVacationResponse(on.client, { isEnabled: true, fromDate: '2027-12-23T08:00:00Z' }, 'b'))
+      .rejects.toThrow('refused');
+    expect(replyBlock(on.content('filters'))).toBe(block);
+    expect(parseScript(on.content('filters')).vacationAudience).toEqual({ ...external, activeFrom: FROM, activeUntil: UNTIL });
+    expect(await card(on)).toMatchObject({ isEnabled: true, notRunning: false });
+  });
+
+  it('leaves the include narrowed after a save that failed while the server cannot be asked, until the next save', async () => {
+    const server = await offAgain();
+    server.client.setVacationResponse.mockRejectedValueOnce(new Error('offline'));
+    server.client.getVacationResponse.mockRejectedValueOnce(new Error('offline'));
+    await expect(vacation().updateVacationResponse(server.client, { isEnabled: true }, 'b')).rejects.toThrow('offline');
+    expect(server.content('filters')).toContain(NARROWED);
+
+    await vacation().updateVacationResponse(server.client, { isEnabled: false }, 'b');
+    expect(server.content('filters')).toContain(FOR_EVERYONE);
+    expect(server.content('filters')).not.toContain(AUDIENCE);
+  });
+
   it('goes by the server, not by the caller, before the include runs for every sender', async () => {
     const server = account([{ name: 'filters', content: filters([rule('a')]), isActive: true }]);
     await vacation().updateVacationResponse(server.client, { isEnabled: true, audience: external }, 'b');
