@@ -280,9 +280,13 @@ function LoginPageContent() {
   // The device's OS policy narrows what the server offers. A forced Bulwark server hides
   // the field for a server of one's own, unless that field is the only way to sign in there.
   const allowCustomJmapEndpoint = configAllowsCustomEndpoint && (customServerAllowedByDesktopPolicy(desktopPolicy) || !configuredServerUrl);
+  // A server that is only an extra account (#1687) is offered when adding an
+  // account, never on the first sign-in, also not picked by domain.
   const jmapServers = useMemo(
-    () => (desktopPolicy.AllowedJmapServers.value ? configuredServers.filter((s) => jmapServerAllowedByDesktopPolicy(s.url, desktopPolicy)) : configuredServers),
-    [configuredServers, desktopPolicy],
+    () => configuredServers.filter((s) =>
+      (isAddAccountMode || !s.extraAccountOnly)
+      && (!desktopPolicy.AllowedJmapServers.value || jmapServerAllowedByDesktopPolicy(s.url, desktopPolicy))),
+    [configuredServers, desktopPolicy, isAddAccountMode],
   );
   const resolvedTheme = useThemeStore((s) => s.resolvedTheme);
   const colorModeLocked = usePolicyStore((s) => s.getColorModePolicy().locked);

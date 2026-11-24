@@ -25,7 +25,8 @@
       "oauth_discovery_failed": "SSO is ingeschakeld maar de identiteitsprovider is niet bereikbaar. Controleer uw OAuth-configuratie.",
       "oauth_issuer_mismatch": "Aanmelden via deze provider is niet goed ingesteld. De beheerder moet het issuer-adres van de provider instellen.",
       "token_exchange_failed": "Uw wachtwoord en code zijn geaccepteerd, maar de mailserver weigerde een sessie voor deze app te starten. Vraag uw beheerder de OAuth-clientinstellingen te controleren.",
-      "login_refused": "De mailserver weigerde deze aanmelding voordat uw code werd gecontroleerd. Vraag uw beheerder de OAuth-clientinstellingen te controleren."
+      "login_refused": "De mailserver weigerde deze aanmelding voordat uw code werd gecontroleerd. Vraag uw beheerder de OAuth-clientinstellingen te controleren.",
+      "primary_sign_in_required": "Meld je eerst aan bij je hoofdaccount. Deze server kan alleen als extra account worden toegevoegd."
     },
     "show_password": "Wachtwoord tonen",
     "hide_password": "Wachtwoord verbergen",

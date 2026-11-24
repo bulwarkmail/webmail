@@ -463,6 +463,9 @@ export const CONFIG_ENV_MAP: Record<string, { envVar?: string; fileEnvVar?: stri
   errorReportingSampleRate: { envVar: 'ERROR_REPORTING_SAMPLE_RATE', type: 'string', defaultValue: '1' },
   errorReportingEnvironment: { envVar: 'ERROR_REPORTING_ENVIRONMENT', type: 'string', defaultValue: 'production' },
   sessionSecret: { envVar: 'SESSION_SECRET', fileEnvVar: 'SESSION_SECRET_FILE', fileKey: "sessionSecretFile", type: 'string', defaultValue: '' },
+  // Shared with a legacy-proxy's LOGIN_GRANT_SECRET: signs the login grant a
+  // server entry marked extraAccountOnly gets (#1687, lib/auth/extra-account.ts).
+  loginGrantSecret: { envVar: 'LOGIN_GRANT_SECRET', fileEnvVar: 'LOGIN_GRANT_SECRET_FILE', fileKey: 'loginGrantSecretFile', type: 'string', defaultValue: '' },
   extensionDirectoryUrl: { envVar: 'EXTENSION_DIRECTORY_URL', type: 'url', defaultValue: 'https://extensions.bulwarkmail.org' },
   // Root keys (base64 raw Ed25519, comma-separated) a self-hosted extension
   // directory signs its keyring with. The official directory's are built in
@@ -514,7 +517,7 @@ export const CONFIG_ENV_MAP: Record<string, { envVar?: string; fileEnvVar?: stri
 };
 
 /** Keys that should never be exposed to the client config endpoint */
-export const SENSITIVE_CONFIG_KEYS = new Set(['oauthClientSecret', 'sessionSecret']);
+export const SENSITIVE_CONFIG_KEYS = new Set(['oauthClientSecret', 'sessionSecret', 'loginGrantSecret']);
 
 /** Admin session cookie name */
 export const ADMIN_SESSION_COOKIE = 'admin_session';

@@ -17,6 +17,7 @@ import { configManager } from '@/lib/admin/config-manager';
 import { isPublicHttpUrl } from '@/lib/security/url-guard';
 import { recordLogin } from '@/lib/telemetry/login-tracker';
 import { parseJmapServers, resolveTrustedJmapUrl } from '@/lib/admin/jmap-servers';
+import { checkExtraAccountSignIn } from '@/lib/auth/extra-account';
 import { MAX_ACCOUNT_SLOTS } from '@/lib/account-utils';
 import { rejectCrossOriginRequest } from '@/lib/security/same-origin';
 import { rejectNonJsonBody } from '@/app/api/auth/json-request';
@@ -239,6 +240,10 @@ export async function POST(request: NextRequest) {
     } else {
       return NextResponse.json({ error: 'JMAP server not configured' }, { status: 500 });
     }
+
+    // Only as an extra account: needs a sign-in to another server here (#1687).
+    const extraAccount = await checkExtraAccountSignIn(upstreamUrl, username);
+    if (!extraAccount.ok) return extraAccount.response;
 
     const slot = accountSlotFromBody(bodySlot) ?? getSlot(request);
     const cookieName = sessionCookieName(slot);

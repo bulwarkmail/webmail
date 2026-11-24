@@ -25,7 +25,8 @@
       "oauth_discovery_failed": "SSO este activată, dar furnizorul de identitate nu a putut fi contactat. Verificați configurația OAuth.",
       "oauth_issuer_mismatch": "Autentificarea prin acest furnizor nu este configurată corect. Administratorul trebuie să seteze adresa emitentului (issuer) acestuia.",
       "token_exchange_failed": "Parola și codul au fost acceptate, dar serverul de e-mail a refuzat să pornească o sesiune pentru această aplicație. Cereți administratorului să verifice setările clientului OAuth.",
-      "login_refused": "Serverul de e-mail a refuzat această autentificare înainte de a verifica codul. Cereți administratorului să verifice setările clientului OAuth."
+      "login_refused": "Serverul de e-mail a refuzat această autentificare înainte de a verifica codul. Cereți administratorului să verifice setările clientului OAuth.",
+      "primary_sign_in_required": "Conectează-te mai întâi la contul principal. Acest server poate fi adăugat doar ca cont suplimentar."
     },
     "show_password": "Afișează parola",
     "hide_password": "Ascunde parola",

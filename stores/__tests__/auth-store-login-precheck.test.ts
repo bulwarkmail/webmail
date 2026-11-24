@@ -106,6 +106,22 @@ describe('auth-store login Basic-auth pre-check (#969)', () => {
     expect(connectSpy).toHaveBeenCalledTimes(1);
   });
 
+  it('says to sign in to the main account first for a server that is only an extra account (#1687)', async () => {
+    stubVerify(async () => ({ ok: false, status: 403, json: async () => ({ error: 'primary_sign_in_required' }) }));
+
+    const ok = await useAuthStore.getState().login(SERVER, 'bob@gmx.test', 'pw');
+
+    expect(ok).toBe(false);
+    expect(connectSpy).not.toHaveBeenCalled();
+    expect(useAuthStore.getState().error).toBe('primary_sign_in_required');
+  });
+
+  it('falls through on another 403 from the pre-check', async () => {
+    stubVerify(async () => ({ ok: false, status: 403, json: async () => ({ error: 'Device policy' }) }));
+    await useAuthStore.getState().login(SERVER, 'alice', 'pw');
+    expect(connectSpy).toHaveBeenCalledTimes(1);
+  });
+
   it('skips the pre-check for app-relative (mock) servers', async () => {
     const fetchMock = stubVerify(async () => ({ ok: true, json: async () => ({ result: 'unauthorized' }) }));
 

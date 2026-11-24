@@ -25,7 +25,8 @@
       "oauth_discovery_failed": "SSO 已啟用，但無法連線至身分提供者。請檢查 OAuth 設定。",
       "oauth_issuer_mismatch": "透過此身分提供者登入的設定不正確。管理員需要設定其簽發者（issuer）位址。",
       "token_exchange_failed": "密碼與驗證碼已通過，但郵件伺服器拒絕為此應用程式建立工作階段。請聯絡管理員檢查其 OAuth 用戶端設定。",
-      "login_refused": "郵件伺服器在檢查你的驗證碼之前拒絕了這次登入。請要求管理員檢查 OAuth 用戶端設定。"
+      "login_refused": "郵件伺服器在檢查你的驗證碼之前拒絕了這次登入。請要求管理員檢查 OAuth 用戶端設定。",
+      "primary_sign_in_required": "請先登入你的主要帳號。此伺服器只能作為額外帳號新增。"
     },
     "show_password": "顯示密碼",
     "hide_password": "隱藏密碼",

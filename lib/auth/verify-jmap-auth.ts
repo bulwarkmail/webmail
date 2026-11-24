@@ -167,6 +167,11 @@ export interface VerifyJmapAuthOptions {
    * password against that client rather than against the webmail.
    */
   clientIp?: string;
+  /**
+   * More headers for the session request, for a trusted server only: the
+   * login grant of an extra-only server (lib/auth/extra-account.ts).
+   */
+  extraHeaders?: Record<string, string>;
 }
 
 /**
@@ -438,7 +443,11 @@ async function fetchVerifiedSession(
 
       const requestInit = {
         method: 'GET',
-        headers: { Authorization: authHeader, ...forwardedClientHeaders(options.clientIp) },
+        headers: {
+          Authorization: authHeader,
+          ...forwardedClientHeaders(options.clientIp),
+          ...(options.trusted ? options.extraHeaders : undefined),
+        },
         signal: controller.signal,
       };
       // Untrusted (user-supplied) endpoints connect through the rebinding-safe

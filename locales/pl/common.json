@@ -25,7 +25,8 @@
       "oauth_discovery_failed": "SSO jest włączone, ale nie można połączyć się z dostawcą tożsamości. Sprawdź konfigurację OAuth.",
       "oauth_issuer_mismatch": "Logowanie przez tego dostawcę nie jest poprawnie skonfigurowane. Administrator musi ustawić jego adres wystawcy (issuer).",
       "token_exchange_failed": "Hasło i kod zostały zaakceptowane, ale serwer poczty odmówił rozpoczęcia sesji dla tej aplikacji. Poproś administratora o sprawdzenie ustawień klienta OAuth.",
-      "login_refused": "Serwer poczty odrzucił to logowanie, zanim sprawdził Twój kod. Poproś administratora o sprawdzenie ustawień klienta OAuth."
+      "login_refused": "Serwer poczty odrzucił to logowanie, zanim sprawdził Twój kod. Poproś administratora o sprawdzenie ustawień klienta OAuth.",
+      "primary_sign_in_required": "Najpierw zaloguj się na swoje główne konto. Ten serwer można dodać tylko jako dodatkowe konto."
     },
     "show_password": "Pokaż hasło",
     "hide_password": "Ukryj hasło",

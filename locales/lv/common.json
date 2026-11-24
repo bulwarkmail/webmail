@@ -25,6 +25,7 @@
       "oauth_issuer_mismatch": "Pieteikšanās ar šo pakalpojumu sniedzēju nav pareizi iestatīta. Administratoram jānorāda tā izdevēja (issuer) adrese.",
       "token_exchange_failed": "Parole un kods tika pieņemti, taču pasta serveris atteicās sākt sesiju šai lietotnei. Lūdziet administratoram pārbaudīt OAuth klienta iestatījumus.",
       "login_refused": "Pasta serveris noraidīja šo pierakstīšanos, pirms pārbaudīja jūsu kodu. Lūdziet administratoram pārbaudīt OAuth klienta iestatījumus.",
+      "primary_sign_in_required": "Vispirms pierakstieties savā galvenajā kontā. Šo serveri var pievienot tikai kā papildu kontu.",
       "totp_required": "Nepieciešams divu faktoru autentifikācijas kods. Lūdzu, ievadiet kodu zemāk."
     },
     "show_password": "Rādīt paroli",

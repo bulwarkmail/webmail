@@ -25,7 +25,8 @@
       "oauth_discovery_failed": "SSO engedélyezve van, de az identitásszolgáltató nem érhető el. Ellenőrizd az OAuth konfigurációt.",
       "oauth_issuer_mismatch": "A bejelentkezés ezen a szolgáltatón keresztül nincs megfelelően beállítva. A rendszergazdának meg kell adnia a kibocsátó (issuer) címét.",
       "token_exchange_failed": "A jelszót és a kódot elfogadtuk, de a levelezőszerver nem indított munkamenetet ehhez az alkalmazáshoz. Kérje meg a rendszergazdát, hogy ellenőrizze az OAuth-kliens beállításait.",
-      "login_refused": "A levelezőszerver elutasította ezt a bejelentkezést, mielőtt ellenőrizte volna a kódot. Kérje meg a rendszergazdát, hogy ellenőrizze az OAuth-kliens beállításait."
+      "login_refused": "A levelezőszerver elutasította ezt a bejelentkezést, mielőtt ellenőrizte volna a kódot. Kérje meg a rendszergazdát, hogy ellenőrizze az OAuth-kliens beállításait.",
+      "primary_sign_in_required": "Előbb jelentkezz be a fő fiókodba. Ez a szerver csak további fiókként adható hozzá."
     },
     "show_password": "Jelszó megjelenítése",
     "hide_password": "Jelszó elrejtése",

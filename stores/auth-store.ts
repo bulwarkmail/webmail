@@ -199,6 +199,7 @@ const ERROR_PATTERNS: Array<{ key: string; matches: string[] }> = [
   { key: 'totp_required', matches: ['TOTP_REQUIRED'] },
   { key: 'token_exchange_failed', matches: ['TOKEN_EXCHANGE_FAILED'] },
   { key: 'login_refused', matches: ['LOGIN_REFUSED'] },
+  { key: 'primary_sign_in_required', matches: ['PRIMARY_SIGN_IN_REQUIRED'] },
   { key: 'invalid_credentials', matches: ['Invalid username or password', '401', 'Unauthorized'] },
   { key: 'connection_failed', matches: ['network', 'Failed to fetch', 'NetworkError', 'ECONNREFUSED', 'Load failed', 'cancelled'] },
   { key: 'server_error', matches: ['500', '502', '503', '504', 'Internal Server Error', 'Service Unavailable'] },
@@ -239,18 +240,27 @@ async function precheckCredentials(
   // App-relative servers (the dev mock) never send a Basic challenge, and the
   // static Lite build has no backend to ask.
   if (IS_LITE || serverUrl.startsWith('/')) return false;
+  let needsPrimary = false;
   try {
     const res = await apiFetch('/api/auth/verify', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ serverUrl, ...credentials }),
     });
-    if (!res.ok) return false;
-    const body = await res.json().catch(() => null);
-    return body?.result === 'unauthorized';
+    if (res.status === 403) {
+      // A server that is only an extra account, with no other sign-in here (#1687).
+      const refusal = await res.json().catch(() => null);
+      needsPrimary = refusal?.error === 'primary_sign_in_required';
+    }
+    if (!needsPrimary) {
+      if (!res.ok) return false;
+      const body = await res.json().catch(() => null);
+      return body?.result === 'unauthorized';
+    }
   } catch {
     return false;
   }
+  throw new Error('PRIMARY_SIGN_IN_REQUIRED');
 }
 
 // An auth/session endpoint answered with a server-side error (5xx) - an

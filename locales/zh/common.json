@@ -25,7 +25,8 @@
       "oauth_discovery_failed": "SSO 已启用，但无法访问身份提供者。检查您的 OAuth 配置。",
       "oauth_issuer_mismatch": "通过此身份提供者登录的配置不正确。管理员需要设置其颁发者（issuer）地址。",
       "token_exchange_failed": "密码和验证码已通过，但邮件服务器拒绝为此应用建立会话。请联系管理员检查其 OAuth 客户端设置。",
-      "login_refused": "邮件服务器在检查你的验证码之前拒绝了此次登录。请让管理员检查 OAuth 客户端设置。"
+      "login_refused": "邮件服务器在检查你的验证码之前拒绝了此次登录。请让管理员检查 OAuth 客户端设置。",
+      "primary_sign_in_required": "请先登录你的主账户。此服务器只能作为附加账户添加。"
     },
     "show_password": "显示密码",
     "hide_password": "隐藏密码",

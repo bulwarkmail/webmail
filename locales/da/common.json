@@ -25,7 +25,8 @@
       "oauth_discovery_failed": "SSO er aktiveret, men identitetsudbyderen kunne ikke nås. Kontrollér din OAuth-konfiguration.",
       "oauth_issuer_mismatch": "Login med denne udbyder er ikke sat korrekt op. Administratoren skal angive udbyderens issuer-adresse.",
       "token_exchange_failed": "Din adgangskode og kode blev accepteret, men mailserveren nægtede at starte en session for denne app. Bed din administrator om at kontrollere OAuth-klientindstillingerne.",
-      "login_refused": "Mailserveren afviste dette login, før den tjekkede din kode. Bed din administrator om at kontrollere OAuth-klientindstillingerne."
+      "login_refused": "Mailserveren afviste dette login, før den tjekkede din kode. Bed din administrator om at kontrollere OAuth-klientindstillingerne.",
+      "primary_sign_in_required": "Log først ind på din hovedkonto. Denne server kan kun tilføjes som en ekstra konto."
     },
     "show_password": "Vis adgangskode",
     "hide_password": "Skjul adgangskode",

@@ -25,7 +25,8 @@
       "oauth_discovery_failed": "SSO è abilitato ma il provider di identità non è raggiungibile. Controlla la configurazione OAuth.",
       "oauth_issuer_mismatch": "L'accesso con questo provider non è configurato correttamente. L'amministratore deve impostarne l'indirizzo dell'emittente (issuer).",
       "token_exchange_failed": "Password e codice sono stati accettati, ma il server di posta ha rifiutato di avviare una sessione per questa app. Chiedi all'amministratore di controllare le impostazioni del client OAuth.",
-      "login_refused": "Il server di posta ha rifiutato questo accesso prima di controllare il codice. Chiedi all'amministratore di controllare le impostazioni del client OAuth."
+      "login_refused": "Il server di posta ha rifiutato questo accesso prima di controllare il codice. Chiedi all'amministratore di controllare le impostazioni del client OAuth.",
+      "primary_sign_in_required": "Accedi prima al tuo account principale. Questo server si può aggiungere solo come account aggiuntivo."
     },
     "show_password": "Mostra password",
     "hide_password": "Nascondi password",

@@ -25,7 +25,8 @@
       "oauth_discovery_failed": "SSO đã được bật nhưng không thể liên lạc được với nhà cung cấp danh tính. Kiểm tra cấu hình OAuth của bạn.",
       "oauth_issuer_mismatch": "Đăng nhập qua nhà cung cấp này chưa được thiết lập đúng. Quản trị viên cần đặt địa chỉ issuer của nhà cung cấp.",
       "token_exchange_failed": "Mật khẩu và mã của bạn đã được chấp nhận nhưng máy chủ thư từ chối bắt đầu phiên cho ứng dụng này. Yêu cầu quản trị viên của bạn kiểm tra cài đặt ứng dụng khách OAuth của nó.",
-      "login_refused": "Máy chủ thư đã từ chối lần đăng nhập này trước khi kiểm tra mã của bạn. Hãy nhờ quản trị viên kiểm tra cài đặt ứng dụng khách OAuth."
+      "login_refused": "Máy chủ thư đã từ chối lần đăng nhập này trước khi kiểm tra mã của bạn. Hãy nhờ quản trị viên kiểm tra cài đặt ứng dụng khách OAuth.",
+      "primary_sign_in_required": "Hãy đăng nhập vào tài khoản chính trước. Máy chủ này chỉ có thể được thêm làm tài khoản phụ."
     },
     "show_password": "Hiển thị mật khẩu",
     "hide_password": "Ẩn mật khẩu",

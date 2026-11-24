@@ -10,6 +10,7 @@ import { loginClientAddress } from '@/lib/auth/client-address';
 import { reserveVerifyProbe, type BudgetRefund } from '@/lib/auth/verify-budget';
 import { isStoreUnavailable } from '@/lib/auth/store-unavailable';
 import { devicePolicyServerRefusal } from '@/lib/desktop/server-policy';
+import { checkExtraAccountSignIn } from '@/lib/auth/extra-account';
 
 /**
  * Server-side credential pre-check for the login form (#969): a password
@@ -86,6 +87,11 @@ export async function POST(request: NextRequest) {
       return respond('inconclusive');
     }
 
+    // A server that is only an extra account needs a sign-in elsewhere in
+    // this browser; its first credential check carries the login grant (#1687).
+    const extraAccount = await checkExtraAccountSignIn(upstreamUrl, hasPassword ? username : '', { withGrant: hasPassword });
+    if (!extraAccount.ok) return extraAccount.response;
+
     // Wrong passwords tried from here count against this server's address
     // upstream; over budget the browser probes the JMAP server itself.
     const clientIp = loginClientAddress(request, upstreamUrl);
@@ -104,7 +110,7 @@ export async function POST(request: NextRequest) {
       ? `Bearer ${token}`
       : 'Basic ' + Buffer.from(username + ':' + password).toString('base64');
     try {
-      await verifyJmapAuth(upstreamUrl, authHeader, { trusted: upstreamTrusted, clientIp });
+      await verifyJmapAuth(upstreamUrl, authHeader, { trusted: upstreamTrusted, clientIp, extraHeaders: extraAccount.headers });
       await refund();
       return respond('ok');
     } catch (error) {
