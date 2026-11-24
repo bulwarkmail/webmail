@@ -590,6 +590,14 @@ describe('Stalwart target: entry document logic (runs in the browser)', () => {
     expect(resolveStalwartBoot('/webmail/en/auth', '/webmail', locales, shells, 'de')?.canonical).toBe('/webmail/en/');
   });
 
+  it('opens a view named without a locale in the preferred locale', () => {
+    expect(resolveStalwartBoot('/webmail/calendar', '/webmail', locales, shells, 'de')).toEqual({ locale: 'de', shell: 'de/calendar/index.html', canonical: '/webmail/de/calendar/' });
+    expect(resolveStalwartBoot('/webmail/contacts/', '/webmail', locales, shells, 'en')).toEqual({ locale: 'en', shell: 'en/contacts/index.html', canonical: '/webmail/en/contacts/' });
+    // The rest of the path stays, as it does after a locale.
+    expect(resolveStalwartBoot('/webmail/calendar/week/2026-09-17', '/webmail', locales, shells, 'zh-TW')).toEqual({ locale: 'zh-TW', shell: 'zh-TW/calendar/index.html', canonical: '/webmail/zh-TW/calendar/week/2026-09-17/' });
+    expect(resolveStalwartBoot('/plugins/oauth/callback', '', locales, shells, 'en')?.shell).toBe('en/plugins/oauth/callback/index.html');
+  });
+
   it('boots the callback for the locale-free OAuth redirect URI', () => {
     expect(resolveStalwartBoot('/webmail/oauth/callback', '/webmail', locales, shells, 'de')).toEqual({ locale: 'de', shell: 'de/auth/callback/index.html', canonical: '/webmail/de/auth/callback/' });
     expect(resolveStalwartBoot('/webmail/oauth/callback/', '/webmail', locales, shells, 'en')?.shell).toBe('en/auth/callback/index.html');

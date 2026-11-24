@@ -1245,6 +1245,9 @@ export function resolveStalwartBoot(pathname, mount, locales, shells, preferredL
   }
   var parts = rest.split("/").filter(function (p) { return p.length > 0; });
   var locale = locales.indexOf(parts[0]) !== -1 ? parts[0] : null;
+  // Where the view starts in `parts`: after the locale, or at once when the
+  // path names none (/webmail/calendar), as the static build's 404 page takes it.
+  var at = 1;
   if (!locale) {
     // The OAuth redirect URI (lib/auth/lite-oauth.ts) names no locale, so one
     // registration covers every language: boot the callback in the preferred
@@ -1252,7 +1255,8 @@ export function resolveStalwartBoot(pathname, mount, locales, shells, preferredL
     if (parts.length === 2 && parts[0] === "oauth" && parts[1] === "callback" && shells.indexOf("auth/callback") !== -1) {
       return { locale: preferredLocale, shell: preferredLocale + "/auth/callback/index.html", canonical: mount + "/" + preferredLocale + "/auth/callback/" };
     }
-    return { locale: preferredLocale, shell: preferredLocale + "/index.html", canonical: mount + "/" + preferredLocale + "/" };
+    locale = preferredLocale;
+    at = 0;
   }
   var best = null;
   for (var i = 0; i < shells.length; i++) {
@@ -1260,11 +1264,11 @@ export function resolveStalwartBoot(pathname, mount, locales, shells, preferredL
     if (!dir) continue;
     var segs = dir.split("/");
     var match = true;
-    for (var j = 0; j < segs.length; j++) if (parts[1 + j] !== segs[j]) { match = false; break; }
+    for (var j = 0; j < segs.length; j++) if (parts[at + j] !== segs[j]) { match = false; break; }
     if (match && (!best || segs.length > best.split("/").length)) best = dir;
   }
-  if (best) return { locale: locale, shell: locale + "/" + best + "/index.html", canonical: null };
-  if (parts.length === 1) return { locale: locale, shell: locale + "/index.html", canonical: null };
+  if (best) return { locale: locale, shell: locale + "/" + best + "/index.html", canonical: at ? null : mount + "/" + locale + "/" + parts.join("/") + "/" };
+  if (at && parts.length === 1) return { locale: locale, shell: locale + "/index.html", canonical: null };
   return { locale: locale, shell: locale + "/index.html", canonical: mount + "/" + locale + "/" };
 }
 
