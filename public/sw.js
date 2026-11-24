@@ -29,6 +29,9 @@ function getBasePath() {
 }
 
 const BASE_PATH = getBasePath();
+// The status-bar mark of a notification. Android draws only its transparency,
+// so it is a cut-out, never the (often opaque) app icon (#915).
+const NOTIFICATION_BADGE = `${BASE_PATH}/api/notification-badge`;
 const MAILTO_CLIENTS = new Map();
 
 // The build this worker came with (the ?v= the page registered it with).
@@ -674,7 +677,7 @@ async function handlePush(event) {
         body: "You have new mail",
         tag: "bulwark-mail:" + (accountId || "default"),
         icon: `${BASE_PATH}/api/pwa-icon/192`,
-        badge: `${BASE_PATH}/api/pwa-icon/192`,
+        badge: NOTIFICATION_BADGE,
         data: { kind: "mail-list", accountId },
       });
     }
@@ -897,7 +900,7 @@ async function notifyAccount(accountId, emailIds, accountLabel, lingering = []) 
     // Branded app icon via the PWA-icon endpoint (admin-configured, else the
     // built-in default). The static /icon-192x192.png ignored admin branding.
     icon: `${BASE_PATH}/api/pwa-icon/192`,
-    badge: `${BASE_PATH}/api/pwa-icon/192`,
+    badge: NOTIFICATION_BADGE,
     data,
     // Inside the quiet window, or with the sound setting off, the
     // notification still appears or updates, without a sound.
@@ -932,7 +935,7 @@ async function showMention(mention, redacted, accountId, accountLabel, slot, log
     // Ids repeat across accounts and logins.
     tag: `mention-${accountLabel || "default"}:${accountId || "default"}:${mention.noteId}`,
     icon: `${BASE_PATH}/api/pwa-icon/192`,
-    badge: `${BASE_PATH}/api/pwa-icon/192`,
+    badge: NOTIFICATION_BADGE,
     data: {
       kind: "mention",
       noteId: mention.noteId,
@@ -977,7 +980,7 @@ const PREVIEW_LATE = Symbol("preview late");
 async function showWithoutAlert(groupTag) {
   const options = {
     icon: `${BASE_PATH}/api/pwa-icon/192`,
-    badge: `${BASE_PATH}/api/pwa-icon/192`,
+    badge: NOTIFICATION_BADGE,
     renotify: false,
     silent: true,
   };
@@ -1556,7 +1559,7 @@ async function showMailtoFocusNotification(state) {
       body: state.focusNotificationBody || "The request was opened in Bulwark. Click to bring it to the front.",
       tag: "bulwark-mailto-focus",
       icon: `${BASE_PATH}/api/pwa-icon/192`,
-      badge: `${BASE_PATH}/api/pwa-icon/192`,
+      badge: NOTIFICATION_BADGE,
       data: { kind: "protocol-mailto-focus" },
       renotify: true,
     });

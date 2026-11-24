@@ -11,8 +11,8 @@
 /** The folders under app/api. */
 export const API_GROUPS: readonly string[] = [
   'account', 'account-archive', 'admin', 'auth', 'bimi', 'caldav', 'calendar-agenda', 'config',
-  'connector', 'dev-jmap', 'devices', 'errors', 'favicon', 'fetch-ical', 'health', 'metrics', 'offline',
-  'og-image', 'plugin-approval-status', 'plugin-proxy', 'plugin-secrets', 'plugin-signing-pubkey',
+  'connector', 'dev-jmap', 'devices', 'errors', 'favicon', 'fetch-ical', 'health', 'metrics', 'notification-badge',
+  'offline', 'og-image', 'plugin-approval-status', 'plugin-proxy', 'plugin-secrets', 'plugin-signing-pubkey',
   'plugins', 'push', 'pwa-icon', 'pwa-screenshot', 'ready', 'settings', 'setup', 'system',
   'translate', 'version', 'webdav', 'wopi',
 ];

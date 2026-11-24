@@ -36,6 +36,7 @@ type UploadSlot = BrandingOverrideKey;
 const VALID_SLOTS = new Set<UploadSlot>([
   'faviconUrl',
   'pwaIconUrl',
+  'notificationBadgeUrl',
   'appLogoLightUrl',
   'appLogoDarkUrl',
   'loginLogoLightUrl',

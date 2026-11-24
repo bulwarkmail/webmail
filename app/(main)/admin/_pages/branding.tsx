@@ -71,6 +71,13 @@ const LOGIN_BACKGROUND_SLIDERS = [
 
 const PWA_IMAGE_FIELDS = [
   { key: 'pwaIconUrl', label: 'Icon', accept: '.svg,.png,.jpg,.webp' },
+  {
+    key: 'notificationBadgeUrl',
+    label: 'Notification badge',
+    accept: '.svg,.png,.webp',
+    description: 'Small mark in the Android status bar. Android shows only the shape, so use a white cut-out on a transparent background. Empty uses the Bulwark mark.',
+    previewOn: 'dark',
+  },
   { key: 'pwaScreenshotMobileUrl', label: 'Screenshot (mobile)', accept: '.png,.jpg,.webp' },
   { key: 'pwaScreenshotDesktopUrl', label: 'Screenshot (desktop)', accept: '.png,.jpg,.webp' },
 ] as const;
@@ -429,11 +436,12 @@ export function BrandingPage() {
       : null
   );
 
-  const imageRow = (field: { key: string; label: string; accept: string }) => (
+  const imageRow = (field: { key: string; label: string; accept: string; description?: string; previewOn?: 'light' | 'dark' }) => (
     <ImageItem
       key={field.key}
       label={field.label}
-      previewOn={field.key.endsWith('DarkUrl') ? 'dark' : field.key.endsWith('LightUrl') ? 'light' : undefined}
+      description={field.description}
+      previewOn={field.previewOn ?? (field.key.endsWith('DarkUrl') ? 'dark' : field.key.endsWith('LightUrl') ? 'light' : undefined)}
       accept={field.accept}
       value={currentValue(field.key)}
       badge={overrideBadge(field.key)}
@@ -676,6 +684,7 @@ export function BrandingPage() {
 
 interface ImageItemProps {
   label: string;
+  description?: string;
   /** Shows the preview on the surface the logo is meant for, whatever the panel's own mode. */
   previewOn?: 'light' | 'dark';
   accept: string;
@@ -693,10 +702,10 @@ interface ImageItemProps {
 }
 
 /** One image slot: a URL field, an upload button, and a preview of what is set. */
-function ImageItem({ label, previewOn, accept, value, badge, placeholder, uploading, uploadDisabled, uploaded, overridden, onChange, onUpload, onDeleteUpload, onRevert }: ImageItemProps) {
+function ImageItem({ label, description, previewOn, accept, value, badge, placeholder, uploading, uploadDisabled, uploaded, overridden, onChange, onUpload, onDeleteUpload, onRevert }: ImageItemProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   return (
-    <SettingItem label={label}>
+    <SettingItem label={label} description={description}>
       <div className="flex w-full flex-col gap-2 sm:w-auto sm:items-end">
         <div className="flex w-full items-center gap-1.5 sm:w-auto">
           {badge}

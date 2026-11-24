@@ -313,6 +313,11 @@ export const CONFIG_ENV_MAP: Record<string, { envVar?: string; fileEnvVar?: stri
   devMode: { envVar: 'DEV_MOCK_JMAP', type: 'boolean', defaultValue: false },
   faviconUrl: { envVar: 'FAVICON_URL', type: 'url', defaultValue: '/branding/Bulwark_Favicon.svg' },
   pwaIconUrl: { envVar: 'PWA_ICON_URL', type: 'url', defaultValue: '' },
+  // The small mark in the Android status bar for push notifications. Android
+  // draws only its transparency, so it has to be a cut-out on transparency;
+  // an opaque app icon turns into a solid blob there (#915). Empty uses the
+  // bundled Bulwark mark (/api/notification-badge).
+  notificationBadgeUrl: { envVar: 'NOTIFICATION_BADGE_URL', type: 'url', defaultValue: '' },
   pwaScreenshotMobileUrl: { envVar: 'PWA_SCREENSHOT_MOBILE_URL', type: 'url', defaultValue: '' },
   pwaScreenshotDesktopUrl: { envVar: 'PWA_SCREENSHOT_DESKTOP_URL', type: 'url', defaultValue: '' },
   pwaThemeColor: { envVar: 'PWA_THEME_COLOR', type: 'string', defaultValue: '#ffffff' },

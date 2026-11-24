@@ -53,7 +53,7 @@ export interface ReachableInput {
 }
 
 const BRANDING_KEYS = [
-  'faviconUrl', 'pwaIconUrl', 'pwaScreenshotMobileUrl', 'pwaScreenshotDesktopUrl',
+  'faviconUrl', 'pwaIconUrl', 'notificationBadgeUrl', 'pwaScreenshotMobileUrl', 'pwaScreenshotDesktopUrl',
   'appLogoLightUrl', 'appLogoDarkUrl', 'loginLogoLightUrl', 'loginLogoDarkUrl',
 ] as const;
 
