@@ -32,7 +32,8 @@ export function attachmentAccount(
 ): { client: IJMAPClient; accountId: string } | null {
   const client = ref?.localAccountId ? getClientByLocalAccountId(ref.localAccountId) ?? null : active;
   if (!client) return null;
-  const accountId = ref?.isShared && ref.accountId ? ref.accountId : client.getCalendarsAccountId();
+  const accountId = ref?.isShared && ref.accountId ? ref.accountId : client.getCalendarsAccountId?.();
+  if (!accountId) return null;
   return { client, accountId };
 }
 
