@@ -433,7 +433,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   }), []);
   const { dialogProps: confirmDialogProps, confirm: confirmDialog } = useConfirmDialog();
   const { dialogProps: promptDialogProps, prompt: promptDialog } = usePromptDialog();
-  const { showAppsModal, inlineApp, loadedApps, handleManageApps, handleInlineApp, closeInlineApp, closeAppsModal } = useSidebarApps();
+  const { showAppsModal, inlineApp, handleManageApps, handleInlineApp, closeInlineApp, closeAppsModal } = useSidebarApps();
   const [initialCheckDone, setInitialCheckDone] = useState(() => useAuthStore.getState().isAuthenticated && !!useAuthStore.getState().client);
   const [showShortcutsModal, setShowShortcutsModal] = useState(false);
   // A message that couldn't be fetched: the reader says so, with Retry (mail-p2-7).
@@ -6604,7 +6604,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
         )}
 
         {inlineApp && (
-          <InlineAppView apps={loadedApps} activeAppId={inlineApp!.id} onClose={closeInlineApp} className="flex-1" />
+          <InlineAppView app={inlineApp} onClose={closeInlineApp} className="flex-1" />
         )}
 
         {/* Mobile/Tablet Sidebar Overlay Backdrop.

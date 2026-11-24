@@ -16,17 +16,17 @@ function buttonsOfHeader(): HTMLElement[] {
 }
 
 describe('a pane\'s close beside the window\'s', () => {
-  const apps = [{ id: 'notes', name: 'Notes', url: 'https://notes.example.org' }] as never;
+  const app = { id: 'notes', name: 'Notes', url: 'https://notes.example.org' };
 
   it('is at the end of its row without window controls', () => {
-    render(<InlineAppView apps={apps} activeAppId="notes" onClose={() => {}} />);
+    render(<InlineAppView app={app} onClose={() => {}} />);
     const header = document.querySelector<HTMLElement>('[data-window-top-row]')!;
     expect(header.lastElementChild?.tagName).toBe('BUTTON');
   });
 
   it('moves to the start, in the page\'s order too, when the row ends at the window\'s controls', async () => {
     root.setAttribute(CONTROLS_ATTRIBUTE, '');
-    render(<InlineAppView apps={apps} activeAppId="notes" onClose={() => {}} />);
+    render(<InlineAppView app={app} onClose={() => {}} />);
     const header = document.querySelector<HTMLElement>('[data-window-top-row]')!;
     act(() => header.setAttribute(CLOSE_MOVES_ATTRIBUTE, ''));
     await waitFor(() => expect(header.firstElementChild?.tagName).toBe('BUTTON'));
@@ -38,7 +38,7 @@ describe('a pane\'s close beside the window\'s', () => {
   });
 
   it('stays at the end when the window has no controls over the page, whatever the row says', async () => {
-    render(<InlineAppView apps={apps} activeAppId="notes" onClose={() => {}} />);
+    render(<InlineAppView app={app} onClose={() => {}} />);
     const header = document.querySelector<HTMLElement>('[data-window-top-row]')!;
     act(() => header.setAttribute(CLOSE_MOVES_ATTRIBUTE, ''));
     await new Promise((resolve) => setTimeout(resolve, 20));

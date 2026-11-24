@@ -49,7 +49,7 @@ export function PluginPageApp({ linkSegments = [] }: PluginPageAppProps) {
     () => useAuthStore.getState().isAuthenticated && !!useAuthStore.getState().client,
   );
   const { quota, isPushConnected } = useEmailStore();
-  const { showAppsModal, inlineApp, loadedApps, handleManageApps, handleInlineApp, closeInlineApp, closeAppsModal } = useSidebarApps();
+  const { showAppsModal, inlineApp, handleManageApps, handleInlineApp, closeInlineApp, closeAppsModal } = useSidebarApps();
   const isMobile = useIsMobile();
   const isEmbedded = useIsEmbedded();
   const mvShell = useMountainViewShell(isEmbedded);
@@ -164,7 +164,7 @@ export function PluginPageApp({ linkSegments = [] }: PluginPageAppProps) {
         )}
         <div className="flex flex-col flex-1 min-w-0">
           {!isEmbedded && <PhoneAppHeader title={page?.title ?? ""} below="md" />}
-          {inlineApp && <InlineAppView apps={loadedApps} activeAppId={inlineApp.id} onClose={closeInlineApp} />}
+          {inlineApp && <InlineAppView app={inlineApp} onClose={closeInlineApp} />}
           <div className={cn("flex flex-col flex-1 min-h-0", inlineApp && "hidden")}>
             {content}
           </div>

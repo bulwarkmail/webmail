@@ -124,7 +124,7 @@ function ContactsAppContent({ linkSegments: routeSegments }: ContactsAppProps = 
   useDesktopWindowName(tSidebar("contacts"), { withAccount: true });
   const contactsEnabled = usePolicyStore((s) => s.isFeatureEnabled('contactsEnabled'));
   const { client, isAuthenticated, logout, checkAuth, isLoading: authLoading } = useAuthStore();
-  const { showAppsModal, inlineApp, loadedApps, handleManageApps, handleInlineApp, closeInlineApp, closeAppsModal } = useSidebarApps();
+  const { showAppsModal, inlineApp, handleManageApps, handleInlineApp, closeInlineApp, closeAppsModal } = useSidebarApps();
   const [initialCheckDone, setInitialCheckDone] = useState(() => useAuthStore.getState().isAuthenticated && !!useAuthStore.getState().client);
   const { quota, isPushConnected } = useEmailStore();
   const {
@@ -1461,7 +1461,7 @@ function ContactsAppContent({ linkSegments: routeSegments }: ContactsAppProps = 
 
       <div className="flex flex-col flex-1 min-w-0 min-h-0">
         {inlineApp && (
-          <InlineAppView apps={loadedApps} activeAppId={inlineApp!.id} onClose={closeInlineApp} />
+          <InlineAppView app={inlineApp} onClose={closeInlineApp} />
         )}
         {/* Holds the drawer in a Pro pane and clips it there when closed. */}
         <div className={cn("relative flex flex-1 min-h-0 overflow-hidden", inlineApp && "hidden")}>

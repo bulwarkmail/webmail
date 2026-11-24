@@ -277,7 +277,7 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
   const tPalette = useTranslations('command_palette');
   const skeletonLabels = useSkeletonLabels();
   const { client, isAuthenticated, logout, checkAuth, isLoading: authLoading } = useAuthStore();
-  const { showAppsModal, inlineApp, loadedApps, handleManageApps, handleInlineApp, closeInlineApp, closeAppsModal } = useSidebarApps();
+  const { showAppsModal, inlineApp, handleManageApps, handleInlineApp, closeInlineApp, closeAppsModal } = useSidebarApps();
   const isEmbedded = useIsEmbedded();
   // Mountain View's desktop chrome: its top bar in place of the left rail.
   const mvShell = useMountainViewShell(isEmbedded);
@@ -1228,7 +1228,7 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
       )}
 
       {inlineApp && (
-        <InlineAppView apps={loadedApps} activeAppId={inlineApp!.id} onClose={closeInlineApp} className="flex-1" />
+        <InlineAppView app={inlineApp} onClose={closeInlineApp} className="flex-1" />
       )}
       {!inlineApp && (
       <>

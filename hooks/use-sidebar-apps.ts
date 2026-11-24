@@ -5,6 +5,7 @@ import { useManagedSidebarApps } from '@/hooks/use-resolved-sidebar-apps';
 import { appUrlToFrameOrigin, inlineAppFrameOrigins } from '@/lib/security/app-frame-origins';
 import { readAppFrameOrigins, writeAppFrameOrigins } from '@/lib/security/app-frame-origins-client';
 import { sidebarAppHooks } from '@/lib/plugin-hooks';
+import { useSidebarAppFramesStore } from '@/stores/sidebar-app-frames-store';
 
 export interface InlineAppState {
   id: string;
@@ -35,7 +36,6 @@ function takePendingInlineApp(): InlineAppState | null {
 export function useSidebarApps() {
   const [showAppsModal, setShowAppsModal] = useState(false);
   const [inlineApp, setInlineApp] = useState<InlineAppState | null>(null);
-  const [loadedApps, setLoadedApps] = useState<InlineAppState[]>([]);
   const keepAppsLoaded = useSettingsStore((s) => s.keepAppsLoaded);
   const sidebarApps = useSettingsStore((s) => s.sidebarApps);
   const managedApps = useManagedSidebarApps();
@@ -59,9 +59,12 @@ export function useSidebarApps() {
     return () => { void sidebarAppHooks.onSidebarAppClose.emit({ appId: inlineAppId }); };
   }, [inlineAppId]);
 
+  // The frames themselves live in the layout (SidebarAppFramesHost), so an app
+  // keeps its document when the user moves to another page. Each page starts
+  // with no app open.
   const openInlineApp = useCallback((app: InlineAppState) => {
     setInlineApp(app);
-    setLoadedApps((prev) => (prev.some((a) => a.id === app.id) ? prev : [...prev, app]));
+    useSidebarAppFramesStore.getState().open(app, useSettingsStore.getState().keepAppsLoaded);
   }, []);
 
   useEffect(() => {
@@ -120,9 +123,7 @@ export function useSidebarApps() {
   }, [sidebarApps, managedOrigins, openInlineApp]);
 
   const closeInlineApp = useCallback(() => {
-    if (!keepAppsLoaded) {
-      setLoadedApps((prev) => prev.filter((a) => a.id !== inlineApp?.id));
-    }
+    if (inlineApp) useSidebarAppFramesStore.getState().close(inlineApp.id, keepAppsLoaded);
     setInlineApp(null);
   }, [keepAppsLoaded, inlineApp]);
 
@@ -133,7 +134,6 @@ export function useSidebarApps() {
   return {
     showAppsModal,
     inlineApp,
-    loadedApps: keepAppsLoaded ? loadedApps : (inlineApp ? [inlineApp] : []),
     handleManageApps,
     handleInlineApp,
     closeInlineApp,

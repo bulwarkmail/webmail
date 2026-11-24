@@ -258,7 +258,7 @@ export function CalendarApp({ linkSegments: routeSegments, surface = "calendar" 
   const [narrowSidebarOpen, setNarrowSidebarOpen] = useState(false);
   const closeNarrowSidebar = useCallback(() => setNarrowSidebarOpen(false), []);
   useEffect(() => { if (!isNarrow) setNarrowSidebarOpen(false); }, [isNarrow]);
-  const { showAppsModal, inlineApp, loadedApps, handleManageApps, handleInlineApp, closeInlineApp, closeAppsModal } = useSidebarApps();
+  const { showAppsModal, inlineApp, handleManageApps, handleInlineApp, closeInlineApp, closeAppsModal } = useSidebarApps();
   const { client, isAuthenticated, logout, checkAuth, switchAccount, activeAccountId, isLoading: authLoading } = useAuthStore();
   const [initialCheckDone, setInitialCheckDone] = useState(() => useAuthStore.getState().isAuthenticated && !!useAuthStore.getState().client);
   // A .ics opened from the OS (lib/launch-handoff.ts). The standard page that
@@ -2769,7 +2769,7 @@ export function CalendarApp({ linkSegments: routeSegments, surface = "calendar" 
       )}
 
       {inlineApp && (
-        <InlineAppView apps={loadedApps} activeAppId={inlineApp!.id} onClose={closeInlineApp} className="flex-1" />
+        <InlineAppView app={inlineApp} onClose={closeInlineApp} className="flex-1" />
       )}
 
       {!inlineApp && (

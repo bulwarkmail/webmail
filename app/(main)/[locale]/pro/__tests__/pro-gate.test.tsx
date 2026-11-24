@@ -52,7 +52,6 @@ vi.mock('@/hooks/use-sidebar-apps', () => ({
   useSidebarApps: () => ({
     showAppsModal: false,
     inlineApp: null,
-    loadedApps: [],
     handleManageApps: () => {},
     handleInlineApp: () => {},
     closeInlineApp: () => {},

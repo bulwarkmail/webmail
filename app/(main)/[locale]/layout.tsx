@@ -21,6 +21,7 @@ import { ExternalRecipientConfirmHost } from "@/components/email/external-recipi
 import { PhishingReportHost } from "@/components/email/phishing-report-host";
 import { PluginPageNavigator } from "@/components/plugins/plugin-page-navigator";
 import { PaneCycleHost } from "@/components/layout/pane-cycle";
+import { SidebarAppFramesHost } from "@/components/layout/sidebar-app-frames-host";
 import { FocusRescueHost } from "@/components/layout/focus-rescue";
 import { CommandPaletteHost } from "@/components/command-palette/command-palette";
 import { AccessibilityQuickPanelHost } from "@/components/accessibility/accessibility-quick-panel";
@@ -125,6 +126,10 @@ export default async function LocaleLayout({
                   <SessionTimeoutGuard />
                   <AccountTemplateSync />
                   {children}
+                  {/* After the page, so the open app's frame lies over its pane. */}
+                  <MainWindowOnly>
+                    <SidebarAppFramesHost />
+                  </MainWindowOnly>
                   <DeferredFileDropHost />
                   <PluginDialogHost />
                   <PluginNoticeHost />

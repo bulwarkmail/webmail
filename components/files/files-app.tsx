@@ -90,7 +90,7 @@ export function FilesApp({ linkSegments: routeSegments }: FilesAppProps = {}) {
   const activeAccountId = useAuthStore((s) => s.activeAccountId);
   const getClientForAccount = useAuthStore((s) => s.getClientForAccount);
   const accounts = useAccountStore((s) => s.accounts);
-  const { showAppsModal, inlineApp, loadedApps, handleManageApps, handleInlineApp, closeInlineApp, closeAppsModal } = useSidebarApps();
+  const { showAppsModal, inlineApp, handleManageApps, handleInlineApp, closeInlineApp, closeAppsModal } = useSidebarApps();
   const [initialCheckDone, setInitialCheckDone] = useState(() => useAuthStore.getState().isAuthenticated && !!useAuthStore.getState().client);
   const { quota: mailQuota, isPushConnected } = useEmailStore();
   // In the desktop app the engine keeps the storage Files counts against: the ring shows the
@@ -1082,7 +1082,7 @@ export function FilesApp({ linkSegments: routeSegments }: FilesAppProps = {}) {
 
       <div className="flex flex-col flex-1 min-w-0">
         {inlineApp && (
-          <InlineAppView apps={loadedApps} activeAppId={inlineApp!.id} onClose={closeInlineApp} />
+          <InlineAppView app={inlineApp} onClose={closeInlineApp} />
         )}
         <div className={cn("flex flex-1 min-h-0", inlineApp && "hidden")}>
           <div className="flex-1 min-w-0 flex flex-col">

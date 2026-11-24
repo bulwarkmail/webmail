@@ -46,7 +46,7 @@ describe('shell labels', () => {
     render(
       <>
         <ResizeHandle onResize={() => {}} />
-        <InlineAppView apps={[]} activeAppId="x" onClose={() => {}} />
+        <InlineAppView app={{ id: "x", name: "X", url: "https://x.example.com/" }} onClose={() => {}} />
       </>
     );
     expect(screen.getByRole('separator', { name: 'resize' })).toBeInTheDocument();

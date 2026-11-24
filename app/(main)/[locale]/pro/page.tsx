@@ -203,7 +203,6 @@ export default function ProHome() {
   const {
     showAppsModal,
     inlineApp,
-    loadedApps,
     handleManageApps,
     handleInlineApp,
     closeInlineApp,
@@ -580,8 +579,7 @@ export default function ProHome() {
 
           {inlineApp && (
             <InlineAppView
-              apps={loadedApps}
-              activeAppId={inlineApp.id}
+              app={inlineApp}
               onClose={closeInlineApp}
               className="flex-1"
             />

@@ -21,7 +21,7 @@ vi.mock('@/components/layout/mv-top-bar', () => ({ MvTopBar: () => null }));
 vi.mock('@/components/plugins/app-top-banner-slot', () => ({ AppTopBannerSlot: () => null }));
 vi.mock('@/hooks/use-sidebar-apps', () => ({
   useSidebarApps: () => ({
-    showAppsModal: false, inlineApp: null, loadedApps: [], handleManageApps: vi.fn(),
+    showAppsModal: false, inlineApp: null, handleManageApps: vi.fn(),
     handleInlineApp: vi.fn(), closeInlineApp: vi.fn(), closeAppsModal: vi.fn(),
   }),
 }));
