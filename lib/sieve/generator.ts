@@ -1,6 +1,6 @@
 import type { FilterRule, FilterCondition, FilterAction, FilterMetadata, VacationAudience, VacationForward, VacationSieveConfig } from '@/lib/jmap/sieve-types';
 import { debug } from '@/lib/debug';
-import { PERIOD_REQUIRES, hasPeriod, periodTests } from '@/lib/sieve/period';
+import { PERIOD_REQUIRES, hasPeriod, periodTests, supportsPeriods } from '@/lib/sieve/period';
 import { VACATION_FORWARD_MARKER, isValidVacationForward, normalizeVacationForward } from '@/lib/sieve/vacation-forward';
 import { isValidVacationAudience, normalizeVacationAudience } from '@/lib/sieve/vacation-audience';
 import { usesRegex } from '@/lib/sieve/regex';
@@ -328,9 +328,16 @@ export interface GenerateOptions {
   vacationForward?: VacationForward | null;
   /**
    * Who gets the auto-reply when not everyone should. Always kept in the
-   * metadata; it narrows the vacation include (`includeVacation`).
+   * metadata; it narrows the vacation include (`includeVacation`) while the
+   * auto-reply is on, and within its period where it carries one.
    */
   vacationAudience?: VacationAudience | null;
+  /**
+   * The auto-reply is off. An include that stays then (the one of "managed",
+   * which also runs the server's own rules and sender lists) is written for
+   * every sender; the audience waits in the metadata.
+   */
+  vacationAudienceIdle?: boolean;
   /**
    * The server's `sieveExtensions`. Folder moves use `:mailboxid` when it
    * lists "mailboxid"; without it they target the folder path only.
@@ -441,8 +448,15 @@ export function generateScript(
 
   const useMailboxId = options.extensions?.includes('mailboxid') ?? false;
   const bulwarkRequires = computeRequires(bulwarkRules, vacation, useMailboxId, options.extensions);
+  // The audience narrows the include only while the auto-reply is on.
+  const audience = options.includeVacation && !options.vacationAudienceIdle ? metadata.vacationAudience : undefined;
+  // Outside the period the audience carries, the include runs for every
+  // sender. A period the server cannot test leaves the include narrowed
+  // throughout: that answers nobody else.
+  const audiencePeriod = audience && supportsPeriods(options.extensions) ? periodTests(audience) : null;
   if (options.includeVacation) bulwarkRequires.push('include');
-  if (options.includeVacation && metadata.vacationAudience) bulwarkRequires.push('envelope');
+  if (audience) bulwarkRequires.push('envelope');
+  if (audiencePeriod?.length) bulwarkRequires.push(...PERIOD_REQUIRES);
   const serverRules = options.serverRules?.trim() ?? '';
   if (/\binclude\b/.test(serverRules)) bulwarkRequires.push('include');
 
@@ -477,14 +491,19 @@ export function generateScript(
     // Stalwart 1.2 counts "managed" as included only through a literal name
     // without :global, as written here.
     const include = `include :personal :optional "${escapeString(options.vacationScriptName ?? VACATION_SCRIPT_NAME)}";`;
-    const audience = metadata.vacationAudience;
     if (audience) {
       // Only senders from (or not from) the account's own domains. The reply
       // goes to the envelope sender, so that is the address to judge: a From
       // header can name a colleague on mail from anywhere, and the reply
       // meant for colleagues would go to whoever sent it.
       const domains = audience.domains.map(d => `"${escapeString(d)}"`).join(', ');
-      lines.push(`if ${audience.only === 'external' ? 'not ' : ''}envelope :domain :is "from" [${domains}] {`);
+      const senders = `${audience.only === 'external' ? 'not ' : ''}envelope :domain :is "from" [${domains}]`;
+      if (audiencePeriod?.length) {
+        const during = audiencePeriod.length === 1 ? audiencePeriod[0] : `allof(${audiencePeriod.join(', ')})`;
+        lines.push(`if anyof(${senders}, not ${during}) {`);
+      } else {
+        lines.push(`if ${senders} {`);
+      }
       lines.push(`    ${include}`);
       lines.push('}');
     } else {

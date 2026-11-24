@@ -142,6 +142,24 @@ describe('vacation store with a narrowed auto-reply', () => {
     expect(useVacationStore.getState().audience).toEqual(external);
   });
 
+  it('leaves the test as it is whatever the period of the auto-reply: a "vacation" script only answers', async () => {
+    const server = stalwart([{ name: 'filters', content: filters([rule('a')]), isActive: true }], [...EXTENSIONS, 'date', 'relational']);
+    const narrowed = `# Vacation auto-reply\n${NARROWED}\n    ${INCLUDE}\n}\n`;
+    await useVacationStore.getState().fetchVacationResponse(server.client);
+    await useVacationStore.getState().updateVacationResponse(server.client, {
+      isEnabled: true, fromDate: '2026-12-24T08:00:00Z', toDate: '2027-01-06T17:30:00Z', audience: external,
+    });
+    expect(server.content('filters')).toContain(narrowed);
+    expect(server.content('filters')).not.toContain('currentdate');
+    expect(parseScript(server.content('filters')).vacationAudience).toEqual(external);
+
+    await useVacationStore.getState().updateVacationResponse(server.client, { isEnabled: true, fromDate: '2026-12-23T08:00:00Z' });
+    expect(server.active()).toBe('filters');
+    expect(server.content('filters')).toContain(narrowed);
+    expect(server.content('filters')).not.toContain('currentdate');
+    expect(parseScript(server.content('filters')).vacationAudience).toEqual(external);
+  });
+
   it('says when the auto-reply was saved but the choice of who gets it was not', async () => {
     const server = stalwart([{ name: 'filters', content: filters([rule('a')]), isActive: true }]);
     await useVacationStore.getState().fetchVacationResponse(server.client);

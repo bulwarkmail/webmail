@@ -28,6 +28,11 @@ export interface ParseResult {
   vacationForward?: VacationForward;
   /** Who gets the auto-reply, when not everyone. */
   vacationAudience?: VacationAudience;
+  /**
+   * The include stands outside the audience test and runs for every sender:
+   * the auto-reply was off when the script was written (see GenerateOptions).
+   */
+  vacationAudienceIdle?: boolean;
   /** The server rules region, verbatim (see lib/sieve/server-rules). */
   serverRules?: string;
 }
@@ -949,15 +954,20 @@ export function parseScript(content: string): ParseResult {
     // The script the vacation block includes, so that a save keeps it:
     // "vacation", or "managed" on Stalwart 1.2.
     let vacationScriptName: string | undefined;
+    // Whether that include stands outside the audience test, as it is written
+    // while the auto-reply is off, so that a save keeps that as well.
+    let vacationAudienceIdle = false;
     if (metadata.includeVacation === true) {
       for (const r of external.rules) {
         const raw = r.rawBlock || '';
         if (!/#\s*Vacation auto-reply/i.test(raw)) continue;
         // The statement on its own line: an audience domain like
         // "include.example" on the test above it is not one.
-        const name = raw.match(/^[ \t]*include\b[^;"]*"((?:[^"\\]|\\.)*)"[ \t]*;/m)?.[1];
-        if (name) {
-          vacationScriptName = name.replace(/\\([\s\S])/g, '$1');
+        const statement = raw.match(/^[ \t]*include\b[^;"]*"((?:[^"\\]|\\.)*)"[ \t]*;/m);
+        if (statement?.[1]) {
+          vacationScriptName = statement[1].replace(/\\([\s\S])/g, '$1');
+          // The audience test opens its block right before the statement.
+          vacationAudienceIdle = !!metadata.vacationAudience && !/\{\s*$/.test(raw.slice(0, statement.index));
           break;
         }
       }
@@ -980,6 +990,7 @@ export function parseScript(content: string): ParseResult {
       ...(metadata.includeVacation === true ? { includeVacation: true, ...(vacationScriptName ? { vacationScriptName } : {}) } : {}),
       ...(metadata.vacationForward ? { vacationForward: metadata.vacationForward } : {}),
       ...(metadata.vacationAudience ? { vacationAudience: metadata.vacationAudience } : {}),
+      ...(vacationAudienceIdle ? { vacationAudienceIdle: true } : {}),
       ...(server.serverRules ? { serverRules: server.serverRules } : {}),
     };
   }

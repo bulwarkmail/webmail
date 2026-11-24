@@ -236,6 +236,7 @@ describe('readVacationFilters', () => {
       audience: null,
       audienceAvailable: true,
       notRunning: false,
+      audienceIdle: false,
       otherForwards: 1,
     });
   });

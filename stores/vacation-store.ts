@@ -3,7 +3,7 @@ import type { IJMAPClient } from '@/lib/jmap/client-interface';
 import type { VacationAudience, VacationForward } from '@/lib/jmap/sieve-types';
 import type { VacationResponse } from '@/lib/jmap/types';
 import { parseStalwartVacationScript, type StalwartVacationReply } from '@/lib/sieve/stalwart-vacation';
-import { readVacationFilters, syncVacationWithFilters, type VacationFilters } from '@/stores/filter-store';
+import { readVacationFilters, sameMoment, syncVacationWithFilters, type VacationFilters } from '@/stores/filter-store';
 import { withVacationPeriod } from '@/lib/sieve/vacation-forward';
 import { currentStoreEpoch } from '@/lib/store-epoch';
 import { debug } from '@/lib/debug';
@@ -104,14 +104,31 @@ async function readStalwartVacation(
   }
 }
 
+type VacationPeriod = { from: string | null; until: string | null };
+
+/**
+ * Stored forwarding or recipients do not run. While the auto-reply is on,
+ * that goes for an audience that waits (VacationFilters.audienceIdle) and for
+ * one that keeps to another period than the auto-reply's: another client
+ * changed the auto-reply, or a save was cut short.
+ */
+function notRunning(filters: VacationFilters, isEnabled: boolean, period: VacationPeriod): boolean {
+  if (filters.notRunning) return true;
+  if (!isEnabled || !filters.audience) return false;
+  const { activeFrom, activeUntil } = filters.audience;
+  const otherPeriod = (activeFrom !== undefined || activeUntil !== undefined) &&
+    !(sameMoment(activeFrom, period.from) && sameMoment(activeUntil, period.until));
+  return filters.audienceIdle || otherPeriod;
+}
+
 /** The card's part of what the filters script holds. */
-function fromFilters(filters: VacationFilters) {
+function fromFilters(filters: VacationFilters, isEnabled: boolean, period: VacationPeriod) {
   return {
     forward: filters.forward,
     forwardAvailable: filters.forwardAvailable,
     audience: filters.audience,
     audienceAvailable: filters.audienceAvailable,
-    notRunning: filters.notRunning,
+    notRunning: notRunning(filters, isEnabled, period),
     otherForwards: filters.otherForwards,
   };
 }
@@ -202,7 +219,7 @@ export const useVacationStore = create<VacationStore>()((set, get) => ({
         notRunning: false,
         otherForwards: 0,
         forwardUnknown: sieve && !filters,
-        ...(filters ? fromFilters(filters) : {}),
+        ...(filters ? fromFilters(filters, isEnabled, { from: reply.fromDate, until: reply.toDate }) : {}),
         replyOnlyInScript,
         isLoading: false,
       });
@@ -253,6 +270,21 @@ export const useVacationStore = create<VacationStore>()((set, get) => ({
     });
     if (!(await vacationHooks.onBeforeVacationUpdate.intercept(next))) return false;
     set({ isSaving: true, error: null });
+    // The server is about to answer at other times: the auto-reply is turned
+    // on, or its period moves. One for some senders only gets its test in
+    // place first, for as long as it is on whatever the period: the filters
+    // include the server's script for every sender while the auto-reply is
+    // off and outside its period (see syncVacationWithFilters), and the sync
+    // after the save would come a moment late.
+    const moves = (next: string | null | undefined, previous: string | null) => next !== undefined && !sameMoment(next, previous);
+    const answersAnew = (vacationUpdates.isEnabled ?? before.isEnabled) && (
+      !before.isEnabled || moves(vacationUpdates.fromDate, before.fromDate) || moves(vacationUpdates.toDate, before.toDate)
+    );
+    if (answersAnew && before.audience && audience !== null && hasSieve(client, accountId)) {
+      await syncVacationWithFilters(client, true, accountId, undefined, undefined, 'pending').catch((error) => {
+        debug.error('Failed to narrow the vacation include ahead of the auto-reply:', error);
+      });
+    }
     try {
       await client.setVacationResponse(vacationUpdates, accountId);
     } catch (error) {
@@ -272,11 +304,10 @@ export const useVacationStore = create<VacationStore>()((set, get) => ({
     let filtersState: Partial<VacationStore> = {};
     const needsSync = vacationUpdates.isEnabled !== undefined || forwardSettings !== undefined || audience !== undefined;
     if (needsSync && hasSieve(client, accountId)) {
+      const enabled = vacationUpdates.isEnabled ?? state.isEnabled;
       let synced = false;
       try {
-        await syncVacationWithFilters(
-          client, vacationUpdates.isEnabled ?? state.isEnabled, accountId, forwardSettings, audience, period,
-        );
+        await syncVacationWithFilters(client, enabled, accountId, forwardSettings, audience, period);
         synced = true;
       } catch (error) {
         debug.error('Failed to keep filters active next to the vacation response:', error);
@@ -291,7 +322,7 @@ export const useVacationStore = create<VacationStore>()((set, get) => ({
       // failed save the card keeps what the user set, to save it again.
       const filters = await readVacationFilters(client, accountId).catch(() => null);
       if (filters) {
-        filtersState = synced ? fromFilters(filters) : { notRunning: filters.notRunning };
+        filtersState = synced ? fromFilters(filters, enabled, period) : { notRunning: notRunning(filters, enabled, period) };
       } else if (synced) {
         filtersState = {
           ...(forwardSettings !== undefined

@@ -2,7 +2,8 @@ import type { IJMAPClient } from '@/lib/jmap/client-interface';
 import type { FilterRule, SieveCapabilities, SieveScript } from '@/lib/jmap/sieve-types';
 import { parseScript, type ParseResult } from '@/lib/sieve/parser';
 import {
-  FILTERS_SCRIPT_NAME, findServerVacationScript, generateScript, isServerVacationScript, VACATION_SCRIPT_NAME,
+  FILTERS_SCRIPT_NAME, findServerVacationScript, generateScript, isManagedScriptName, isServerVacationScript,
+  VACATION_SCRIPT_NAME,
 } from '@/lib/sieve/generator';
 import { filterHooks } from '@/lib/plugin-hooks';
 import type { FilterRuleView } from '@/lib/plugin-types';
@@ -30,6 +31,8 @@ export interface AccountFilters {
   includeVacation: boolean;
   /** The vacation script the filters include when written (see vacationScriptToInclude). */
   vacationScriptName: string;
+  /** That include is written for every sender, the audience waits (see isVacationAudienceIdle). */
+  vacationAudienceIdle: boolean;
   capabilities: SieveCapabilities | null;
 }
 
@@ -110,6 +113,44 @@ export function vacationScriptToInclude(
   return findServerVacationScript(scripts)?.name ?? VACATION_SCRIPT_NAME;
 }
 
+/**
+ * Whether the server says the auto-reply is off. Not known counts as on:
+ * that keeps an auto-reply for some senders to those senders.
+ */
+export async function autoReplyIsOff(client: IJMAPClient, accountId?: string): Promise<boolean> {
+  try {
+    return !(await client.getVacationResponse(accountId)).isEnabled;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Whether a save of the rules writes the vacation include for every sender
+ * although an audience is stored (GenerateOptions.vacationAudienceIdle), as
+ * it stands while the auto-reply is off.
+ *
+ * The filters script decides while it is the active one: its include runs,
+ * and the save leaves it as it is. Where "managed" is the active script, it
+ * runs for every sender and the save keeps that, unless the auto-reply is
+ * on: that the server tells. In every other case the include is narrowed: a
+ * "vacation" script only runs while the auto-reply is on, and of an include
+ * that does not run now nothing tells whom it answers once it does.
+ */
+export async function isVacationAudienceIdle(
+  client: IJMAPClient,
+  accountId: string,
+  scripts: readonly SieveScript[],
+  script: SieveScript | null | undefined,
+  parsed: Pick<ParseResult, 'vacationAudience' | 'vacationAudienceIdle'>,
+): Promise<boolean> {
+  if (!parsed.vacationAudience) return false;
+  const active = scripts.find(s => s.isActive);
+  if (!active) return false;
+  if (active.id === script?.id) return !!parsed.vacationAudienceIdle;
+  return isManagedScriptName(active.name) && autoReplyIsOff(client, accountId);
+}
+
 // Let plugins graft their managed sections (e.g. an inbox-category
 // classifier) into the script before it becomes the active one. A handler
 // returning a non-string is ignored to keep the upload valid.
@@ -142,6 +183,7 @@ export async function readAccountFilters(client: IJMAPClient, accountId: string)
       activeScriptId,
       includeVacation: vacationActive,
       vacationScriptName: vacationScriptToInclude(allScripts),
+      vacationAudienceIdle: false,
       capabilities,
     };
   }
@@ -156,6 +198,7 @@ export async function readAccountFilters(client: IJMAPClient, accountId: string)
     activeScriptId,
     includeVacation: !parsed.isOpaque && (!!parsed.includeVacation || vacationActive),
     vacationScriptName: vacationScriptToInclude(allScripts, parsed),
+    vacationAudienceIdle: await isVacationAudienceIdle(client, accountId, allScripts, script, parsed),
     capabilities,
   };
 }
@@ -163,7 +206,8 @@ export async function readAccountFilters(client: IJMAPClient, accountId: string)
 /** The script for `rules`, keeping the account's vacation, its forwarding and external requires. */
 export function renderFiltersScript(
   rules: FilterRule[],
-  filters: Pick<AccountFilters, 'parsed' | 'includeVacation' | 'capabilities'> & Partial<Pick<AccountFilters, 'vacationScriptName'>>,
+  filters: Pick<AccountFilters, 'parsed' | 'includeVacation' | 'capabilities'>
+    & Partial<Pick<AccountFilters, 'vacationScriptName' | 'vacationAudienceIdle'>>,
 ): string {
   return generateScript(rules, filters.parsed.vacation, {
     externalRequires: filters.parsed.externalRequires,
@@ -171,6 +215,7 @@ export function renderFiltersScript(
     vacationScriptName: filters.vacationScriptName,
     vacationForward: filters.parsed.vacationForward,
     vacationAudience: filters.parsed.vacationAudience,
+    vacationAudienceIdle: filters.vacationAudienceIdle,
     extensions: filters.capabilities?.sieveExtensions,
     serverRules: filters.parsed.serverRules,
   });
