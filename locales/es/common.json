@@ -6625,7 +6625,14 @@
       "calendar": "Calendario",
       "addressBook": "Libreta de direcciones",
       "file": "Archivo"
-    }
+    },
+    "shared_items": "Lo que compartes",
+    "stop_sharing": "Dejar de compartir {item} con {name}",
+    "stop_sharing_title": "¿Dejar de compartir {item} con {name}?",
+    "stop_sharing_message": "{name} pierde el acceso a {item}. Todo lo demás que compartes con esa persona se mantiene.",
+    "stop_sharing_confirm": "Dejar de compartir",
+    "stopped_sharing": "{name} ya no tiene acceso a {item}",
+    "stop_sharing_failed": "No se pudo dejar de compartir {item}"
   },
   "quote_header": {
     "reply_line": "El {date}, {from} escribió:",

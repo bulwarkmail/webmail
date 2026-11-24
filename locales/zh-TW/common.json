@@ -5985,7 +5985,14 @@
       "calendar": "行事曆",
       "addressBook": "通訊錄",
       "file": "檔案"
-    }
+    },
+    "shared_items": "你共用的內容",
+    "stop_sharing": "停止與 {name} 共用 {item}",
+    "stop_sharing_title": "停止與 {name} 共用 {item}？",
+    "stop_sharing_message": "{name} 將無法再存取 {item}。你與其共用的其他內容維持不變。",
+    "stop_sharing_confirm": "停止共用",
+    "stopped_sharing": "{name} 已無法存取 {item}",
+    "stop_sharing_failed": "無法停止共用 {item}"
   },
   "advanced_search": {
     "title": "進階搜尋",

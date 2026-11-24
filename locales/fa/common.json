@@ -5985,7 +5985,14 @@
       "calendar": "تقویم",
       "addressBook": "دفترچه آدرس",
       "file": "فایل"
-    }
+    },
+    "shared_items": "آنچه هم‌رسانی می‌کنید",
+    "stop_sharing": "توقف هم‌رسانی {item} با {name}",
+    "stop_sharing_title": "هم‌رسانی {item} با {name} متوقف شود؟",
+    "stop_sharing_message": "{name} دسترسی به {item} را از دست می‌دهد. بقیه چیزهایی که با او هم‌رسانی می‌کنید می‌ماند.",
+    "stop_sharing_confirm": "توقف هم‌رسانی",
+    "stopped_sharing": "{name} دیگر به {item} دسترسی ندارد",
+    "stop_sharing_failed": "توقف هم‌رسانی {item} ممکن نشد"
   },
   "advanced_search": {
     "title": "جستجوی پیشرفته",

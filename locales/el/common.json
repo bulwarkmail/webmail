@@ -5997,7 +5997,14 @@
       "calendar": "Ημερολόγιο",
       "addressBook": "Βιβλίο διευθύνσεων",
       "file": "Αρχείο"
-    }
+    },
+    "shared_items": "Τι κοινοποιείτε",
+    "stop_sharing": "Διακοπή κοινής χρήσης του {item} με {name}",
+    "stop_sharing_title": "Διακοπή κοινής χρήσης του {item} με {name};",
+    "stop_sharing_message": "Ο/Η {name} χάνει την πρόσβαση στο {item}. Ό,τι άλλο κοινοποιείτε μένει.",
+    "stop_sharing_confirm": "Διακοπή κοινής χρήσης",
+    "stopped_sharing": "Ο/Η {name} δεν έχει πλέον πρόσβαση στο {item}",
+    "stop_sharing_failed": "Δεν ήταν δυνατή η διακοπή κοινής χρήσης του {item}"
   },
   "advanced_search": {
     "title": "Σύνθετη αναζήτηση",

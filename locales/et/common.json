@@ -5985,7 +5985,14 @@
       "calendar": "Kalender",
       "addressBook": "Aadressiraamat",
       "file": "Fail"
-    }
+    },
+    "shared_items": "Mida sa jagad",
+    "stop_sharing": "Lõpeta {item} jagamine kasutajaga {name}",
+    "stop_sharing_title": "Kas lõpetada {item} jagamine kasutajaga {name}?",
+    "stop_sharing_message": "{name} kaotab ligipääsu üksusele {item}. Kõik muu, mida jagad, jääb alles.",
+    "stop_sharing_confirm": "Lõpeta jagamine",
+    "stopped_sharing": "Kasutajal {name} pole enam ligipääsu üksusele {item}",
+    "stop_sharing_failed": "{item} jagamist ei õnnestunud lõpetada"
   },
   "advanced_search": {
     "title": "Täpsem otsing",

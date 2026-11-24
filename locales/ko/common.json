@@ -6625,7 +6625,14 @@
       "calendar": "캘린더",
       "addressBook": "주소록",
       "file": "파일"
-    }
+    },
+    "shared_items": "공유 중인 항목",
+    "stop_sharing": "{name}과(와) {item} 공유 중지",
+    "stop_sharing_title": "{name}과(와) {item} 공유를 중지할까요?",
+    "stop_sharing_message": "{name}은(는) {item}에 더 이상 접근할 수 없습니다. 함께 공유하는 다른 항목은 그대로입니다.",
+    "stop_sharing_confirm": "공유 중지",
+    "stopped_sharing": "{name}은(는) 이제 {item}에 접근할 수 없습니다",
+    "stop_sharing_failed": "{item} 공유를 중지하지 못했습니다"
   },
   "quote_header": {
     "reply_line": "{date}에 {from}님이 작성:",

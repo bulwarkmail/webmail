@@ -6625,7 +6625,14 @@
       "calendar": "Календарь",
       "addressBook": "Адресная книга",
       "file": "Файл"
-    }
+    },
+    "shared_items": "Что вы открыли другим",
+    "stop_sharing": "Закрыть доступ к {item} для {name}",
+    "stop_sharing_title": "Закрыть доступ к {item} для {name}?",
+    "stop_sharing_message": "{name} теряет доступ к {item}. Остальное, к чему вы дали доступ, остаётся.",
+    "stop_sharing_confirm": "Закрыть доступ",
+    "stopped_sharing": "У {name} больше нет доступа к {item}",
+    "stop_sharing_failed": "Не удалось закрыть доступ к {item}"
   },
   "quote_header": {
     "reply_line": "{date}, {from} написал:",

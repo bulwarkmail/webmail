@@ -187,6 +187,50 @@ export function summarizeDelegates(targets: ShareTarget[], excludeIds: string[] 
   });
 }
 
+/** One thing the user shares and everyone who has it (#1171). */
+export interface SharedItem {
+  target: ShareTarget;
+  /** Mail folders: the folders above it, outermost first. */
+  parents: ShareTarget[];
+  grants: { principalId: string; level: AccessLevel | null }[];
+}
+
+const KIND_ORDER: ShareKind[] = ['mailbox', 'calendar', 'addressBook', 'file'];
+
+/**
+ * Every folder, calendar, address book and file shared with someone, with
+ * whom and at which level: mail first, then calendars, contacts and files,
+ * each in the server's order. `excludeIds` as in summarizeDelegates.
+ */
+export function sharedItems(targets: ShareTarget[], excludeIds: string[] = []): SharedItem[] {
+  const exclude = new Set(excludeIds);
+  const mailboxes = new Map(ofKind(targets, 'mailbox').map((t) => [t.id, t]));
+  const parentsOf = (target: ShareTarget): ShareTarget[] => {
+    const parents: ShareTarget[] = [];
+    const seen = new Set<string>([target.id]);
+    let parentId = target.parentId;
+    while (parentId && !seen.has(parentId)) {
+      const parent = mailboxes.get(parentId);
+      if (!parent) break;
+      seen.add(parentId);
+      parents.unshift(parent);
+      parentId = parent.parentId;
+    }
+    return parents;
+  };
+  const items: SharedItem[] = [];
+  for (const kind of KIND_ORDER) {
+    for (const target of ofKind(targets, kind)) {
+      const grants = Object.entries(target.shareWith)
+        .filter(([principalId, rights]) => !exclude.has(principalId) && !!rights)
+        .map(([principalId, rights]) => ({ principalId, level: accessLevelOf(kind, rights) }));
+      if (grants.length === 0) continue;
+      items.push({ target, parents: kind === 'mailbox' ? parentsOf(target) : [], grants });
+    }
+  }
+  return items;
+}
+
 export interface ChangeStart {
   scope: DelegateScope;
   level: LevelChoice;

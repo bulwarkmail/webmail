@@ -6625,7 +6625,14 @@
       "calendar": "Agenda",
       "addressBook": "Adresboek",
       "file": "Bestand"
-    }
+    },
+    "shared_items": "Wat u deelt",
+    "stop_sharing": "{item} niet meer delen met {name}",
+    "stop_sharing_title": "{item} niet meer delen met {name}?",
+    "stop_sharing_message": "{name} verliest de toegang tot {item}. Al het andere dat u deelt, blijft.",
+    "stop_sharing_confirm": "Niet meer delen",
+    "stopped_sharing": "{name} heeft geen toegang meer tot {item}",
+    "stop_sharing_failed": "Kon het delen van {item} niet stoppen"
   },
   "quote_header": {
     "reply_line": "Op {date} schreef {from}:",

@@ -5985,7 +5985,14 @@
       "calendar": "Kalendár",
       "addressBook": "Adresár",
       "file": "Súbor"
-    }
+    },
+    "shared_items": "Čo zdieľate",
+    "stop_sharing": "Prestať zdieľať {item} s {name}",
+    "stop_sharing_title": "Prestať zdieľať {item} s {name}?",
+    "stop_sharing_message": "{name} stratí prístup k {item}. Všetko ostatné, čo zdieľate, zostane.",
+    "stop_sharing_confirm": "Prestať zdieľať",
+    "stopped_sharing": "{name} už nemá prístup k {item}",
+    "stop_sharing_failed": "Zdieľanie {item} sa nepodarilo zrušiť"
   },
   "advanced_search": {
     "title": "Pokročilé hľadanie",

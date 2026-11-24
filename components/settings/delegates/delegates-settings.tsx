@@ -5,7 +5,9 @@ import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Avatar } from "@/components/ui/avatar";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { Loader2, UserPlus } from "@/components/icons";
+import { BookUser, Calendar, FileText, Folder, Loader2, UserPlus, X } from "@/components/icons";
+import { IconButton } from "@/components/ui/icon-button";
+import { localizeMailboxName } from "@/lib/mailbox-label";
 import { SettingsSection } from "@/components/settings/settings-section";
 import { useAuthStore } from "@/stores/auth-store";
 import { usePolicyStore } from "@/stores/policy-store";
@@ -20,8 +22,10 @@ import {
   buildRevokeChanges,
   changeStartFor,
   failedChanges,
+  sharedItems,
   summarizeDelegates,
   type DelegateSummary,
+  type SharedItem,
 } from "@/lib/delegation/delegation";
 import { rememberPrincipals, rememberedPrincipals } from "@/lib/delegation/known-principals";
 import { DelegateDialog, type DelegateDialogProps } from "./delegate-dialog";
@@ -37,6 +41,7 @@ type DialogState = { mode: "add" } | { mode: "change"; summary: DelegateSummary 
  */
 export function DelegatesSettings() {
   const t = useTranslations("delegates");
+  const tSidebar = useTranslations("sidebar");
   const client = useAuthStore((s) => s.client);
   const accountKey = useAuthStore((s) => s.activeAccountId) ?? "";
   const delegation = useRestriction("delegation");
@@ -54,6 +59,8 @@ export function DelegatesSettings() {
   const [dialog, setDialog] = useState<DialogState>(null);
   const [confirmRemove, setConfirmRemove] = useState<DelegateSummary | null>(null);
   const [removingId, setRemovingId] = useState<string | null>(null);
+  const [confirmStop, setConfirmStop] = useState<{ item: SharedItem; principalId: string } | null>(null);
+  const [stoppingKey, setStoppingKey] = useState<string | null>(null);
 
   // Each read is numbered; an answer that arrives after a newer read started
   // (another account, a changed gate) is dropped instead of shown.
@@ -94,6 +101,7 @@ export function DelegatesSettings() {
     return [...emails];
   }, [client, directory, ownIds]);
   const summaries = useMemo(() => (targets ? summarizeDelegates(targets, ownIds) : []), [targets, ownIds]);
+  const items = useMemo(() => (targets ? sharedItems(targets, ownIds) : []), [targets, ownIds]);
 
   // Stalwart names a principal by its account id, and an account shared with
   // the user is in the session under the owner's address: a last way to name
@@ -154,6 +162,30 @@ export function DelegatesSettings() {
     return principal ? principalDisplay(principal).name : t("unknown_person");
   };
 
+  // "Inbox / Projects" for a mail folder, the name for the rest.
+  const itemName = (item: SharedItem) => {
+    const label = (target: ShareTarget) => (target.kind === "mailbox"
+      ? localizeMailboxName(target.role, target.name, (k) => tSidebar(`mailboxes.${k}`))
+      : target.name);
+    return [...item.parents, item.target].map(label).join(" / ");
+  };
+
+  // Takes one person's access to one item away; the rest they have stays (#1171).
+  const stopSharing = async (item: SharedItem, principalId: string) => {
+    if (!client.applyShareChanges) return;
+    const { kind, accountId, id, name } = item.target;
+    const key = `${kind}:${accountId}:${id}:${principalId}`;
+    setStoppingKey(key);
+    try {
+      const results = await client.applyShareChanges([{ kind, accountId, id, name, principalId, rights: null }]);
+      if (failedChanges(results).length === 0) toast.success(t("stopped_sharing", { name: nameOf(principalId), item: itemName(item) }));
+      else toast.error(t("stop_sharing_failed", { item: itemName(item) }));
+      await reload();
+    } finally {
+      setStoppingKey(null);
+    }
+  };
+
   return (
     <SettingsSection id="delegates" title={t("title")} description={t("description")} term="delegation">
       <div>
@@ -212,6 +244,48 @@ export function DelegatesSettings() {
         )}
       </div>
 
+      {items.length > 0 && (
+        <div className="space-y-2">
+          <h4 className="text-sm font-medium">{t("shared_items")}</h4>
+          <ul className="divide-y divide-border rounded-md border border-border" data-testid="shared-items-list">
+            {items.map((item) => {
+              const { kind, accountId, id } = item.target;
+              const Icon = kind === "mailbox" ? Folder : kind === "calendar" ? Calendar : kind === "addressBook" ? BookUser : FileText;
+              const name = itemName(item);
+              return (
+                <li key={`${kind}:${accountId}:${id}`} className="space-y-1.5 px-3 py-2.5" data-testid="shared-item-row">
+                  <div className="flex min-w-0 items-center gap-2 text-sm">
+                    <Icon className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
+                    <span className="truncate font-medium" dir="auto" title={name}>{name}</span>
+                    <span className="shrink-0 text-xs text-muted-foreground">{t(`kind.${kind}`)}</span>
+                  </div>
+                  <ul className="flex flex-wrap gap-1.5 ps-6">
+                    {item.grants.map(({ principalId, level }) => {
+                      const person = nameOf(principalId);
+                      const busy = stoppingKey === `${kind}:${accountId}:${id}:${principalId}`;
+                      return (
+                        <li key={principalId} className="inline-flex max-w-full items-center gap-1 rounded-full border border-border py-0.5 ps-2.5 pe-0.5 text-xs" data-testid="shared-item-grant">
+                          <span className="truncate" dir="auto">{person}</span>
+                          <span className="shrink-0 text-muted-foreground">· {t(`level.${level ?? "none"}`)}</span>
+                          <IconButton
+                            label={t("stop_sharing", { item: name, name: person })}
+                            className="h-6 w-6 shrink-0 rounded-full text-muted-foreground"
+                            onClick={() => setConfirmStop({ item, principalId })}
+                            disabled={busy}
+                          >
+                            {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <X className="h-3.5 w-3.5" />}
+                          </IconButton>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      )}
+
       {dialog && targets && (
         <DelegateDialog
           client={client}
@@ -242,6 +316,16 @@ export function DelegatesSettings() {
         title={confirmRemove ? t("remove_title", { name: nameOf(confirmRemove.principalId) }) : ""}
         message={confirmRemove ? t("remove_message", { name: nameOf(confirmRemove.principalId) }) : ""}
         confirmText={t("remove")}
+        variant="destructive"
+      />
+
+      <ConfirmDialog
+        isOpen={!!confirmStop}
+        onClose={() => setConfirmStop(null)}
+        onConfirm={() => { if (confirmStop) void stopSharing(confirmStop.item, confirmStop.principalId); }}
+        title={confirmStop ? t("stop_sharing_title", { item: itemName(confirmStop.item), name: nameOf(confirmStop.principalId) }) : ""}
+        message={confirmStop ? t("stop_sharing_message", { item: itemName(confirmStop.item), name: nameOf(confirmStop.principalId) }) : ""}
+        confirmText={t("stop_sharing_confirm")}
         variant="destructive"
       />
     </SettingsSection>

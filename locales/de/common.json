@@ -6625,7 +6625,14 @@
       "calendar": "Kalender",
       "addressBook": "Adressbuch",
       "file": "Datei"
-    }
+    },
+    "shared_items": "Was Sie teilen",
+    "stop_sharing": "{item} nicht mehr mit {name} teilen",
+    "stop_sharing_title": "{item} nicht mehr mit {name} teilen?",
+    "stop_sharing_message": "{name} verliert den Zugriff auf {item}. Alles andere, was Sie mit {name} teilen, bleibt.",
+    "stop_sharing_confirm": "Nicht mehr teilen",
+    "stopped_sharing": "{name} hat keinen Zugriff mehr auf {item}",
+    "stop_sharing_failed": "Die Freigabe von {item} konnte nicht beendet werden"
   },
   "quote_header": {
     "reply_line": "Am {date} schrieb {from}:",

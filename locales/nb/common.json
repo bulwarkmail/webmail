@@ -5985,7 +5985,14 @@
       "calendar": "Kalender",
       "addressBook": "Adressebok",
       "file": "Fil"
-    }
+    },
+    "shared_items": "Det du deler",
+    "stop_sharing": "Slutt å dele {item} med {name}",
+    "stop_sharing_title": "Slutte å dele {item} med {name}?",
+    "stop_sharing_message": "{name} mister tilgangen til {item}. Alt annet du deler med dem, blir værende.",
+    "stop_sharing_confirm": "Slutt å dele",
+    "stopped_sharing": "{name} har ikke lenger tilgang til {item}",
+    "stop_sharing_failed": "Kunne ikke slutte å dele {item}"
   },
   "advanced_search": {
     "title": "Avansert søk",

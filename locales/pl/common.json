@@ -6625,7 +6625,14 @@
       "calendar": "Kalendarz",
       "addressBook": "Książka adresowa",
       "file": "Plik"
-    }
+    },
+    "shared_items": "Co udostępniasz",
+    "stop_sharing": "Przestań udostępniać {item} dla {name}",
+    "stop_sharing_title": "Przestać udostępniać {item} dla {name}?",
+    "stop_sharing_message": "{name} straci dostęp do {item}. Wszystko inne, co udostępniasz, zostaje.",
+    "stop_sharing_confirm": "Przestań udostępniać",
+    "stopped_sharing": "{name} nie ma już dostępu do {item}",
+    "stop_sharing_failed": "Nie udało się przestać udostępniać {item}"
   },
   "quote_header": {
     "reply_line": "{date}, {from} napisał(a):",

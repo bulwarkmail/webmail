@@ -5985,7 +5985,14 @@
       "calendar": "Naptár",
       "addressBook": "Címjegyzék",
       "file": "Fájl"
-    }
+    },
+    "shared_items": "Amit megoszt",
+    "stop_sharing": "{item} megosztásának leállítása vele: {name}",
+    "stop_sharing_title": "Leállítja a(z) {item} megosztását vele: {name}?",
+    "stop_sharing_message": "{name} elveszíti a hozzáférést ehhez: {item}. Minden más megosztás megmarad.",
+    "stop_sharing_confirm": "Megosztás leállítása",
+    "stopped_sharing": "{name} már nem fér hozzá ehhez: {item}",
+    "stop_sharing_failed": "Nem sikerült leállítani a(z) {item} megosztását"
   },
   "advanced_search": {
     "title": "Speciális keresés",

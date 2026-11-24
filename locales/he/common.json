@@ -6437,7 +6437,14 @@
       "calendar": "לוח שנה",
       "addressBook": "פנקס כתובות",
       "file": "קובץ"
-    }
+    },
+    "shared_items": "מה אתם משתפים",
+    "stop_sharing": "הפסקת השיתוף של {item} עם {name}",
+    "stop_sharing_title": "להפסיק לשתף את {item} עם {name}?",
+    "stop_sharing_message": "ל-{name} לא תהיה עוד גישה ל-{item}. כל השאר שאתם משתפים נשאר.",
+    "stop_sharing_confirm": "הפסקת השיתוף",
+    "stopped_sharing": "ל-{name} אין עוד גישה ל-{item}",
+    "stop_sharing_failed": "לא ניתן היה להפסיק את השיתוף של {item}"
   },
   "unified_mailbox": {
     "search_unavailable": "חיפוש אינו זמין בתצוגה המאוחדת"

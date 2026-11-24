@@ -6625,7 +6625,14 @@
       "calendar": "Calendario",
       "addressBook": "Rubrica",
       "file": "File"
-    }
+    },
+    "shared_items": "Cosa condividi",
+    "stop_sharing": "Smetti di condividere {item} con {name}",
+    "stop_sharing_title": "Smettere di condividere {item} con {name}?",
+    "stop_sharing_message": "{name} perde l'accesso a {item}. Tutto il resto che condividi rimane.",
+    "stop_sharing_confirm": "Smetti di condividere",
+    "stopped_sharing": "{name} non ha più accesso a {item}",
+    "stop_sharing_failed": "Impossibile smettere di condividere {item}"
   },
   "quote_header": {
     "reply_line": "Il {date}, {from} ha scritto:",

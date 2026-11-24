@@ -5985,7 +5985,14 @@
       "calendar": "Calendar",
       "addressBook": "Agendă",
       "file": "Fișier"
-    }
+    },
+    "shared_items": "Ce partajați",
+    "stop_sharing": "Nu mai partaja {item} cu {name}",
+    "stop_sharing_title": "Nu mai partajați {item} cu {name}?",
+    "stop_sharing_message": "{name} pierde accesul la {item}. Restul elementelor partajate rămân.",
+    "stop_sharing_confirm": "Nu mai partaja",
+    "stopped_sharing": "{name} nu mai are acces la {item}",
+    "stop_sharing_failed": "Nu s-a putut opri partajarea {item}"
   },
   "advanced_search": {
     "title": "Căutare avansată",

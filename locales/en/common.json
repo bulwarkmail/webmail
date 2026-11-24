@@ -5985,7 +5985,14 @@
       "calendar": "Calendar",
       "addressBook": "Address book",
       "file": "File"
-    }
+    },
+    "shared_items": "What you share",
+    "stop_sharing": "Stop sharing {item} with {name}",
+    "stop_sharing_title": "Stop sharing {item} with {name}?",
+    "stop_sharing_message": "{name} loses access to {item}. Everything else you share with them stays.",
+    "stop_sharing_confirm": "Stop sharing",
+    "stopped_sharing": "{name} no longer has access to {item}",
+    "stop_sharing_failed": "Couldn't stop sharing {item}"
   },
   "advanced_search": {
     "title": "Advanced Search",

@@ -6625,7 +6625,14 @@
       "calendar": "カレンダー",
       "addressBook": "アドレス帳",
       "file": "ファイル"
-    }
+    },
+    "shared_items": "共有しているもの",
+    "stop_sharing": "{item} の {name} との共有を停止",
+    "stop_sharing_title": "{item} の {name} との共有を停止しますか？",
+    "stop_sharing_message": "{name} は {item} にアクセスできなくなります。ほかに共有しているものはそのままです。",
+    "stop_sharing_confirm": "共有を停止",
+    "stopped_sharing": "{name} は {item} にアクセスできなくなりました",
+    "stop_sharing_failed": "{item} の共有を停止できませんでした"
   },
   "quote_header": {
     "reply_line": "{date}に{from}が書きました:",

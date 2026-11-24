@@ -187,6 +187,45 @@ describe('DelegatesSettings', () => {
     // The overview is read again afterwards.
     await waitFor(() => expect(client.getShareTargets).toHaveBeenCalledTimes(2));
   });
+
+  // #1171: every shared item in one list, with who has it.
+  it('lists each shared item with who has it, sub-folders by their path', async () => {
+    const list = targets(true);
+    list.push({ kind: 'mailbox', accountId: 'ci', id: 'p', name: 'Projects', parentId: 'a', shareWith: { ch: MAILBOX_PRESETS.readWrite, ck: MAILBOX_PRESETS.read } });
+    renderWith(makeClient({ targets: list }));
+    const rows = await screen.findAllByTestId('shared-item-row');
+    const read = (row: HTMLElement) => [
+      row.querySelector('span[title]')!.textContent,
+      within(row).getAllByTestId('shared-item-grant').map((g) => g.textContent),
+    ];
+    expect(rows.map(read)).toEqual([
+      // The Inbox reads as in the sidebar (the key here, with keys for text).
+      ['mailboxes.inbox', ['org-carol@example.org· level.read']],
+      ['mailboxes.inbox / Projects', ['org-team@example.org· level.write', 'org-carol@example.org· level.read']],
+      ['Calendar', ['org-carol@example.org· level.read']],
+      ['plan.pdf', ['org-carol@example.org· level.read']],
+    ]);
+  });
+
+  it('stops sharing one item with one person and keeps the rest', async () => {
+    const client = makeClient({ withCarol: true });
+    renderWith(client);
+    const [inbox] = await screen.findAllByTestId('shared-item-row');
+    fireEvent.click(within(inbox).getByRole('button', { name: 'stop_sharing' }));
+    const confirm = await screen.findByRole('alertdialog');
+    fireEvent.click(within(confirm).getByRole('button', { name: 'stop_sharing_confirm' }));
+    await waitFor(() => expect(client.applyShareChanges).toHaveBeenCalledTimes(1));
+    expect(client.applyShareChanges.mock.calls[0][0].map((c) => [c.kind, c.id, c.principalId, c.rights])).toEqual([
+      ['mailbox', 'a', 'ck', null],
+    ]);
+    await waitFor(() => expect(client.getShareTargets).toHaveBeenCalledTimes(2));
+  });
+
+  it('lists nothing when nothing is shared', async () => {
+    renderWith(makeClient());
+    await screen.findByText('nobody');
+    expect(screen.queryByTestId('shared-items-list')).toBeNull();
+  });
 });
 
 function candidate(dialog: HTMLElement, text: string): HTMLElement {

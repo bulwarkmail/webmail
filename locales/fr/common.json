@@ -6625,7 +6625,14 @@
       "calendar": "Calendrier",
       "addressBook": "Carnet d'adresses",
       "file": "Fichier"
-    }
+    },
+    "shared_items": "Ce que vous partagez",
+    "stop_sharing": "Ne plus partager {item} avec {name}",
+    "stop_sharing_title": "Ne plus partager {item} avec {name} ?",
+    "stop_sharing_message": "{name} perd l'accès à {item}. Tout le reste de ce que vous partagez est conservé.",
+    "stop_sharing_confirm": "Ne plus partager",
+    "stopped_sharing": "{name} n'a plus accès à {item}",
+    "stop_sharing_failed": "Impossible d'arrêter le partage de {item}"
   },
   "quote_header": {
     "reply_line": "Le {date}, {from} a écrit :",

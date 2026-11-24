@@ -5997,7 +5997,14 @@
       "calendar": "Lịch",
       "addressBook": "Sổ địa chỉ",
       "file": "Tệp"
-    }
+    },
+    "shared_items": "Những gì bạn chia sẻ",
+    "stop_sharing": "Ngừng chia sẻ {item} với {name}",
+    "stop_sharing_title": "Ngừng chia sẻ {item} với {name}?",
+    "stop_sharing_message": "{name} mất quyền truy cập {item}. Mọi thứ khác bạn chia sẻ vẫn giữ nguyên.",
+    "stop_sharing_confirm": "Ngừng chia sẻ",
+    "stopped_sharing": "{name} không còn quyền truy cập {item}",
+    "stop_sharing_failed": "Không thể ngừng chia sẻ {item}"
   },
   "advanced_search": {
     "title": "Tìm kiếm nâng cao",

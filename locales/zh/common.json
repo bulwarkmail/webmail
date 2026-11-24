@@ -6625,7 +6625,14 @@
       "calendar": "日历",
       "addressBook": "地址簿",
       "file": "文件"
-    }
+    },
+    "shared_items": "你共享的内容",
+    "stop_sharing": "停止与 {name} 共享 {item}",
+    "stop_sharing_title": "停止与 {name} 共享 {item}？",
+    "stop_sharing_message": "{name} 将无法再访问 {item}。你与其共享的其他内容保持不变。",
+    "stop_sharing_confirm": "停止共享",
+    "stopped_sharing": "{name} 已无法访问 {item}",
+    "stop_sharing_failed": "无法停止共享 {item}"
   },
   "quote_header": {
     "reply_line": "在 {date}，{from} 写道：",

@@ -6625,7 +6625,14 @@
       "calendar": "Календар",
       "addressBook": "Адресна книга",
       "file": "Файл"
-    }
+    },
+    "shared_items": "Чим ви ділитеся",
+    "stop_sharing": "Припинити ділитися {item} з {name}",
+    "stop_sharing_title": "Припинити ділитися {item} з {name}?",
+    "stop_sharing_message": "{name} втрачає доступ до {item}. Усе інше, чим ви ділитеся, залишається.",
+    "stop_sharing_confirm": "Припинити ділитися",
+    "stopped_sharing": "{name} більше не має доступу до {item}",
+    "stop_sharing_failed": "Не вдалося припинити ділитися {item}"
   },
   "quote_header": {
     "reply_line": "{date}, {from} написав:",

@@ -6625,7 +6625,14 @@
       "calendar": "Kalendārs",
       "addressBook": "Adrešu grāmata",
       "file": "Fails"
-    }
+    },
+    "shared_items": "Ko jūs kopīgojat",
+    "stop_sharing": "Pārtraukt {item} kopīgošanu ar {name}",
+    "stop_sharing_title": "Pārtraukt {item} kopīgošanu ar {name}?",
+    "stop_sharing_message": "{name} zaudē piekļuvi {item}. Viss pārējais, ko kopīgojat, paliek.",
+    "stop_sharing_confirm": "Pārtraukt kopīgošanu",
+    "stopped_sharing": "{name} vairs nav piekļuves {item}",
+    "stop_sharing_failed": "Neizdevās pārtraukt {item} kopīgošanu"
   },
   "quote_header": {
     "reply_line": "{date} {from} rakstīja:",

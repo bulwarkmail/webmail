@@ -5993,7 +5993,14 @@
       "calendar": "Kalender",
       "addressBook": "Adressebok",
       "file": "Fil"
-    }
+    },
+    "shared_items": "Det du deler",
+    "stop_sharing": "Slutt å dela {item} med {name}",
+    "stop_sharing_title": "Slutta å dela {item} med {name}?",
+    "stop_sharing_message": "{name} mistar tilgangen til {item}. Alt anna du deler med dei, blir verande.",
+    "stop_sharing_confirm": "Slutt å dela",
+    "stopped_sharing": "{name} har ikkje lenger tilgang til {item}",
+    "stop_sharing_failed": "Kunne ikkje slutta å dela {item}"
   },
   "advanced_search": {
     "title": "Avansert søk",

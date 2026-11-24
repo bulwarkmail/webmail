@@ -6625,7 +6625,14 @@
       "calendar": "Kalendář",
       "addressBook": "Adresář",
       "file": "Soubor"
-    }
+    },
+    "shared_items": "Co sdílíte",
+    "stop_sharing": "Přestat sdílet {item} s {name}",
+    "stop_sharing_title": "Přestat sdílet {item} s {name}?",
+    "stop_sharing_message": "{name} ztratí přístup k {item}. Vše ostatní, co s nimi sdílíte, zůstane.",
+    "stop_sharing_confirm": "Přestat sdílet",
+    "stopped_sharing": "{name} už nemá přístup k {item}",
+    "stop_sharing_failed": "Sdílení {item} se nepodařilo zrušit"
   },
   "quote_header": {
     "reply_line": "Dne {date} napsal(a) {from}:",

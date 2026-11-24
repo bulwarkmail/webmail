@@ -5985,7 +5985,14 @@
       "calendar": "Хуанли",
       "addressBook": "Хаягийн дэвтэр",
       "file": "Файл"
-    }
+    },
+    "shared_items": "Таны хуваалцаж буй зүйлс",
+    "stop_sharing": "{item}-г {name}-тэй хуваалцахыг зогсоох",
+    "stop_sharing_title": "{item}-г {name}-тэй хуваалцахыг зогсоох уу?",
+    "stop_sharing_message": "{name} {item}-д хандах эрхээ алдана. Бусад хуваалцсан зүйлс хэвээр үлдэнэ.",
+    "stop_sharing_confirm": "Хуваалцахыг зогсоох",
+    "stopped_sharing": "{name} {item}-д хандах эрхгүй боллоо",
+    "stop_sharing_failed": "{item}-г хуваалцахыг зогсоож чадсангүй"
   },
   "advanced_search": {
     "title": "Нарийвчилсан хайлт",

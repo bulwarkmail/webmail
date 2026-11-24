@@ -5985,7 +5985,14 @@
       "calendar": "Takvim",
       "addressBook": "Adres defteri",
       "file": "Dosya"
-    }
+    },
+    "shared_items": "Paylaştıklarınız",
+    "stop_sharing": "{item} öğesini {name} ile paylaşmayı durdur",
+    "stop_sharing_title": "{item} öğesini {name} ile paylaşmayı durdurmak istiyor musunuz?",
+    "stop_sharing_message": "{name}, {item} öğesine erişimini kaybeder. Paylaştığınız diğer her şey kalır.",
+    "stop_sharing_confirm": "Paylaşmayı durdur",
+    "stopped_sharing": "{name} artık {item} öğesine erişemiyor",
+    "stop_sharing_failed": "{item} paylaşımı durdurulamadı"
   },
   "advanced_search": {
     "title": "Gelişmiş Arama",

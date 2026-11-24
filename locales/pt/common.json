@@ -6625,7 +6625,14 @@
       "calendar": "Calendário",
       "addressBook": "Catálogo de endereços",
       "file": "Arquivo"
-    }
+    },
+    "shared_items": "O que partilha",
+    "stop_sharing": "Deixar de partilhar {item} com {name}",
+    "stop_sharing_title": "Deixar de partilhar {item} com {name}?",
+    "stop_sharing_message": "{name} perde o acesso a {item}. Tudo o resto que partilha mantém-se.",
+    "stop_sharing_confirm": "Deixar de partilhar",
+    "stopped_sharing": "{name} já não tem acesso a {item}",
+    "stop_sharing_failed": "Não foi possível deixar de partilhar {item}"
   },
   "quote_header": {
     "reply_line": "Em {date}, {from} escreveu:",

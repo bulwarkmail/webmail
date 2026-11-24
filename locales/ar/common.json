@@ -5985,7 +5985,14 @@
       "calendar": "تقويم",
       "addressBook": "دفتر عناوين",
       "file": "ملف"
-    }
+    },
+    "shared_items": "ما تشاركه",
+    "stop_sharing": "إيقاف مشاركة {item} مع {name}",
+    "stop_sharing_title": "إيقاف مشاركة {item} مع {name}؟",
+    "stop_sharing_message": "سيفقد {name} الوصول إلى {item}. يبقى كل ما تشاركه معه غير ذلك.",
+    "stop_sharing_confirm": "إيقاف المشاركة",
+    "stopped_sharing": "لم يعد لدى {name} وصول إلى {item}",
+    "stop_sharing_failed": "تعذّر إيقاف مشاركة {item}"
   },
   "advanced_search": {
     "title": "بحث متقدم",

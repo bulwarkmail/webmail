@@ -5985,7 +5985,14 @@
       "calendar": "Calendari",
       "addressBook": "Llibreta d'adreces",
       "file": "Fitxer"
-    }
+    },
+    "shared_items": "El que compartiu",
+    "stop_sharing": "Deixa de compartir {item} amb {name}",
+    "stop_sharing_title": "Voleu deixar de compartir {item} amb {name}?",
+    "stop_sharing_message": "{name} perd l'accés a {item}. La resta del que hi compartiu es manté.",
+    "stop_sharing_confirm": "Deixa de compartir",
+    "stopped_sharing": "{name} ja no té accés a {item}",
+    "stop_sharing_failed": "No s'ha pogut deixar de compartir {item}"
   },
   "advanced_search": {
     "title": "Cerca avançada",

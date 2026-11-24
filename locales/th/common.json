@@ -3367,7 +3367,14 @@
       "calendar": "ปฏิทิน",
       "addressBook": "สมุดที่อยู่",
       "file": "ไฟล์"
-    }
+    },
+    "shared_items": "สิ่งที่คุณแชร์",
+    "stop_sharing": "หยุดแชร์ {item} กับ {name}",
+    "stop_sharing_title": "หยุดแชร์ {item} กับ {name} หรือไม่",
+    "stop_sharing_message": "{name} จะไม่มีสิทธิ์เข้าถึง {item} อีก สิ่งอื่นที่คุณแชร์ยังคงอยู่",
+    "stop_sharing_confirm": "หยุดแชร์",
+    "stopped_sharing": "{name} ไม่มีสิทธิ์เข้าถึง {item} แล้ว",
+    "stop_sharing_failed": "ไม่สามารถหยุดแชร์ {item} ได้"
   },
   "smime": {
     "your_certificates": "ใบรับรองของคุณ",
