@@ -14,6 +14,7 @@ import { useReplyEmailsFor } from "@/hooks/use-reply-emails";
 import { getEventEndDate, getEventStartDate } from "@/lib/calendar-utils";
 import { useSettingsStore, type MonthTimedEventStyle } from "@/stores/settings-store";
 import { readableTextOn } from "@/lib/color-transform";
+import { namedColorHex } from "@/lib/css-named-colors";
 import { useLongPress } from "@/hooks/use-long-press";
 import { useCvdColor } from "@/hooks/use-cvd-color";
 import { endEventDragGrab, startEventDragGrab } from "@/lib/calendar/event-drag-grab";
@@ -59,11 +60,13 @@ interface EventCardProps {
   timedStyle?: MonthTimedEventStyle;
 }
 
+// A colour name ("red", as other calendar apps write it) as its hex value, so
+// it draws, tints and maps to the colour-blind palette like a hex colour.
 function sanitizeColor(color: string | null | undefined, fallback = "#3b82f6"): string {
   if (!color) return fallback;
   if (/^#[0-9a-fA-F]{3,8}$/.test(color)) return color;
   if (/^(rgb|hsl)a?\([\d\s,.%/]+\)$/.test(color)) return color;
-  return fallback;
+  return namedColorHex(color) ?? fallback;
 }
 
 function getEventColor(event: CalendarEvent, calendar?: Calendar): string {
