@@ -26,4 +26,12 @@ describe('accountRowText', () => {
     const bare = { id: 'b', displayName: '', label: 'Bare@Example.com', email: 'bare@example.com', username: 'bare@example.com' };
     expect(accountRowText(bare, [bare])).toEqual({ title: 'bare@example.com', subtitle: null });
   });
+
+  it('titles an account without any name by its address', () => {
+    // Entries from an older store can lack both names.
+    const unnamed = { id: 'u', email: 'u@example.com', username: 'u@example.com' } as unknown as Parameters<typeof accountRowText>[0];
+    const named = account('n', 'Nora Lindqvist', 'nora@meridianlabs.example');
+    expect(accountRowText(unnamed, [unnamed, named])).toEqual({ title: 'u@example.com', subtitle: null });
+    expect(accountRowText(named, [unnamed, named]).title).toBe('Nora Lindqvist');
+  });
 });

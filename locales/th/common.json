@@ -1386,6 +1386,10 @@
     "warning_attachment": "มีคำว่า \"{keyword}\" แต่ไม่ได้แนบไฟล์",
     "warning_placeholders": "ข้อความตัวยึดตำแหน่งที่ผู้รับจะเห็น:",
     "warning_proofreading": "ปัญหาการสะกดหรือไวยากรณ์ที่ยังค้างอยู่: {count}",
+    "warning_account": "ตอบกลับจาก {sending} แต่ข้อความส่งถึง {received}",
+    "account_warning_title": "ตอบกลับจากบัญชีอื่นหรือไม่",
+    "account_warning_message": "ข้อความนี้ส่งถึง {received} คำตอบจะส่งจาก {sending}",
+    "account_warning_back": "เปลี่ยนผู้ส่ง",
     "empty_text_title": "ส่งโดยไม่มีข้อความหรือไม่",
     "empty_text_message": "ข้อความนี้ไม่มีเนื้อหาและไม่มีไฟล์แนบ ส่งต่อไปหรือไม่",
     "scheduled_for": "ตั้งเวลาส่งไว้ที่ {when}",
@@ -1522,6 +1526,7 @@
     "bcc": "สำเนาลับ (Bcc)",
     "subject": "เรื่อง",
     "from": "จาก",
+    "from_account": "บัญชี: {name}",
     "attach_from_files": "เลือกไฟล์จากคลังเอกสาร",
     "files_picker": {
       "attach": "{count, plural, =0 {แนบไฟล์} other {แนบ # ไฟล์}}",

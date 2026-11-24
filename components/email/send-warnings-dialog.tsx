@@ -11,7 +11,9 @@ export type SendWarning =
   | { kind: "text" }
   | { kind: "placeholders"; matches: string[] }
   | { kind: "attachment"; keyword: string }
-  | { kind: "proofreading"; count: number };
+  | { kind: "proofreading"; count: number }
+  /** A reply leaving from another account than the one the original came to: both account names. */
+  | { kind: "account"; login: string; received: string; sending: string };
 
 interface SendWarningsDialogProps {
   /** What to ask about, in the order the composer checks it. Closed when null. */
@@ -90,6 +92,10 @@ export function SendWarningsDialog({ warnings, onBack, onSendAnyway, scheduling 
     description = tProofreading("send_warning.body", { count: single.count });
     backLabel = tProofreading("send_warning.review");
     sendLabel = tProofreading("send_warning.send");
+  } else if (single?.kind === "account") {
+    title = tSend("account_warning_title");
+    description = tSend("account_warning_message", { received: single.received, sending: single.sending });
+    backLabel = tSend("account_warning_back");
   } else {
     title = tSend(scheduling ? "schedule_warnings_title" : "warnings_title");
     body = (
@@ -102,6 +108,7 @@ export function SendWarningsDialog({ warnings, onBack, onSendAnyway, scheduling 
               {w.kind === "text" && tSend("warning_text")}
               {w.kind === "attachment" && tSend("warning_attachment", { keyword: w.keyword })}
               {w.kind === "proofreading" && tSend("warning_proofreading", { count: w.count })}
+              {w.kind === "account" && tSend("warning_account", { received: w.received, sending: w.sending })}
               {w.kind === "placeholders" && (
                 <>
                   {tSend("warning_placeholders")}

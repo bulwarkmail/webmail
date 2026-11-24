@@ -152,7 +152,7 @@ export function accountRowText(
   accounts: NamedAccount[],
 ): { title: string; subtitle: string | null } {
   const key = (value: string) => value.trim().toLowerCase();
-  const nameOf = (a: NamedAccount) => a.displayName || a.label;
+  const nameOf = (a: NamedAccount) => a.displayName || a.label || '';
   const name = nameOf(account);
   const address = account.email || account.username;
   const shared = accounts.some((a) => a.id !== account.id && key(nameOf(a)) === key(name));

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { Identity } from '@/lib/jmap/types';
-import { resolveComposerFrom } from '../composer-identity';
+import { replyAccountMismatch, resolveComposerFrom } from '../composer-identity';
 
 // What the composer's From stands for. Identity ids repeat across logins
 // (`b` is the first identity everywhere), so an identity of another login
@@ -57,5 +57,29 @@ describe('resolveComposerFrom', () => {
   it('falls back to the primary identity for one of the composer\'s own login that no longer exists', () => {
     expect(resolveComposerFrom('gone', [HOME, HOME_ALIAS], HOME, 'login-home', null)).toEqual({ identity: HOME, unlisted: false });
     expect(resolveComposerFrom('login-home::gone', [HOME, HOME_ALIAS], HOME, 'login-home', null)).toEqual({ identity: HOME, unlisted: false });
+  });
+});
+
+describe('replyAccountMismatch', () => {
+  const logins = ['login-home', 'login-work'];
+
+  it('names both accounts when a reply leaves from another account than the one the original came to', () => {
+    expect(replyAccountMismatch('reply', 'login-work', 'login-home', logins)).toEqual({ received: 'login-work', sending: 'login-home' });
+    expect(replyAccountMismatch('replyAll', 'login-work', 'login-home', logins)).toEqual({ received: 'login-work', sending: 'login-home' });
+  });
+
+  it('says nothing when the reply leaves from the account the original came to', () => {
+    expect(replyAccountMismatch('reply', 'login-work', 'login-work', logins)).toBeNull();
+  });
+
+  it('says nothing for a new message or a forward', () => {
+    expect(replyAccountMismatch('compose', 'login-work', 'login-home', logins)).toBeNull();
+    expect(replyAccountMismatch('forward', 'login-work', 'login-home', logins)).toBeNull();
+  });
+
+  it('says nothing when the received side is not an account on this device', () => {
+    // A shared folder's owner id, or an account removed since.
+    expect(replyAccountMismatch('reply', 'owner-x', 'login-home', logins)).toBeNull();
+    expect(replyAccountMismatch('reply', undefined, 'login-home', logins)).toBeNull();
   });
 });

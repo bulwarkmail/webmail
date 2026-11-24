@@ -53,3 +53,22 @@ export function resolveComposerFrom(
   const kept = lastListed?.id === selectedId ? lastListed : ({ id: selectedId, email: '', name: '' } as Identity);
   return { identity: kept, unlisted: true };
 }
+
+/**
+ * The two logins of a reply that leaves from another account than the one the
+ * original came to (#1666), or null when it doesn't. Only replies count: a
+ * forward from another account is often meant that way. Both logins have to be
+ * accounts on this device; anything else (a shared folder's owner id, an
+ * account removed since) says nothing about where the message came to.
+ */
+export function replyAccountMismatch(
+  mode: string,
+  receivedLogin: string | null | undefined,
+  sendingLogin: string | null | undefined,
+  knownLogins: readonly string[],
+): { received: string; sending: string } | null {
+  if (mode !== 'reply' && mode !== 'replyAll') return null;
+  if (!receivedLogin || !sendingLogin || receivedLogin === sendingLogin) return null;
+  if (!knownLogins.includes(receivedLogin) || !knownLogins.includes(sendingLogin)) return null;
+  return { received: receivedLogin, sending: sendingLogin };
+}

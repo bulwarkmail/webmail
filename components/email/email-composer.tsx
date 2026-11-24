@@ -128,7 +128,8 @@ import { offlineActive, offlineAllowed } from "@/lib/offline/offline-mode";
 import { useBrowserOnline } from "@/hooks/use-browser-online";
 import { appPath, buildSettingsPath } from "@/lib/deep-links";
 import type { FileNode, Identity, Mailbox } from "@/lib/jmap/types";
-import { resolveComposerFrom } from "@/lib/composer-identity";
+import { replyAccountMismatch, resolveComposerFrom } from "@/lib/composer-identity";
+import { accountRowText } from "@/lib/account-utils";
 import { useContactStore, getContactDisplayName, getContactPrimaryEmail } from "@/stores/contact-store";
 import { renderTemplateWithPlugins, notifyTemplateApplied } from "@/stores/template-store";
 import { useTemplateSources } from "@/hooks/use-template-sources";
@@ -1420,6 +1421,10 @@ export function EmailComposer({
   const checkThenScheduleRef = useRef<() => void>(() => {});
   // Open proofreading issues, once a checker asked to warn about them.
   const proofreadingConfirmedRef = useRef(false);
+  // The account a reply was confirmed to leave from, though the original came
+  // to another one. Picking yet another account asks again.
+  const accountConfirmedRef = useRef<string | null>(null);
+  const fromSelectRef = useRef<HTMLSelectElement>(null);
   const [showScheduleDialog, setShowScheduleDialog] = useState(false);
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>(() => {
     if (initialData?.tags !== undefined) return initialData.tags;
@@ -1489,6 +1494,17 @@ export function EmailComposer({
   // scopes decide the organisation signature and disclaimer: the identity's
   // own account, else the one the composer was opened in.
   const composingAccountId = currentIdentityParts.localAccountId ?? composerAccountIdRef.current;
+  // With several accounts, the From row names the account the message leaves
+  // from, with the colour the unified views tell accounts apart by (#1666).
+  // Two accounts with the same name are named by their address instead.
+  const accountEntries = useAccountStore((s) => s.accounts);
+  const accountNameOf = (accountId: string) => {
+    const account = accountEntries.find((a) => a.id === accountId);
+    return account ? toUnicodeEmail(accountRowText(account, accountEntries).title) : accountId;
+  };
+  const sendingAccount = multiAccountIdentities.enabled
+    ? accountEntries.find((a) => a.id === composingAccountId)
+    : undefined;
   // What the header calls it. A re-opened draft is in "compose" mode; a reply
   // draft is still a reply (compose-p3-6).
   const titleMode: 'compose' | 'reply' | 'replyAll' | 'forward' = replyKindSwitched ?? (mode !== 'compose'
@@ -4516,6 +4532,23 @@ export function EmailComposer({
         if (open > 0) warnings.push({ kind: 'proofreading', count: open });
       }
 
+      // A reply leaving from another account than the one the original came
+      // to (#1666). The draft of a reply re-opened later is still a reply.
+      const accountMismatch = replyAccountMismatch(
+        titleMode,
+        replyTo?.accountId ?? composerAccountIdRef.current,
+        composingAccountId,
+        useAccountStore.getState().accounts.map((a) => a.id),
+      );
+      if (accountMismatch && accountConfirmedRef.current !== accountMismatch.sending) {
+        warnings.push({
+          kind: 'account',
+          login: accountMismatch.sending,
+          received: accountNameOf(accountMismatch.received),
+          sending: accountNameOf(accountMismatch.sending),
+        });
+      }
+
       if (warnings.length > 0) {
         setSendWarnings({ items: warnings, delayedUntil, ...(checkOnly ? { schedule: true } : {}) });
         return;
@@ -5922,6 +5955,21 @@ export function EmailComposer({
           <div className={cn("flex items-center gap-2 px-4 py-2.5 border-b border-border/50", dockCompact && "py-1", dockCompact && !dockFromShown && "hidden")} data-composer-from="">
             <span className="text-sm text-muted-foreground min-w-12 md:min-w-16 shrink-0 whitespace-nowrap">{t('from')}:</span>
             <div className={cn("flex-1 flex items-center gap-1 min-w-0", fromOverrideEnabled && "flex-wrap")}>
+              {sendingAccount && (
+                <span
+                  data-composer-from-account={sendingAccount.id}
+                  title={t('from_account', { name: accountNameOf(sendingAccount.id) })}
+                  className="inline-flex items-center gap-1.5 shrink-0 max-w-[40%] md:max-w-[14rem] rounded-full border border-border bg-muted/60 ps-1.5 pe-2 py-0.5 me-1 text-xs text-foreground"
+                >
+                  <span
+                    aria-hidden="true"
+                    className="w-2.5 h-2.5 rounded-full shrink-0"
+                    style={{ backgroundColor: sendingAccount.avatarColor }}
+                  />
+                  <span aria-hidden="true" className="truncate" dir="auto">{accountNameOf(sendingAccount.id)}</span>
+                  <span className="sr-only">{t('from_account', { name: accountNameOf(sendingAccount.id) })}</span>
+                </span>
+              )}
               {fromOverrideEnabled ? (
                 // Both fields need room to type in: on a narrow composer they take a
                 // line of their own, or a line each, rather than squeeze to nothing.
@@ -5944,6 +5992,7 @@ export function EmailComposer({
                 </div>
               ) : identities.length > 0 ? (
                 <select
+                  ref={fromSelectRef}
                   data-testid="composer-from"
                   aria-label={t('from')}
                   value={currentIdentity?.id || ''}
@@ -7028,6 +7077,7 @@ export function EmailComposer({
             if (first?.kind === 'subject') subjectInputRef.current?.focus();
             else if (first?.kind === 'placeholders') selectPlaceholder(first.matches[0]);
             else if (first?.kind === 'proofreading') proofreading.navigate(1);
+            else if (first?.kind === 'account') fromSelectRef.current?.focus();
             else if (first?.kind === 'text') {
               if (plainTextModeRef.current) bodyRef.current?.focus();
               else editorRef.current?.commands.focus();
@@ -7048,6 +7098,8 @@ export function EmailComposer({
               if (dontAskAgain) updateSetting('placeholderWarningEnabled', false);
             } else if (warning.kind === 'proofreading') {
               proofreadingConfirmedRef.current = true;
+            } else if (warning.kind === 'account') {
+              accountConfirmedRef.current = warning.login;
             }
           }
           setSendWarnings(null);
