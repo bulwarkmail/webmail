@@ -185,7 +185,9 @@ export const useAccountStore = create<AccountState>()(
       requireSignIn: (accountId) => {
         const account = get().getAccountById(accountId);
         if (!account) return;
-        if (!account.rememberMe && !account.awaitingSignIn) {
+        // An admin's impersonation ran on an app password that has ended:
+        // nobody here can sign in to it again.
+        if ((!account.rememberMe && !account.awaitingSignIn) || account.impersonated) {
           get().removeAccount(accountId, 'evicted');
           return;
         }

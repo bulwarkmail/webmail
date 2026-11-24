@@ -100,7 +100,12 @@ export function applySignedOutStart(w: Window, d: Document, cfg: StartScriptConf
     if ((w as unknown as { bulwarkDesktop?: unknown }).bulwarkDesktop) local = true;
     var registry = JSON.parse(w.localStorage.getItem('account-registry') || 'null');
     var accounts = registry && registry.state && registry.state.accounts;
-    if (Array.isArray(accounts) && accounts.length > 0) local = true;
+    // An entry that only waits for a sign-in has nothing to restore.
+    if (Array.isArray(accounts)) {
+      for (var i = 0; i < accounts.length; i++) {
+        if (accounts[i] && !accounts[i].awaitingSignIn) local = true;
+      }
+    }
     if (w.localStorage.getItem(cfg.clear) !== null) local = true;
     var auth = JSON.parse(w.localStorage.getItem('auth-storage') || 'null');
     if (auth && auth.state && auth.state.isAuthenticated === true) local = true;

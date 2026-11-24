@@ -132,6 +132,18 @@ describe('applySignedOutStart', () => {
     }
   });
 
+  it('stays on the sign-in page when every kept account waits for a sign-in', () => {
+    const waiting = { 'account-registry': JSON.stringify({ state: { accounts: [{ id: 'a', awaitingSignIn: true }] } }) };
+    const page = fakePage('/login', waiting, { [START_COOKIE]: '1' });
+    applySignedOutStart(page.w, page.d, CFG);
+    expect(page.replaced).toEqual([]);
+    expect(page.cookies.has(LOCAL_COOKIE)).toBe(false);
+    const mixed = { 'account-registry': JSON.stringify({ state: { accounts: [{ id: 'a', awaitingSignIn: true }, { id: 'b' }] } }) };
+    const other = fakePage('/', mixed);
+    applySignedOutStart(other.w, other.d, CFG);
+    expect(other.cookies.get(LOCAL_COOKIE)).toBe('1');
+  });
+
   it('drops the marker on the sign-in page once nothing is kept, and nowhere else', () => {
     const elsewhere = fakePage('/settings', {}, { [LOCAL_COOKIE]: '1' });
     applySignedOutStart(elsewhere.w, elsewhere.d, CFG);

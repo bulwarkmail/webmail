@@ -262,9 +262,14 @@ async function pushRegistration(): Promise<ServiceWorkerRegistration | null> {
   return (await navigator.serviceWorker.getRegistration(SW_SCOPE).catch(() => null)) ?? null;
 }
 
+/** An entry that only waits for a sign-in keeps nothing on this device for anyone. */
+function isSignedIn(entry: { awaitingSignIn?: boolean }): boolean {
+  return !entry.awaitingSignIn;
+}
+
 /** The subscription is the browser's, shared by every account on this origin. */
 async function endWebPushIfNobodyLeft(): Promise<void> {
-  if (useAccountStore.getState().accounts.length > 0) return;
+  if (useAccountStore.getState().accounts.some(isSignedIn)) return;
   const registration = await pushRegistration();
   const subscription = await registration?.pushManager?.getSubscription();
   await subscription?.unsubscribe();
@@ -273,7 +278,7 @@ async function endWebPushIfNobodyLeft(): Promise<void> {
 
 /** With nobody left after this there's nothing to lock for, and a next person shouldn't meet it. */
 async function forgetLockIfNobodyStays(leaving: string | null): Promise<void> {
-  if (leaving !== null && useAccountStore.getState().accounts.some((entry) => entry.id !== leaving)) return;
+  if (leaving !== null && useAccountStore.getState().accounts.some((entry) => entry.id !== leaving && isSignedIn(entry))) return;
   await forgetAppLockAtSignOut();
 }
 
@@ -319,7 +324,7 @@ function leavingLoginOf(account: string): LeavingLogin | undefined {
  */
 async function scrubPushState(account: string | null, leaving: LeavingLogin | undefined): Promise<void> {
   if (typeof caches === 'undefined') return;
-  const staying = account === null ? [] : useAccountStore.getState().accounts.filter((entry) => entry.id !== account);
+  const staying = account === null ? [] : useAccountStore.getState().accounts.filter((entry) => entry.id !== account && isSignedIn(entry));
   if (staying.length === 0) {
     await caches.delete(PUSH_STATE_CACHE);
     return;
@@ -565,7 +570,7 @@ async function eraseAccount(account: string, reason: WipeReason, options: WipeAc
   await putRowsBack(records, account);
 
   // A refused login takes what's the account's own, also when it was the last one.
-  const nobodyLeft = !ownOnly && !useAccountStore.getState().accounts.some((entry) => entry.id !== account);
+  const nobodyLeft = !ownOnly && !useAccountStore.getState().accounts.some((entry) => entry.id !== account && isSignedIn(entry));
   if (!(await wipeInMain(reason, nobodyLeft ? null : account))) deleted = false;
   await flushConfirmations(deleted ? account : undefined);
   const wasLocked = isAppLockedNow();

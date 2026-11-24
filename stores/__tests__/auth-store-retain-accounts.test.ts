@@ -86,7 +86,7 @@ afterEach(() => {
 });
 
 describe('account entries outlive an unrestorable session', () => {
-  it('wipes an expired background account mail, outbox and saved session while another stays signed in', async () => {
+  it('keeps an expired background account mail and outbox on the device while another stays signed in', async () => {
     const expired = { ...entry('alice', 2), authMode: 'oauth' as const };
     const active = entry('bob', 1);
     seed([expired, active]);
@@ -99,90 +99,28 @@ describe('account entries outlive an unrestorable session', () => {
     const { FakeJmapMail } = await import('@/lib/store/__tests__/helpers/fake-jmap-mail');
     const { setStoreBackend } = await import('@/lib/store/client/api');
     const { queueSend, readQueue } = await import('@/lib/offline/queue');
-    const { writeEnabled, useOfflineStore } = await import('@/lib/offline/state');
+    const { writeEnabled, isEvicted } = await import('@/lib/offline/state');
     const server = new FakeJmapMail({ mailboxes: [{ id: 'inbox', role: 'inbox' }] });
     server.addEmail({ id: 'm1', keywords: {}, subject: 'Private mail' });
     const store = new InProcessStore(server);
-    let release!: () => void;
-    const deleting = new Promise<void>((resolve) => { release = resolve; });
-    let started!: () => void;
-    const wipeStarted = new Promise<void>((resolve) => { started = resolve; });
-    const remove = store.remove.bind(store);
-    store.remove = async (account) => {
-      started();
-      await deleting;
-      await remove(account);
-    };
     setStoreBackend(store);
     try {
       writeEnabled([expired.id, active.id]);
       for (const account of [expired, active]) {
         await store.sync(account.id);
         await queueSend(account.id, { subject: 'Unsent mail', to: [] }, { kind: 'email', args: [] });
-        expect(await store.area(account.id, 'mail.session')).not.toBeNull();
-        expect((await readQueue(account.id)).outbox).toHaveLength(1);
       }
-      const renewal = auth.getState().refreshAccessToken({ accountId: expired.id });
-      await wipeStarted;
-      // The store can be waiting for this answer before its removal finishes.
-      await expect(renewal).resolves.toBeNull();
+      await expect(auth.getState().refreshAccessToken({ accountId: expired.id })).resolves.toBeNull();
 
       expect(accounts.getState().getAccountById(expired.id)?.awaitingSignIn).toBe(true);
-      release();
-      await vi.waitFor(() => expect(store.has(expired.id)).toBe(false));
-      expect(useOfflineStore.getState().enabled).toEqual([active.id]);
-      expect(await store.area(active.id, 'mail.session')).not.toBeNull();
+      // It waits like any evicted account's (lib/offline/device-wipe.ts).
+      expect(isEvicted(expired.id)).toBe(true);
+      await new Promise((resolve) => setTimeout(resolve, 50));
+      expect(store.has(expired.id)).toBe(true);
+      expect((await readQueue(expired.id)).outbox).toHaveLength(1);
       expect((await readQueue(active.id)).outbox).toHaveLength(1);
-      expect(await store.answer(active.id, [['Email/get', { ids: ['m1'] }, '0']])).toMatchObject({
-        methodResponses: [['Email/get', { list: [{ id: 'm1', subject: 'Private mail' }] }, '0']],
-      });
       expect(auth.getState()).toMatchObject({ isAuthenticated: true, activeAccountId: active.id, client });
     } finally {
-      release();
-      store.stop();
-      setStoreBackend(null);
-    }
-  }, 60_000);
-
-  it('waits for a previous account data wipe before authenticating its next password session', async () => {
-    const saved = entry('alice');
-    const other = { ...entry('bob', 1), awaitingSignIn: true };
-    seed([saved, other]);
-    const { InProcessStore } = await import('@/lib/store/__tests__/helpers/in-process-store');
-    const { setStoreBackend } = await import('@/lib/store/client/api');
-    const { writeEnabled } = await import('@/lib/offline/state');
-    const store = new InProcessStore();
-    await store.ensureOpen(saved.id);
-    await store.ensureOpen(other.id);
-    setStoreBackend(store);
-    // Even the last offline-enabled account must not purge other slots' stores.
-    writeEnabled([saved.id]);
-    let release!: () => void;
-    const deleting = new Promise<void>((resolve) => { release = resolve; });
-    let started!: () => void;
-    const wipeStarted = new Promise<void>((resolve) => { started = resolve; });
-    const remove = store.remove.bind(store);
-    store.remove = async (account) => {
-      started();
-      await deleting;
-      await remove(account);
-    };
-    try {
-      const restoring = auth.getState().checkAuth();
-      await wipeStarted;
-      const connect = vi.fn(async () => {});
-      session.connect = connect;
-      const signingIn = auth.getState().signInRestoredAccount(saved.id, 'password', true);
-      await Promise.resolve();
-      expect(connect).not.toHaveBeenCalled();
-      release();
-      await restoring;
-      await expect(signingIn).resolves.toBe(true);
-      expect(connect).toHaveBeenCalledOnce();
-      expect(store.has(saved.id)).toBe(false);
-      expect(store.has(other.id)).toBe(true);
-    } finally {
-      release();
       store.stop();
       setStoreBackend(null);
     }
@@ -200,8 +138,8 @@ describe('account entries outlive an unrestorable session', () => {
     });
     expect(auth.getState().isAuthenticated).toBe(false);
     expect(auth.getState().error).not.toBe('connection_failed');
-    expect(offline.isEvicted(saved.id)).toBe(false);
-    expect(offline.useOfflineStore.getState().enabled).not.toContain(saved.id);
+    // Its mail waits on the device, out of sight, like an evicted account's.
+    expect(offline.isEvicted(saved.id)).toBe(true);
     expect(offline.visibleAccounts()).not.toContain(saved.id);
     await vi.waitFor(() => expect(requests).toContainEqual({ url: '/api/auth/session?slot=2', method: 'DELETE' }));
     if (authMode === 'oauth') expect(requests).toContainEqual({ url: '/api/auth/token?slot=2', method: 'DELETE' });
@@ -345,6 +283,39 @@ describe('account entries outlive an unrestorable session', () => {
     expect(await signingIn).toBe(true);
     expect(requests).toContainEqual({ url: '/api/auth/session?slot=0', method: 'POST' });
     expect(requests).toContainEqual({ url: '/api/auth/stalwart-context', method: 'POST' });
+  });
+
+  it.each([
+    ['a 503', () => new Response('{}', { status: 503 })],
+    ['a 429', () => new Response('{}', { status: 429 })],
+    ['a network error', () => { throw new TypeError('Failed to fetch'); }],
+  ] as const)('keeps an OAuth account when switching to it meets %s', async (_name, answer) => {
+    const target = { ...entry('alice', 2), authMode: 'oauth' as const };
+    const active = entry('bob', 1);
+    seed([target, active]);
+    const { JMAPClient } = await import('@/lib/jmap/client');
+    const client = new JMAPClient(active.serverUrl, active.username, 'password');
+    auth.setState({ isAuthenticated: true, activeAccountId: active.id, client });
+    accounts.getState().setActiveAccount(active.id);
+    const originalFetch = vi.mocked(fetch).getMockImplementation()!;
+    vi.stubGlobal('fetch', vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      if (String(input).includes('/api/auth/token') && (init?.method ?? 'GET') !== 'DELETE') {
+        requests.push({ url: String(input), method: init?.method ?? 'GET' });
+        return answer();
+      }
+      return originalFetch(input, init);
+    }));
+    await auth.getState().switchAccount(target.id);
+    expect(accounts.getState().getAccountById(target.id)?.awaitingSignIn).toBeFalsy();
+    expect(requests.some((request) => request.method === 'DELETE' && request.url.includes('slot=2'))).toBe(false);
+    expect(auth.getState().activeAccountId).toBe(active.id);
+  });
+
+  it('removes an impersonated entry instead of keeping it for a sign-in', async () => {
+    const opened = { ...entry('alice'), impersonated: true };
+    seed([opened]);
+    await auth.getState().checkAuth();
+    expect(accounts.getState().getAccountById(opened.id)).toBeUndefined();
   });
 
   it('does not extend a pending account data retention when another session expires', async () => {

@@ -85,6 +85,19 @@ describe('the address handed over in login_hint', () => {
     expect(lookups).toEqual([]);
   });
 
+  it('signs in without a target when ?account= names no entry waiting for a sign-in', async () => {
+    query.value = 'mode=add-account&account=gone%40example.org%40mail.example.org';
+    const login = vi.fn(async () => false);
+    useAuthStore.setState({ login, isAuthenticated: false });
+    render(<LoginPage />);
+    fireEvent.change(email(), { target: { value: 'sam@example.org' } });
+    fireEvent.change(password(), { target: { value: 'right-password' } });
+    fireEvent.submit(password().closest('form')!);
+    await waitFor(() => expect(login).toHaveBeenCalled());
+    expect(login.mock.calls[0]).toHaveLength(5);
+    expect(login.mock.calls[0].slice(1, 3)).toEqual(['sam@example.org', 'right-password']);
+  });
+
   it('can forget a pending account before any account signs in', async () => {
     const saved = { ...entry('sam@example.org@mail.example.org', 'sam@example.org'), awaitingSignIn: true, isConnected: false };
     useAccountStore.setState({ accounts: [saved] } as never);

@@ -206,12 +206,12 @@ it('doesn\'t let a late local answer overwrite the server\'s From list', async (
   expect(useAuthStore.getState().identities.map((identity) => identity.email)).toEqual([ACCOUNT.username]);
 });
 
-it('leaves the login path to a refused account and never revives its local copy', async () => {
+it('leaves the login path to a refused account, and keeps its data', async () => {
   sessionAnswer = () => new Response('{}', { status: 401 });
   await useAuthStore.getState().checkAuth();
   await vi.waitFor(() => expect(useAccountStore.getState().getAccountById(ACCOUNT.id)).toMatchObject({ awaitingSignIn: true, isConnected: false }));
   await vi.waitFor(() => expect(useAuthStore.getState().isAuthenticated).toBe(false));
   expect(useAuthStore.getState().client).toBeNull();
-  expect(useOfflineStore.getState().enabled).toEqual([]);
-  expect(offline.order).toContain('wipe');
+  expect(useOfflineStore.getState().enabled).toEqual([ACCOUNT.id]);
+  expect(offline.order).not.toContain('wipe');
 });

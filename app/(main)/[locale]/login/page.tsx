@@ -333,7 +333,7 @@ function LoginPageContent() {
   // well-known, SRV, then the admin's default). The field for it only opens when
   // nothing was found or the user wants another one. Lite has no server to ask
   // and keeps the field open.
-  const customServerMode = !reauthenticateId && !hasServerList && allowCustomJmapEndpoint;
+  const customServerMode = !reauthenticateAccount && !hasServerList && allowCustomJmapEndpoint;
   const canLookUpServer = customServerMode && !IS_LITE;
   const [serverEditing, setServerEditing] = useState(false);
   // Change on a found server: another one is wanted, nothing failed.
@@ -855,7 +855,7 @@ function LoginPageContent() {
           sessionStorage.setItem("mobile_state", mobileState);
         } catch { /* sessionStorage unavailable */ }
       }
-      if (reauthenticateId) sessionStorage.setItem("oauth_reauthenticate_account", reauthenticateId);
+      if (reauthenticateAccount) sessionStorage.setItem("oauth_reauthenticate_account", reauthenticateAccount.id);
       else sessionStorage.removeItem("oauth_reauthenticate_account");
       const res = await apiFetch('/api/auth/sso/start', {
         method: 'POST',
@@ -903,7 +903,7 @@ function LoginPageContent() {
     } catch {
       setOauthLoading(false);
     }
-  }, [params.locale, selectedServer?.id, serverUrl, desktopPolicy, tDesktopPolicy, persistProviderSession, isMobileHandoff, isDesktopHandoff, searchParams, mobileRedirectUri, mobileState, mobileChallenge, reauthenticateId]);
+  }, [params.locale, selectedServer?.id, serverUrl, desktopPolicy, tDesktopPolicy, persistProviderSession, isMobileHandoff, isDesktopHandoff, searchParams, mobileRedirectUri, mobileState, mobileChallenge, reauthenticateAccount]);
 
   useEffect(() => {
     // After signing out, show the login page rather than signing straight
@@ -1097,7 +1097,7 @@ function LoginPageContent() {
     if (isAddAccountMode) {
       sessionStorage.setItem("oauth_add_account_mode", "true");
     }
-    if (reauthenticateId) sessionStorage.setItem("oauth_reauthenticate_account", reauthenticateId);
+    if (reauthenticateAccount) sessionStorage.setItem("oauth_reauthenticate_account", reauthenticateAccount.id);
     else sessionStorage.removeItem("oauth_reauthenticate_account");
     sessionStorage.setItem("oauth_cookie_slot", (reauthenticateAccount?.cookieSlot ?? useAccountStore.getState().getNextCookieSlot()).toString());
     saveLiteOAuthFlow({
@@ -1203,7 +1203,7 @@ function LoginPageContent() {
     // tokens. getNextCookieSlot() returns 0 when no accounts exist (correct for
     // first sign-in) and the lowest unused slot otherwise (correct for "+ Add
     // Account").
-    if (reauthenticateId) sessionStorage.setItem("oauth_reauthenticate_account", reauthenticateId);
+    if (reauthenticateAccount) sessionStorage.setItem("oauth_reauthenticate_account", reauthenticateAccount.id);
     else sessionStorage.removeItem("oauth_reauthenticate_account");
     const nextSlot = reauthenticateAccount?.cookieSlot ?? useAccountStore.getState().getNextCookieSlot();
     sessionStorage.setItem("oauth_cookie_slot", nextSlot.toString());
@@ -1245,7 +1245,7 @@ function LoginPageContent() {
 
   /** The server's or the instance's own sign-in page in the system browser. */
   const handleBrowserSignIn = async () => {
-    if (reauthenticateId) sessionStorage.setItem("oauth_reauthenticate_account", reauthenticateId);
+    if (reauthenticateAccount) sessionStorage.setItem("oauth_reauthenticate_account", reauthenticateAccount.id);
     else sessionStorage.removeItem("oauth_reauthenticate_account");
     setDesktopNotice(null);
     setDesktopPolicyNotice(null);
@@ -1281,7 +1281,7 @@ function LoginPageContent() {
         loginHint: loginHintFrom(typedAddress),
         redeem: (server, code, verifier, redirectUri) => useAuthStore.getState().loginWithOAuth(server, code, verifier, redirectUri),
         tryPassword: async ({ username, password, totp }) => {
-          if (await useAuthStore.getState().login(target, username, password, totp, persistSession, ...(reauthenticateId ? [reauthenticateId] as const : []))) {
+          if (await useAuthStore.getState().login(target, username, password, totp, persistSession, ...(reauthenticateAccount ? [reauthenticateAccount.id] as const : []))) {
             if (!rememberMeEnabled || persistSession) saveUsername(username);
             return { ok: true };
           }
@@ -1419,7 +1419,7 @@ function LoginPageContent() {
       if (sessionStorage.getItem('redirect_after_login')) endSignInHold();
     } catch { /* sessionStorage unavailable */ }
     if (signInWithToken) {
-      if (await loginWithToken(effectiveServerUrl, accessToken, persistSession, ...(reauthenticateId ? [reauthenticateId] as const : []))) {
+      if (await loginWithToken(effectiveServerUrl, accessToken, persistSession, ...(reauthenticateAccount ? [reauthenticateAccount.id] as const : []))) {
         router.push('/');
       } else if (IS_DESKTOP_BUILD) {
         forgetDesktopServer(effectiveServerUrl, 'failed');
@@ -1456,7 +1456,7 @@ function LoginPageContent() {
       // (a SESSION_SECRET is configured). Prevents a broken cookie write
       // when the remember-me feature is disabled server-side.
       persistSession,
-      ...(reauthenticateId ? [reauthenticateId] as const : [])
+      ...(reauthenticateAccount ? [reauthenticateAccount.id] as const : [])
     );
 
     if (success) {
@@ -1648,7 +1648,7 @@ function LoginPageContent() {
     </p>
   );
 
-  const serverPicker = !reauthenticateId && hasServerList && jmapServers.length > 1 ? (
+  const serverPicker = !reauthenticateAccount && hasServerList && jmapServers.length > 1 ? (
     <div className="space-y-1.5">
       <label htmlFor="jmap-server-select" className="block text-sm font-medium text-foreground">
         {t("jmap_server_label")}

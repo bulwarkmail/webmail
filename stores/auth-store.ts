@@ -405,11 +405,10 @@ function renewalSignal(outer: AbortSignal): { signal: AbortSignal; done: () => v
 const TIMED_OUT = Symbol('timed out');
 // A sign-out may stop waiting, but a new sign-in must wait for its actual DELETEs.
 const credentialCleanups = new Map<number, Promise<string | null>>();
-const accountDataCleanups = new Map<number, Promise<void>>();
 
 async function waitForCredentialCleanup(slot: number): Promise<void> {
-  while (credentialCleanups.has(slot) || accountDataCleanups.has(slot)) {
-    await Promise.all([credentialCleanups.get(slot), accountDataCleanups.get(slot)]);
+  while (credentialCleanups.has(slot)) {
+    await credentialCleanups.get(slot);
   }
 }
 
@@ -1730,24 +1729,11 @@ async function startLocalCopyClient(accountId: string, serverUrl: string, userna
 // While device-only clients get replaced, restoring goes straight to the server.
 let skipLocalCopy = false;
 
-function wipeExpiredAccountData(accountId: string, slot: number): Promise<void> {
-  const pending = accountDataCleanups.get(slot);
-  if (pending) return pending;
-  if (IS_LITE || !useOfflineStore.getState().enabled.includes(accountId)) return Promise.resolve();
-  // Expiry must not purge the shared store while another slot signs in.
-  const cleanup = import('@/lib/offline/offline-mode').then((offline) => offline.wipeAccount(accountId, { accountOnly: true }));
-  accountDataCleanups.set(slot, cleanup);
-  void cleanup.then(() => {
-    if (accountDataCleanups.get(slot) === cleanup) accountDataCleanups.delete(slot);
-  }, (error) => {
-    // Keep the failed barrier: a new session must not race an incomplete wipe.
-    debug.error('Failed to wipe expired account data:', error);
-  });
-  return cleanup;
-}
-
-/** Clear a failed session and its local data, retaining only its sign-in target. */
-async function requireAccountSignIn(accountId: string, options: { keepLocalData?: boolean } = {}): Promise<void> {
+/**
+ * Clear a failed session, retaining only its sign-in target. Its local data
+ * waits like any evicted account's (lib/offline/device-wipe.ts).
+ */
+async function requireAccountSignIn(accountId: string): Promise<void> {
   const accountStore = useAccountStore.getState();
   const account = accountStore.getAccountById(accountId);
   if (!account) return;
@@ -1763,7 +1749,6 @@ async function requireAccountSignIn(accountId: string, options: { keepLocalData?
   clearPluginStorageForAccount(accountId);
   closingSlots.add(account.cookieSlot);
   void clearSlotCredentials(account.cookieSlot, account.authMode === 'oauth');
-  if (!options.keepLocalData) await wipeExpiredAccountData(accountId, account.cookieSlot);
 }
 
 function performFullLogout(set: (state: Partial<AuthState>) => void, options: SignOutCleanupOptions & { activeAccountId?: string | null } = {}): void {
@@ -2832,7 +2817,6 @@ export const useAuthStore = create<AuthState>()(
                   void requireAccountSignIn(accountId).catch((error) => debug.error('Account cleanup failed:', error));
                   return null;
                 }
-                if (accountId) void wipeExpiredAccountData(accountId, slot);
                 notifyParent('sso:session-expired');
                 markSessionExpired();
                 get().logout({ endProviderSession: false, keepLocalData: true });
@@ -2847,7 +2831,7 @@ export const useAuthStore = create<AuthState>()(
                 notifyParent('sso:session-expired');
                 markSessionExpired();
                 // removeAccount() on the active account would sign out as if the user asked to.
-                if (accountId && accountId !== get().activeAccountId) void requireAccountSignIn(accountId, { keepLocalData: true });
+                if (accountId && accountId !== get().activeAccountId) void requireAccountSignIn(accountId);
                 else {
                   await saveDraftsBeforeExpiry(slot);
                   // An outage on our side says nothing against the mail on this device.
@@ -3195,6 +3179,8 @@ export const useAuthStore = create<AuthState>()(
         let targetClient = clients.get(accountId);
         const wasConnected = !!targetClient;
         let targetRestoreRateLimited = false;
+        // An outage (5xx, 429, no network) says nothing against the sign-in.
+        let targetRestoreTransient = false;
         let targetForced: ForcedSignOutKind | null = null;
 
         if (!targetClient) {
@@ -3213,6 +3199,7 @@ export const useAuthStore = create<AuthState>()(
             if (targetAccount.authMode === 'oauth') {
               const res = await fetchSlotAccessToken(targetAccount.cookieSlot, { remember: targetAccount.rememberMe });
               if (!res.ok && res.status === 401) targetForced = await forcedSignOutOf(res);
+              if (res.status >= 500 || res.status === 429) throw new TransientAuthError('Token refresh failed', res.status);
               if (res.ok) {
                 const { access_token, expires_in } = await res.json();
                 targetClient = JMAPClient.withBearer(targetAccount.serverUrl, access_token, targetAccount.username, () => get().refreshAccessToken({ accountId }), expires_in);
@@ -3230,6 +3217,7 @@ export const useAuthStore = create<AuthState>()(
             } else if (targetAccount.rememberMe || await keepsUntickedSignIn()) {
               const res = await fetchSlotSession(targetAccount.cookieSlot);
               if (!res.ok && res.status === 401) targetForced = await forcedSignOutOf(res);
+              if (res.status >= 500 || res.status === 429) throw new TransientAuthError('Session restore failed', res.status);
               if (res.ok) {
                 const session: RememberedSession = await res.json();
                 targetClient = clientForSession(session);
@@ -3243,6 +3231,8 @@ export const useAuthStore = create<AuthState>()(
             debug.error(`Failed to restore client for ${accountId}:`, err);
             if (isRateLimitError(err)) {
               targetRestoreRateLimited = true;
+            } else if (isTransientAuthError(err)) {
+              targetRestoreTransient = true;
             }
           }
         }
@@ -3252,7 +3242,7 @@ export const useAuthStore = create<AuthState>()(
         if (superseded()) return;
 
         if (!targetClient) {
-          if (targetRestoreRateLimited) {
+          if (targetRestoreRateLimited || targetRestoreTransient) {
             if (state.activeAccountId && state.activeAccountId !== accountId) {
               const prevClient = clients.get(state.activeAccountId);
               const prevAccount = accountStore.getAccountById(state.activeAccountId);
