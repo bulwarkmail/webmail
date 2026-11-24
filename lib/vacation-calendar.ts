@@ -33,7 +33,7 @@ import type { Calendar, CalendarEvent } from '@/lib/jmap/types';
 import { fromWallClock, getEffectiveTimeZone, getWallClock, parseLocalDateTime } from '@/lib/timezone';
 import { parseDurationSeconds } from '@/lib/calendar-event-normalization';
 import { parseScript } from '@/lib/sieve/parser';
-import { VACATION_SCRIPT_NAME } from '@/lib/sieve/generator';
+import { isServerVacationScript } from '@/lib/sieve/generator';
 import { supportsInclude } from '@/lib/filters/account-filters';
 import { useSettingsStore } from '@/stores/settings-store';
 import { usePolicyStore } from '@/stores/policy-store';
@@ -421,7 +421,7 @@ export async function ownFilterScriptStops(
 ): Promise<boolean> {
   const account = accountId || client.getSieveAccountId();
   const scripts = await client.getSieveScripts(account);
-  const active = scripts.find((s) => s.isActive && s.name !== VACATION_SCRIPT_NAME);
+  const active = scripts.find((s) => s.isActive && !isServerVacationScript(s.name));
   if (!active) return false;
   if (!supportsInclude(client.getSieveCapabilities(account))) return true;
   const parsed = parseScript(await client.getSieveScriptContent(active.blobId, account));

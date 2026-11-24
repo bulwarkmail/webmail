@@ -310,11 +310,16 @@ export interface GenerateOptions {
    */
   externalRequires?: string[];
   /**
-   * Run the server-managed "vacation" script (VacationResponse) from this
-   * one. Only one script can be active, so this keeps the auto-reply working
-   * while the filters stay active.
+   * Run the server's vacation script (VacationResponse) from this one. Only
+   * one script can be active, so this keeps the auto-reply working while the
+   * filters stay active.
    */
   includeVacation?: boolean;
+  /**
+   * The server's vacation script for `includeVacation`: "vacation" unless
+   * the server keeps Stalwart 1.2's "managed" (see findServerVacationScript).
+   */
+  vacationScriptName?: string;
   /**
    * Forwarding from the vacation card. Always kept in the metadata; it runs
    * while it is switched on, with or without the auto-reply.
@@ -334,6 +339,34 @@ export interface GenerateOptions {
 
 /** Name of the script a server builds for VacationResponse (RFC 9661). */
 export const VACATION_SCRIPT_NAME = 'vacation';
+
+/**
+ * Stalwart 1.2 and later keep the auto-reply, together with the server's own
+ * mail rules, in one read-only script of this name, compared without case.
+ * Like the "vacation" script before, VacationResponse/set activates it, which
+ * switches the filters off, unless the active script includes it; then it
+ * only changes the auto-reply.
+ */
+export const MANAGED_SCRIPT_NAME = 'managed';
+
+/** Stalwart 1.2's "managed" script, compared without case as Stalwart does. */
+export function isManagedScriptName(name: string): boolean {
+  return name.toLowerCase() === MANAGED_SCRIPT_NAME;
+}
+
+/** A script the server writes for VacationResponse; nothing else may change it. */
+export function isServerVacationScript(name: string): boolean {
+  return name === VACATION_SCRIPT_NAME || isManagedScriptName(name);
+}
+
+/**
+ * The script the server runs the auto-reply from: "managed" where the server
+ * keeps one, else "vacation". Next to "managed", a "vacation" script is one
+ * from before Stalwart 1.2, which the server no longer writes.
+ */
+export function findServerVacationScript<T extends { name: string }>(scripts: readonly T[]): T | undefined {
+  return scripts.find(s => isManagedScriptName(s.name)) ?? scripts.find(s => s.name === VACATION_SCRIPT_NAME);
+}
 
 export function generateScript(
   rules: FilterRule[],
@@ -426,7 +459,9 @@ export function generateScript(
     // the parser does not re-import it as an external rule.
     lines.push('');
     lines.push('# Vacation auto-reply');
-    const include = `include :personal :optional "${VACATION_SCRIPT_NAME}";`;
+    // Stalwart 1.2 counts "managed" as included only through a literal name
+    // without :global, as written here.
+    const include = `include :personal :optional "${escapeString(options.vacationScriptName ?? VACATION_SCRIPT_NAME)}";`;
     const audience = metadata.vacationAudience;
     if (audience) {
       // Only senders from (or not from) the account's own domains. The reply

@@ -1,6 +1,8 @@
 import { create } from 'zustand';
 import type { IJMAPClient } from '@/lib/jmap/client-interface';
 import type { VacationAudience, VacationForward } from '@/lib/jmap/sieve-types';
+import type { VacationResponse } from '@/lib/jmap/types';
+import { parseStalwartVacationScript, type StalwartVacationReply } from '@/lib/sieve/stalwart-vacation';
 import { readVacationFilters, syncVacationWithFilters, type VacationFilters } from '@/stores/filter-store';
 import { withVacationPeriod } from '@/lib/sieve/vacation-forward';
 import { currentStoreEpoch } from '@/lib/store-epoch';
@@ -48,6 +50,13 @@ interface VacationStore {
   forwardUnknown: boolean;
   /** The most forwards the filter rules let one message collect (see readVacationFilters). */
   otherForwards: number;
+  /**
+   * Set while the reply shown is one that only Stalwart's old "vacation"
+   * script holds (see fetchVacationResponse), with the account it was read
+   * for. The next save for that account sends it along, so that the server
+   * answers with what the card shows.
+   */
+  replyOnlyInScript: { accountId: string | undefined } | null;
   isLoading: boolean;
   isSaving: boolean;
   error: string | null;
@@ -73,6 +82,26 @@ interface VacationStore {
   }, accountId?: string) => Promise<boolean>;
   setSupported: (supported: boolean) => void;
   clearState: () => void;
+}
+
+/** Whether the server holds a reply at all: a text, a subject or a period. */
+function hasReply(vacation: VacationResponse): boolean {
+  return !!(vacation.subject || vacation.textBody || vacation.htmlBody || vacation.fromDate || vacation.toDate);
+}
+
+/** The reply in Stalwart's old "vacation" script (see parseStalwartVacationScript), or null. */
+async function readStalwartVacation(
+  client: IJMAPClient,
+  blobId: string,
+  accountId?: string,
+): Promise<StalwartVacationReply | null> {
+  try {
+    return await parseStalwartVacationScript(
+      await client.getSieveScriptContent(blobId, accountId || client.getSieveAccountId()),
+    );
+  } catch {
+    return null;
+  }
 }
 
 /** The card's part of what the filters script holds. */
@@ -115,6 +144,7 @@ export const useVacationStore = create<VacationStore>()((set, get) => ({
   notRunning: false,
   forwardUnknown: false,
   otherForwards: 0,
+  replyOnlyInScript: null,
   isLoading: false,
   isSaving: false,
   error: null,
@@ -127,26 +157,44 @@ export const useVacationStore = create<VacationStore>()((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       const vacation = await client.getVacationResponse(accountId);
+      let reply: StalwartVacationReply = vacation;
+      let replyOnlyInScript: VacationStore['replyOnlyInScript'] = null;
       let isEnabled = vacation.isEnabled;
       let filters: VacationFilters | null = null;
       const sieve = hasSieve(client, accountId);
       if (sieve) {
         filters = await readVacationFilters(client, accountId).catch(() => null);
-        // Running from the filters script leaves the vacation script itself
-        // inactive, so VacationResponse reports it as off.
-        if (filters) isEnabled = isEnabled || filters.includesVacation;
+        if (filters) {
+          // Running from the filters script leaves the vacation script itself
+          // inactive, so VacationResponse reports it as off. Stalwart 1.2 does
+          // the same for a "vacation" script from before its update, which
+          // still answers while it is the active one.
+          isEnabled = isEnabled || filters.includesVacation || !!filters.stalwartVacation?.isActive;
+          // From 1.2 Stalwart keeps the reply in "managed" and starts it
+          // empty; one set before the update is only in the old script. The
+          // card shows it, and the next save moves it to "managed". Not while
+          // the server answers from "managed": that reply is the one in use,
+          // empty or not.
+          if (filters.stalwartVacation && !vacation.isEnabled && !hasReply(vacation)) {
+            const old = await readStalwartVacation(client, filters.stalwartVacation.blobId, accountId);
+            if (old) {
+              reply = old;
+              replyOnlyInScript = { accountId };
+            }
+          }
+        }
       }
       if (stale()) return;
       if (vacationHooks.onVacationLoaded.size > 0) {
-        void vacationHooks.onVacationLoaded.emit(vacationToView({ ...vacation, isEnabled }));
+        void vacationHooks.onVacationLoaded.emit(vacationToView({ ...vacation, ...reply, isEnabled }));
       }
       set({
         isEnabled,
-        fromDate: vacation.fromDate,
-        toDate: vacation.toDate,
-        subject: vacation.subject || '',
-        textBody: vacation.textBody || '',
-        htmlBody: vacation.htmlBody,
+        fromDate: reply.fromDate,
+        toDate: reply.toDate,
+        subject: reply.subject || '',
+        textBody: reply.textBody || '',
+        htmlBody: reply.htmlBody,
         forward: null,
         forwardAvailable: false,
         audience: null,
@@ -155,11 +203,12 @@ export const useVacationStore = create<VacationStore>()((set, get) => ({
         otherForwards: 0,
         forwardUnknown: sieve && !filters,
         ...(filters ? fromFilters(filters) : {}),
+        replyOnlyInScript,
         isLoading: false,
       });
       // Out-of-office blocks the calendar (lib/vacation-calendar.ts): the
       // reply may have been set in another client.
-      vacationReplyLoaded(client, accountId, { isEnabled, fromDate: vacation.fromDate, toDate: vacation.toDate, subject: vacation.subject || '' });
+      vacationReplyLoaded(client, accountId, { isEnabled, fromDate: reply.fromDate, toDate: reply.toDate, subject: reply.subject || '' });
     } catch (error) {
       if (stale()) return;
       set({
@@ -175,8 +224,23 @@ export const useVacationStore = create<VacationStore>()((set, get) => ({
     const generation = loadGeneration;
     const epoch = currentStoreEpoch();
     const superseded = () => generation !== loadGeneration || currentStoreEpoch() !== epoch;
-    const { forward: forwardSettings, audience, ...vacationUpdates } = updates;
+    const { forward: forwardSettings, audience, ...given } = updates;
     const before = get();
+    // A reply that only Stalwart's old script holds goes along, with its
+    // switch: a save that only turns the reply on (a plugin) or off (the
+    // sidebar) would otherwise leave "managed" without it, and the server
+    // would answer with its default text while the card shows the old one.
+    const carried = before.replyOnlyInScript && before.replyOnlyInScript.accountId === accountId
+      ? {
+        isEnabled: before.isEnabled,
+        fromDate: before.fromDate,
+        toDate: before.toDate,
+        subject: before.subject,
+        textBody: before.textBody,
+        htmlBody: before.htmlBody,
+      }
+      : {};
+    const vacationUpdates = { ...carried, ...given };
     const next = vacationToView({
       id: 'singleton',
       isEnabled: before.isEnabled,
@@ -241,7 +305,7 @@ export const useVacationStore = create<VacationStore>()((set, get) => ({
 
     set((current) => (superseded()
       ? { ...current, isSaving: false }
-      : { ...current, ...vacationUpdates, ...filtersState, isSaving: false }));
+      : { ...current, ...vacationUpdates, ...filtersState, replyOnlyInScript: null, isSaving: false }));
     // The reply itself is saved even when its filters part failed.
     void vacationHooks.onVacationUpdate.emit(next);
     vacationReplySaved(client, accountId, before, { isEnabled: next.isEnabled, fromDate: next.fromDate, toDate: next.toDate, subject: next.subject });
@@ -267,6 +331,7 @@ export const useVacationStore = create<VacationStore>()((set, get) => ({
       notRunning: false,
       forwardUnknown: false,
       otherForwards: 0,
+      replyOnlyInScript: null,
       isLoading: false,
       isSaving: false,
       error: null,

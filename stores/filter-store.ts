@@ -2,10 +2,13 @@ import { create } from 'zustand';
 import type { IJMAPClient } from '@/lib/jmap/client-interface';
 import type { FilterRule, SieveCapabilities, VacationAudience, VacationForward, VacationSieveConfig } from '@/lib/jmap/sieve-types';
 import { parseScript } from '@/lib/sieve/parser';
-import { generateScript, supportsSpamGuard, VACATION_SCRIPT_NAME } from '@/lib/sieve/generator';
+import {
+  findServerVacationScript, generateScript, isManagedScriptName, isServerVacationScript, supportsSpamGuard,
+  VACATION_SCRIPT_NAME,
+} from '@/lib/sieve/generator';
 import {
   OpaqueFiltersError, applyScriptTransforms, assertFiltersSaveAllowed, filterRuleToView, readAccountFilters, renderFiltersScript,
-  supportsInclude, writeFiltersScript,
+  supportsInclude, vacationScriptToInclude, writeFiltersScript,
 } from '@/lib/filters/account-filters';
 import { countKeywordUses, renameKeywordInRules } from '@/lib/sieve/keyword-rename';
 import { filterHooks } from '@/lib/plugin-hooks';
@@ -62,6 +65,8 @@ interface FilterStore {
   vacationSettings: VacationSieveConfig | null;
   externalRequires: string[];
   includeVacation: boolean;
+  /** The vacation script `includeVacation` names (see vacationScriptToInclude). */
+  vacationScriptName: string;
   /** Forwarding from the vacation card; carried through every save. */
   vacationForward: VacationForward | null;
   /** Who gets the auto-reply, when not everyone; carried through every save. */
@@ -130,6 +135,7 @@ export const useFilterStore = create<FilterStore>()((set, get) => ({
   vacationSettings: null,
   externalRequires: [],
   includeVacation: false,
+  vacationScriptName: VACATION_SCRIPT_NAME,
   vacationForward: null,
   vacationAudience: null,
   availableAccounts: [],
@@ -154,15 +160,14 @@ export const useFilterStore = create<FilterStore>()((set, get) => ({
       if (stale()) return;
       debug.log('filters', 'Sieve scripts fetched:', allScripts.length);
 
-      // Skip the server-managed 'vacation' script (RFC 9661 §4) - it can only
-      // be modified via VacationResponse/set, not SieveScript/set.
-      const scripts = allScripts.filter(s => s.name !== VACATION_SCRIPT_NAME);
+      // Skip the server's vacation script ("vacation", on Stalwart 1.2
+      // "managed", RFC 9661 §4): only VacationResponse/set may change it.
+      const scripts = allScripts.filter(s => !isServerVacationScript(s.name));
 
       // Saving activates the filters script, which switches off an active
       // server vacation script. Include it instead so both keep working.
       const vacationActive =
-        allScripts.some(s => s.name === VACATION_SCRIPT_NAME && s.isActive) &&
-        supportsInclude(capabilities);
+        allScripts.some(s => s.isActive && isServerVacationScript(s.name)) && supportsInclude(capabilities);
 
       const activeScript = scripts.find(s => s.isActive) || scripts[0];
       if (!activeScript) {
@@ -174,6 +179,7 @@ export const useFilterStore = create<FilterStore>()((set, get) => ({
           rawScript: '',
           isOpaque: false,
           includeVacation: vacationActive,
+          vacationScriptName: vacationScriptToInclude(allScripts),
           vacationForward: null,
           vacationAudience: null,
         });
@@ -190,7 +196,7 @@ export const useFilterStore = create<FilterStore>()((set, get) => ({
       if (result.isOpaque) debug.log('filters', 'Sieve script is opaque (hand-edited)');
       else debug.log('filters', 'Parsed', result.rules.length, 'filter rules');
       emitFiltersLoaded(result.isOpaque ? [] : result.rules);
-      set({ isLoading: false, ...stateFromScript(result, vacationActive) });
+      set({ isLoading: false, vacationScriptName: vacationScriptToInclude(allScripts, result), ...stateFromScript(result, vacationActive) });
     } catch (error) {
       if (stale()) return;
       debug.error('Failed to fetch filters:', error);
@@ -213,6 +219,7 @@ export const useFilterStore = create<FilterStore>()((set, get) => ({
       vacationSettings: null,
       externalRequires: [],
       includeVacation: false,
+      vacationScriptName: VACATION_SCRIPT_NAME,
       vacationForward: null,
       vacationAudience: null,
     });
@@ -224,7 +231,7 @@ export const useFilterStore = create<FilterStore>()((set, get) => ({
     try {
       const {
         isOpaque, rawScript, rules, activeScriptId, vacationSettings, externalRequires, includeVacation,
-        vacationForward, vacationAudience, selectedAccountId, sieveCapabilities,
+        vacationScriptName, vacationForward, vacationAudience, selectedAccountId, sieveCapabilities,
       } = get();
       // Throws FiltersSaveVetoedError (handled below like any failed save,
       // so the settings UI puts its optimistic change back).
@@ -237,6 +244,7 @@ export const useFilterStore = create<FilterStore>()((set, get) => ({
         content = generateScript(rules, vacationSettings || undefined, {
           externalRequires,
           includeVacation,
+          vacationScriptName,
           vacationForward,
           vacationAudience,
           extensions: sieveCapabilities?.sieveExtensions,
@@ -411,6 +419,7 @@ export const useFilterStore = create<FilterStore>()((set, get) => ({
       vacationSettings: null,
       externalRequires: [],
       includeVacation: false,
+      vacationScriptName: VACATION_SCRIPT_NAME,
       vacationForward: null,
       vacationAudience: null,
       availableAccounts: [],
@@ -421,22 +430,33 @@ export const useFilterStore = create<FilterStore>()((set, get) => ({
 
 async function loadManagedScript(client: IJMAPClient, accountId: string) {
   const scripts = await client.getSieveScripts(accountId);
-  const vacationScript = scripts.find(s => s.name === VACATION_SCRIPT_NAME);
-  const filters = scripts.filter(s => s.name !== VACATION_SCRIPT_NAME);
+  const vacationScript = findServerVacationScript(scripts);
+  const filters = scripts.filter(s => !isServerVacationScript(s.name));
   const target = filters.find(s => s.isActive) || filters[0];
-  if (!target) return { vacationScript, target: undefined, parsed: undefined };
+  if (!target) return { scripts, vacationScript, target: undefined, parsed: undefined };
   const parsed = parseScript(await client.getSieveScriptContent(target.blobId, accountId));
-  return { vacationScript, target, parsed: parsed.isOpaque ? undefined : parsed };
+  return { scripts, vacationScript, target, parsed: parsed.isOpaque ? undefined : parsed };
 }
 
 /** What the vacation card needs from the account's filters script. */
 export interface VacationFilters {
   /**
-   * The filters script runs the server's vacation script. VacationResponse
-   * .isEnabled reads false in that case, because the vacation script itself
-   * is not the active one.
+   * The active filters script runs Stalwart's "vacation" script, which
+   * VacationResponse.isEnabled reads as off: up to Stalwart 1.1 because the
+   * vacation script itself is not the active one, from 1.2 because the
+   * server no longer writes it (one from before the update, which still
+   * answers). An included "managed" needs no help: 1.2 reads that one right,
+   * and the include of it says nothing about the auto-reply (it stays while
+   * the auto-reply is off, see syncVacationWithFilters).
    */
   includesVacation: boolean;
+  /**
+   * Stalwart's "vacation" script, if there is one. Up to 1.1 VacationResponse
+   * writes it; from 1.2 it is left over from before the update and still
+   * answers while it is the active script, though VacationResponse reads as
+   * off. It holds the reply set before the update.
+   */
+  stalwartVacation: { blobId: string; isActive: boolean } | null;
   /** The forwarding as stored, on or off; null when none is set up. */
   forward: VacationForward | null;
   /**
@@ -493,12 +513,15 @@ function canForward(capabilities: SieveCapabilities | null | undefined): boolean
 export async function readVacationFilters(client: IJMAPClient, accountId?: string): Promise<VacationFilters> {
   const sieveAccountId = accountId || client.getSieveAccountId();
   const capabilities = client.getSieveCapabilities(sieveAccountId);
-  const { vacationScript, target, parsed } = await loadManagedScript(client, sieveAccountId);
+  const { scripts, vacationScript, target, parsed } = await loadManagedScript(client, sieveAccountId);
   const filtersUsable = supportsInclude(capabilities) && !(target && !parsed);
   const forward = parsed?.vacationForward ?? null;
   const audience = parsed?.vacationAudience ?? null;
+  const included = target?.isActive && parsed?.includeVacation ? parsed.vacationScriptName ?? VACATION_SCRIPT_NAME : null;
+  const stalwartVacation = scripts.find(s => s.name === VACATION_SCRIPT_NAME);
   return {
-    includesVacation: !!(vacationScript && target?.isActive && parsed?.includeVacation),
+    includesVacation: !!included && !isManagedScriptName(included) && scripts.some(s => s.name === included),
+    stalwartVacation: stalwartVacation ? { blobId: stalwartVacation.blobId, isActive: stalwartVacation.isActive } : null,
     forward,
     forwardAvailable: filtersUsable && (canForward(capabilities) || !!forward?.enabled),
     audience,
@@ -532,9 +555,13 @@ function sameForward(a: VacationForward | null, b: VacationForward | null): bool
  * VacationResponse/set.
  *
  * Stalwart allows one active Sieve script and turns the auto-reply on by
- * activating its own "vacation" script, which switches every filter off.
- * When that happened, re-activate the filters script with an `include` of
- * the vacation script. When the auto-reply is turned off, drop the include.
+ * activating its own vacation script ("vacation"; from 1.2 "managed"), which
+ * switches every filter off. When that happened, re-activate the filters
+ * script with an `include` of the vacation script; Stalwart 1.2 then leaves
+ * the activation alone. When the auto-reply is turned off, drop the include
+ * of "vacation". One of "managed" stays: that script also runs the server's
+ * own mail rules and sender lists, and answers nobody while the auto-reply
+ * is off.
  *
  * `forward` replaces the stored forwarding (null removes it, undefined keeps
  * it). Forwarding runs with or without the auto-reply, but only from an
@@ -556,7 +583,7 @@ export async function syncVacationWithFilters(
   const canInclude = supportsInclude(capabilities);
   if (enabled && !canInclude && forward === undefined && audience === undefined) return;
 
-  const { vacationScript, target, parsed } = await loadManagedScript(client, sieveAccountId);
+  const { scripts, vacationScript, target, parsed } = await loadManagedScript(client, sieveAccountId);
   const opaque = !!target && !parsed;
   const storedForward = parsed?.vacationForward ?? null;
   const storedAudience = parsed?.vacationAudience ?? null;
@@ -580,6 +607,12 @@ export async function syncVacationWithFilters(
 
   const rules = parsed?.rules ?? [];
   const forwarding = !!nextForward?.enabled;
+  const managed = vacationScript && isManagedScriptName(vacationScript.name) ? vacationScript : undefined;
+  // Whether the script written below includes the server's vacation script.
+  let include = enabled;
+  // "managed" is the active script although the auto-reply is off, over
+  // filters that have something to run.
+  let managedTookOver = false;
   if (enabled) {
     // Act when the vacation script took over from filters that must keep
     // running, or when something changed. An auto-reply for some senders
@@ -588,29 +621,52 @@ export async function syncVacationWithFilters(
     const needsFilters = rules.length > 0 || forwarding || !!nextAudience;
     if (!changed && !(tookOver && needsFilters)) return;
   } else {
+    // A "vacation" script left over from before Stalwart 1.2 answers while
+    // it is the active one: the server switches only its own "managed" off.
+    // The filters take its place where they have something to run.
+    const staleVacation = managed ? scripts.find(s => s.name === VACATION_SCRIPT_NAME && s.isActive) : undefined;
+    if (staleVacation) {
+      if (target && (rules.length > 0 || forwarding)) {
+        await client.activateSieveScript(target.id, sieveAccountId);
+        target.isActive = true;
+      } else {
+        await client.deactivateSieveScript(sieveAccountId);
+      }
+    }
+    // "managed" also runs the server's own mail rules and sender lists, and
+    // answers nobody while the auto-reply is off. So an include of it stays.
+    // Where it is still the active script, something in it runs (the server
+    // switches it off itself otherwise): the filters take over with one.
+    managedTookOver = canInclude && !!managed?.isActive && !target?.isActive && (rules.length > 0 || forwarding);
+    include = managedTookOver || (
+      canInclude && !!managed && !!parsed?.includeVacation &&
+      isManagedScriptName(parsed.vacationScriptName ?? VACATION_SCRIPT_NAME)
+    );
     // Forwarding also runs without the auto-reply, from an active filters
     // script; turning the auto-reply off can leave no script active.
     const forwardingIdle = forwarding && !target?.isActive;
-    if (!changed && !parsed?.includeVacation && !forwardingIdle) return;
+    const dropsInclude = !!parsed?.includeVacation && !include;
+    if (!changed && !dropsInclude && !managedTookOver && !forwardingIdle) return;
   }
 
   const content = await applyScriptTransforms(
     generateScript(rules, parsed?.vacation, {
       externalRequires: parsed?.externalRequires,
-      includeVacation: enabled,
+      includeVacation: include,
+      vacationScriptName: vacationScript?.name ?? VACATION_SCRIPT_NAME,
       vacationForward: nextForward,
       vacationAudience: nextAudience,
       extensions: capabilities?.sieveExtensions,
     }),
     sieveAccountId,
   );
-  const activate = enabled || forwarding || !!target?.isActive;
+  const activate = enabled || forwarding || managedTookOver || !!target?.isActive;
   if (target) {
     await client.updateSieveScript(target.id, content, activate, sieveAccountId);
   } else {
     await client.createSieveScript('filters', content, activate, sieveAccountId);
   }
-  debug.log('filters', enabled ? 'Filters now include the vacation script' : 'Removed the vacation include');
+  debug.log('filters', include ? 'Filters include the vacation script' : 'Filters written without a vacation include');
 
   const store = useFilterStore.getState();
   if (store.selectedAccountId === sieveAccountId) {
