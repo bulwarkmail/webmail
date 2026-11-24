@@ -76,6 +76,7 @@ vi.mock("@/stores/settings-store", () => ({
   ),
   // calendar-store (pulled in via email-store) registers its sync bridge at load.
   registerCalendarSubscriptionSyncBridge: () => {},
+  onSettingsLoadSettled: () => () => {},
 }));
 
 vi.mock("@/stores/policy-store", () => ({
