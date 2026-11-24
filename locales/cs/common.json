@@ -8006,10 +8006,14 @@
     },
     "signatures": {
       "title": "Podpisy",
-      "description": "Přidá se na konec zpráv, které píšete. Každá adresa má svůj vlastní.",
+      "description": "Přidá se na konec zpráv, které píšete. Každá adresa má svůj vlastní, nebo používá podpis jiné adresy.",
       "saved": "Podpis uložen.",
       "error": "Podpis se nepodařilo uložit. Zkuste to znovu.",
-      "no_addresses": "Zatím nemáte adresu, ze které lze odesílat."
+      "no_addresses": "Zatím nemáte adresu, ze které lze odesílat.",
+      "use_label": "Podpis",
+      "own": "Vlastní podpis",
+      "same_as": "Stejný jako {address}",
+      "shared_note": "Používá podpis adresy {address}. Upravte ho tam."
     },
     "search": {
       "addresses": "identita identity alias aliasy odesílatel adresa odesílatele adresa od identity alias sender",

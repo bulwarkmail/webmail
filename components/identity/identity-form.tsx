@@ -10,6 +10,7 @@ import { getEmailValidationError, validateEmailList } from '@/lib/validation';
 import { getPlainTextSignature } from '@/lib/signature-utils';
 import { useOrgSignatureSetup } from '@/hooks/use-org-signature';
 import { OrgLockedNote } from '@/components/settings/org-locked-note';
+import { toUnicodeEmail } from '@/lib/idn';
 import { useSettingsStore } from '@/stores/settings-store';
 import { SignatureEditor, SIGNATURE_MAX_BYTES, signatureBytes } from './signature-editor';
 
@@ -28,9 +29,14 @@ interface IdentityFormProps {
   onCancel: () => void;
   /** Told whenever the form starts or stops holding unsaved input. */
   onDirtyChange?: (dirty: boolean) => void;
+  /**
+   * The address whose signature this one uses (#1190): shown read-only,
+   * since it is edited there and copied here.
+   */
+  signatureFrom?: Identity | null;
 }
 
-export function IdentityForm({ identity, onSave, onCancel, onDirtyChange }: IdentityFormProps) {
+export function IdentityForm({ identity, onSave, onCancel, onDirtyChange, signatureFrom }: IdentityFormProps) {
   const t = useTranslations('identities.form');
   const tValidation = useTranslations('identities.validation_errors');
   const tOrg = useTranslations('org_signature');
@@ -63,7 +69,8 @@ export function IdentityForm({ identity, onSave, onCancel, onDirtyChange }: Iden
   const org = useOrgSignatureSetup({ name: formData.name, email: formData.email || identity?.email || '' });
   const signatureHidden = org.restriction.hidden;
   const signatureLocked = org.restriction.locked && !signatureHidden;
-  const signatureEditable = !signatureHidden && !signatureLocked;
+  const signatureShared = !!signatureFrom && !signatureHidden && !signatureLocked;
+  const signatureEditable = !signatureHidden && !signatureLocked && !signatureShared;
 
   const dirty =
     formData.name !== (identity?.name || '') ||
@@ -288,6 +295,14 @@ export function IdentityForm({ identity, onSave, onCancel, onDirtyChange }: Iden
         />
       )}
 
+      {signatureShared && signatureFrom && (
+        <LockedSignature
+          html={signatureFrom.htmlSignature ?? ''}
+          text={signatureFrom.textSignature ?? ''}
+          note={<SharedSignatureNote source={signatureFrom} />}
+        />
+      )}
+
       {signatureEditable && (
         <SignatureEditor
           html={formData.htmlSignature ?? ''}
@@ -325,8 +340,22 @@ export function IdentityForm({ identity, onSave, onCancel, onDirtyChange }: Iden
   );
 }
 
-/** The signature an address sends with when the admin locked signatures, read-only. */
-export function LockedSignature({ html, text }: { html: string; text: string }) {
+/** Says whose signature an address uses (#1190), where to edit it. */
+export function SharedSignatureNote({ source }: { source: Pick<Identity, 'name' | 'email'> }) {
+  const t = useTranslations('uxs2_ident.signatures');
+  const address = source.name ? `${source.name} <${toUnicodeEmail(source.email)}>` : toUnicodeEmail(source.email);
+  return (
+    <p className="text-xs text-muted-foreground mt-1 wrap-anywhere" data-testid="shared-signature-note">
+      {t('shared_note', { address })}
+    </p>
+  );
+}
+
+/**
+ * The signature an address sends with when the admin locked signatures,
+ * read-only; `note` says why it can't be edited here (the admin's lock by default).
+ */
+export function LockedSignature({ html, text, note }: { html: string; text: string; note?: React.ReactNode }) {
   const t = useTranslations('org_signature');
   const preview = html.trim() ? sanitizeSignatureHtmlForDisplay(html) : '';
   const plain = preview ? '' : getPlainTextSignature({ textSignature: text, htmlSignature: html });
@@ -342,7 +371,7 @@ export function LockedSignature({ html, text }: { html: string; text: string }) 
           <div className="text-muted-foreground">{t('identity_no_signature')}</div>
         )}
       </div>
-      <OrgLockedNote className="mt-1" />
+      {note ?? <OrgLockedNote className="mt-1" />}
     </div>
   );
 }

@@ -8006,10 +8006,14 @@
     },
     "signatures": {
       "title": "Firme",
-      "description": "Aggiunta alla fine dei messaggi che scrivi. Ogni indirizzo ha la sua.",
+      "description": "Aggiunta alla fine dei messaggi che scrivi. Ogni indirizzo ha la sua o usa la firma di un altro indirizzo.",
       "saved": "Firma salvata.",
       "error": "Non è stato possibile salvare la firma. Riprova.",
-      "no_addresses": "Non c'è ancora un indirizzo da cui inviare."
+      "no_addresses": "Non c'è ancora un indirizzo da cui inviare.",
+      "use_label": "Firma",
+      "own": "La sua firma",
+      "same_as": "Uguale a {address}",
+      "shared_note": "Usa la firma di {address}. Modificala lì."
     },
     "search": {
       "addresses": "identità alias mittente indirizzo del mittente indirizzo da identity sender",

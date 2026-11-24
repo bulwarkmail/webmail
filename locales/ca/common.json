@@ -8006,10 +8006,14 @@
     },
     "signatures": {
       "title": "Signatures",
-      "description": "S'afegeix al final dels missatges que escriviu. Cada adreça té la seva.",
+      "description": "S'afegeix al final dels missatges que escriviu. Cada adreça té la seva o fa servir la signatura d'una altra adreça.",
       "saved": "S'ha desat la signatura.",
       "error": "No s'ha pogut desar la signatura. Torneu-ho a provar.",
-      "no_addresses": "Encara no teniu cap adreça per enviar."
+      "no_addresses": "Encara no teniu cap adreça per enviar.",
+      "use_label": "Signatura",
+      "own": "La seva pròpia signatura",
+      "same_as": "La mateixa que {address}",
+      "shared_note": "Fa servir la signatura de {address}. Editeu-la allà."
     },
     "search": {
       "addresses": "identitat identitats àlies remitent adreça del remitent adreça de identity alias sender",

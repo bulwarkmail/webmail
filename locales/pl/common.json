@@ -8006,10 +8006,14 @@
     },
     "signatures": {
       "title": "Podpisy",
-      "description": "Dodawany na końcu pisanych wiadomości. Każdy adres ma własny.",
+      "description": "Dodawany na końcu pisanych wiadomości. Każdy adres ma własny albo używa podpisu innego adresu.",
       "saved": "Zapisano podpis.",
       "error": "Nie udało się zapisać podpisu. Spróbuj ponownie.",
-      "no_addresses": "Nie masz jeszcze adresu, z którego można wysyłać."
+      "no_addresses": "Nie masz jeszcze adresu, z którego można wysyłać.",
+      "use_label": "Podpis",
+      "own": "Własny podpis",
+      "same_as": "Taki sam jak {address}",
+      "shared_note": "Używa podpisu adresu {address}. Edytuj go tam."
     },
     "search": {
       "addresses": "tożsamość tożsamości alias nadawca adres nadawcy adres od identity sender",

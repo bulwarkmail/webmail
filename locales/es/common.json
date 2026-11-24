@@ -8006,10 +8006,14 @@
     },
     "signatures": {
       "title": "Firmas",
-      "description": "Se añade al final de los mensajes que escribes. Cada dirección tiene la suya.",
+      "description": "Se añade al final de los mensajes que escribes. Cada dirección tiene la suya o usa la firma de otra dirección.",
       "saved": "Firma guardada.",
       "error": "No se ha podido guardar la firma. Inténtalo de nuevo.",
-      "no_addresses": "Todavía no hay ninguna dirección desde la que enviar."
+      "no_addresses": "Todavía no hay ninguna dirección desde la que enviar.",
+      "use_label": "Firma",
+      "own": "Su propia firma",
+      "same_as": "La misma que {address}",
+      "shared_note": "Usa la firma de {address}. Edítala allí."
     },
     "search": {
       "addresses": "identidad identidades alias remitente dirección del remitente dirección de envío identity alias sender",

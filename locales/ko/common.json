@@ -8006,10 +8006,14 @@
     },
     "signatures": {
       "title": "서명",
-      "description": "작성한 메시지 끝에 붙습니다. 주소마다 서명이 따로 있습니다.",
+      "description": "작성한 메시지 끝에 붙습니다. 주소마다 서명이 따로 있거나 다른 주소의 서명을 씁니다.",
       "saved": "서명을 저장했습니다.",
       "error": "서명을 저장하지 못했습니다. 다시 시도하세요.",
-      "no_addresses": "아직 보낼 수 있는 주소가 없습니다."
+      "no_addresses": "아직 보낼 수 있는 주소가 없습니다.",
+      "use_label": "서명",
+      "own": "이 주소의 서명",
+      "same_as": "{address}와 같음",
+      "shared_note": "{address}의 서명을 써요. 수정은 그 주소에서 하세요."
     },
     "search": {
       "addresses": "ID 아이덴티티 별칭 보낸 사람 보낸 사람 주소 발신 주소 identity alias sender",

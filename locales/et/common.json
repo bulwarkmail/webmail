@@ -8006,10 +8006,14 @@
     },
     "signatures": {
       "title": "Allkirjad",
-      "description": "Lisatakse teie kirjutatud kirjade lõppu. Igal aadressil on oma.",
+      "description": "Lisatakse teie kirjutatud kirjade lõppu. Igal aadressil on oma või see kasutab teise aadressi allkirja.",
       "saved": "Allkiri salvestatud.",
       "error": "Allkirja ei õnnestunud salvestada. Proovige uuesti.",
-      "no_addresses": "Teil pole veel aadressi, millelt saata."
+      "no_addresses": "Teil pole veel aadressi, millelt saata.",
+      "use_label": "Allkiri",
+      "own": "Oma allkiri",
+      "same_as": "Sama mis {address}",
+      "shared_note": "Kasutab aadressi {address} allkirja. Muutke seda seal."
     },
     "search": {
       "addresses": "identiteet identiteedid alias saatja saatja aadress saatja nimi identity alias sender",

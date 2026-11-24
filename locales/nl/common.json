@@ -8006,10 +8006,14 @@
     },
     "signatures": {
       "title": "Handtekeningen",
-      "description": "Komt onder de berichten die u schrijft. Elk adres heeft een eigen handtekening.",
+      "description": "Komt onder de berichten die u schrijft. Elk adres heeft een eigen handtekening of gebruikt die van een ander adres.",
       "saved": "Handtekening opgeslagen.",
       "error": "De handtekening kon niet worden opgeslagen. Probeer het opnieuw.",
-      "no_addresses": "Er is nog geen adres om vanaf te verzenden."
+      "no_addresses": "Er is nog geen adres om vanaf te verzenden.",
+      "use_label": "Handtekening",
+      "own": "Eigen handtekening",
+      "same_as": "Dezelfde als {address}",
+      "shared_note": "Gebruikt de handtekening van {address}. Bewerk die daar."
     },
     "search": {
       "addresses": "identiteit identiteiten alias afzender afzenderadres van-adres identity sender",

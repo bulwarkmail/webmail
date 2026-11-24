@@ -8006,10 +8006,14 @@
     },
     "signatures": {
       "title": "Signatures",
-      "description": "Ajoutée à la fin des messages que vous écrivez. Chaque adresse a la sienne.",
+      "description": "Ajoutée à la fin des messages que vous écrivez. Chaque adresse a la sienne ou utilise la signature d'une autre adresse.",
       "saved": "Signature enregistrée.",
       "error": "La signature n'a pas pu être enregistrée. Réessayez.",
-      "no_addresses": "Vous n'avez encore aucune adresse d'envoi."
+      "no_addresses": "Vous n'avez encore aucune adresse d'envoi.",
+      "use_label": "Signature",
+      "own": "Sa propre signature",
+      "same_as": "La même que {address}",
+      "shared_note": "Utilise la signature de {address}. Modifiez-la là-bas."
     },
     "search": {
       "addresses": "identité identités alias expéditeur adresse d'expédition adresse de l'expéditeur identity alias sender",

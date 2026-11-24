@@ -4,6 +4,7 @@ import { ComposingSettings } from '../composing-settings';
 import { useSettingsStore } from '@/stores/settings-store';
 import { useAuthStore } from '@/stores/auth-store';
 import { useIdentityStore } from '@/stores/identity-store';
+import { useAccountStore } from '@/stores/account-store';
 import type { Identity } from '@/lib/jmap/types';
 
 // settings-p2-3: the signature was four clicks deep (Composing > "Email
@@ -83,5 +84,52 @@ describe('Composing > Signatures', () => {
     render(<ComposingSettings />);
     expect(screen.getAllByTestId('address-signature')).toHaveLength(1);
     expect(screen.queryByText('WORK <sam@work.test>')).toBeNull();
+  });
+});
+
+// #1190: an address can use another address's signature instead of a copy
+// that drifts. The signature still goes on its own identity on the server.
+describe('Composing > Signatures, one signature for several addresses', () => {
+  beforeEach(() => {
+    useAccountStore.setState({ activeAccountId: 'acc-a' });
+    useSettingsStore.setState({ signatureSources: {} });
+  });
+  afterEach(() => {
+    useAccountStore.setState({ activeAccountId: null });
+  });
+
+  const boxOf = (email: string) => screen.getAllByTestId('address-signature').find((el) => el.getAttribute('data-address') === email)!;
+  const pickerOf = (email: string) => within(boxOf(email)).getByTestId('signature-source') as HTMLSelectElement;
+
+  it('copies the chosen signature to the address and shows it read-only', async () => {
+    render(<ComposingSettings />);
+    await act(async () => { fireEvent.change(pickerOf('sam@home.test'), { target: { value: 'work' } }); });
+    expect(useSettingsStore.getState().signatureSources).toEqual({ 'acc-a': { home: 'work' } });
+    expect(updateIdentity).toHaveBeenCalledWith('home', { htmlSignature: null, textSignature: 'Sam' });
+    expect(within(boxOf('sam@home.test')).queryByRole('textbox')).toBeNull();
+    expect(within(boxOf('sam@home.test')).getByTestId('shared-signature-note')).toBeTruthy();
+  });
+
+  it('writes an edit of the signature to the addresses that use it', async () => {
+    useSettingsStore.setState({ signatureSources: { 'acc-a': { home: 'work' } } });
+    render(<ComposingSettings />);
+    fireEvent.change(editorOf('sam@work.test'), { target: { value: 'Sam Lee' } });
+    await act(async () => { await vi.advanceTimersByTimeAsync(1000); });
+    expect(updateIdentity).toHaveBeenCalledWith('work', { htmlSignature: null, textSignature: 'Sam Lee' });
+    expect(updateIdentity).toHaveBeenCalledWith('home', { htmlSignature: null, textSignature: 'Sam Lee' });
+  });
+
+  it('goes back to an editor of its own', async () => {
+    useSettingsStore.setState({ signatureSources: { 'acc-a': { home: 'work' } } });
+    render(<ComposingSettings />);
+    await act(async () => { fireEvent.change(pickerOf('sam@home.test'), { target: { value: '' } }); });
+    expect(useSettingsStore.getState().signatureSources).toEqual({});
+    expect(within(boxOf('sam@home.test')).getByRole('textbox')).toBeTruthy();
+  });
+
+  it('offers no picker with one address', () => {
+    useIdentityStore.setState({ identities: [identity('work', 'sam@work.test', 'Sam')] });
+    render(<ComposingSettings />);
+    expect(screen.queryByTestId('signature-source')).toBeNull();
   });
 });

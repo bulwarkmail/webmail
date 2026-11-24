@@ -8014,10 +8014,14 @@
     },
     "signatures": {
       "title": "Signaturar",
-      "description": "Lagt til på slutten av meldingane du skriv. Kvar adresse har si eiga.",
+      "description": "Lagt til på slutten av meldingane du skriv. Kvar adresse har si eiga eller brukar signaturen til ei anna adresse.",
       "saved": "Signatur lagra.",
       "error": "Signaturen kunne ikkje lagrast. Prøv på nytt.",
-      "no_addresses": "Det finst enno inga adresse å sende frå."
+      "no_addresses": "Det finst enno inga adresse å sende frå.",
+      "use_label": "Signatur",
+      "own": "Si eiga signatur",
+      "same_as": "Same som {address}",
+      "shared_note": "Brukar signaturen til {address}. Rediger han der."
     },
     "search": {
       "addresses": "identitet identitetar alias alias avsendar avsendar adresse frå adresse frå namn",

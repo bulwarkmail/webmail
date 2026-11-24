@@ -8018,10 +8018,14 @@
     },
     "signatures": {
       "title": "Chữ ký",
-      "description": "Được thêm vào cuối thư bạn viết. Mỗi địa chỉ có chữ ký riêng.",
+      "description": "Được thêm vào cuối thư bạn viết. Mỗi địa chỉ có chữ ký riêng hoặc dùng chữ ký của địa chỉ khác.",
       "saved": "Đã lưu chữ ký.",
       "error": "Không lưu được chữ ký. Hãy thử lại.",
-      "no_addresses": "Chưa có địa chỉ nào để gửi."
+      "no_addresses": "Chưa có địa chỉ nào để gửi.",
+      "use_label": "Chữ ký",
+      "own": "Chữ ký riêng",
+      "same_as": "Giống {address}",
+      "shared_note": "Dùng chữ ký của {address}. Hãy sửa ở đó."
     },
     "search": {
       "addresses": "danh tính bí danh người gửi địa chỉ người gửi địa chỉ gửi từ identity alias sender",

@@ -8006,10 +8006,14 @@
     },
     "signatures": {
       "title": "Aláírások",
-      "description": "Az Ön által írt üzenetek végére kerül. Minden címnek saját aláírása van.",
+      "description": "Az Ön által írt üzenetek végére kerül. Minden címnek saját aláírása van, vagy egy másik cím aláírását használja.",
       "saved": "Aláírás mentve.",
       "error": "Az aláírást nem sikerült menteni. Próbálja újra.",
-      "no_addresses": "Még nincs cím, amelyről küldhetne."
+      "no_addresses": "Még nincs cím, amelyről küldhetne.",
+      "use_label": "Aláírás",
+      "own": "Saját aláírás",
+      "same_as": "Ugyanaz, mint: {address}",
+      "shared_note": "A(z) {address} aláírását használja. Ott szerkesztheti."
     },
     "search": {
       "addresses": "identitás identitások álnév alias feladó feladó címe feladócím identity alias sender",

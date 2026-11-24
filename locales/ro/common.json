@@ -8006,10 +8006,14 @@
     },
     "signatures": {
       "title": "Semnături",
-      "description": "Se adaugă la sfârșitul mesajelor pe care le scrieți. Fiecare adresă are semnătura ei.",
+      "description": "Se adaugă la sfârșitul mesajelor pe care le scrieți. Fiecare adresă are semnătura ei sau folosește semnătura altei adrese.",
       "saved": "Semnătura a fost salvată.",
       "error": "Semnătura nu a putut fi salvată. Încercați din nou.",
-      "no_addresses": "Nu există încă nicio adresă de pe care să trimiteți."
+      "no_addresses": "Nu există încă nicio adresă de pe care să trimiteți.",
+      "use_label": "Semnătură",
+      "own": "Semnătura proprie",
+      "same_as": "La fel ca {address}",
+      "shared_note": "Folosește semnătura adresei {address}. Editați-o acolo."
     },
     "search": {
       "addresses": "identitate identități alias expeditor adresa expeditorului adresa de la identity sender",

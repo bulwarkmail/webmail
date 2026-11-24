@@ -33,6 +33,7 @@ import { sortIdentities } from '@/lib/identity-order';
 import { useRestriction } from '@/hooks/use-restriction';
 import { ToggleSwitch } from '@/components/settings/settings-section';
 import { isReplyOnlyIdentity, setIdentityReplyOnly } from '@/lib/reply-only-identities';
+import { copySignatureToUsers, signatureFieldsOf, signatureSourceOf } from '@/lib/shared-signatures';
 
 interface IdentityFormData {
   name: string;
@@ -64,6 +65,7 @@ export function IdentityManagerModal({ isOpen, onClose }: IdentityManagerModalPr
   // Addresses kept for replies only (#1673), per login like the default sender.
   const loginId = useAccountStore((state) => state.activeAccountId);
   const replyOnlyIdentities = useSettingsStore((state) => state.replyOnlyIdentities);
+  const signatureSources = useSettingsStore((state) => state.signatureSources);
   const setReplyOnly = useCallback((identity: Identity, replyOnly: boolean) => {
     if (!loginId) return;
     const current = useSettingsStore.getState().replyOnlyIdentities;
@@ -162,6 +164,13 @@ export function IdentityManagerModal({ isOpen, onClose }: IdentityManagerModalPr
         htmlSignature: data.htmlSignature,
       });
       if (!saved) return;
+      // The addresses using this one's signature get the new one too (#1190).
+      if ('htmlSignature' in data || 'textSignature' in data) {
+        await copySignatureToUsers(client, identity, signatureFieldsOf({
+          htmlSignature: data.htmlSignature ?? null,
+          textSignature: data.textSignature ?? null,
+        }));
+      }
 
       await refreshIdentities();
       setEditingId(null);
@@ -281,6 +290,7 @@ export function IdentityManagerModal({ isOpen, onClose }: IdentityManagerModalPr
                     </h3>
                     <IdentityForm
                       identity={identity}
+                      signatureFrom={signatureSourceOf(signatureSources, loginId, identity.id, identities)}
                       onSave={(data) => handleUpdate(identity, data)}
                       onCancel={() => void cancelForm()}
                       onDirtyChange={setFormDirty}

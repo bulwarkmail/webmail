@@ -8006,10 +8006,14 @@
     },
     "signatures": {
       "title": "Signaturer",
-      "description": "Tilføjes i slutningen af de beskeder, du skriver. Hver adresse har sin egen.",
+      "description": "Tilføjes i slutningen af de beskeder, du skriver. Hver adresse har sin egen eller bruger signaturen fra en anden adresse.",
       "saved": "Signaturen er gemt.",
       "error": "Signaturen kunne ikke gemmes. Prøv igen.",
-      "no_addresses": "Der er endnu ingen adresse at sende fra."
+      "no_addresses": "Der er endnu ingen adresse at sende fra.",
+      "use_label": "Signatur",
+      "own": "Sin egen signatur",
+      "same_as": "Samme som {address}",
+      "shared_note": "Bruger signaturen fra {address}. Rediger den dér."
     },
     "search": {
       "addresses": "identitet identiteter alias afsender afsenderadresse fra-adresse identity alias sender",

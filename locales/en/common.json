@@ -8006,10 +8006,14 @@
     },
     "signatures": {
       "title": "Signatures",
-      "description": "Added at the end of the messages you write. Each address has its own.",
+      "description": "Added at the end of the messages you write. Each address has its own, or uses the signature of another address.",
       "saved": "Signature saved.",
       "error": "The signature could not be saved. Try again.",
-      "no_addresses": "There is no address to send from yet."
+      "no_addresses": "There is no address to send from yet.",
+      "use_label": "Signature",
+      "own": "Its own signature",
+      "same_as": "Same as {address}",
+      "shared_note": "Uses the signature of {address}. Edit it there."
     },
     "search": {
       "addresses": "identity identities alias aliases sender sender address from address from name",

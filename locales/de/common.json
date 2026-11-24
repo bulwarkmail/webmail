@@ -8006,10 +8006,14 @@
     },
     "signatures": {
       "title": "Signaturen",
-      "description": "Steht am Ende der Nachrichten, die Sie schreiben. Jede Adresse hat ihre eigene.",
+      "description": "Steht am Ende der Nachrichten, die Sie schreiben. Jede Adresse hat ihre eigene oder nutzt die Signatur einer anderen Adresse.",
       "saved": "Signatur gespeichert.",
       "error": "Die Signatur konnte nicht gespeichert werden. Versuchen Sie es noch einmal.",
-      "no_addresses": "Es gibt noch keine Adresse zum Senden."
+      "no_addresses": "Es gibt noch keine Adresse zum Senden.",
+      "use_label": "Signatur",
+      "own": "Eigene Signatur",
+      "same_as": "Wie {address}",
+      "shared_note": "Nutzt die Signatur von {address}. Bearbeiten Sie sie dort."
     },
     "search": {
       "addresses": "Identität Identitäten Alias Aliasse Absender Absenderadresse Von-Adresse Absendername identity alias sender",

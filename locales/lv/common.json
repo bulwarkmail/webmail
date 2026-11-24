@@ -8006,10 +8006,14 @@
     },
     "signatures": {
       "title": "Paraksti",
-      "description": "Tiek pievienots jūsu rakstīto ziņojumu beigās. Katrai adresei ir savs.",
+      "description": "Tiek pievienots jūsu rakstīto ziņojumu beigās. Katrai adresei ir savs, vai tā izmanto citas adreses parakstu.",
       "saved": "Paraksts saglabāts.",
       "error": "Parakstu neizdevās saglabāt. Mēģiniet vēlreiz.",
-      "no_addresses": "Vēl nav adreses, no kuras sūtīt."
+      "no_addresses": "Vēl nav adreses, no kuras sūtīt.",
+      "use_label": "Paraksts",
+      "own": "Savs paraksts",
+      "same_as": "Tāds pats kā {address}",
+      "shared_note": "Izmanto adreses {address} parakstu. Rediģējiet to tur."
     },
     "search": {
       "addresses": "identitāte identitātes aizstājvārds sūtītājs sūtītāja adrese no adrese identity alias sender",

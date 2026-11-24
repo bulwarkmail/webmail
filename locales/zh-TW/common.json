@@ -8006,10 +8006,14 @@
     },
     "signatures": {
       "title": "簽名",
-      "description": "加在你所寫郵件的結尾。每個地址都有自己的簽名。",
+      "description": "加在你所寫郵件的結尾。每個地址都有自己的簽名，或使用另一個地址的簽名。",
       "saved": "已儲存簽名。",
       "error": "無法儲存簽名。請再試一次。",
-      "no_addresses": "還沒有可以寄信的地址。"
+      "no_addresses": "還沒有可以寄信的地址。",
+      "use_label": "簽名",
+      "own": "自己的簽名",
+      "same_as": "與 {address} 相同",
+      "shared_note": "使用 {address} 的簽名。請在那裡編輯。"
     },
     "search": {
       "addresses": "身分 別名 寄件者 寄件者地址 寄件地址 identity alias sender",

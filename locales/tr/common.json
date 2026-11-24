@@ -8006,10 +8006,14 @@
     },
     "signatures": {
       "title": "İmzalar",
-      "description": "Yazdığınız iletilerin sonuna eklenir. Her adresin kendi imzası vardır.",
+      "description": "Yazdığınız iletilerin sonuna eklenir. Her adresin kendi imzası vardır ya da başka bir adresin imzasını kullanır.",
       "saved": "İmza kaydedildi.",
       "error": "İmza kaydedilemedi. Yeniden deneyin.",
-      "no_addresses": "Henüz gönderebileceğiniz bir adres yok."
+      "no_addresses": "Henüz gönderebileceğiniz bir adres yok.",
+      "use_label": "İmza",
+      "own": "Kendi imzası",
+      "same_as": "{address} ile aynı",
+      "shared_note": "{address} adresinin imzasını kullanır. Orada düzenleyin."
     },
     "search": {
       "addresses": "kimlik kimlikler takma ad gönderen gönderen adresi kimden adresi identity alias sender",
