@@ -5708,6 +5708,10 @@
     "title": "Davetler",
     "from": "Gönderen: {name}"
   },
+  "event_from_mail": {
+    "menu": "Etkinlik oluştur…",
+    "link_line": "E-posta: {link}"
+  },
   "free_busy_share": {
     "button": "Müsaitlik durumumu {group} ile paylaş",
     "already": "Müsaitlik durumunuz {group} ile paylaşılıyor",

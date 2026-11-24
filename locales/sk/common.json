@@ -5708,6 +5708,10 @@
     "title": "Pozvánky",
     "from": "Od {name}"
   },
+  "event_from_mail": {
+    "menu": "Vytvoriť udalosť…",
+    "link_line": "E-mail: {link}"
+  },
   "free_busy_share": {
     "button": "Zdieľať môj voľný čas so skupinou {group}",
     "already": "Váš voľný čas je zdieľaný so skupinou {group}",

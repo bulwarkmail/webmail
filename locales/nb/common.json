@@ -5708,6 +5708,10 @@
     "title": "Invitasjoner",
     "from": "Fra {name}"
   },
+  "event_from_mail": {
+    "menu": "Opprett hendelse…",
+    "link_line": "E-post: {link}"
+  },
   "free_busy_share": {
     "button": "Del min ledig/opptatt med {group}",
     "already": "Din ledig/opptatt er delt med {group}",

@@ -6348,6 +6348,10 @@
     "title": "Запрошення",
     "from": "Від {name}"
   },
+  "event_from_mail": {
+    "menu": "Створити подію…",
+    "link_line": "Лист: {link}"
+  },
   "free_busy_share": {
     "button": "Поділитися моєю зайнятістю з {group}",
     "already": "Вашою зайнятістю поділено з {group}",

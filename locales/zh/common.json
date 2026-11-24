@@ -6348,6 +6348,10 @@
     "title": "邀请",
     "from": "来自 {name}"
   },
+  "event_from_mail": {
+    "menu": "创建日程…",
+    "link_line": "邮件：{link}"
+  },
   "free_busy_share": {
     "button": "与 {group} 共享我的忙闲时间",
     "already": "你的忙闲时间已与 {group} 共享",

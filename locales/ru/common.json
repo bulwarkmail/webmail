@@ -6348,6 +6348,10 @@
     "title": "Приглашения",
     "from": "От {name}"
   },
+  "event_from_mail": {
+    "menu": "Создать событие…",
+    "link_line": "Письмо: {link}"
+  },
   "free_busy_share": {
     "button": "Открыть мою занятость для {group}",
     "already": "Ваша занятость открыта для {group}",

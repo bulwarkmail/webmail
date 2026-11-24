@@ -5708,6 +5708,10 @@
     "title": "Kutsed",
     "from": "Saatja: {name}"
   },
+  "event_from_mail": {
+    "menu": "Loo sündmus…",
+    "link_line": "E-kiri: {link}"
+  },
   "free_busy_share": {
     "button": "Jaga minu vaba/hõivatud aega grupiga {group}",
     "already": "Sinu vaba/hõivatud aeg on jagatud grupiga {group}",

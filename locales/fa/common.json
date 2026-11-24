@@ -5708,6 +5708,10 @@
     "title": "دعوت‌نامه‌ها",
     "from": "از {name}"
   },
+  "event_from_mail": {
+    "menu": "ایجاد رویداد…",
+    "link_line": "ایمیل: {link}"
+  },
   "free_busy_share": {
     "button": "هم‌رسانی آزاد/مشغول من با {group}",
     "already": "آزاد/مشغول شما با {group} هم‌رسانی شده است",

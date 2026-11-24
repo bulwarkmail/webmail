@@ -6348,6 +6348,10 @@
     "title": "Uitnodigingen",
     "from": "Van {name}"
   },
+  "event_from_mail": {
+    "menu": "Afspraak maken…",
+    "link_line": "E-mail: {link}"
+  },
   "free_busy_share": {
     "button": "Mijn vrij/bezet delen met {group}",
     "already": "Je vrij/bezet is gedeeld met {group}",

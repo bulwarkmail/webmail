@@ -29,6 +29,7 @@ const { EmailContextMenu } = await import('../email-context-menu');
 const { usePrintRequestStore, requestPrint } = await import('@/hooks/use-message-file-actions');
 const { emailKeyFor } = await import('@/lib/thread-utils');
 const { useMessageActionList } = await import('../message-actions');
+const { useCalendarStore } = await import('@/stores/calendar-store');
 
 const email = {
   id: 'e1',
@@ -303,5 +304,35 @@ describe('Edit as new', () => {
     const menu = screen.getByRole('menu', { name: 'more_actions' });
     fireEvent.click(within(menu).getByTestId('ctx-edit-as-new'));
     expect(onEditAsNew).toHaveBeenCalledTimes(1);
+  });
+});
+
+// #1579: a new event in the calendar, filled in from the message.
+describe('Create event', () => {
+  afterEach(() => {
+    useCalendarStore.setState({ supportsCalendar: false });
+    sessionStorage.clear();
+  });
+
+  const entryOf = (message: Email) => {
+    const { result } = renderHook(() => useMessageActionList({ email: message, onReply: () => {} }));
+    return result.current.find((entry) => entry.kind === 'item' && entry.key === 'create_event');
+  };
+
+  it('parks a draft from the message for the calendar', () => {
+    useCalendarStore.setState({ supportsCalendar: true });
+    const entry = entryOf(email);
+    expect(entry).toBeTruthy();
+    if (entry?.kind === 'item') entry.run();
+    const parked = JSON.parse(sessionStorage.getItem('bulwark:pending-event-draft') ?? '{}');
+    expect(parked.draft).toMatchObject({ title: 'Hello' });
+    // The text, then the line with the link back (its words come from the locale).
+    expect(parked.draft.description).toBe('Hello\n\nlink_line');
+  });
+
+  it('is not offered without a calendar, or on a draft', () => {
+    expect(entryOf(email)).toBeUndefined();
+    useCalendarStore.setState({ supportsCalendar: true });
+    expect(entryOf({ ...email, keywords: { $draft: true } } as Email)).toBeUndefined();
   });
 });

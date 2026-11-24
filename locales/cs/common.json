@@ -6348,6 +6348,10 @@
     "title": "Pozvánky",
     "from": "Od {name}"
   },
+  "event_from_mail": {
+    "menu": "Vytvořit událost…",
+    "link_line": "E-mail: {link}"
+  },
   "free_busy_share": {
     "button": "Sdílet můj volný čas se skupinou {group}",
     "already": "Váš volný čas je sdílen se skupinou {group}",

@@ -6348,6 +6348,10 @@
     "title": "Einladungen",
     "from": "Von {name}"
   },
+  "event_from_mail": {
+    "menu": "Termin erstellen…",
+    "link_line": "E-Mail: {link}"
+  },
   "free_busy_share": {
     "button": "Meine Frei/Gebucht-Zeiten für {group} freigeben",
     "already": "Ihre Frei/Gebucht-Zeiten sind für {group} freigegeben",

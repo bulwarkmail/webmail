@@ -5708,6 +5708,10 @@
     "title": "邀請",
     "from": "來自 {name}"
   },
+  "event_from_mail": {
+    "menu": "建立活動…",
+    "link_line": "郵件：{link}"
+  },
   "free_busy_share": {
     "button": "與 {group} 共用我的忙碌/空閒時間",
     "already": "你的忙碌/空閒時間已與 {group} 共用",

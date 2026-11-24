@@ -5708,6 +5708,10 @@
     "title": "Invitacions",
     "from": "De {name}"
   },
+  "event_from_mail": {
+    "menu": "Crea un esdeveniment…",
+    "link_line": "Correu: {link}"
+  },
   "free_busy_share": {
     "button": "Comparteix la meva disponibilitat amb {group}",
     "already": "La vostra disponibilitat està compartida amb {group}",

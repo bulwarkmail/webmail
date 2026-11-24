@@ -46,7 +46,9 @@ import {
   Fish,
   Undo,
   Inbox,
+  CalendarPlus,
 } from "@/components/icons";
+import { useCreateEventFromMail } from "./use-create-event-from-mail";
 
 type Icon = ComponentType<{ className?: string }>;
 
@@ -65,6 +67,7 @@ export type MessageActionKey =
   | "forward_as_attachment"
   | "copy_message_link"
   | "copy_conversation_link"
+  | "create_event"
   | "archive"
   | "delete"
   | "read"
@@ -191,6 +194,7 @@ export function useMessageActionList(o: MessageActionOptions): MessageActionEntr
   const tActions = useTranslations("reader_actions");
   const tP3 = useTranslations("mail_p3_actions");
   const tSave = useTranslations("desktopSaveOpen");
+  const tEventFromMail = useTranslations("event_from_mail");
   const copyLink = useCopyLink();
   const archiveEnabled = useArchiveActionEnabled();
   const mountainView = useSettingsStore((state) => state.interfaceLayout === "mountain-view");
@@ -198,6 +202,7 @@ export function useMessageActionList(o: MessageActionOptions): MessageActionEntr
   // Report phishing (enterprise pack): while the admin set an address for
   // the message's account. It sends mail, so it opens a confirm first.
   const phishing = usePhishingReport([email], o.currentMailboxRole);
+  const createEventFromMail = useCreateEventFromMail();
 
   const isUnread = o.unread ?? !email.keywords?.$seen;
   const isStarred = !!email.keywords?.$flagged;
@@ -275,6 +280,10 @@ export function useMessageActionList(o: MessageActionOptions): MessageActionEntr
           })]
         : []),
     ];
+    // A new event in the calendar, filled in from the message (#1579).
+    const createEvent = createEventFromMail && !isDraft
+      ? [item("create_event", CalendarPlus, tEventFromMail("menu"), () => createEventFromMail(email), { testId: "ctx-create-event" })]
+      : [];
     // In Trash the first thing after answering: getting it back.
     const restore = o.onRestore && o.currentMailboxRole === "trash"
       ? [item("restore", Undo, tRecover("restore"), o.onRestore, { testId: "ctx-restore" }), SEPARATOR]
@@ -342,14 +351,14 @@ export function useMessageActionList(o: MessageActionOptions): MessageActionEntr
           ...draft, ...replies, ...restore, ...archive, del, read, SEPARATOR,
           ...move, tag, ...rules, ...copy, SEPARATOR,
           star, ...pin, ...spam, ...reportPhishing, ...find, SEPARATOR,
-          ...links, SEPARATOR, ...views, SEPARATOR, ...openWindow, ...file,
+          ...createEvent, ...links, SEPARATOR, ...views, SEPARATOR, ...openWindow, ...file,
         ]
       : [
           ...draft, ...replies, ...restore, ...archive, del, SEPARATOR,
           ...move, ...copy, ...rules, SEPARATOR,
           read, star, ...pin, tag, SEPARATOR,
           ...spam, ...reportPhishing, ...find, SEPARATOR,
-          ...openWindow, ...links, SEPARATOR,
+          ...openWindow, ...createEvent, ...links, SEPARATOR,
           ...views, SEPARATOR,
           ...file,
         ];
@@ -390,6 +399,7 @@ export const ROW_MENU_KEYS: ReadonlySet<MessageActionKey> = new Set<MessageActio
  */
 const MORE_GROUPS: MessageActionKey[][] = [
   ["forward_as_attachment"],
+  ["create_event"],
   ["copy_message_link", "copy_conversation_link"],
   ["copy_to_account", "rules", "remove_from_folder", "pin", "report_phishing", "find_from_sender"],
   ["export", "print", "view_source"],

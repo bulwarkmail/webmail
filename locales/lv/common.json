@@ -6348,6 +6348,10 @@
     "title": "Uzaicinājumi",
     "from": "No {name}"
   },
+  "event_from_mail": {
+    "menu": "Izveidot notikumu…",
+    "link_line": "E-pasts: {link}"
+  },
   "free_busy_share": {
     "button": "Kopīgot manu brīvs/aizņemts ar {group}",
     "already": "Jūsu brīvs/aizņemts ir kopīgots ar {group}",

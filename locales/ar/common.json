@@ -5708,6 +5708,10 @@
     "title": "الدعوات",
     "from": "من {name}"
   },
+  "event_from_mail": {
+    "menu": "إنشاء حدث…",
+    "link_line": "البريد: {link}"
+  },
   "free_busy_share": {
     "button": "مشاركة أوقات توفري مع {group}",
     "already": "أوقات توفرك مشتركة مع {group}",

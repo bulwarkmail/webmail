@@ -5708,6 +5708,10 @@
     "title": "Invitations",
     "from": "From {name}"
   },
+  "event_from_mail": {
+    "menu": "Create event…",
+    "link_line": "Email: {link}"
+  },
   "free_busy_share": {
     "button": "Share my free/busy with {group}",
     "already": "Your free/busy is shared with {group}",

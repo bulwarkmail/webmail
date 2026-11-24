@@ -5720,6 +5720,10 @@
     "title": "Lời mời",
     "from": "Từ {name}"
   },
+  "event_from_mail": {
+    "menu": "Tạo sự kiện…",
+    "link_line": "Email: {link}"
+  },
   "free_busy_share": {
     "button": "Chia sẻ lịch rảnh/bận của tôi với {group}",
     "already": "Lịch rảnh/bận của bạn đã được chia sẻ với {group}",

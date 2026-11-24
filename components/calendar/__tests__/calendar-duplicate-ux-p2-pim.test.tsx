@@ -6,6 +6,7 @@ import { useAuthStore } from '@/stores/auth-store';
 import { useSettingsStore } from '@/stores/settings-store';
 import { useToastStore } from '@/stores/toast-store';
 import { useTaskStore } from '@/stores/task-store';
+import { eventDraftFromEmail, savePendingEventDraft } from '@/lib/event-from-mail';
 
 // The whole calendar page, with the shell around it stubbed out and the
 // stores holding a fixed set of calendars and events.
@@ -152,5 +153,41 @@ describe('Duplicate opens an unsaved copy in the editor', () => {
     fireEvent.click(screen.getByRole('button', { name: 'form.cancel' }));
     await waitFor(() => expect(screen.queryByRole('dialog', { name: 'events.create' })).toBeNull());
     expect(store.createEvent).not.toHaveBeenCalled();
+  });
+});
+
+// #1579: "Create event…" on a message parks a draft and goes to the
+// calendar, which opens the editor on it. Nothing is saved until Save.
+describe('A new event from a message', () => {
+  beforeEach(() => sessionStorage.clear());
+
+  it('opens the editor filled in from the message, and saves only on Save', async () => {
+    savePendingEventDraft(eventDraftFromEmail({
+      subject: 'Re: Site visit on Friday',
+      from: [{ name: 'Ben', email: 'ben@example.com' }],
+      to: [{ name: 'Me', email: 'me@example.com' }],
+      preview: 'Can we meet at the gate?',
+    }, { ownEmails: ['me@example.com'], link: 'https://mail.example.com/mail/message/m1', linkLine: (link) => `Email: ${link}` }));
+    renderApp();
+
+    await screen.findByRole('dialog', { name: 'events.create' });
+    expect((screen.getByLabelText('form.title') as HTMLInputElement).value).toBe('Site visit on Friday');
+    expect(store.createEvent).not.toHaveBeenCalled();
+    // Taken once: a reload doesn't open it again.
+    expect(sessionStorage.length).toBe(0);
+
+    fireEvent.click(screen.getByRole('button', { name: 'form.save' }));
+    await waitFor(() => expect(store.createEvent).toHaveBeenCalledTimes(1));
+    const data = store.createEvent.mock.calls[0][1] as Partial<CalendarEvent>;
+    expect(data).toMatchObject({ title: 'Site visit on Friday', calendarIds: { cal: true } });
+    expect(data.description).toBe('Can we meet at the gate?\n\nEmail: https://mail.example.com/mail/message/m1');
+    const emails = Object.values(data.participants ?? {}).map((p) => p.email);
+    expect(emails).toContain('ben@example.com');
+  });
+
+  it('opens no editor without a draft', async () => {
+    renderApp();
+    await screen.findAllByRole('button', { name: /Standup/ });
+    expect(screen.queryByRole('dialog', { name: 'events.create' })).toBeNull();
   });
 });

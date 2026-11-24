@@ -6348,6 +6348,10 @@
     "title": "초대",
     "from": "보낸 사람: {name}"
   },
+  "event_from_mail": {
+    "menu": "일정 만들기…",
+    "link_line": "이메일: {link}"
+  },
   "free_busy_share": {
     "button": "내 일정 가능 여부를 {group}과(와) 공유",
     "already": "일정 가능 여부가 {group}과(와) 공유되어 있습니다",

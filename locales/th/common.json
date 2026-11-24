@@ -3108,6 +3108,10 @@
     "title": "คำเชิญ",
     "from": "จาก {name}"
   },
+  "event_from_mail": {
+    "menu": "สร้างกิจกรรม…",
+    "link_line": "อีเมล: {link}"
+  },
   "free_busy_share": {
     "button": "แชร์เวลาว่าง/ไม่ว่างของฉันกับ {group}",
     "already": "แชร์เวลาว่าง/ไม่ว่างของคุณกับ {group} แล้ว",

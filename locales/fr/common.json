@@ -6348,6 +6348,10 @@
     "title": "Invitations",
     "from": "De {name}"
   },
+  "event_from_mail": {
+    "menu": "Créer un événement…",
+    "link_line": "E-mail : {link}"
+  },
   "free_busy_share": {
     "button": "Partager mes disponibilités avec {group}",
     "already": "Vos disponibilités sont partagées avec {group}",

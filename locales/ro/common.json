@@ -5708,6 +5708,10 @@
     "title": "Invitații",
     "from": "De la {name}"
   },
+  "event_from_mail": {
+    "menu": "Creează eveniment…",
+    "link_line": "E-mail: {link}"
+  },
   "free_busy_share": {
     "button": "Partajează disponibilitatea mea cu {group}",
     "already": "Disponibilitatea dvs. este partajată cu {group}",

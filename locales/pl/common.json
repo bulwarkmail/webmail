@@ -6348,6 +6348,10 @@
     "title": "Zaproszenia",
     "from": "Od {name}"
   },
+  "event_from_mail": {
+    "menu": "Utwórz wydarzenie…",
+    "link_line": "E-mail: {link}"
+  },
   "free_busy_share": {
     "button": "Udostępnij moją dostępność grupie {group}",
     "already": "Twoja dostępność jest udostępniona grupie {group}",

@@ -5708,6 +5708,10 @@
     "title": "Meghívók",
     "from": "Feladó: {name}"
   },
+  "event_from_mail": {
+    "menu": "Esemény létrehozása…",
+    "link_line": "E-mail: {link}"
+  },
   "free_busy_share": {
     "button": "Szabad/foglalt időim megosztása ezzel: {group}",
     "already": "Szabad/foglalt idői meg vannak osztva ezzel: {group}",

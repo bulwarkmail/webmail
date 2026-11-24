@@ -6160,6 +6160,10 @@
     "title": "הזמנות",
     "from": "מאת {name}"
   },
+  "event_from_mail": {
+    "menu": "יצירת אירוע…",
+    "link_line": "דוא״ל: {link}"
+  },
   "free_busy_share": {
     "button": "שתף את הזמינות שלי עם {group}",
     "already": "הזמינות שלך משותפת עם {group}",

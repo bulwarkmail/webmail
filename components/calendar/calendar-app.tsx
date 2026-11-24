@@ -56,6 +56,7 @@ import { isForwardableMeeting } from "@/lib/calendar-forward";
 import { useForwardInvitation } from "@/components/calendar/use-forward-invitation";
 import { PendingInvitations } from "@/components/calendar/pending-invitations";
 import { answerTargetId } from "@/lib/calendar-pending-invitations";
+import { consumePendingEventDraft } from "@/lib/event-from-mail";
 import { ICalImportModal } from "@/components/calendar/ical-import-modal";
 import { ICalSubscriptionModal } from "@/components/calendar/ical-subscription-modal";
 import { ProtocolAccountPicker } from "@/components/protocol/protocol-account-picker";
@@ -1638,6 +1639,14 @@ export function CalendarApp({ linkSegments: routeSegments, surface = "calendar" 
     setEditTask(null);
     setShowEventModal(true);
   }), [calendars, isSubscriptionCalendar, whenEditorsDiscarded]);
+
+  // A new event from a message (#1579), parked by the mail page: the
+  // editor opens on it once the calendars are there.
+  useEffect(() => {
+    if (!client || calendars.length === 0) return;
+    const draft = consumePendingEventDraft();
+    if (draft) handleDuplicateEvent({ id: "", calendarIds: {}, ...draft } as CalendarEvent);
+  }, [client, calendars.length, handleDuplicateEvent]);
 
   const handleDeleteEvent = useCallback(async (id: string, sendSchedulingMessages?: boolean) => {
     if (!client) { toast.error(t("notifications.event_error")); return; }

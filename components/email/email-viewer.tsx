@@ -263,7 +263,7 @@ const NO_RENAMES: AttachmentRenames = { emailId: undefined, names: {} };
 const SAVED_FILE_OMIT: readonly MessageActionKey[] = [
   'edit_draft', 'forward_as_attachment', 'restore', 'archive', 'delete', 'remove_from_folder',
   'read', 'star', 'pin', 'tag', 'spam', 'report_phishing', 'copy_message_link',
-  'copy_conversation_link', 'open_window', 'export',
+  'copy_conversation_link', 'create_event', 'open_window', 'export',
 ];
 
 /** Whatever a sub-view offers to act on, in the order it is read out. */
