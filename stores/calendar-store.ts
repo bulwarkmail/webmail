@@ -47,7 +47,9 @@ import {
   mergeSyncedSubscriptions,
   subscriptionOwnerFor,
 } from '@/lib/calendar-subscription-sync';
-import { registerCalendarSubscriptionSyncBridge } from './settings-store';
+import { isSettingsLoadSettled, onSettingsLoadSettled, registerCalendarSubscriptionSyncBridge, useSettingsStore } from './settings-store';
+import { applyVisibilityChoices, choicesFromLocalSelection, visibilityKeyOf, withVisibilityChoice } from '@/lib/calendar-visibility';
+import { generateAccountId } from '@/lib/account-utils';
 import { currentStoreEpoch } from '@/lib/store-epoch';
 import { isCalendarEventArray, isFetchRange, isPartialCalendarEvent } from '@/lib/plugin-calendar-hooks';
 import { sentByPatchValue } from '@/lib/calendar-delegate';
@@ -601,6 +603,46 @@ function withNewCalendars(
     selectedCalendarIds: added.length > 0 ? [...selection, ...added] : selection,
     knownCalendarIds: [...new Set([...seen, ...ids])].filter((id) => id !== BIRTHDAY_CALENDAR_ID),
   };
+}
+
+/**
+ * The login whose calendars carry no `<login>::` prefix: the one a
+ * single-login load was for. Their shown/hidden choices are kept under it
+ * (lib/calendar-visibility).
+ */
+let unprefixedLogin: string | null = null;
+
+function loginOfClient(client: Partial<Pick<IJMAPClient, 'getUsername' | 'getServerUrl'>>): string | null {
+  try {
+    const username = client.getUsername?.();
+    const serverUrl = client.getServerUrl?.();
+    return username && serverUrl ? generateAccountId(username, serverUrl) : null;
+  } catch {
+    return null;
+  }
+}
+
+/** `selection` with the shown/hidden choices synced with the settings (#1845). */
+function withSyncedVisibility(selection: string[], calendars: Calendar[]): string[] {
+  return applyVisibilityChoices(selection, calendars, useSettingsStore.getState().calendarVisibility, unprefixedLogin);
+}
+
+/**
+ * Before the choices were synced, the calendars a browser hid were kept in
+ * that browser only. Once a login's synced settings are loaded and have no
+ * choices for it, the calendars this browser hides become its choices, so
+ * they survive the next sign-out and reach the login's other browsers.
+ */
+function migrateLocalVisibility(): void {
+  const { calendars, selectedCalendarIds, knownCalendarIds, calendarSelectionChosen } = useCalendarStore.getState();
+  if (!calendarSelectionChosen || !knownCalendarIds || calendars.length === 0) return;
+  const settled = calendars.filter((calendar) => {
+    const at = visibilityKeyOf(calendar, unprefixedLogin);
+    return !!at && isSettingsLoadSettled(at.login);
+  });
+  const settings = useSettingsStore.getState();
+  const next = choicesFromLocalSelection(settings.calendarVisibility, selectedCalendarIds, knownCalendarIds, settled, unprefixedLogin);
+  if (next !== settings.calendarVisibility) settings.updateSetting('calendarVisibility', next);
 }
 
 // In-flight refresh dedup. Concurrent callers (auto-interval +
@@ -1163,25 +1205,29 @@ export const useCalendarStore = create<CalendarStore>()(
           const defaultSelected = calendars.filter(c => !c.isTasksOnly).map(c => c.id);
           // Shared calendars' ids are `<accountId>:<id>` (getAllCalendars).
           const unloadedPrefixes = failedAccountIds.map((accountId) => `${accountId}:`);
+          unprefixedLogin = loginOfClient(client);
+          const selection = withNewCalendars(
+            selectionAfterFetch(
+              get().selectedCalendarIds,
+              calendars,
+              defaultSelected,
+              unloadedPrefixes,
+              undefined,
+              get().calendarSelectionChosen,
+            ),
+            get().knownCalendarIds,
+            calendars,
+            defaultSelected,
+            unloadedPrefixes,
+          );
           set({
             calendars,
             taskCalendarKinds,
             isLoading: false,
-            ...withNewCalendars(
-              selectionAfterFetch(
-                get().selectedCalendarIds,
-                calendars,
-                defaultSelected,
-                unloadedPrefixes,
-                undefined,
-                get().calendarSelectionChosen,
-              ),
-              get().knownCalendarIds,
-              calendars,
-              defaultSelected,
-              unloadedPrefixes,
-            ),
+            ...selection,
+            selectedCalendarIds: withSyncedVisibility(selection.selectedCalendarIds, calendars),
           });
+          migrateLocalVisibility();
         } catch (error) {
           if (currentStoreEpoch() !== epoch) return;
           debug.error('Failed to fetch calendars:', error);
@@ -1288,27 +1334,31 @@ export const useCalendarStore = create<CalendarStore>()(
           const calendars = sortCalendars(withTaskKinds(fetched, taskCalendarKinds, ownerOf));
           // As for one account: tasks-only calendars stay out of the grid.
           const defaultSelected = calendars.filter(c => !c.isTasksOnly).map(c => c.id);
+          unprefixedLogin = activeLocalAccountId ?? null;
+          const selection = withNewCalendars(
+            selectionAfterFetch(
+              get().selectedCalendarIds,
+              calendars,
+              defaultSelected,
+              unloadedPrefixes,
+              activeLocalAccountId ?? undefined,
+              get().calendarSelectionChosen,
+            ),
+            get().knownCalendarIds,
+            calendars,
+            defaultSelected,
+            unloadedPrefixes,
+            activeLocalAccountId ?? undefined,
+          );
           set({
             calendars,
             taskCalendarKinds,
             isLoading: false,
             ...(events.length !== shownEvents.length ? { events } : {}),
-            ...withNewCalendars(
-              selectionAfterFetch(
-                get().selectedCalendarIds,
-                calendars,
-                defaultSelected,
-                unloadedPrefixes,
-                activeLocalAccountId ?? undefined,
-                get().calendarSelectionChosen,
-              ),
-              get().knownCalendarIds,
-              calendars,
-              defaultSelected,
-              unloadedPrefixes,
-              activeLocalAccountId ?? undefined,
-            ),
+            ...selection,
+            selectedCalendarIds: withSyncedVisibility(selection.selectedCalendarIds, calendars),
           });
+          migrateLocalVisibility();
         } catch (error) {
           if (currentStoreEpoch() !== epoch) return;
           debug.error('Failed to fetch all-account calendars:', error);
@@ -2039,6 +2089,13 @@ export const useCalendarStore = create<CalendarStore>()(
             ? [...state.knownCalendarIds, calendarId]
             : state.knownCalendarIds,
         }));
+        // Kept with the synced settings, so it stays after a sign-out and in other browsers (#1845).
+        const calendar = get().calendars.find((c) => c.id === calendarId);
+        if (calendar) {
+          const settings = useSettingsStore.getState();
+          const next = withVisibilityChoice(settings.calendarVisibility, calendar, unprefixedLogin, visible);
+          if (next !== settings.calendarVisibility) settings.updateSetting('calendarVisibility', next);
+        }
         void calendarHooks.onCalendarVisibilityToggle.emit({ calendarId, visible });
       },
 
@@ -2784,6 +2841,20 @@ registerCalendarSubscriptionSyncBridge(
     }
   })
 );
+
+// Choices that arrive with the synced settings (a sign-in, an account's
+// settings loaded) show and hide the calendars on screen (#1845).
+useSettingsStore.subscribe((state, prev) => {
+  if (state.calendarVisibility === prev.calendarVisibility) return;
+  const { selectedCalendarIds, calendars } = useCalendarStore.getState();
+  const next = withSyncedVisibility(selectedCalendarIds, calendars);
+  if (next.length !== selectedCalendarIds.length || next.some((id, i) => id !== selectedCalendarIds[i])) {
+    useCalendarStore.setState({ selectedCalendarIds: next });
+  }
+});
+// After the sign-in turns syncing back on, which follows the load: made
+// before, the carried-over choices waited for some other change to go up.
+onSettingsLoadSettled(() => { setTimeout(migrateLocalVisibility, 0); });
 
 /**
  * Drops the calendars, events and client of login `localAccountId` (the Pro

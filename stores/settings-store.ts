@@ -14,6 +14,7 @@ import { calendarHooks, settingsHooks } from '@/lib/plugin-hooks';
 import { BIRTHDAY_CALENDAR_ID } from '@/lib/birthday-calendar';
 import { generateAccountId } from '@/lib/account-utils';
 import { subscriptionOwnerFor } from '@/lib/calendar-subscription-sync';
+import { sanitizeVisibilityChoices, type CalendarVisibilityChoices } from '@/lib/calendar-visibility';
 import type { FolderCountMode } from '@/lib/folder-counts';
 import { DEFAULT_FILES_SETTINGS, normalizeFilesSettings, type FilesSettings } from '@/lib/files-settings';
 import { orderForMailbox, sanitizeSortLevels, type MessageListOrderScope, type SortLevel } from '@/lib/message-list-order';
@@ -617,7 +618,7 @@ const DEVICE_LOCAL_SETTING_KEYS = new Set<string>(['proInterface']);
  * Maps keyed by account id. Every account's server copy carries one, and a
  * server load takes only the loading account's entry.
  */
-const PER_ACCOUNT_MAP_KEYS = new Set<string>(['preferredIdentityIds', 'allMailFolderIds', 'hiddenSharedMailAccounts', 'sharedMailAccountOrder']);
+const PER_ACCOUNT_MAP_KEYS = new Set<string>(['preferredIdentityIds', 'allMailFolderIds', 'hiddenSharedMailAccounts', 'sharedMailAccountOrder', 'calendarVisibility']);
 
 /** A map of plugin id → boolean, whatever came in (sync, import, storage). */
 function booleanRecord(value: unknown): Record<string, boolean> {
@@ -955,6 +956,10 @@ interface SettingsState extends AccessibilitySettings {
   // sharedCalendarColorKey(). Lets each recipient recolor calendars shared
   // with them without changing the owner's color (see #345).
   sharedCalendarColors: Record<string, string>;
+  // The calendars the user showed or hid, by login (AccountEntry.id) and
+  // the calendar's id in it (lib/calendar-visibility), so they stay hidden
+  // after a sign-out and in other browsers (#1845).
+  calendarVisibility: CalendarVisibilityChoices;
 
   // Contacts Display
   groupContactsByLetter: boolean;
@@ -1331,6 +1336,7 @@ const DEFAULT_SETTINGS = {
   birthdayCalendarColor: '#eab308',
 
   sharedCalendarColors: {} as Record<string, string>,
+  calendarVisibility: {} as CalendarVisibilityChoices,
 
   // Contacts Display
   groupContactsByLetter: true,
@@ -1948,6 +1954,7 @@ export const useSettingsStore = create<SettingsState>()(
           showBirthdayCalendar: state.showBirthdayCalendar,
           birthdayCalendarColor: state.birthdayCalendarColor,
           sharedCalendarColors: state.sharedCalendarColors,
+          calendarVisibility: state.calendarVisibility,
           groupContactsByLetter: state.groupContactsByLetter,
           sortContactsByLastName: state.sortContactsByLastName,
           showContactsDirectory: state.showContactsDirectory,
@@ -2231,6 +2238,10 @@ export const useSettingsStore = create<SettingsState>()(
               }
               if ((key === 'hiddenSharedMailAccounts' || key === 'sharedMailAccountOrder') && !isPlainRecord(settings[key])) {
                 return;
+              }
+              if (key === 'calendarVisibility') {
+                if (!isPlainRecord(settings[key])) return;
+                settings[key] = sanitizeVisibilityChoices(settings[key]);
               }
               if (key === 'signatureDetails') {
                 put(key, { signatureDetails: sanitizeSignatureDetails(settings[key]) });
@@ -2681,6 +2692,7 @@ export const useSettingsStore = create<SettingsState>()(
             if (!isPlainRecord(state.sharedMailAccountOrder)) {
               state.sharedMailAccountOrder = {};
             }
+            state.calendarVisibility = sanitizeVisibilityChoices(state.calendarVisibility);
             if (!Array.isArray(state.explicitSettings)) {
               state.explicitSettings = [];
             }
