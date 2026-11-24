@@ -6,7 +6,7 @@ import { knownTagIds } from '@/lib/known-tag-ids';
 import { getEmailTagIds } from '@/lib/thread-utils';
 import type { Email, Mailbox } from '@/lib/jmap/types';
 import { findMailboxByRole, jmapMailboxIdOf, resolveSourceFolderName, withFolderlessExclusion, type UnifiedAccountClient } from '@/lib/unified-mailbox';
-import { buildUnifiedAccountClients, useEmailStore } from '@/stores/email-store';
+import { accountFolders, buildUnifiedAccountClients, listRowSource, useEmailStore } from '@/stores/email-store';
 import { useSettingsStore } from '@/stores/settings-store';
 
 function addressFields(addresses: Email['from']): string[] {
@@ -78,13 +78,13 @@ type JmapFilter = Record<string, unknown>;
 /**
  * The default scope is "everything but Trash and Junk" (#641's "Most");
  * `in:trash` / `in:junk` search that folder alone and `is:anything` lifts the
- * exclusion. Servers without those role folders just search everything.
+ * exclusion. An account without the requested role has nothing to search.
  */
-export function mailFilterFor(parsed: ParsedQuery, entry: UnifiedAccountClient): JmapFilter {
+export function mailFilterFor(parsed: ParsedQuery, entry: UnifiedAccountClient): JmapFilter | null {
   const base = buildJMAPFilter(parsed.text, parsed.mail, undefined, knownTagIds());
   if (parsed.mailboxRole) {
     const mailbox = findMailboxByRole(entry.mailboxes, parsed.mailboxRole);
-    return mailbox ? andFilters(base, { inMailbox: jmapMailboxIdOf(entry, mailbox) }) : base;
+    return mailbox ? andFilters(base, { inMailbox: jmapMailboxIdOf(entry, mailbox) }) : null;
   }
   // `is:anything` lifts Trash and Junk, never the team notes.
   return withFolderlessExclusion(base, entry, !parsed.includeTrashAndJunk);
@@ -98,19 +98,33 @@ export const mailProvider: SearchProvider = {
   local: (parsed, accounts, limit) => {
     const byId = indexAccounts(accounts);
     const active = getActiveLocalAccountId();
-    const { emails, mailboxes } = useEmailStore.getState();
+    const state = useEmailStore.getState();
+    const { emails, mailboxes } = state;
+    const role = parsed.mailboxRole;
+    const sourceOf = role ? listRowSource(state) : null;
     const hits: MailHit[] = [];
     for (const email of emails) {
-      const localAccountId = email.sourceClientAccountId ?? active;
+      const source = sourceOf?.(email);
+      const localAccountId = source ? source.login : email.sourceClientAccountId ?? active;
       if (!localAccountId) continue;
       const account = byId.get(localAccountId);
       if (!account) continue;
       if (!matchesTerms(parsed.terms, emailFields(email))) continue;
       if (!emailMatchesFilters(email, parsed)) continue;
-      const mailbox = mailboxes.find((mb) => email.mailboxIds?.[mb.id]);
-      const jmapAccountId = email.sourceAccountId
-        ?? (mailbox?.isShared && mailbox.accountId ? mailbox.accountId : account.client.getAccountId());
-      hits.push(toHit(email, account, jmapAccountId, folderOf(email, mailboxes), 'local'));
+      if (role) {
+        // Mailbox ids can repeat across logins and JMAP owners. Only publish a
+        // cached hit when the folders of the message's own source confirm it.
+        const ownAccountId = account.client.getAccountId();
+        const jmapAccountId = source?.account ?? ownAccountId;
+        const mailbox = findMailboxByRole(accountFolders(state, localAccountId, jmapAccountId, ownAccountId), role);
+        if (!mailbox || !(email.mailboxIds?.[mailbox.id] || (mailbox.originalId && email.mailboxIds?.[mailbox.originalId]))) continue;
+        hits.push(toHit(email, account, jmapAccountId, mailbox.name, 'local'));
+      } else {
+        const mailbox = mailboxes.find((mb) => email.mailboxIds?.[mb.id]);
+        const jmapAccountId = email.sourceAccountId
+          ?? (mailbox?.isShared && mailbox.accountId ? mailbox.accountId : account.client.getAccountId());
+        hits.push(toHit(email, account, jmapAccountId, folderOf(email, mailboxes), 'local'));
+      }
       if (hits.length >= limit) break;
     }
     return hits;
@@ -125,8 +139,10 @@ export const mailProvider: SearchProvider = {
     // parallel, and every request here pins one of the login's sockets (#702).
     for (const entry of entries) {
       if (signal.aborted) throw Object.assign(new Error('aborted'), { name: 'AbortError' });
+      const filter = mailFilterFor(parsed, entry);
+      if (!filter) continue;
       const result = await entry.client.advancedSearchEmails(
-        mailFilterFor(parsed, entry),
+        filter,
         entry.isShared ? entry.jmapAccountId : undefined,
         limit,
         position,

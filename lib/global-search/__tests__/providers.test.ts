@@ -1,5 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { parseSearchQuery } from '../query-parser';
+import { runGlobalSearch } from '../run-global-search';
+import { DEFAULT_SEARCH_FILTERS } from '@/lib/jmap/search-utils';
 import type { SearchAccount } from '../types';
 import {
   connectCalendarClient,
@@ -14,7 +16,16 @@ import {
 // logins via account/auth stores; all of that is replaced with plain state.
 // ---------------------------------------------------------------------------
 
-const emailState = { emails: [] as unknown[], mailboxes: [] as unknown[] };
+const emailState = {
+  emails: [] as unknown[],
+  mailboxes: [] as unknown[],
+  accountMailboxes: {} as Record<string, unknown[]>,
+  viewingAccountId: null as string | null,
+  selectedMailbox: '',
+  searchQuery: '',
+  searchFilters: DEFAULT_SEARCH_FILTERS,
+  searchMailboxId: '',
+};
 const contactState = { contacts: [] as unknown[], addressBooks: [] as unknown[] };
 const calendarState = { events: [] as unknown[], calendars: [] as unknown[] };
 const fileState: Record<string, unknown> = { lastAction: null, uploadProgress: null, isLoading: false, currentAccountId: null };
@@ -30,7 +41,8 @@ function storeHook(state: object) {
   return hook;
 }
 
-vi.mock('@/stores/email-store', () => ({
+vi.mock('@/stores/email-store', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/stores/email-store')>()),
   useEmailStore: storeHook(emailState),
   buildUnifiedAccountClients: (opts?: unknown) => buildUnifiedAccountClients(opts),
 }));
@@ -72,6 +84,9 @@ const signal = new AbortController().signal;
 beforeEach(() => {
   emailState.emails = [];
   emailState.mailboxes = [];
+  emailState.accountMailboxes = {};
+  emailState.viewingAccountId = null;
+  emailState.selectedMailbox = '';
   contactState.contacts = [];
   contactState.addressBooks = [];
   calendarState.events = [];
@@ -106,6 +121,72 @@ describe('mail provider', () => {
     const shared = entry(boxes, { isShared: true });
     const filter = mailFilterFor(parseSearchQuery('in:trash x'), shared as never);
     expect(filter).toEqual({ operator: 'AND', conditions: [{ text: 'x' }, { inMailbox: 'tr' }] });
+  });
+
+  it.each(['trash', 'junk'])('does not merge cached Inbox mail into in:%s results', async (role) => {
+    const boxes = [mailbox('in', 'inbox'), mailbox('special', role)];
+    const inbox = { id: 'cached-inbox', subject: 'Budget', keywords: {}, mailboxIds: { in: true } };
+    const scoped = { ...inbox, id: 'role-mail', mailboxIds: { special: true } };
+    emailState.mailboxes = boxes;
+    emailState.emails = [inbox];
+    const advancedSearchEmails = vi.fn(async () => ({ emails: [scoped], hasMore: false, total: 1 }));
+    buildUnifiedAccountClients.mockResolvedValue([entry(boxes, { advancedSearchEmails })]);
+
+    const onUpdate = vi.fn();
+    const result = await runGlobalSearch({
+      parsed: parseSearchQuery(`in:${role} budget`), providers: [mailProvider],
+      accounts: [account('login-a')], signal, localLimit: 10, remoteLimit: 10, onUpdate,
+    });
+
+    expect(advancedSearchEmails).toHaveBeenCalledTimes(1);
+    expect.soft(onUpdate.mock.calls[0][0].hits.mail.map((hit: { id: string }) => hit.id)).toEqual([]);
+    expect(result.hits.mail.map((hit) => hit.id)).toEqual(['role-mail']);
+  });
+
+  it('checks the mailbox role in each cached message’s own login and JMAP account', () => {
+    emailState.mailboxes = [mailbox('box', 'trash')];
+    emailState.accountMailboxes = {
+      'login-b|jmap-a': [mailbox('box', 'inbox')],
+      'login-a|team': [mailbox('team:tr', 'trash', { originalId: 'tr', isShared: true, accountId: 'team' })],
+    };
+    const row = { subject: 'Budget', keywords: {}, mailboxIds: { box: true }, sourceAccountId: 'jmap-a' };
+    emailState.emails = [
+      { ...row, id: 'own-trash', sourceClientAccountId: 'login-a' },
+      { ...row, id: 'other-inbox', sourceClientAccountId: 'login-b' },
+      { ...row, id: 'shared-trash', sourceClientAccountId: 'login-a', sourceAccountId: 'team', mailboxIds: { 'team:tr': true } },
+      { ...row, id: 'shared-inbox', sourceClientAccountId: 'login-a', sourceAccountId: 'team' },
+    ];
+
+    expect(mailProvider.local(parseSearchQuery('in:trash budget'), [account('login-a'), account('login-b')], 10))
+      .toMatchObject([
+        { id: 'own-trash', localAccountId: 'login-a', jmapAccountId: 'jmap-a' },
+        { id: 'shared-trash', localAccountId: 'login-a', jmapAccountId: 'team' },
+      ]);
+  });
+
+  it('uses the browsed login for cached mail without source stamps', () => {
+    emailState.viewingAccountId = 'login-b';
+    emailState.mailboxes = [mailbox('box', 'inbox')];
+    emailState.accountMailboxes = { 'login-b': [mailbox('box', 'junk')] };
+    emailState.emails = [{ id: 'junk-mail', subject: 'Budget', keywords: {}, mailboxIds: { box: true } }];
+
+    expect(mailProvider.local(parseSearchQuery('in:junk budget'), [account('login-a'), account('login-b')], 10))
+      .toMatchObject([{ id: 'junk-mail', localAccountId: 'login-b' }]);
+  });
+
+  it.each(['trash', 'junk'])('skips a shared account with no matching folder for in:%s', async (role) => {
+    const matchingSearch = vi.fn(async () => ({ emails: [{ id: 'matching', mailboxIds: { special: true } }], hasMore: false, total: 1 }));
+    const sharedSearch = vi.fn(async () => ({ emails: [{ id: 'shared-inbox', mailboxIds: { in: true } }], hasMore: false, total: 1 }));
+    buildUnifiedAccountClients.mockResolvedValue([
+      entry([mailbox('special', role)], { advancedSearchEmails: matchingSearch }),
+      entry([mailbox('in', 'inbox')], { isShared: true, jmapAccountId: 'shared', advancedSearchEmails: sharedSearch }),
+    ]);
+
+    const result = await mailProvider.remote(parseSearchQuery(`in:${role} budget`), account('login-a'), { limit: 10, signal });
+
+    expect(matchingSearch).toHaveBeenCalledTimes(1);
+    expect.soft(sharedSearch).not.toHaveBeenCalled();
+    expect(result.hits.map((hit) => hit.id)).toEqual(['matching']);
   });
 
   it('sends every quoted phrase as its own condition beside the folder conditions', () => {

@@ -1792,7 +1792,7 @@ interface SourceActionContext {
  * from. An unstamped row is in the account of the folder it is listed in,
  * reached through the login browsed.
  */
-function listRowSource(state: EmailStore): (email: Email) => { login: string | undefined; account: string | undefined } {
+export function listRowSource(state: EmailStore): (email: Email) => { login: string | undefined; account: string | undefined } {
   const auth = useAuthStore.getState();
   const viewLogin = state.viewingAccountId ?? auth.activeAccountId ?? undefined;
   const viewAccount = resolveUnstampedEmailAccountId({
@@ -1820,7 +1820,7 @@ function sourceRowMatcher(state: EmailStore, emailId: string, login: string, acc
  * The folders of JMAP account `accountId` as `login` lists them. A folder
  * without an account id is one of the login's own account.
  */
-function accountFolders(state: EmailStore, login: string, accountId: string, ownAccountId: string): Mailbox[] {
+export function accountFolders(state: EmailStore, login: string, accountId: string, ownAccountId: string): Mailbox[] {
   const cached = state.accountMailboxes[sourceMailboxesKey(login, accountId)];
   if (cached) return cached;
   const list = login === useAuthStore.getState().activeAccountId ? state.mailboxes : state.accountMailboxes[login];
