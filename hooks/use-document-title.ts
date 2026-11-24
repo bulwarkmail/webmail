@@ -6,6 +6,8 @@ import { useIsFocusedProTab, usePaneId } from '@/hooks/use-pane-context';
 import { useAccountStore } from '@/stores/account-store';
 import { formatTabTitle } from '@/lib/tab-title';
 import { isTitleAlertActive } from '@/lib/title-alert';
+import { withTitleBadge } from '@/lib/title-badge';
+import { useTitleBadgeCount } from '@/hooks/use-title-badge';
 
 // The surface that set the title last owns it. One that is still mounted
 // (during a route transition) stops re-applying, so two titles never fight.
@@ -30,7 +32,8 @@ export function useDocumentTitle(
   const account = useAccountStore(
     (s) => s.accounts.find((a) => a.id === s.activeAccountId)?.email || null,
   );
-  const title = formatTabTitle(context, showAccount ? account : null, appName);
+  const badge = useTitleBadgeCount();
+  const base = formatTabTitle(context, showAccount ? account : null, appName);
   // The Pro shell keeps every opened tab mounted (hidden), so only the
   // focused tab may claim the title; outside Pro every surface is in view.
   const paneId = usePaneId();
@@ -53,6 +56,7 @@ export function useDocumentTitle(
       // A visual alert swaps the title for now (lib/title-alert); it puts
       // the title back when it stops, and this runs again then.
       if (isTitleAlertActive()) return;
+      const title = withTitleBadge(base);
       const current = document.title;
       if (current === title || current === readBack) return;
       document.title = title;
@@ -65,5 +69,5 @@ export function useDocumentTitle(
       observer.disconnect();
       if (owner === self) owner = null;
     };
-  }, [title, inView]);
+  }, [base, badge, inView]);
 }

@@ -4,6 +4,7 @@ import { FaviconBadge } from '@/components/favicon-badge';
 import { useFaviconBadge } from '@/hooks/use-favicon-badge';
 import { useAppBadge } from '@/hooks/use-app-badge';
 import { useAppBadgeWorkerState } from '@/hooks/use-app-badge-worker';
+import { useTitleBadge } from '@/hooks/use-title-badge';
 import { useEmailStore } from '@/stores/email-store';
 import { useSettingsStore } from '@/stores/settings-store';
 import { useAccountStore } from '@/stores/account-store';
@@ -16,6 +17,9 @@ vi.mock('@/hooks/use-favicon-badge', () => ({
 vi.mock('@/hooks/use-app-badge', () => ({
   useAppBadge: vi.fn(),
 }));
+vi.mock('@/hooks/use-title-badge', () => ({
+  useTitleBadge: vi.fn(),
+}));
 vi.mock('@/hooks/use-app-badge-worker', () => ({
   useAppBadgeWorkerState: vi.fn(),
 }));
@@ -23,6 +27,7 @@ vi.mock('@/hooks/use-app-badge-worker', () => ({
 const useFaviconBadgeMock = vi.mocked(useFaviconBadge);
 const useAppBadgeMock = vi.mocked(useAppBadge);
 const useAppBadgeWorkerStateMock = vi.mocked(useAppBadgeWorkerState);
+const useTitleBadgeMock = vi.mocked(useTitleBadge);
 
 function mailbox(patch: Partial<Mailbox> & { id: string }): Mailbox {
   return {
@@ -71,6 +76,7 @@ describe('FaviconBadge', () => {
 
     expect(useFaviconBadgeMock).toHaveBeenCalledWith(7, true);
     expect(useAppBadgeMock).toHaveBeenCalledWith(7, true);
+    expect(useTitleBadgeMock).toHaveBeenCalledWith(7, true);
     expect(container.firstChild).toBeNull(); // renders no markup
   });
 
@@ -97,6 +103,7 @@ describe('FaviconBadge', () => {
 
     expect(useFaviconBadgeMock).toHaveBeenCalledWith(7, false);
     expect(useAppBadgeMock).toHaveBeenCalledWith(7, false);
+    expect(useTitleBadgeMock).toHaveBeenCalledWith(7, false);
   });
 
   it('ignores a shared inbox, even when it sorts first', () => {

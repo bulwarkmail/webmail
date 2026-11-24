@@ -4,6 +4,7 @@ import { useSettingsStore } from "@/stores/settings-store";
 import { useFaviconBadge } from "@/hooks/use-favicon-badge";
 import { useAppBadge } from "@/hooks/use-app-badge";
 import { useAppBadgeWorkerState } from "@/hooks/use-app-badge-worker";
+import { useTitleBadge } from "@/hooks/use-title-badge";
 import { useAllInboxesUnread } from "@/hooks/use-all-inboxes-unread";
 
 /**
@@ -36,6 +37,7 @@ export function FaviconBadge() {
 
   useFaviconBadge(count, enabled);
   useAppBadge(count, enabled);
+  useTitleBadge(count, enabled);
   // The same number for the service worker, which keeps the icon right on
   // push while the app is closed (#1516).
   useAppBadgeWorkerState(count, enabled);
