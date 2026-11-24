@@ -2,8 +2,8 @@
 
 import { useMemo, useCallback, useId, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { parseISO, isBefore, isTomorrow } from "date-fns";
-import { displayNow, isDisplayToday } from "@/lib/timezone";
+import { parseISO, isBefore } from "date-fns";
+import { displayNow, isDisplayToday, isDisplayTomorrow } from "@/lib/timezone";
 import { Check, Flag, CalendarDays, ListTodo, Plus, X } from "@/components/icons";
 import { cn } from "@/lib/utils";
 import type { CalendarTask, Calendar } from "@/lib/jmap/types";
@@ -159,7 +159,7 @@ export function getDueDateLabel(due: string, showWithoutTime: boolean, t: Return
       className: "text-primary",
     };
   }
-  if (isTomorrow(dueDate)) {
+  if (isDisplayTomorrow(dueDate)) {
     return {
       label: t("tasks.due_tomorrow"),
       className: "text-muted-foreground",

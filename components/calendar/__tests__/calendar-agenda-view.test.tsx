@@ -2,6 +2,7 @@ import { render, screen, fireEvent, cleanup } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { CalendarAgendaView } from '../calendar-agenda-view';
 import type { CalendarEvent, Calendar } from '@/lib/jmap/types';
+import { useSettingsStore } from '@/stores/settings-store';
 
 // The agenda is an infinite list (#759): a "show earlier" trigger at the
 // top, a sentinel at the bottom that widens the window when it scrolls into
@@ -192,5 +193,31 @@ describe('CalendarAgendaView infinite scroll', () => {
     expect(screen.getByText('Event declined')).toHaveClass('line-through');
     expect(screen.getByText('Event declined')).toHaveClass('text-muted-foreground');
     expect(screen.getByText('Event accepted')).not.toHaveClass('line-through');
+  });
+});
+
+describe('agenda tomorrow label in the display time zone', () => {
+  afterEach(() => {
+    vi.useRealTimers();
+    useSettingsStore.setState({ timeZone: 'auto' });
+  });
+  it.each([
+    { zone: 'Europe/Athens', now: new Date('2026-11-24T22:30:00Z'), expected: true },
+    { zone: 'America/Los_Angeles', now: new Date('2026-11-25T00:30:00Z'), expected: false },
+    { zone: 'auto', now: new Date(2026, 10, 25, 12), expected: true },
+  ])('labels November 26 using $zone', ({ zone, now, expected }) => {
+    useSettingsStore.setState({ timeZone: zone });
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(now);
+    const { container } = renderView({
+      focus: { date: new Date(2026, 10, 24), nonce: 0 },
+      rangeStart: new Date(2026, 10, 24),
+      rangeEnd: new Date(2026, 10, 27),
+      events: [makeEvent('due', '2026-11-26T09:00:00')],
+    });
+    const group = container.querySelector('[data-agenda-day="2026-11-26"]');
+    expect(group).not.toBeNull();
+    expect(Boolean(screen.queryByText('events.tomorrow_header'))).toBe(expected);
+    expect(group?.getAttribute('aria-label') === 'events.tomorrow_header').toBe(expected);
   });
 });
