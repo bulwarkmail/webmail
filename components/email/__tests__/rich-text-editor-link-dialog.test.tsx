@@ -97,6 +97,31 @@ describe('Insert link', () => {
     expect(editor.getHTML()).not.toContain('href=');
   });
 
+  // #1856: a link copied from a file share with spaces in its name.
+  it('sends spaces in the address as %20 and keeps encoded ones', async () => {
+    const editor = await setup('<p>docs here</p>');
+    act(() => { editor.commands.setTextSelection({ from: 1, to: 5 }); });
+
+    fireEvent.click(screen.getByTitle('link'));
+    fireEvent.change(screen.getByRole('textbox', { name: 'link' }), {
+      target: { value: ' https://example.org/My Document  v2/a%20b.pdf ' },
+    });
+    expect(screen.queryByRole('alert')).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'save' }));
+
+    expect(editor.getHTML()).toContain('href="https://example.org/My%20Document%20%20v2/a%20b.pdf">docs</a>');
+  });
+
+  it('still refuses a tab in the address', async () => {
+    const editor = await setup('<p>docs here</p>');
+    act(() => { editor.commands.setTextSelection({ from: 1, to: 5 }); });
+
+    fireEvent.click(screen.getByTitle('link'));
+    fireEvent.change(screen.getByRole('textbox', { name: 'link' }), { target: { value: 'https://example.org/a\tb' } });
+    expect(screen.getByRole('alert')).toHaveTextContent('link_invalid');
+    expect(screen.getByRole('button', { name: 'save' })).toBeDisabled();
+  });
+
   it('keeps addresses that name their scheme', () => {
     expect(withLinkScheme('mailto:a@example.org')).toBe('mailto:a@example.org');
     expect(withLinkScheme('http://example.org')).toBe('http://example.org');

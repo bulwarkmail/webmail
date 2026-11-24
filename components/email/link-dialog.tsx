@@ -40,7 +40,9 @@ export function LinkDialog({ isOpen, onClose, onSubmit, defaultText, defaultHref
     setHref(defaultHref);
   }, [isOpen, defaultText, defaultHref]);
 
-  const address = href.trim();
+  // Addresses copied from file shares often keep their spaces: send them as
+  // %20, as a browser does. Tabs and line breaks still can't be in a link.
+  const address = href.trim().replace(/ +/g, (run) => "%20".repeat(run.length));
   const error = /\s/.test(address) ? t("link_invalid") : null;
   const canSubmit = address.length > 0 && !error;
   const errorId = `${id}-error`;
