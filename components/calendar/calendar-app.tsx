@@ -104,7 +104,7 @@ import { debug } from "@/lib/debug";
 import { consumePendingWebcal, hasPendingWebcal, subscribeToPendingWebcal } from "@/lib/protocol-handlers/session";
 import { useHandoffFiles } from "@/hooks/use-handoff-files";
 import type { ParsedWebcal } from "@/lib/protocol-handlers/webcal";
-import { appPath, buildCalendarPath, parseCalendarPath, type CalendarDeepLink } from "@/lib/deep-links";
+import { appPath, buildCalendarPath, calendarEventLinkState, parseCalendarPath, type CalendarDeepLink } from "@/lib/deep-links";
 import { consumePendingDeepLinkEntry, subscribePendingDeepLink } from "@/lib/deep-link-handoff";
 import { useDeepLinkUrl } from "@/hooks/use-deep-link-url";
 import { useCloseOnBack } from "@/hooks/use-close-on-back";
@@ -1211,12 +1211,10 @@ export function CalendarApp({ linkSegments: routeSegments, surface = "calendar" 
   // back to the button that opened it. Escape is the editor's own (it asks
   // about unsaved changes).
   const mobileTaskEditorRef = useFocusTrap({ isActive: showTaskModal && isMobile, restoreFocus: true });
-  const eventLinkId = showEventModal && editEvent ? editEvent.id : null;
   const calendarLinkPath = appPath(tasksSurface ? "/tasks" : buildCalendarPath({
     view: normalizedViewMode,
     date: selectedDate,
-    eventId: eventLinkId,
-    accountId: eventLinkId ? editEvent?.accountId : null,
+    ...(showEventModal && editEvent ? calendarEventLinkState(editEvent, activeLocalAccountId) : {}),
   }));
   useDeepLinkUrl(
     isEmbedded

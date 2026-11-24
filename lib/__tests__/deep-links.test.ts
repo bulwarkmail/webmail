@@ -7,6 +7,7 @@ import {
   buildMailPath,
   parseMailPath,
   buildCalendarPath,
+  calendarEventLinkState,
   parseCalendarPath,
   formatLinkDate,
   parseLinkDate,
@@ -24,8 +25,10 @@ import {
 import {
   UNIFIED_MAILBOX_IDS,
   CROSS_VIEW_IDS,
+  type CalendarEvent,
   type Mailbox,
 } from '@/lib/jmap/types';
+import { expandRecurringEvents } from '@/lib/recurrence-expansion';
 
 function mailbox(partial: Partial<Mailbox> & { id: string }): Mailbox {
   return {
@@ -319,6 +322,24 @@ describe('calendar paths', () => {
       .toBe('/calendar/event/e1?account=acc-2');
     expect(parseCalendarPath(['event', 'e1'], new URLSearchParams('account=acc-2')))
       .toEqual({ kind: 'event', id: 'e1', accountId: 'acc-2' });
+  });
+
+  it('links an occurrence the browser expanded by its series, the id its server knows', () => {
+    const series = {
+      id: 'evt-1', uid: 'u1', title: 'Weekly', start: '2026-08-03T10:00:00', duration: 'PT1H',
+      timeZone: 'Europe/Berlin', showWithoutTime: false, calendarIds: { c1: true },
+      recurrenceRules: [{ '@type': 'RecurrenceRule', frequency: 'weekly' }],
+    } as unknown as CalendarEvent;
+    const occurrence = expandRecurringEvents([series], '2026-08-09T00:00:00', '2026-08-16T00:00:00')[0];
+    expect(occurrence.id).toBe('evt-1:2026-08-10T10:00:00');
+    const path = buildCalendarPath({ view: 'month', date: null, ...calendarEventLinkState(occurrence) });
+    expect(path).toBe('/calendar/event/evt-1');
+  });
+
+  it('links a shared or other login\'s event by its own id, with its account and login', () => {
+    const event = { id: 'acc-2:e1', originalId: 'e1', accountId: 'acc-2', localAccountId: 'login-b' };
+    expect(calendarEventLinkState(event, 'login-a')).toEqual({ eventId: 'e1', accountId: 'acc-2', login: 'login-b' });
+    expect(calendarEventLinkState(event, 'login-b')).toEqual({ eventId: 'e1', accountId: 'acc-2', login: null });
   });
 
   it('accepts a bare date with no view', () => {

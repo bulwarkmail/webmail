@@ -352,6 +352,25 @@ export function parseLinkDate(value: string): Date | null {
   return date;
 }
 
+/**
+ * What a link to an open event carries: the id its server knows it by, which
+ * the link reads back with CalendarEvent/get. The calendar's own ids are not
+ * that id. An occurrence the browser expanded is `<series id>:<recurrence id>`,
+ * which no server has, so after a save the link said the event was no longer
+ * available; it links to its series. A login's or a shared calendar's prefix
+ * comes off too, with the login named when it isn't the active one.
+ */
+export function calendarEventLinkState(
+  event: { id: string; originalId?: string; accountId?: string; localAccountId?: string },
+  activeLogin?: string | null,
+): Pick<CalendarLinkState, 'eventId' | 'accountId' | 'login'> {
+  return {
+    eventId: event.originalId || event.id,
+    accountId: event.accountId ?? null,
+    login: event.localAccountId && activeLogin && event.localAccountId !== activeLogin ? event.localAccountId : null,
+  };
+}
+
 export function buildCalendarPath(state: CalendarLinkState): string {
   if (state.eventId) {
     const path = `/calendar/event/${encodeSegment(state.eventId)}`;
