@@ -250,53 +250,142 @@ export const MAX_PLUGIN_MOVE = 100;
 /** Moves a plugin may make per minute. */
 export const MAX_PLUGIN_MOVES_PER_MINUTE = 20;
 
-function readIdList(value: unknown, method: string): string[] {
+/**
+ * The ids of a move and the account they are in. An entry is an id, or
+ * `{ id, accountId }` as api.search.showMessages takes them; `accountArg`
+ * names the account of the plain ids. One account per call. `accountId` is
+ * undefined when nothing names one.
+ */
+function readMoveIds(value: unknown, accountArg: unknown, method: string): { emailIds: string[]; accountId: string | undefined } {
   if (!Array.isArray(value) || value.length === 0) throw new Error(`${method}: emailIds must be a non-empty array`);
   if (value.length > MAX_PLUGIN_MOVE) throw new Error(`${method}: at most ${MAX_PLUGIN_MOVE} messages at once`);
-  return [...new Set(value.map((id, i) => readId(id, method, `emailIds[${i}]`)))];
+  const named = accountArg === undefined ? undefined : readId(accountArg, method, 'accountId');
+  const accounts = new Set<string | undefined>();
+  const emailIds = value.map((entry, i) => {
+    if (typeof entry === 'string') {
+      accounts.add(named);
+      return readId(entry, method, `emailIds[${i}]`);
+    }
+    const data = readObject(entry, method, `emailIds[${i}]`, ['id', 'accountId']);
+    accounts.add(data.accountId === undefined ? named : readId(data.accountId, method, `emailIds[${i}].accountId`));
+    return readId(data.id, method, `emailIds[${i}].id`);
+  });
+  if (named !== undefined) accounts.add(named);
+  if (accounts.size > 1) throw new Error(`${method}: the messages must all be in one account`);
+  return { emailIds: [...new Set(emailIds)], accountId: [...accounts][0] };
 }
 
 /**
- * The store moves in the account of the list that is open. A plugin names
- * messages of the signed-in account by bare id, and ids repeat across
- * accounts, so with a shared or group folder, another login or a unified,
- * tag or all-folders view open, the move filed that account's messages
- * with the same ids instead.
+ * Whether the open list is one folder of `accountId` (undefined: the
+ * signed-in account) of the signed-in login: the store's batch move moves
+ * in that account.
  */
-function assertOwnFolderOpen(method: string): void {
+function openListIsAccount(accountId: string | undefined): boolean {
   const state = useEmailStore.getState();
   const open = state.mailboxes.find((m) => m.id === state.selectedMailbox);
   const otherLogin = !!state.viewingAccountId && state.viewingAccountId !== useAuthStore.getState().activeAccountId;
-  if (open?.isShared || otherLogin || isAggregateListView()) {
+  if (otherLogin || isAggregateListView()) return false;
+  return (open?.isShared ? open.accountId : undefined) === accountId;
+}
+
+/**
+ * The store moves in the account of the list that is open. Bare ids name
+ * messages of the signed-in account, and ids repeat across accounts, so
+ * with a shared or group folder, another login or a unified, tag or
+ * all-folders view open, the move filed that account's messages with the
+ * same ids instead.
+ */
+function assertOwnFolderOpen(method: string): void {
+  if (!openListIsAccount(undefined)) {
     throw new Error(`${method}: open a folder of this account first; the open list belongs to another account or several`);
   }
 }
 
 /**
- * Move messages of the signed-in account into one of its folders, through
- * the store, so the list updates and onBeforeEmailMove / onEmailMove (and the
- * archive hooks for the archive folder) run like for a move the user made.
+ * The account a plugin named, with its folders: undefined for the signed-in
+ * one, else a shared or team account this login shows and the user may
+ * change.
  */
-export async function doEmailMove(pluginId: string, emailIdsArg: unknown, mailboxIdArg: unknown): Promise<void> {
+function namedAccount(client: IJMAPClient, accountId: string, method: string): { accountId: string | undefined; folders: Mailbox[] } {
+  const { mailboxes } = useEmailStore.getState();
+  if (accountId === client.getAccountId()) return { accountId: undefined, folders: mailboxes.filter((m) => !m.isShared) };
+  const folders = mailboxes.filter((m) => m.isShared && m.accountId === accountId);
+  if (folders.length === 0) throw new Error(`${method}: no account "${accountId}" among the user's mailboxes`);
+  if (client.getAccountInfo?.(accountId)?.isReadOnly === true) throw new Error(`${method}: the user may only read the account "${accountId}"`);
+  return { accountId, folders };
+}
+
+/**
+ * Move messages of one account into `destination`, one of its folders. With
+ * a folder of that account open, through the store's batch move as without
+ * an account; else message by message in that account, as the store moves a
+ * message read outside the list. Either way the list follows and
+ * onBeforeEmailMove / onEmailMove run.
+ */
+async function moveInAccount(method: string, client: IJMAPClient, emailIds: string[], accountId: string | undefined, destination: Mailbox): Promise<void> {
+  if (destination.myRights?.mayAddItems === false) throw new Error(`${method}: the user may not add messages to "${destination.name}"`);
+  if (openListIsAccount(accountId)) {
+    await useEmailStore.getState().moveEmailsToMailbox(client, emailIds, destination.id);
+    return;
+  }
+  const login = useAuthStore.getState().activeAccountId;
+  if (!login) throw new Error(`${method}: no active session`);
+  for (const emailId of emailIds) {
+    await useEmailStore.getState().moveToMailbox(client, emailId, destination.id, undefined, { clientAccountId: login, accountId });
+  }
+}
+
+function assertMoveRate(method: string, pluginId: string): void {
+  if (!withinRate('email.move', pluginId, MAX_PLUGIN_MOVES_PER_MINUTE)) throw new Error(`${method}: too many moves, try again in a minute`);
+}
+
+/**
+ * Move messages into a folder through the store, so the list updates and
+ * onBeforeEmailMove / onEmailMove (and the archive hooks for the archive
+ * folder) run like for a move the user made. Without an account: messages
+ * of the signed-in account into one of its folders, with a folder of it
+ * open. `accountId`, or entries `{ id, accountId }`, name the account of
+ * the messages (a shared or team one); the folder is then one of that
+ * account's, by its id in api.mailboxes.list or on the server.
+ */
+export async function doEmailMove(pluginId: string, emailIdsArg: unknown, mailboxIdArg: unknown, accountArg?: unknown): Promise<void> {
   const method = 'email.move';
-  const emailIds = readIdList(emailIdsArg, method);
+  const { emailIds, accountId } = readMoveIds(emailIdsArg, accountArg, method);
   const mailboxId = readId(mailboxIdArg, method, 'mailboxId');
+  const client = sessionClient(method);
+  if (accountId !== undefined) {
+    const account = namedAccount(client, accountId, method);
+    const destination = account.folders.find((m) => m.id === mailboxId) ?? account.folders.find((m) => m.originalId === mailboxId);
+    if (!destination) throw new Error(`${method}: no folder with id "${mailboxId}" in the account "${accountId}"`);
+    assertMoveRate(method, pluginId);
+    await moveInAccount(method, client, emailIds, account.accountId, destination);
+    return;
+  }
   const store = useEmailStore.getState();
   if (!store.mailboxes.some((m) => m.id === mailboxId && !m.isShared)) {
     throw new Error(`${method}: no folder with id "${mailboxId}" in this account`);
   }
   assertOwnFolderOpen(method);
-  if (!withinRate('email.move', pluginId, MAX_PLUGIN_MOVES_PER_MINUTE)) throw new Error(`${method}: too many moves, try again in a minute`);
-  await store.moveEmailsToMailbox(sessionClient(method), emailIds, mailboxId);
+  assertMoveRate(method, pluginId);
+  await store.moveEmailsToMailbox(client, emailIds, mailboxId);
 }
 
-/** Move messages into the account's Archive folder. */
-export async function doEmailArchive(pluginId: string, emailIdsArg: unknown): Promise<void> {
+/** Move messages into the Archive folder of their account (see doEmailMove). */
+export async function doEmailArchive(pluginId: string, emailIdsArg: unknown, accountArg?: unknown): Promise<void> {
   const method = 'email.archive';
-  const emailIds = readIdList(emailIdsArg, method);
+  const { emailIds, accountId } = readMoveIds(emailIdsArg, accountArg, method);
+  const client = sessionClient(method);
+  if (accountId !== undefined) {
+    const account = namedAccount(client, accountId, method);
+    const archive = account.folders.find((m) => m.role === 'archive');
+    if (!archive) throw new Error(`${method}: the account "${accountId}" has no Archive folder`);
+    assertMoveRate(method, pluginId);
+    await moveInAccount(method, client, emailIds, account.accountId, archive);
+    return;
+  }
   const archive = useEmailStore.getState().mailboxes.find((m) => m.role === 'archive' && !m.isShared);
   if (!archive) throw new Error(`${method}: this account has no Archive folder`);
   assertOwnFolderOpen(method);
-  if (!withinRate('email.move', pluginId, MAX_PLUGIN_MOVES_PER_MINUTE)) throw new Error(`${method}: too many moves, try again in a minute`);
-  await useEmailStore.getState().moveEmailsToMailbox(sessionClient(method), emailIds, archive.id);
+  assertMoveRate(method, pluginId);
+  await useEmailStore.getState().moveEmailsToMailbox(client, emailIds, archive.id);
 }

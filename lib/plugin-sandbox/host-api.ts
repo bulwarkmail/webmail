@@ -2548,8 +2548,8 @@ export async function dispatchApiCall(
     case 'mailboxes.list': return doMailboxesList();
     case 'email.getAttachment': return doEmailGetAttachment(args[0], args[1], args[2]);
     case 'email.getRaw': return doEmailGetRaw(args[0], args[1]);
-    case 'email.move': return doEmailMove(plugin.id, args[0], args[1]);
-    case 'email.archive': return doEmailArchive(plugin.id, args[0]);
+    case 'email.move': return doEmailMove(plugin.id, args[0], args[1], args[2]);
+    case 'email.archive': return doEmailArchive(plugin.id, args[0], args[1]);
     case 'email.forward': return doEmailForward(plugin, args[0], args[1], {
       confirm: (input) => awaitDialog({ pluginId: plugin.id, kind: 'confirm', ...input }),
       // Read too, as when the user forwards it (#1756).

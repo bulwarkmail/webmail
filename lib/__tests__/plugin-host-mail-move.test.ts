@@ -98,6 +98,85 @@ describe('api.email.move and archive', () => {
     await expect(call(WRITER, 'email.archive', ['m1'])).rejects.toThrow(/no Archive folder/);
   });
 
+  describe('in a shared or team account', () => {
+    const teamArchive = { id: 'acc2:arch', originalId: 'arch', name: 'Archive', role: 'archive', isShared: true, accountId: 'acc2', myRights: { mayAddItems: true } } as unknown as Mailbox;
+    const teamInbox = { id: 'acc2:in', originalId: 'in', name: 'Inbox', role: 'inbox', isShared: true, accountId: 'acc2', myRights: { mayAddItems: true } } as unknown as Mailbox;
+    const ownRow = (id: string) => ({ id, threadId: id, mailboxIds: { inbox: true }, keywords: {} });
+    let moveEmail: ReturnType<typeof vi.fn>;
+    let batchMoveEmails: ReturnType<typeof vi.fn>;
+    let readOnly: boolean;
+
+    beforeEach(() => {
+      moveEmail = vi.fn(async () => {});
+      batchMoveEmails = vi.fn(async () => {});
+      readOnly = false;
+      const own = {
+        batchMoveEmails, moveEmail, getAccountId: () => 'acc1',
+        getAccountInfo: (id: string) => (id === 'acc2' ? { name: 'team@example.org', isPersonal: false, isReadOnly: readOnly, accountCapabilities: {} } : null),
+      } as unknown as IJMAPClient;
+      useAuthStore.setState({ client: own, activeAccountId: 'login-1', getClientForAccount: (id: string) => (id === 'login-1' ? own : undefined) } as never);
+      // The own Inbox is open; its "m1" is another message than the team's "m1".
+      useEmailStore.setState({
+        moveEmailsToMailbox: storeMove, mailboxes: [inbox, archive, shared, teamArchive, teamInbox],
+        accountMailboxes: {}, emails: [ownRow('m1')], selectedEmail: null,
+      } as never);
+    });
+
+    it('archives into that account\'s Archive while the own Inbox is open', async () => {
+      await call(WRITER, 'email.archive', ['m1'], 'acc2');
+
+      expect(moveEmail).toHaveBeenCalledExactlyOnceWith('m1', 'arch', 'acc2');
+      expect(batchMoveEmails).not.toHaveBeenCalled();
+      // The own message with the same id stays listed.
+      expect(useEmailStore.getState().emails.map((e) => e.id)).toEqual(['m1']);
+    });
+
+    it('takes ids as { id, accountId } and a folder by its id in the list or on the server', async () => {
+      await call(WRITER, 'email.move', [{ id: 'm1', accountId: 'acc2' }, { id: 'm2', accountId: 'acc2' }], 'acc2:in');
+      await call(WRITER, 'email.move', ['m3'], 'in', 'acc2');
+
+      expect(moveEmail.mock.calls).toEqual([['m1', 'in', 'acc2'], ['m2', 'in', 'acc2'], ['m3', 'in', 'acc2']]);
+    });
+
+    it('moves in one batch through the open list when a folder of that account is open', async () => {
+      useEmailStore.setState({ selectedMailbox: 'acc2:in', emails: [] } as never);
+
+      await call(WRITER, 'email.archive', ['m1', 'm2'], 'acc2');
+
+      expect(batchMoveEmails).toHaveBeenCalledExactlyOnceWith(['m1', 'm2'], 'arch', 'acc2');
+    });
+
+    it('moves the own messages it names by the own account while a team folder is open', async () => {
+      useEmailStore.setState({ selectedMailbox: 'acc2:in', emails: [] } as never);
+
+      await call(WRITER, 'email.archive', [{ id: 'm1', accountId: 'acc1' }]);
+
+      expect(moveEmail).toHaveBeenCalledExactlyOnceWith('m1', 'arch', undefined);
+    });
+
+    it('refuses accounts it doesn\'t show, read-only accounts and folders the user may not add to', async () => {
+      await expect(call(WRITER, 'email.archive', ['m1'], 'acc9')).rejects.toThrow(/no account "acc9"/);
+      await expect(call(WRITER, 'email.move', ['m1'], 'inbox', 'acc2')).rejects.toThrow(/no folder with id "inbox" in the account "acc2"/);
+      await expect(call(WRITER, 'email.move', [{ id: 'm1', accountId: 'acc2' }, 'm2'], 'acc2:in')).rejects.toThrow(/one account/);
+      await expect(call(WRITER, 'email.move', [{ id: 'm1', accountId: 'acc3' }], 'acc2:in', 'acc2')).rejects.toThrow(/one account/);
+      await expect(call(WRITER, 'email.move', [{ id: 'm1', extra: 1 }], 'inbox')).rejects.toThrow(/unknown property "extra"/);
+
+      useEmailStore.setState({ mailboxes: [inbox, { ...teamArchive, myRights: { mayAddItems: false } }] } as never);
+      await expect(call(WRITER, 'email.archive', ['m1'], 'acc2')).rejects.toThrow(/may not add messages to "Archive"/);
+
+      readOnly = true;
+      useEmailStore.setState({ mailboxes: [inbox, teamArchive] } as never);
+      await expect(call(WRITER, 'email.archive', ['m1'], 'acc2')).rejects.toThrow(/may only read/);
+      expect(moveEmail).not.toHaveBeenCalled();
+      expect(batchMoveEmails).not.toHaveBeenCalled();
+    });
+
+    it('says when that account has no Archive folder', async () => {
+      useEmailStore.setState({ mailboxes: [inbox, archive, teamInbox] } as never);
+      await expect(call(WRITER, 'email.archive', ['m1'], 'acc2')).rejects.toThrow(/account "acc2" has no Archive folder/);
+    });
+  });
+
   it('limits how often a plugin moves mail', async () => {
     for (let i = 0; i < 20; i++) await call(WRITER, 'email.move', ['m1'], 'inbox');
     await expect(call(WRITER, 'email.move', ['m1'], 'inbox')).rejects.toThrow(/too many moves/);
