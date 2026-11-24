@@ -69,7 +69,7 @@ import { EdgeDrawer } from "@/components/layout/edge-drawer";
 import { descriptionWithNote } from "@/lib/calendar-description";
 import { filterTasksByCalendars, taskSeriesId } from "@/lib/calendar-tasks";
 import { baseEventStoreId, isServerRecurrenceInstance, storeIdBeside } from "@/lib/recurrence-instances";
-import { deleteOccurrence, saveOccurrenceEdit, type EventEditorState } from "@/lib/recurrence-scope-edit";
+import { deleteOccurrence, movedEvent, saveOccurrenceEdit, whenAfterMove, type EventEditorState } from "@/lib/recurrence-scope-edit";
 import { useContactNameResolver } from "@/hooks/use-contact-name-resolver";
 import { getClientByLocalAccountId } from "@/stores/client-registry";
 import { useCalendarErrorMessage } from "@/hooks/use-calendar-error-message";
@@ -1787,8 +1787,6 @@ export function CalendarApp({ linkSegments: routeSegments, surface = "calendar" 
       ? (audience.organizes ? t("move_confirm_organizer_message") : t("move_confirm_attendee_message"))
       : undefined;
     if (isRecurringEvent(event)) {
-      const moved = { ...event, ...updates };
-      const allDay = !!event.showWithoutTime;
       // The attendees stay as they are; the save works out the rest from
       // where the occurrence went, as for a time changed in the editor.
       const attendees = getParticipantList(event, { resolveName: resolveContactName })
@@ -1802,7 +1800,7 @@ export function CalendarApp({ linkSegments: routeSegments, surface = "calendar" 
         editor: {
           initialAttendees: attendees,
           attendees,
-          when: { allDay, start: getEventStartDate(moved), end: allDay ? getEventDisplayEndDate(moved) : getEventEndDate(moved) },
+          when: whenAfterMove(event, updates),
           ruleChanged: false,
         },
         // The scope question says it too: one dialog, not two in a row.
@@ -1811,7 +1809,7 @@ export function CalendarApp({ linkSegments: routeSegments, surface = "calendar" 
       return;
     }
     if (audience) {
-      const moved = { ...event, ...updates } as CalendarEvent;
+      const moved = movedEvent(event, updates);
       const title = event.title || t("events.no_title");
       const confirmed = await confirmAction(audience.organizes
         ? {

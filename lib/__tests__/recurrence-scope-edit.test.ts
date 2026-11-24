@@ -5,6 +5,7 @@ import {
   followingSeriesData,
   saveOccurrenceEdit,
   seriesUpdatesFromOccurrence,
+  whenAfterMove,
   type EventEditorState,
   type OccurrenceEditActions,
 } from '@/lib/recurrence-scope-edit';
@@ -935,6 +936,42 @@ function actions(master: CalendarEvent | null) {
     findMasterEvent: vi.fn().mockResolvedValue(master),
   } satisfies OccurrenceEditActions;
 }
+
+// 19 October dragged from 10:00 to 12:00 in the grid: the drag writes only
+// the new start, and the occurrence still carries the instants of 10:00.
+describe.each(occurrences)('an occurrence dragged to another time on Stalwart %s', (_label, version, make) => {
+  const dragged = { start: '2026-10-19T12:00:00' } as Partial<CalendarEvent>;
+
+  it('starts the rest of the series at the new time with "This and all following"', async () => {
+    const occurrence = make();
+    const deps = actions(series(version));
+
+    await saveOccurrenceEdit('this_and_future', {
+      event: occurrence, updates: dragged, sendScheduling: false, userEmails: [ORGANIZER],
+      editor: { initialAttendees: [], attendees: [], when: whenAfterMove(occurrence, dragged), ruleChanged: false },
+    }, deps);
+
+    expect(deps.createEvent.mock.calls[0][1].start).toBe('2026-10-19T12:00:00');
+  });
+
+  it('moves every occurrence with "All events"', async () => {
+    const occurrence = make();
+    const deps = actions(series(version));
+
+    await saveOccurrenceEdit('all', {
+      event: occurrence, updates: dragged, sendScheduling: false, userEmails: [ORGANIZER],
+      editor: { initialAttendees: [], attendees: [], when: whenAfterMove(occurrence, dragged), ruleChanged: false },
+    }, deps);
+
+    expect(deps.updateEvent.mock.calls[0][2]).toMatchObject({ start: '2026-10-05T12:00:00' });
+  });
+
+  it('keeps the new length of a resize', () => {
+    const occurrence = make();
+    const when = whenAfterMove(occurrence, { duration: 'PT2H' });
+    expect(when.end.getTime() - when.start.getTime()).toBe(2 * 3_600_000);
+  });
+});
 
 describe('saveOccurrenceEdit for every occurrence', () => {
 

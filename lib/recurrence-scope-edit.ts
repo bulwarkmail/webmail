@@ -89,6 +89,25 @@ export function changesWhen(event: CalendarEvent, next: EventWhen): boolean {
     || minute(getEventEndDate(event)) !== minute(next.end);
 }
 
+/**
+ * `event` after a drag or resize in the grid wrote `updates` (a new start,
+ * length or zone) to it. The instants it came with (utcStart, utcEnd) place
+ * it where it was, and dates read with them made the move no move: "This and
+ * all following" started the new series at the old time, and "All events"
+ * left the series where it was.
+ */
+export function movedEvent(event: CalendarEvent, updates: Partial<CalendarEvent>): CalendarEvent {
+  const { utcStart: _start, utcEnd: _end, ...rest } = event;
+  return { ...rest, ...updates } as CalendarEvent;
+}
+
+/** When `event` happens after a drag or resize wrote `updates`, as the editor would say (EventEditorState.when). */
+export function whenAfterMove(event: CalendarEvent, updates: Partial<CalendarEvent>): EventWhen {
+  const moved = movedEvent(event, updates);
+  const allDay = !!moved.showWithoutTime;
+  return { allDay, start: getEventStartDate(moved), end: allDay ? getEventDisplayEndDate(moved) : getEventEndDate(moved) };
+}
+
 const WHEN_KEYS = ['start', 'duration', 'timeZone', 'showWithoutTime'] as const;
 type SeriesWhen = Partial<Pick<CalendarEvent, typeof WHEN_KEYS[number]>>;
 
