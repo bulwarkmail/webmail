@@ -1253,6 +1253,16 @@ function buildCoreApi(manifest: PluginManifest) {
        * this plugin's (none, one the user typed, another plugin's).
        */
       clear: () => callApi('search.clear', []) as Promise<boolean>,
+      /**
+       * Show messages the plugin found itself as the message list, under a
+       * chip with the label, in place of any search: ids of the user's own
+       * account, or { id, accountId } for a shared or team account's. At
+       * most 200, in the order given; ones the server doesn't have are left
+       * out. The user's own search, a filter or another folder replaces it,
+       * and clear() ends it.
+       */
+      showMessages: (emails: Array<string | { id: string; accountId?: string }>, options?: { label?: string }) =>
+        callApi('search.showMessages', [emails, options]) as Promise<void>,
     },
     // Calendar events (permissions: calendar:read / calendar:write). Writes
     // go through the calendar the way the user's own edits do, so other

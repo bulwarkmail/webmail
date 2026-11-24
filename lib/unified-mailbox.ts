@@ -743,6 +743,36 @@ export async function advancedSearchAcrossAccounts(
   );
 }
 
+/**
+ * The named messages, read from the account each names (its JMAP account id;
+ * none is the login's own account) and stamped with that account like any
+ * folder-less search result. Messages an account doesn't have, and ids of
+ * accounts this login doesn't reach, are left out. In the order given.
+ */
+export async function emailsByIdAcrossAccounts(
+  accounts: UnifiedAccountClient[],
+  wanted: { id: string; accountId?: string }[],
+): Promise<UnifiedFetchResult> {
+  const own = accounts.find((account) => !account.isShared);
+  const accountOf = (entry: { accountId?: string }) => entry.accountId ?? own?.jmapAccountId;
+  const reached = accounts.filter((account) => wanted.some((entry) => accountOf(entry) === account.jmapAccountId));
+  const fetched = await fanOutAccountQuery(
+    reached,
+    async (account, jmapAccountId) => {
+      const ids = wanted.filter((entry) => accountOf(entry) === account.jmapAccountId).map((entry) => entry.id);
+      const emails = await account.client.getSomeEmails(ids, jmapAccountId);
+      return { emails, total: emails.length, hasMore: false };
+    },
+    newestFirst,
+  );
+  const key = (accountId: string | undefined, id: string) => `${accountId}/${id}`;
+  const rank = new Map(wanted.map((entry, index) => [key(accountOf(entry), entry.id), index]));
+  const emails = fetched.emails
+    .filter((email) => rank.has(key(email.sourceAccountId, email.id)))
+    .sort((a, b) => rank.get(key(a.sourceAccountId, a.id))! - rank.get(key(b.sourceAccountId, b.id))!);
+  return { ...fetched, emails, total: emails.length, hasMore: false };
+}
+
 /** The trailing SearchRequestOptions argument, left off when nothing is asked of it. */
 function searchRequestOptions(options: AcrossAccountsSearchOptions): [] | [SearchRequestOptions] {
   return options.deferSnippets ? [{ deferSnippets: true }] : [];

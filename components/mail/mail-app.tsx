@@ -150,7 +150,7 @@ import { ContextMenuItem } from "@/components/ui/context-menu";
 import { PromptDialog } from "@/components/ui/prompt-dialog";
 import { DragDropProvider } from "@/contexts/drag-drop-context";
 import { jmapErrorType } from "@/lib/jmap/jmap-error";
-import { isFilterEmpty, activeFilterCount, DEFAULT_SEARCH_FILTERS } from "@/lib/jmap/search-utils";
+import { isFilterEmpty, isPluginMessageList, activeFilterCount, DEFAULT_SEARCH_FILTERS } from "@/lib/jmap/search-utils";
 import { SearchBox, type ContactSearchField } from "@/components/search/search-box";
 import { FilterPanelHost } from "@/components/search/filter-panel-host";
 import { SearchFilterPanel, SELECT_CLASS } from "@/components/search/search-filter-panel";
@@ -4687,7 +4687,8 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   // the folder, as in Gmail, Outlook and Thunderbird (mail-p3-3); another
   // folder keeps the search unless the user chose to reset it.
   const clearSearchIfFolderChangeResets = (sameFolder = false): boolean => {
-    if (!sameFolder && !useSettingsStore.getState().clearSearchOnFolderChange) return false;
+    // A plugin's list of messages has no folder to follow: another folder ends it (#954).
+    if (!sameFolder && !useSettingsStore.getState().clearSearchOnFolderChange && !isPluginMessageList(searchFilters)) return false;
     if (isFilterEmpty(searchFilters) && !searchQuery) return false;
     setSearchQuery("");
     clearSearchFilters();

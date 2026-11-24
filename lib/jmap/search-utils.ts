@@ -29,6 +29,23 @@ export interface PluginSearchFilter {
   /** Chip text: the plugin's label for the search, or its name. */
   label: string;
   filter: Record<string, unknown>;
+  /**
+   * The messages a plugin found itself (`api.search.showMessages`, #954),
+   * in its order. With these the list shows exactly them and `filter` is
+   * empty: no JMAP query asks for messages by id.
+   */
+  emails?: PluginListedEmail[];
+}
+
+/** A message of a plugin's list: its id and, outside the user's own account, the account's id. */
+export interface PluginListedEmail {
+  id: string;
+  accountId?: string;
+}
+
+/** Whether the search is a plugin's own list of messages rather than a query. */
+export function isPluginMessageList(filters: Pick<SearchFilters, 'pluginFilter'>): boolean {
+  return Array.isArray(filters.pluginFilter?.emails);
 }
 
 export const DEFAULT_SEARCH_FILTERS: SearchFilters = {
@@ -273,7 +290,7 @@ export function buildJMAPFilter(
     conditions.push(...untaggedConditions(tagIds));
   }
 
-  if (filters.pluginFilter) {
+  if (filters.pluginFilter && !filters.pluginFilter.emails) {
     conditions.push(filters.pluginFilter.filter);
   }
 

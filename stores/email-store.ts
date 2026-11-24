@@ -17,7 +17,7 @@ import { hiddenSharedMailIds } from "@/lib/shared-mail-visibility";
 import { isMailboxMuted } from "@/lib/notification-mutes";
 import { useCalendarStore } from "@/stores/calendar-store";
 import { orderKeywords, placeHeldRows, sanitizeSortLevels, type HeldKeywords, type SortLevel } from "@/lib/message-list-order";
-import { SearchFilters, DEFAULT_SEARCH_FILTERS, buildJMAPFilter, isFilterEmpty, textFilter } from "@/lib/jmap/search-utils";
+import { SearchFilters, DEFAULT_SEARCH_FILTERS, buildJMAPFilter, isFilterEmpty, isPluginMessageList, textFilter } from "@/lib/jmap/search-utils";
 import { knownTagIds } from "@/lib/known-tag-ids";
 import { emailHooks } from "@/lib/plugin-hooks";
 import { scheduleAutoMarkAsRead } from "@/lib/mark-as-read-delay";
@@ -27,7 +27,7 @@ import { emailInMailbox } from "@/lib/move-targets";
 import { resolveThreadRoute } from "@/lib/thread-routing";
 import { emailKeyFor, threadKeyFor, threadIdFromKey, KEYWORD_PREFIX, KEYWORD_PREFIX_LEGACY } from "@/lib/thread-utils";
 import { provideSearchResults, type ProvidedSearchResult } from "@/lib/plugin-search-results";
-import { positionsByAccount, fetchUnifiedEmails, fetchUnifiedMailboxCounts, searchUnifiedEmails, advancedSearchUnifiedEmails, fetchCrossViewEmails, searchCrossViewEmails, advancedSearchCrossViewEmails, fetchTagEmails, trashAndJunkIds, resolveJmapTarget, unifiedEmptyTargets, searchAcrossAccounts, advancedSearchAcrossAccounts, getCrossUnreadTotal, dedupeUnifiedAccounts, unifiedServerKey, type AcrossAccountsSearchOptions, type UnifiedAccountClient, type UnifiedMailboxCounts } from "@/lib/unified-mailbox";
+import { positionsByAccount, fetchUnifiedEmails, fetchUnifiedMailboxCounts, searchUnifiedEmails, advancedSearchUnifiedEmails, fetchCrossViewEmails, searchCrossViewEmails, advancedSearchCrossViewEmails, fetchTagEmails, trashAndJunkIds, resolveJmapTarget, unifiedEmptyTargets, searchAcrossAccounts, advancedSearchAcrossAccounts, emailsByIdAcrossAccounts, getCrossUnreadTotal, dedupeUnifiedAccounts, unifiedServerKey, type AcrossAccountsSearchOptions, type UnifiedAccountClient, type UnifiedMailboxCounts } from "@/lib/unified-mailbox";
 import { withoutHiddenFolders } from "@/lib/team-mailboxes/hidden-folders";
 import { activeTeamFilterCondition, useTeamListFilter } from "@/lib/team-mailboxes/list-filter";
 import { teamFor } from "@/lib/team-mailboxes/team";
@@ -4211,6 +4211,10 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
   setSearchQuery: (query) => set((state) => dropPageOnSearchEdit(state, {
     ...cancelEmailSearch(state),
     searchQuery: query,
+    // The user's own search replaces a plugin's list of messages (#954).
+    ...(query.trim() && isPluginMessageList(state.searchFilters)
+      ? { searchFilters: { ...state.searchFilters, pluginFilter: null } }
+      : {}),
     ...(query === state.searchQuery ? {} : NO_SELECTION(state)),
     // A new search looks where searches look by default. A scope that only
     // followed the open folder (scopeSearchToOpenFolder) is dropped; one the
@@ -6213,13 +6217,27 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
         await get().fetchEmails(client);
         return;
       }
-      startProvidedSearchResults(searchQuery, searchFilters, { get, set });
+      // A plugin's list is no search other plugins could add to.
+      const pluginList = searchFilters.pluginFilter?.emails;
+      if (pluginList) {
+        providedSearchRun = null;
+        if (get().externalSearchResults.length > 0 || get().externalSearchPending.length > 0) {
+          set({ externalSearchResults: [], externalSearchPending: [] });
+        }
+      } else {
+        startProvidedSearchResults(searchQuery, searchFilters, { get, set });
+      }
       const emailsPerPage = useSettingsStore.getState().emailsPerPage;
       let result;
       let accountId;
       let unifiedErrors;
 
-      if (isUnifiedView && crossView) {
+      if (pluginList) {
+        // A plugin's own list (#954): exactly those messages, in its order,
+        // wherever the user is, read from the accounts this login reaches.
+        result = await emailsByIdAcrossAccounts(buildTagViewAccountClients(client), pluginList);
+        unifiedErrors = result.errors;
+      } else if (isUnifiedView && crossView) {
         const includeGroup = useSettingsStore.getState().includeGroupInUnified;
         const built = await buildUnifiedAccountClients({ includeGroup });
         if (!isCurrentSearch()) return;
@@ -6274,7 +6292,7 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
       // Plugins may add messages to the results by id; the messages are
       // fetched from the server, so a plugin can't put made-up rows in the list.
       if (!isCurrentSearch()) return;
-      const extraIds = await pluginSearchResultIds(searchQuery, searchFilters, result.emails);
+      const extraIds = pluginList ? [] : await pluginSearchResultIds(searchQuery, searchFilters, result.emails);
       if (!isCurrentSearch()) return;
       if (extraIds.length > 0) {
         const newEmails = await resolveActionClient(client).getSomeEmails(extraIds, accountId);
@@ -6314,7 +6332,11 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
   setSearchFilters: (filters) => {
     set((state) => dropPageOnSearchEdit(state, {
       ...cancelEmailSearch(state),
-      searchFilters: { ...state.searchFilters, ...filters },
+      // A filter the user adds replaces a plugin's list of messages, which no
+      // filter can narrow (#954).
+      searchFilters: isPluginMessageList(state.searchFilters) && !('pluginFilter' in filters)
+        ? { ...state.searchFilters, ...filters, pluginFilter: null }
+        : { ...state.searchFilters, ...filters },
       ...NO_SELECTION(state),
     }));
   },
