@@ -4568,7 +4568,11 @@
         "resource": "مورد",
         "location": "موقع",
         "other": "أخرى"
-      }
+      },
+      "filter_label": "إظهار",
+      "filter_all": "الكل",
+      "filter_people": "الأشخاص",
+      "filter_groups": "المجموعات"
     },
     "title": "جهات الاتصال",
     "disabled_title": "عطّل المسؤول جهات الاتصال",

@@ -55,6 +55,34 @@ describe('DirectoryPickerDialog', () => {
     expect(rows()[0]).toHaveTextContent('Marcos Souza');
   });
 
+  // #1600: groups and people apart, the group added as its own address.
+  it('shows only people or only groups', () => {
+    setDirectory([
+      { name: 'Ana Silva', email: 'ana@example.org', type: 'individual' },
+      { name: 'Finance', email: 'finance@example.org', type: 'group' },
+      { name: 'Room 1', email: 'room1@example.org', type: 'location' },
+      { name: 'Marcos Souza', email: 'marcos@example.org' },
+    ], 'ready');
+    render(<DirectoryPickerDialog client={client} onClose={vi.fn()} onAdd={vi.fn()} />);
+    const filter = screen.getByRole('radiogroup', { name: 'filter_label' });
+    expect(within(filter).getByRole('radio', { name: 'filter_all' })).toHaveAttribute('aria-checked', 'true');
+    expect(rows()).toHaveLength(4);
+
+    fireEvent.click(within(filter).getByRole('radio', { name: 'filter_groups' }));
+    expect(rows().map((r) => r.textContent)).toEqual([expect.stringContaining('Finance')]);
+
+    fireEvent.click(within(filter).getByRole('radio', { name: 'filter_people' }));
+    expect(rows()).toHaveLength(2);
+    expect(rows()[0]).toHaveTextContent('Ana Silva');
+    expect(rows()[1]).toHaveTextContent('Marcos Souza');
+  });
+
+  it('offers no type filter without groups', () => {
+    setDirectory(people(3), 'ready');
+    render(<DirectoryPickerDialog client={client} onClose={vi.fn()} onAdd={vi.fn()} />);
+    expect(screen.queryByRole('radiogroup', { name: 'filter_label' })).toBeNull();
+  });
+
   it('adds the checked entries to the chosen field and closes', () => {
     setDirectory([
       { name: 'Marcos Souza', email: 'marcos@example.org' },

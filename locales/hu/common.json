@@ -4568,7 +4568,11 @@
         "resource": "Erőforrás",
         "location": "Helyszín",
         "other": "Egyéb"
-      }
+      },
+      "filter_label": "Megjelenítés",
+      "filter_all": "Mind",
+      "filter_people": "Személyek",
+      "filter_groups": "Csoportok"
     },
     "title": "Névjegyek",
     "disabled_title": "A névjegyeket a rendszergazda kikapcsolta",

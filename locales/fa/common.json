@@ -4568,7 +4568,11 @@
         "resource": "منبع",
         "location": "مکان",
         "other": "سایر"
-      }
+      },
+      "filter_label": "نمایش",
+      "filter_all": "همه",
+      "filter_people": "افراد",
+      "filter_groups": "گروه‌ها"
     },
     "title": "مخاطبین",
     "disabled_title": "مدیر شما مخاطبان را غیرفعال کرده است",

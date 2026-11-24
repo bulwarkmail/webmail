@@ -4580,7 +4580,11 @@
         "resource": "Πόρος",
         "location": "Τοποθεσία",
         "other": "Άλλο"
-      }
+      },
+      "filter_label": "Εμφάνιση",
+      "filter_all": "Όλα",
+      "filter_people": "Άτομα",
+      "filter_groups": "Ομάδες"
     },
     "title": "Επαφές",
     "disabled_title": "Οι Επαφές είναι απενεργοποιημένες από τον διαχειριστή σας",

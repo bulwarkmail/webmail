@@ -4568,7 +4568,11 @@
         "resource": "Ressurss",
         "location": "Asukoht",
         "other": "Muu"
-      }
+      },
+      "filter_label": "Näita",
+      "filter_all": "Kõik",
+      "filter_people": "Inimesed",
+      "filter_groups": "Rühmad"
     },
     "title": "Kontaktid",
     "disabled_title": "Administraator on kontaktid välja lülitanud",

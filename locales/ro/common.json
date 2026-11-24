@@ -4568,7 +4568,11 @@
         "resource": "Resursă",
         "location": "Locație",
         "other": "Altul"
-      }
+      },
+      "filter_label": "Afișează",
+      "filter_all": "Toate",
+      "filter_people": "Persoane",
+      "filter_groups": "Grupuri"
     },
     "title": "Contacte",
     "disabled_title": "Contactele au fost dezactivate de administrator",

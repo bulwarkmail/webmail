@@ -4568,7 +4568,11 @@
         "resource": "Middel",
         "location": "Locatie",
         "other": "Overig"
-      }
+      },
+      "filter_label": "Tonen",
+      "filter_all": "Alles",
+      "filter_people": "Personen",
+      "filter_groups": "Groepen"
     },
     "title": "Contacten",
     "disabled_title": "Contacten zijn uitgeschakeld door je beheerder",

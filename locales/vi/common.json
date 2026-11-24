@@ -4580,7 +4580,11 @@
         "resource": "Tài nguyên",
         "location": "Địa điểm",
         "other": "Khác"
-      }
+      },
+      "filter_label": "Hiển thị",
+      "filter_all": "Tất cả",
+      "filter_people": "Người",
+      "filter_groups": "Nhóm"
     },
     "title": "Danh bạ",
     "disabled_title": "Danh bạ đã bị quản trị viên của bạn tắt",

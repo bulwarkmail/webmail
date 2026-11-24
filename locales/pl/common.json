@@ -4568,7 +4568,11 @@
         "resource": "Zasób",
         "location": "Lokalizacja",
         "other": "Inne"
-      }
+      },
+      "filter_label": "Pokaż",
+      "filter_all": "Wszystko",
+      "filter_people": "Osoby",
+      "filter_groups": "Grupy"
     },
     "title": "Kontakty",
     "disabled_title": "Administrator wyłączył kontakty",

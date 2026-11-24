@@ -29,6 +29,15 @@ export function filterDirectory(entries: DirectoryEntry[], query: string, locale
   return [...matched].sort((a, b) => collator.compare(a.name, b.name) || collator.compare(a.email, b.email));
 }
 
+/** People, groups or both (#1600). Resources and locations only show under All. */
+export type DirectoryTypeFilter = "all" | "people" | "groups";
+
+export function filterDirectoryByType(entries: DirectoryEntry[], filter: DirectoryTypeFilter): DirectoryEntry[] {
+  if (filter === "people") return entries.filter((e) => !e.type || e.type === "individual");
+  if (filter === "groups") return entries.filter((e) => e.type === "group");
+  return entries;
+}
+
 function TypeIcon({ type }: { type: DirectoryEntry["type"] }) {
   if (type === "group") return <Users className="w-3.5 h-3.5" />;
   if (type === "location") return <MapPin className="w-3.5 h-3.5" />;
@@ -90,6 +99,7 @@ export function DirectoryBrowser({
   const fetchDirectory = useContactStore((s) => s.fetchDirectory);
   const [query, setQuery] = useState("");
   const [page, setPage] = useState(0);
+  const [typeFilter, setTypeFilter] = useState<DirectoryTypeFilter>("all");
   const searchRef = useRef<HTMLInputElement>(null);
 
   // The directory loads at sign-in; fetch here only if that never ran.
@@ -101,7 +111,16 @@ export function DirectoryBrowser({
     if (autoFocusSearch) searchRef.current?.focus();
   }, [autoFocusSearch]);
 
-  const filtered = useMemo(() => filterDirectory(entries, query, locale), [entries, query, locale]);
+  // The type switch only appears when the directory holds both kinds.
+  const offersTypes = useMemo(
+    () => entries.some((e) => e.type === "group") && entries.some((e) => !e.type || e.type === "individual"),
+    [entries],
+  );
+  const activeType = offersTypes ? typeFilter : "all";
+  const filtered = useMemo(
+    () => filterDirectory(filterDirectoryByType(entries, activeType), query, locale),
+    [entries, activeType, query, locale],
+  );
   const pageCount = Math.max(1, Math.ceil(filtered.length / DIRECTORY_PAGE_SIZE));
   const currentPage = Math.min(page, pageCount - 1);
   const pageEntries = filtered.slice(currentPage * DIRECTORY_PAGE_SIZE, (currentPage + 1) * DIRECTORY_PAGE_SIZE);
@@ -191,6 +210,30 @@ export function DirectoryBrowser({
             </ToolbarButton>
           )}
         </div>
+        {offersTypes && (
+          <div role="radiogroup" aria-label={t("filter_label")} className="mx-3 mb-2 inline-flex gap-0.5 rounded-md border border-input p-0.5">
+            {([
+              ["all", t("filter_all")],
+              ["people", t("filter_people")],
+              ["groups", t("filter_groups")],
+            ] as const).map(([value, label]) => (
+              <button
+                key={value}
+                type="button"
+                role="radio"
+                aria-checked={activeType === value}
+                onClick={() => { setTypeFilter(value); setPage(0); }}
+                className={cn(
+                  "flex items-center gap-1.5 px-2.5 py-1 text-xs rounded transition-colors",
+                  activeType === value ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                {value === "groups" && <Users className="w-3.5 h-3.5" />}
+                {label}
+              </button>
+            ))}
+          </div>
+        )}
         {entries.length > 0 && status === "error" && (
           <p role="alert" className="px-3 pb-2 -mt-1 text-xs text-destructive">{t("refresh_failed")}</p>
         )}

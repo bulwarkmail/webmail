@@ -4568,7 +4568,11 @@
         "resource": "Ресурс",
         "location": "Місце",
         "other": "Інше"
-      }
+      },
+      "filter_label": "Показати",
+      "filter_all": "Усі",
+      "filter_people": "Люди",
+      "filter_groups": "Групи"
     },
     "title": "Контакти",
     "disabled_title": "Адміністратор вимкнув контакти",

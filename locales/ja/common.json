@@ -4568,7 +4568,11 @@
         "resource": "リソース",
         "location": "場所",
         "other": "その他"
-      }
+      },
+      "filter_label": "表示",
+      "filter_all": "すべて",
+      "filter_people": "ユーザー",
+      "filter_groups": "グループ"
     },
     "title": "連絡先",
     "disabled_title": "連絡先は管理者によって無効にされています",

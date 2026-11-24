@@ -4568,7 +4568,11 @@
         "resource": "Ressource",
         "location": "Ort",
         "other": "Sonstiges"
-      }
+      },
+      "filter_label": "Anzeigen",
+      "filter_all": "Alle",
+      "filter_people": "Personen",
+      "filter_groups": "Gruppen"
     },
     "title": "Kontakte",
     "disabled_title": "Kontakte wurden von Ihrem Administrator deaktiviert",

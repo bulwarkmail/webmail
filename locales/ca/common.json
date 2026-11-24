@@ -4568,7 +4568,11 @@
         "resource": "Recurs",
         "location": "Ubicació",
         "other": "Altre"
-      }
+      },
+      "filter_label": "Mostra",
+      "filter_all": "Tots",
+      "filter_people": "Persones",
+      "filter_groups": "Grups"
     },
     "title": "Contactes",
     "disabled_title": "L'administrador ha desactivat els contactes",

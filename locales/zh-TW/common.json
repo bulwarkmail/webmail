@@ -4568,7 +4568,11 @@
         "resource": "資源",
         "location": "地點",
         "other": "其他"
-      }
+      },
+      "filter_label": "顯示",
+      "filter_all": "全部",
+      "filter_people": "人員",
+      "filter_groups": "群組"
     },
     "title": "聯絡人",
     "disabled_title": "管理員已關閉聯絡人",

@@ -4568,7 +4568,11 @@
         "resource": "Нөөц",
         "location": "Байршил",
         "other": "Бусад"
-      }
+      },
+      "filter_label": "Харуулах",
+      "filter_all": "Бүгд",
+      "filter_people": "Хүмүүс",
+      "filter_groups": "Бүлгүүд"
     },
     "title": "Харилцах утас",
     "disabled_title": "Таны администратор харилцагчдыг унтраасан",

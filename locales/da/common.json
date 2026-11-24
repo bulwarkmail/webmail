@@ -4568,7 +4568,11 @@
         "resource": "Ressource",
         "location": "Sted",
         "other": "Andet"
-      }
+      },
+      "filter_label": "Vis",
+      "filter_all": "Alle",
+      "filter_people": "Personer",
+      "filter_groups": "Grupper"
     },
     "title": "Kontakter",
     "disabled_title": "Kontakter er slået fra af din administrator",

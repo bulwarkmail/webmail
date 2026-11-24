@@ -4568,7 +4568,11 @@
         "resource": "Recurso",
         "location": "Local",
         "other": "Outro"
-      }
+      },
+      "filter_label": "Mostrar",
+      "filter_all": "Tudo",
+      "filter_people": "Pessoas",
+      "filter_groups": "Grupos"
     },
     "title": "Contatos",
     "disabled_title": "Os contatos foram desativados pelo administrador",

@@ -4568,7 +4568,11 @@
         "resource": "Prostředek",
         "location": "Místo",
         "other": "Jiné"
-      }
+      },
+      "filter_label": "Zobrazit",
+      "filter_all": "Vše",
+      "filter_people": "Lidé",
+      "filter_groups": "Skupiny"
     },
     "title": "Kontakty",
     "disabled_title": "Kontakty vypnul správce",

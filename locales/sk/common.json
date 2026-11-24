@@ -4568,7 +4568,11 @@
         "resource": "Prostriedok",
         "location": "Miesto",
         "other": "Iné"
-      }
+      },
+      "filter_label": "Zobraziť",
+      "filter_all": "Všetko",
+      "filter_people": "Ľudia",
+      "filter_groups": "Skupiny"
     },
     "title": "Kontakty",
     "disabled_title": "Kontakty vypol správca",

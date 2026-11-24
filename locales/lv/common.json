@@ -4568,7 +4568,11 @@
         "resource": "Resurss",
         "location": "Vieta",
         "other": "Cits"
-      }
+      },
+      "filter_label": "Rādīt",
+      "filter_all": "Visi",
+      "filter_people": "Personas",
+      "filter_groups": "Grupas"
     },
     "title": "Kontakti",
     "disabled_title": "Administrators ir izslēdzis kontaktpersonas",

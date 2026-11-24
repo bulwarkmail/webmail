@@ -4568,7 +4568,11 @@
         "resource": "리소스",
         "location": "위치",
         "other": "기타"
-      }
+      },
+      "filter_label": "표시",
+      "filter_all": "전체",
+      "filter_people": "사람",
+      "filter_groups": "그룹"
     },
     "title": "연락처",
     "disabled_title": "관리자가 연락처를 사용 중지했습니다",

@@ -4568,7 +4568,11 @@
         "resource": "Risorsa",
         "location": "Luogo",
         "other": "Altro"
-      }
+      },
+      "filter_label": "Mostra",
+      "filter_all": "Tutti",
+      "filter_people": "Persone",
+      "filter_groups": "Gruppi"
     },
     "title": "Contatti",
     "disabled_title": "I contatti sono stati disattivati dall'amministratore",

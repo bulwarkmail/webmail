@@ -4576,7 +4576,11 @@
         "resource": "Ressurs",
         "location": "Stad",
         "other": "Anna"
-      }
+      },
+      "filter_label": "Vis",
+      "filter_all": "Alle",
+      "filter_people": "Personar",
+      "filter_groups": "Grupper"
     },
     "title": "Kontaktar",
     "disabled_title": "Kontaktar er slått av av administratoren din",

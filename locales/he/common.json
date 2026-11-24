@@ -4430,7 +4430,11 @@
         "resource": "משאב",
         "location": "מיקום",
         "other": "אחר"
-      }
+      },
+      "filter_label": "הצגה",
+      "filter_all": "הכול",
+      "filter_people": "אנשים",
+      "filter_groups": "קבוצות"
     },
     "title": "אנשי קשר",
     "disabled_title": "מנהל המערכת השבית את אנשי הקשר",

@@ -4568,7 +4568,11 @@
         "resource": "资源",
         "location": "地点",
         "other": "其他"
-      }
+      },
+      "filter_label": "显示",
+      "filter_all": "全部",
+      "filter_people": "人员",
+      "filter_groups": "群组"
     },
     "title": "联系人",
     "disabled_title": "管理员已关闭联系人",

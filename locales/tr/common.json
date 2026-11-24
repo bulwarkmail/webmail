@@ -4568,7 +4568,11 @@
         "resource": "Kaynak",
         "location": "Konum",
         "other": "Diğer"
-      }
+      },
+      "filter_label": "Göster",
+      "filter_all": "Tümü",
+      "filter_people": "Kişiler",
+      "filter_groups": "Gruplar"
     },
     "title": "Kişiler",
     "disabled_title": "Kişiler yöneticiniz tarafından kapatıldı",

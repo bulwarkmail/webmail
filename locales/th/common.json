@@ -3944,7 +3944,11 @@
         "resource": "ทรัพยากร/อุปกรณ์",
         "location": "สถานที่/ห้องประชุม",
         "other": "อื่นๆ"
-      }
+      },
+      "filter_label": "แสดง",
+      "filter_all": "ทั้งหมด",
+      "filter_people": "บุคคล",
+      "filter_groups": "กลุ่ม"
     },
     "title": "ผู้ติดต่อ",
     "disabled_title": "ผู้ดูแลระบบปิดรายชื่อติดต่อ",

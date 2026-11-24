@@ -4568,7 +4568,11 @@
         "resource": "Ressurs",
         "location": "Sted",
         "other": "Annet"
-      }
+      },
+      "filter_label": "Vis",
+      "filter_all": "Alle",
+      "filter_people": "Personer",
+      "filter_groups": "Grupper"
     },
     "title": "Kontakter",
     "disabled_title": "Kontakter er slått av av administratoren",

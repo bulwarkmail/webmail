@@ -4568,7 +4568,11 @@
         "resource": "Resource",
         "location": "Location",
         "other": "Other"
-      }
+      },
+      "filter_label": "Show",
+      "filter_all": "All",
+      "filter_people": "People",
+      "filter_groups": "Groups"
     },
     "title": "Contacts",
     "disabled_title": "Contacts is turned off by your administrator",

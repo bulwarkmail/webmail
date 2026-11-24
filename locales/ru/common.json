@@ -4568,7 +4568,11 @@
         "resource": "Ресурс",
         "location": "Место",
         "other": "Другое"
-      }
+      },
+      "filter_label": "Показать",
+      "filter_all": "Все",
+      "filter_people": "Люди",
+      "filter_groups": "Группы"
     },
     "title": "Контакты",
     "disabled_title": "Администратор отключил контакты",
