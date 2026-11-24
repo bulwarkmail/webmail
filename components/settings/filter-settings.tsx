@@ -239,6 +239,7 @@ export function FilterSettings() {
     includeVacation,
     vacationScriptName,
     vacationForward,
+    serverRules,
     sieveCapabilities,
     selectAccount,
     saveFilters,
@@ -597,6 +598,25 @@ export function FilterSettings() {
                   {t("reset_to_visual")}
                 </button>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* Shown so nothing in the filters script runs out of the user's sight. */}
+        {!isOpaque && serverRules && (
+          <div
+            className="flex items-start gap-3 p-3 rounded-md border border-border"
+            data-testid="server-rules"
+          >
+            <div className="pt-0.5 text-muted-foreground" aria-hidden="true">
+              <Lock className="w-4 h-4" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-foreground">{t("server_rules")}</p>
+              <p className="text-xs text-muted-foreground">{t("server_rules_description")}</p>
+              <pre dir="ltr" className="mt-1.5 text-xs font-mono whitespace-pre-wrap break-all text-muted-foreground bg-muted rounded p-2 max-h-32 overflow-y-auto">
+                {serverRules}
+              </pre>
             </div>
           </div>
         )}

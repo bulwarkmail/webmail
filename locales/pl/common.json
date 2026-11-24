@@ -3206,6 +3206,8 @@
       },
       "origin_external": "Zewnętrzny",
       "managed_by_tooltip": "Zarządzane przez {source}. Edytuj w tej aplikacji lub użyj surowego edytora Sieve.",
+      "server_rules": "Reguły serwera",
+      "server_rules_description": "Dodał je Twój dostawca poczty. Działają przed Twoimi filtrami i nie można ich tu zmienić.",
       "quick_rule_names": {
         "move_sender": "Przenoś od {sender} do {folder}",
         "move_domain": "Przenoś od @{domain} do {folder}",

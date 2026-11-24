@@ -3206,6 +3206,8 @@
       },
       "origin_external": "Extern",
       "managed_by_tooltip": "Verwaltet von {source}. Bearbeiten Sie sie in dieser App oder verwenden Sie den rohen Sieve-Editor.",
+      "server_rules": "Serverregeln",
+      "server_rules_description": "Ihr Mailanbieter hat sie angelegt. Sie laufen vor Ihren Filtern und lassen sich hier nicht ändern.",
       "quick_rule_names": {
         "move_sender": "Von {sender} nach {folder} verschieben",
         "move_domain": "Von @{domain} nach {folder} verschieben",

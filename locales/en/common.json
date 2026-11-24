@@ -3213,6 +3213,8 @@
       },
       "origin_external": "External",
       "managed_by_tooltip": "Managed by {source}. Edit it in that app, or use the raw Sieve editor.",
+      "server_rules": "Server rules",
+      "server_rules_description": "Your mail host added these. They run before your filters and can't be changed here.",
       "quick_rule_names": {
         "move_sender": "Move from {sender} to {folder}",
         "move_domain": "Move from @{domain} to {folder}",

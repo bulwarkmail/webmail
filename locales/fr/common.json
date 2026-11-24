@@ -3206,6 +3206,8 @@
       },
       "origin_external": "Externe",
       "managed_by_tooltip": "Géré par {source}. Modifiez-le dans cette application, ou utilisez l'éditeur Sieve brut.",
+      "server_rules": "Règles du serveur",
+      "server_rules_description": "Votre fournisseur de messagerie les a ajoutées. Elles s'appliquent avant vos filtres et ne peuvent pas être modifiées ici.",
       "quick_rule_names": {
         "move_sender": "Déplacer de {sender} vers {folder}",
         "move_domain": "Déplacer de @{domain} vers {folder}",

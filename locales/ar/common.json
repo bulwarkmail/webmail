@@ -3213,6 +3213,8 @@
       },
       "origin_external": "خارجي",
       "managed_by_tooltip": "تُدار بواسطة {source}. عدّلها في ذلك التطبيق، أو استخدم محرر Sieve الخام.",
+      "server_rules": "قواعد الخادم",
+      "server_rules_description": "أضافها مزوّد البريد لديك. تعمل قبل عوامل التصفية الخاصة بك، ولا يمكن تغييرها هنا.",
       "quick_rule_names": {
         "move_sender": "نقل من {sender} إلى {folder}",
         "move_domain": "نقل من @{domain} إلى {folder}",

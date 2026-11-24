@@ -3213,6 +3213,8 @@
       },
       "origin_external": "Extern",
       "managed_by_tooltip": "Gestionat per {source}. Editeu-ho en aquesta aplicació, o utilitzeu l'editor Sieve en brut.",
+      "server_rules": "Regles del servidor",
+      "server_rules_description": "Les ha afegit el vostre proveïdor de correu. S'executen abans dels vostres filtres i no es poden canviar aquí.",
       "quick_rule_names": {
         "move_sender": "Mou de {sender} a {folder}",
         "move_domain": "Mou de @{domain} a {folder}",

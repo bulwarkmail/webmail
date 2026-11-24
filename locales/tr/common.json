@@ -3206,6 +3206,8 @@
       },
       "origin_external": "Harici",
       "managed_by_tooltip": "{source} tarafından yönetilir. Bu uygulamada düzenleyin veya ham Sieve düzenleyicisini kullanın.",
+      "server_rules": "Sunucu kuralları",
+      "server_rules_description": "Bunları e-posta sağlayıcınız ekledi. Filtrelerinizden önce çalışırlar ve burada değiştirilemezler.",
       "quick_rule_names": {
         "move_sender": "{sender} iletilerini {folder} klasörüne taşı",
         "move_domain": "@{domain} iletilerini {folder} klasörüne taşı",

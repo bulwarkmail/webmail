@@ -3213,6 +3213,8 @@
       },
       "origin_external": "Externé",
       "managed_by_tooltip": "Spravované aplikáciou {source}. Upravte to v danej aplikácii alebo použite editor zdrojového kódu Sieve.",
+      "server_rules": "Pravidlá servera",
+      "server_rules_description": "Pridal ich váš poskytovateľ pošty. Bežia pred vašimi filtrami a tu sa nedajú zmeniť.",
       "quick_rule_names": {
         "move_sender": "Presunúť od {sender} do {folder}",
         "move_domain": "Presunúť od @{domain} do {folder}",

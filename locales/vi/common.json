@@ -3225,6 +3225,8 @@
       },
       "origin_external": "Bên ngoài",
       "managed_by_tooltip": "Do {source} quản lý. Hãy chỉnh sửa trong ứng dụng đó hoặc dùng trình chỉnh sửa mã Sieve.",
+      "server_rules": "Quy tắc máy chủ",
+      "server_rules_description": "Nhà cung cấp thư của bạn đã thêm các quy tắc này. Chúng chạy trước bộ lọc của bạn và không thể thay đổi ở đây.",
       "quick_rule_names": {
         "move_sender": "Chuyển từ {sender} tới {folder}",
         "move_domain": "Chuyển từ @{domain} sang {folder}",

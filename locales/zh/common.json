@@ -3206,6 +3206,8 @@
       },
       "origin_external": "外部",
       "managed_by_tooltip": "由 {source} 管理。请在该应用中编辑，或使用原始 Sieve 编辑器。",
+      "server_rules": "服务器规则",
+      "server_rules_description": "这些规则由您的邮件服务商添加，会在您的过滤器之前运行，无法在此更改。",
       "quick_rule_names": {
         "move_sender": "将 {sender} 的邮件移至 {folder}",
         "move_domain": "将 @{domain} 的邮件移至 {folder}",

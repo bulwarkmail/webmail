@@ -3213,6 +3213,8 @@
       },
       "origin_external": "Extern",
       "managed_by_tooltip": "Gestionat de {source}. Editați-l în acea aplicație sau utilizați editorul brut Sieve.",
+      "server_rules": "Reguli ale serverului",
+      "server_rules_description": "Le-a adăugat furnizorul dvs. de e-mail. Rulează înaintea filtrelor dvs. și nu pot fi modificate aici.",
       "quick_rule_names": {
         "move_sender": "Mută de la {sender} în {folder}",
         "move_domain": "Mută de la @{domain} în {folder}",

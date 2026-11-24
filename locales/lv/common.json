@@ -3206,6 +3206,8 @@
       },
       "origin_external": "Ārējs",
       "managed_by_tooltip": "Pārvalda {source}. Rediģējiet to šajā lietotnē vai izmantojiet neapstrādāto Sieve redaktoru.",
+      "server_rules": "Servera noteikumi",
+      "server_rules_description": "Tos pievienoja jūsu pasta pakalpojuma sniedzējs. Tie darbojas pirms jūsu filtriem, un šeit tos mainīt nevar.",
       "quick_rule_names": {
         "move_sender": "Pārvietot no {sender} uz {folder}",
         "move_domain": "Pārvietot no @{domain} uz {folder}",

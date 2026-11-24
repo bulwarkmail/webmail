@@ -3206,6 +3206,8 @@
       },
       "origin_external": "Extern",
       "managed_by_tooltip": "Beheerd door {source}. Bewerk het in die app of gebruik de ruwe Sieve-editor.",
+      "server_rules": "Serverregels",
+      "server_rules_description": "Je mailprovider heeft deze toegevoegd. Ze worden vóór je filters uitgevoerd en zijn hier niet te wijzigen.",
       "quick_rule_names": {
         "move_sender": "Van {sender} naar {folder} verplaatsen",
         "move_domain": "Van @{domain} naar {folder} verplaatsen",

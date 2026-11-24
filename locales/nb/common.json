@@ -3213,6 +3213,8 @@
       },
       "origin_external": "Ekstern",
       "managed_by_tooltip": "Denne regelen administreres av {source}. Rediger den der, eller bruk redigereren for rå Sieve-kode.",
+      "server_rules": "Serverregler",
+      "server_rules_description": "E-postleverandøren din har lagt dem til. De kjører før filtrene dine og kan ikke endres her.",
       "quick_rule_names": {
         "move_sender": "Flytt fra {sender} til {folder}",
         "move_domain": "Flytt fra @{domain} til {folder}",

@@ -3107,6 +3107,8 @@
       "regex_placeholder": "ביטוי רגולרי, לדוגמה ^Cron|mailman",
       "origin_external": "חיצוני",
       "managed_by_tooltip": "מנוהל על ידי {source}. ערוך אותו ביישום זה, או השתמש בעורך Sieve הגולמי.",
+      "server_rules": "כללי שרת",
+      "server_rules_description": "ספק הדואר שלך הוסיף אותם. הם פועלים לפני המסננים שלך ואי אפשר לשנות אותם כאן.",
       "quick_rule_names": {
         "move_sender": "העבר מ-{sender} אל {folder}",
         "move_domain": "העבר מ-@{domain} אל {folder}",

@@ -3206,6 +3206,8 @@
       },
       "origin_external": "Esterno",
       "managed_by_tooltip": "Gestito da {source}. Modificalo in quell'app o usa l'editor Sieve grezzo.",
+      "server_rules": "Regole del server",
+      "server_rules_description": "Le ha aggiunte il tuo provider di posta. Vengono eseguite prima dei tuoi filtri e qui non si possono modificare.",
       "quick_rule_names": {
         "move_sender": "Sposta da {sender} a {folder}",
         "move_domain": "Sposta da @{domain} a {folder}",

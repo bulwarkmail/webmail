@@ -3206,6 +3206,8 @@
       },
       "origin_external": "Externí",
       "managed_by_tooltip": "Spravováno aplikací {source}. Úpravy provádějte v příslušné aplikaci nebo použijte editor zdrojového kódu Sieve.",
+      "server_rules": "Pravidla serveru",
+      "server_rules_description": "Přidal je váš poskytovatel pošty. Běží před vašimi filtry a tady je změnit nelze.",
       "quick_rule_names": {
         "move_sender": "Přesunout od {sender} do {folder}",
         "move_domain": "Přesunout od @{domain} do {folder}",

@@ -3209,6 +3209,8 @@
       },
       "origin_external": "Ekstern",
       "managed_by_tooltip": "Administreres af {source}. Redigér det i den pågældende app, eller brug raw Sieve-editoren.",
+      "server_rules": "Serverregler",
+      "server_rules_description": "Din mailudbyder har tilføjet dem. De kører før dine filtre og kan ikke ændres her.",
       "quick_rule_names": {
         "move_sender": "Flyt fra {sender} til {folder}",
         "move_domain": "Flyt fra @{domain} til {folder}",

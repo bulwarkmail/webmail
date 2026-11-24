@@ -3213,6 +3213,8 @@
       },
       "origin_external": "خارجی",
       "managed_by_tooltip": "مدیریت شده توسط {source}. در آن برنامه ویرایش کنید یا از ویرایشگر خام Sieve استفاده کنید.",
+      "server_rules": "قوانین سرور",
+      "server_rules_description": "ارائه‌دهندهٔ ایمیل شما این‌ها را افزوده است. پیش از فیلترهای شما اجرا می‌شوند و اینجا قابل تغییر نیستند.",
       "quick_rule_names": {
         "move_sender": "انتقال از {sender} به {folder}",
         "move_domain": "انتقال از @{domain} به {folder}",

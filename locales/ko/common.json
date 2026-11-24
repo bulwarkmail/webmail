@@ -3206,6 +3206,8 @@
       },
       "origin_external": "외부",
       "managed_by_tooltip": "{source}에서 관리됩니다. 해당 앱에서 편집하거나 원시 Sieve 편집기를 사용하세요.",
+      "server_rules": "서버 규칙",
+      "server_rules_description": "메일 서비스 제공자가 추가한 규칙입니다. 필터보다 먼저 실행되며 여기서는 변경할 수 없습니다.",
       "quick_rule_names": {
         "move_sender": "{sender}에서 {folder}(으)로 이동",
         "move_domain": "@{domain}에서 {folder}(으)로 이동",

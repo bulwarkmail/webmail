@@ -3206,6 +3206,8 @@
       },
       "origin_external": "Externo",
       "managed_by_tooltip": "Gestionado por {source}. Edítalo en esa aplicación o usa el editor Sieve sin procesar.",
+      "server_rules": "Reglas del servidor",
+      "server_rules_description": "Las añadió tu proveedor de correo. Se aplican antes que tus filtros y no se pueden cambiar aquí.",
       "quick_rule_names": {
         "move_sender": "Mover de {sender} a {folder}",
         "move_domain": "Mover de @{domain} a {folder}",

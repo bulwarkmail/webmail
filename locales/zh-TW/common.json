@@ -3213,6 +3213,8 @@
       },
       "origin_external": "外部",
       "managed_by_tooltip": "由 {source} 管理。請在該應用程式中編輯，或使用原始 Sieve 編輯器。",
+      "server_rules": "伺服器規則",
+      "server_rules_description": "這些規則由您的郵件服務商新增，會在您的篩選器之前執行，無法在此變更。",
       "quick_rule_names": {
         "move_sender": "將 {sender} 的郵件移至 {folder}",
         "move_domain": "將 @{domain} 的郵件移至 {folder}",

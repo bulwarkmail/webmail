@@ -3206,6 +3206,8 @@
       },
       "origin_external": "Внешнее",
       "managed_by_tooltip": "Управляется {source}. Редактируйте в этом приложении или используйте редактор Sieve.",
+      "server_rules": "Правила сервера",
+      "server_rules_description": "Их добавил ваш почтовый провайдер. Они срабатывают раньше ваших фильтров, и изменить их здесь нельзя.",
       "quick_rule_names": {
         "move_sender": "Перемещать от {sender} в {folder}",
         "move_domain": "Перемещать от @{domain} в {folder}",

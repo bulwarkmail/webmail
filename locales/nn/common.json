@@ -3221,6 +3221,8 @@
       },
       "origin_external": "Ekstern",
       "managed_by_tooltip": "Styrt av {source}. Rediger han i den appen, eller bruk den rå Sieve-redigeringa.",
+      "server_rules": "Serverreglar",
+      "server_rules_description": "E-postleverandøren din har lagt dei til. Dei køyrer før filtera dine og kan ikkje endrast her.",
       "quick_rule_names": {
         "move_sender": "Flytt frå {sender} til {folder}",
         "move_domain": "Flytt frå @{domain} til {folder}",

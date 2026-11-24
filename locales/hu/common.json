@@ -3209,6 +3209,8 @@
       },
       "origin_external": "Külső",
       "managed_by_tooltip": "Kezeli: {source}. Szerkeszd az alkalmazásban, vagy használd a nyers Sieve szerkesztőt.",
+      "server_rules": "Szerver szabályai",
+      "server_rules_description": "Ezeket a levelezési szolgáltatód adta hozzá. A szűrőid előtt futnak, és itt nem módosíthatók.",
       "quick_rule_names": {
         "move_sender": "Áthelyezés: {sender} → {folder}",
         "move_domain": "Áthelyezés: @{domain} → {folder}",

@@ -6602,6 +6602,8 @@
       },
       "origin_external": "ภายนอก",
       "managed_by_tooltip": "จัดการโดย {source} แก้ไขในแอปนั้น หรือใช้ตัวแก้ไข Sieve โดยตรง",
+      "server_rules": "กฎของเซิร์ฟเวอร์",
+      "server_rules_description": "ผู้ให้บริการอีเมลของคุณเพิ่มกฎเหล่านี้ไว้ กฎจะทำงานก่อนตัวกรองของคุณและแก้ไขที่นี่ไม่ได้",
       "quick_rule_names": {
         "move_sender": "ย้ายจาก {sender} ไปที่ {folder}",
         "move_domain": "ย้ายจาก @{domain} ไปที่ {folder}",

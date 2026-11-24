@@ -3206,6 +3206,8 @@
       },
       "origin_external": "外部",
       "managed_by_tooltip": "{source} によって管理されています。そのアプリで編集するか、生の Sieve エディターを使用してください。",
+      "server_rules": "サーバーのルール",
+      "server_rules_description": "メールサービスの提供者が追加したルールです。フィルターより先に実行され、ここでは変更できません。",
       "quick_rule_names": {
         "move_sender": "{sender} から {folder} へ移動",
         "move_domain": "@{domain} から {folder} へ移動",

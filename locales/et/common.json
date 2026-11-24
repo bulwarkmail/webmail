@@ -3213,6 +3213,8 @@
       },
       "origin_external": "Väline",
       "managed_by_tooltip": "Hallatud {source} poolt. Muuda seda vastavas rakenduses või kasuta Sieve lähtekoodi redaktorit.",
+      "server_rules": "Serveri reeglid",
+      "server_rules_description": "Need lisas sinu e-posti teenuse pakkuja. Need käivituvad enne sinu filtreid ja neid ei saa siin muuta.",
       "quick_rule_names": {
         "move_sender": "Liiguta saatjalt {sender} kausta {folder}",
         "move_domain": "Liiguta domeenilt @{domain} kausta {folder}",
