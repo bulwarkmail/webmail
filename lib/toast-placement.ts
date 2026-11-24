@@ -30,6 +30,7 @@ const STACK_WIDTH = 360;
 /** What of a composer's text area must stay free above the stack: three lines (px). */
 export const TOAST_EDITOR_FREE = 72;
 const COMPOSER_FOOTER = '[data-composer-footer]';
+export const TOAST_REPLY_BOX = '[data-quick-reply-box]';
 const COMPOSER_ROOT = '[data-testid="email-composer"]';
 const COMPOSER_EDITOR = '.ProseMirror, textarea';
 
@@ -56,9 +57,10 @@ function viewport(): { width: number; height: number } {
 }
 
 /** The stack's place, from what is on screen now. */
-export function computeToastPlacement(stack: HTMLElement, opts: { phone: boolean; rtl: boolean }): ToastPlacement {
+export function computeToastPlacement(stack: HTMLElement, opts: { phone: boolean; rtl: boolean; replyInUse?: Element | null }): ToastPlacement {
   const { width: vw, height: vh } = viewport();
   const width = Math.min(stack.offsetWidth || STACK_WIDTH, vw);
+  const height = stack.offsetHeight || stack.getBoundingClientRect().height;
 
   // Beside a sheet at the window's end, when the stack fits next to it.
   // Without room it stays in the corner and clears the sheet's footer below.
@@ -83,6 +85,7 @@ export function computeToastPlacement(stack: HTMLElement, opts: { phone: boolean
     const right = atEnd === null ? vw - TOAST_PHONE_EDGE : left + width;
     let bottom = opts.phone ? TOAST_PHONE_EDGE : TOAST_EDGE;
     let lifter: Element | null = null;
+    const boxes: { el: Element; r: DOMRect }[] = [];
     for (const el of document.querySelectorAll(TOAST_AVOID_BOTTOM)) {
       if (stack.contains(el)) continue;
       const r = shownRect(el);
@@ -90,6 +93,12 @@ export function computeToastPlacement(stack: HTMLElement, opts: { phone: boolean
       if (r.right <= left || r.left >= right) continue;
       if (r.top >= vh || r.bottom <= 0) continue;
       if (r.top < vh / 2) continue;
+      if (!opts.phone && el.matches(TOAST_REPLY_BOX) && !el.hasAttribute("data-reply-started") && el !== opts.replyInUse && !el.contains(document.activeElement)) continue;
+      boxes.push({ el, r });
+    }
+    boxes.sort((a, b) => b.r.bottom - a.r.bottom);
+    for (const { el, r } of boxes) {
+      if (r.bottom <= vh - bottom - height) continue;
       const above = vh - r.top + TOAST_GAP;
       if (above > bottom) {
         bottom = above;
@@ -109,7 +118,6 @@ export function computeToastPlacement(stack: HTMLElement, opts: { phone: boolean
     const editor = root?.querySelector(COMPOSER_EDITOR);
     const rootBox = root ? shownRect(root) : null;
     const editorBox = editor ? shownRect(editor) : null;
-    const height = stack.offsetHeight;
     if (rootBox && editorBox && height > 0) {
       const stackTop = vh - bottom - height;
       const free = stackTop - Math.max(editorBox.top, rootBox.top);

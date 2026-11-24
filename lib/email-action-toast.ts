@@ -3,14 +3,15 @@ import { useEmailStore, resolveEmailActionContext, resolveSelectedEmails, type E
 import type { ToastAction } from "@/components/ui/toast";
 import type { IJMAPClient } from "@/lib/jmap/client-interface";
 import type { Email } from "@/lib/jmap/types";
-import { linkUndoToast, recordUndo, runUndo } from "@/lib/undo-history";
+import { recordUndo } from "@/lib/undo-history";
+import { confirmUndone, showUndoCard, UNDO_TOAST_DURATION, UNDO_TOAST_GROUP } from "@/lib/undo-deck";
 import { formatShortcutCombo } from "@/lib/shortcut-keys";
 import { emailKeyFor, KEYWORD_PREFIX, KEYWORD_PREFIX_LEGACY } from "@/lib/thread-utils";
 import { announce } from "@/lib/announce";
+import { stripSubjectPrefixes } from "@/lib/subject-prefix";
 import { currentStoreEpoch } from "@/lib/store-epoch";
 
-/** How long a toast with Undo stays, so there is time to reach the button. */
-export const UNDO_TOAST_DURATION = 8000;
+export { UNDO_TOAST_DURATION, UNDO_TOAST_GROUP };
 
 /** The words the Undo action needs, from the `notifications` namespace. */
 export interface UndoLabels {
@@ -26,6 +27,17 @@ export interface UndoLabels {
 /** An Undo for a toast, with the words a screen reader hears about it. */
 export interface UndoToastAction extends ToastAction {
   hint?: string;
+  subject?: string;
+  keys?: string[];
+}
+
+function subjectOf(batches: EmailRestoreBatch[]): string | undefined {
+  const subjects = new Set<string>();
+  for (const batch of batches) for (const point of batch.points) {
+    const subject = stripSubjectPrefixes(batch.messages?.[point.id]?.subject).trim();
+    if (subject) subjects.add(subject);
+  }
+  return subjects.size === 1 ? subjects.values().next().value : undefined;
 }
 
 /** The undo shortcut as this platform writes it (Ctrl+Z, ⌘Z). */
@@ -93,6 +105,7 @@ export function undoKeywordAction(
   return {
     label: labels.undo,
     hint: labels.hint,
+    keys: points.map((p) => p.key),
     onClick: () => {
       void (async () => {
         const { patchEmailKeywords } = useEmailStore.getState();
@@ -104,7 +117,7 @@ export function undoKeywordAction(
           console.error("Failed to undo:", failed.reason);
           toast.error(labels.failed);
         } else {
-          toast.success(labels.undone ?? labels.done);
+          confirmUndone(labels.undone ?? labels.done);
         }
       })();
     },
@@ -118,7 +131,7 @@ export function undoKeywordAction(
  */
 export function recordQuietUndo(title: string, undo: UndoToastAction | undefined): void {
   announce(title);
-  if (undo) recordUndo(title, undo.onClick);
+  if (undo) recordUndo(title, undo.onClick, undo.keys);
 }
 
 /**
@@ -244,11 +257,13 @@ export function undoMoveAction(
   return {
     label: labels.undo,
     hint: labels.hint,
+    subject: subjectOf(batches),
+    keys: batches.flatMap((b) => b.points.map((p) => b.messages?.[p.id]?.key ?? p.id)),
     onClick: () => {
       void (async () => {
         try {
           await useEmailStore.getState().undoMove(client, batches, receipts ?? []);
-          toast.success(labels.done);
+          confirmUndone(labels.done);
           onUndone?.();
         } catch (error) {
           console.error("Failed to undo:", error);
@@ -269,15 +284,7 @@ export function toastWithUndo(title: string, undo: UndoToastAction | undefined, 
     toast.success(title, message);
     return;
   }
-  const entry = recordUndo(title, undo.onClick);
-  const toastId = toast.success(title, {
-    message,
-    // The toast closes itself after its action ran.
-    action: { label: undo.label, onClick: () => { runUndo(entry.id); } },
-    duration: UNDO_TOAST_DURATION,
-    srHint: undo.hint,
-  });
-  linkUndoToast(entry.id, toastId);
+  showUndoCard(title, undo, message ?? undo.subject);
 }
 
 /**

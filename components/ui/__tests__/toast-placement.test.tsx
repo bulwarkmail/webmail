@@ -2,6 +2,7 @@ import { act, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ToastContainer } from '../toast';
 import { toast, useToastStore } from '@/stores/toast-store';
+import { TOAST_EASE, TOAST_MOVE_MS } from '@/lib/toast-motion';
 
 // Toasts were left in the middle of the content: their place was worked out
 // from a box (the quick reply box's height, a bar's top, the focused element)
@@ -49,9 +50,13 @@ async function nextFrame() {
   });
 }
 
-function QuickReplyBox({ top = H - 90, height = 90 }: { top?: number; height?: number }) {
+function QuickReplyBox({ top = H - 90, height = 90, writing = true, started = false }: { top?: number; height?: number; writing?: boolean; started?: boolean }) {
   // Its height in its style, as the growing text field changes it in the app.
-  return <div data-quick-reply-box="" data-toast-avoid="bottom" data-rect={`${top},300,${W - 300},${height}`} style={{ height }} />;
+  return (
+    <div data-quick-reply-box="" data-reply-started={started ? '' : undefined} data-toast-avoid="bottom" data-rect={`${top},300,${W - 300},${height}`} style={{ height }}>
+      {writing ? <textarea autoFocus /> : <button type="button">Reply</button>}
+    </div>
+  );
 }
 
 function ComposerFooter() {
@@ -112,6 +117,89 @@ describe('where the toast stack stands', () => {
     rerender(<><Toasts /><Calendar /></>);
     await nextFrame();
     expect(stack().style.bottom).toBe('20px');
+  });
+
+  it('stays clear of a reply that was started, even while the focus and the pointer are elsewhere', async () => {
+    render(<><Toasts /><QuickReplyBox writing={false} started /></>);
+    act(() => { toast.success('Archived'); });
+    await nextFrame();
+    expect(stack().style.bottom).toBe(`${90 + 12}px`);
+  });
+
+  it('stays in the corner when the quick reply box ends above it', () => {
+    render(<><Toasts /><QuickReplyBox top={H - 200} height={110} /></>);
+    act(() => { toast.success('Archived'); });
+    expect(stack().style.bottom).toBe('20px');
+  });
+
+  it('holds still while one message after another puts its reply box at another height above it', async () => {
+    const { rerender } = render(<><Toasts /><QuickReplyBox top={H - 300} height={90} writing={false} /></>);
+    act(() => { toast.success('Archived'); });
+    const seen = new Set([stack().style.bottom]);
+    for (const top of [H - 170, H - 110, H - 330, H - 90, H - 250, H - 140, H - 360]) {
+      rerender(<><Toasts /></>);
+      await nextFrame();
+      seen.add(stack().style.bottom);
+      rerender(<><Toasts /><QuickReplyBox top={top} height={90} writing={false} /></>);
+      await nextFrame();
+      seen.add(stack().style.bottom);
+    }
+    expect([...seen]).toEqual(['20px']);
+  });
+
+  it('makes room above the quick reply box once the pointer rests on it, and comes back down a while after it left', async () => {
+    render(<><Toasts /><QuickReplyBox writing={false} /></>);
+    act(() => { toast.success('Archived'); });
+    expect(stack().style.bottom).toBe('20px');
+
+    const box = document.querySelector('[data-quick-reply-box]') as HTMLElement;
+    fireEvent.pointerMove(box, { pointerType: 'mouse', clientX: 340, clientY: H - 40 });
+    await nextFrame();
+    expect(stack().style.bottom).toBe('20px');
+    await act(async () => { vi.advanceTimersByTime(500); });
+    await nextFrame();
+    expect(stack().style.bottom).toBe(`${90 + 12}px`);
+
+    fireEvent.pointerMove(document.body, { pointerType: 'mouse', clientX: 100, clientY: 100 });
+    await nextFrame();
+    expect(stack().style.bottom).toBe(`${90 + 12}px`);
+    await act(async () => { vi.advanceTimersByTime(800); });
+    await nextFrame();
+    expect(stack().style.bottom).toBe('20px');
+  });
+
+  it('stays put when the pointer only crosses the quick reply box on its way to the stack', async () => {
+    render(<><Toasts /><QuickReplyBox writing={false} /></>);
+    act(() => { toast.success('Archived'); });
+    const box = document.querySelector('[data-quick-reply-box]') as HTMLElement;
+    for (const x of [340, 420, 500, 580]) {
+      fireEvent.pointerMove(box, { pointerType: 'mouse', clientX: x, clientY: H - 40 });
+      await act(async () => { vi.advanceTimersByTime(60); });
+      await nextFrame();
+      expect(stack().style.bottom).toBe('20px');
+    }
+    fireEvent.pointerMove(stack(), { pointerType: 'mouse', clientX: W - 300, clientY: H - 50 });
+    await act(async () => { vi.advanceTimersByTime(2000); });
+    await nextFrame();
+    expect(stack().style.bottom).toBe('20px');
+  });
+
+  it('holds still when the pointer goes for the stack over the quick reply box', async () => {
+    render(<><Toasts /><QuickReplyBox writing={false} /></>);
+    act(() => { toast.success('Archived'); });
+    fireEvent.pointerMove(stack(), { pointerType: 'mouse', clientX: W - 200, clientY: H - 50 });
+    await nextFrame();
+    expect(stack().style.bottom).toBe('20px');
+  });
+
+  it('makes room above the quick reply box once a reply is being written in it', async () => {
+    const { rerender } = render(<><Toasts /><QuickReplyBox writing={false} /></>);
+    act(() => { toast.success('Archived'); });
+    expect(stack().style.bottom).toBe('20px');
+
+    rerender(<><Toasts /><QuickReplyBox writing /></>);
+    await nextFrame();
+    expect(stack().style.bottom).toBe(`${90 + 12}px`);
   });
 
   it('leaves out a box scrolled out of view, one in the middle, and one under other columns', () => {
@@ -214,7 +302,79 @@ describe('where the toast stack stands', () => {
     expect(screen.getByText('Second')).toBeInTheDocument();
 
     fireEvent.pointerLeave(stack(), { pointerType: 'mouse' });
+    act(() => { vi.advanceTimersByTime(600); });
     act(() => { vi.advanceTimersByTime(6000); });
     expect(screen.queryByText('First')).not.toBeInTheDocument();
+  });
+});
+
+describe('how the toast stack moves', () => {
+  type Glide = { keyframes: Keyframe[]; options?: KeyframeAnimationOptions; cancel: ReturnType<typeof vi.fn> };
+  let glides: Glide[] = [];
+  const originalMatchMedia = window.matchMedia;
+
+  beforeEach(() => {
+    vi.useFakeTimers();
+    useToastStore.setState({ toasts: [] });
+    mockLayout();
+    glides = [];
+    (HTMLElement.prototype as unknown as { animate: unknown }).animate = vi.fn(function (keyframes: Keyframe[], options?: KeyframeAnimationOptions) {
+      const glide = { keyframes, options, cancel: vi.fn() };
+      glides.push(glide);
+      return glide as unknown as Animation;
+    });
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+    delete (HTMLElement.prototype as unknown as { animate?: unknown }).animate;
+    window.matchMedia = originalMatchMedia;
+  });
+
+  it('appears in its place without gliding there', () => {
+    render(<><Toasts /><ComposerFooter /></>);
+    act(() => { toast.success('Draft saved'); });
+    expect(stack().style.bottom).toBe(`${56 + 12}px`);
+    expect(glides).toHaveLength(0);
+  });
+
+  it('glides from where it stood to its new place', async () => {
+    const { rerender } = render(<><Toasts /></>);
+    act(() => { toast.success('Draft saved'); });
+    rerender(<><Toasts /><ComposerFooter /></>);
+    await nextFrame();
+
+    expect(stack().style.bottom).toBe(`${56 + 12}px`);
+    expect(glides).toHaveLength(1);
+    expect(glides[0].options).toMatchObject({ duration: TOAST_MOVE_MS, easing: TOAST_EASE });
+    expect(glides[0].keyframes[0].transform).toBe('translate(0px, 48px)');
+    expect(glides[0].keyframes.at(-1)!.transform).toBe('translate(0px, 0px)');
+  });
+
+  it('turns a glide around when it has to move again before it got there', async () => {
+    const { rerender } = render(<><Toasts /></>);
+    act(() => { toast.success('Draft saved'); });
+    rerender(<><Toasts /><ComposerFooter /></>);
+    await nextFrame();
+    rerender(<><Toasts /></>);
+    await nextFrame();
+
+    expect(glides).toHaveLength(2);
+    expect(glides[0].cancel).toHaveBeenCalled();
+    expect(stack().style.bottom).toBe('20px');
+  });
+
+  it('jumps straight there when motion is reduced', async () => {
+    window.matchMedia = ((query: string) => ({
+      matches: query.includes('prefers-reduced-motion'), media: query, onchange: null,
+      addListener: () => {}, removeListener: () => {}, addEventListener: () => {}, removeEventListener: () => {}, dispatchEvent: () => false,
+    })) as unknown as typeof window.matchMedia;
+    const { rerender } = render(<><Toasts /></>);
+    act(() => { toast.success('Draft saved'); });
+    rerender(<><Toasts /><ComposerFooter /></>);
+    await nextFrame();
+
+    expect(stack().style.bottom).toBe(`${56 + 12}px`);
+    expect(glides).toHaveLength(0);
   });
 });

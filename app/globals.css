@@ -608,11 +608,11 @@ optgroup {
 }
 
 .toast-enter {
-  animation: toast-enter 0.32s cubic-bezier(0.21, 1.02, 0.73, 1) forwards;
+  animation: toast-enter var(--toast-move) var(--toast-ease) forwards;
 }
 
 .toast-exit {
-  animation: toast-exit 0.28s cubic-bezier(0.06, 0.71, 0.55, 1) forwards;
+  animation: toast-exit var(--toast-leave) var(--toast-ease) forwards;
 }
 
 /* The reader toolbar with no room for its labels: icons only, the names stay in the tooltips.

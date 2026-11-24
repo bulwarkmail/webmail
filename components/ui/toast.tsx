@@ -9,13 +9,16 @@ import { cn } from "@/lib/utils";
 import { TOUCH_HIT_AREA } from "@/components/ui/button";
 import { useContextMenuOpen } from "@/components/ui/context-menu";
 import { useMediaQuery, narrowerThan } from "@/hooks/use-media-query";
-import { computeToastPlacement, stackWouldCoverFocus, TOAST_AVOID_BOTTOM, TOAST_AVOID_END, TOAST_EDGE } from "@/lib/toast-placement";
+import { UndoDeck } from "@/components/ui/toast-deck";
+import { computeToastPlacement, stackWouldCoverFocus, TOAST_AVOID_BOTTOM, TOAST_AVOID_END, TOAST_EDGE, TOAST_REPLY_BOX } from "@/lib/toast-placement";
+import { TOAST_EASE, TOAST_LEAVE_MS, TOAST_MOVE_MS, toastMotionVars } from "@/lib/toast-motion";
 
 export type ToastType = "success" | "error" | "info" | "warning";
 
 export interface ToastAction {
   label: string;
   onClick: () => void;
+  keepOpen?: boolean;
 }
 
 export interface Toast {
@@ -30,6 +33,7 @@ export interface Toast {
    * toast or on one of its actions. Not called when it times out.
    */
   onDismiss?: () => void;
+  onLeave?: () => void;
   icon?: React.ReactNode;
   action?: ToastAction;
   secondaryAction?: ToastAction;
@@ -71,6 +75,17 @@ export interface Toast {
    * only read out.
    */
   content?: React.ReactNode;
+  group?: string;
+  behind?: DeckCard[];
+  cardId?: string;
+  revision?: number;
+}
+
+export interface DeckCard {
+  id: string;
+  title: string;
+  message?: string;
+  action: ToastAction;
 }
 
 interface ToastProps {
@@ -82,6 +97,7 @@ interface ToastProps {
   stackHovered?: boolean;
   /** The toast goes away with the keyboard focus in it: put the focus back. */
   onFocusLost?: () => void;
+  onExit?: () => void;
 }
 
 /**
@@ -123,7 +139,7 @@ const progressBarStyles = {
 // A sideways swipe this far (px) on a touch screen dismisses the toast.
 const SWIPE_DISMISS_DISTANCE = 72;
 
-export function ToastItem({ toast, onClose, held = false, stackHovered = false, onFocusLost }: ToastProps) {
+export function ToastItem({ toast, onClose, held = false, stackHovered = false, onFocusLost, onExit }: ToastProps) {
   const tCommon = useTranslations("common");
   const tPlugin = useTranslations("plugins.dialog");
   const Icon = icons[toast.type];
@@ -138,6 +154,7 @@ export function ToastItem({ toast, onClose, held = false, stackHovered = false, 
   const [paused, setPaused] = useState(false);
   const [hovered, setHovered] = useState(false);
   const [focused, setFocused] = useState(false);
+  const pointerFocusRef = useRef(false);
   const rootRef = useRef<HTMLDivElement>(null);
   const titleId = useId();
   const remainingRef = useRef(toast.duration ?? 5000);
@@ -151,13 +168,23 @@ export function ToastItem({ toast, onClose, held = false, stackHovered = false, 
     lastDurationRef.current = toast.duration;
     remainingRef.current = toast.duration ?? 5000;
   }
+  const lastRevisionRef = useRef(toast.revision);
+  if (lastRevisionRef.current !== toast.revision) {
+    lastRevisionRef.current = toast.revision;
+    remainingRef.current = toast.duration ?? 5000;
+    startRef.current = Date.now();
+  }
 
+  const onLeaveRef = useRef(toast.onLeave);
+  onLeaveRef.current = toast.onLeave;
   const dismiss = useCallback(() => {
     setExiting(true);
+    onLeaveRef.current?.();
+    onExit?.();
     // Removing the toast would drop the focus onto <body>.
     if (rootRef.current?.contains(document.activeElement)) onFocusLost?.();
-    setTimeout(() => onClose(toast.id), 280);
-  }, [onClose, toast.id, onFocusLost]);
+    setTimeout(() => onClose(toast.id), TOAST_LEAVE_MS);
+  }, [onClose, toast.id, onFocusLost, onExit]);
 
   const dismissByUser = useCallback(() => {
     try {
@@ -184,9 +211,10 @@ export function ToastItem({ toast, onClose, held = false, stackHovered = false, 
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
     };
-  }, [toast.duration, waiting, dismiss, isProgress]);
+  }, [toast.duration, toast.revision, waiting, dismiss, isProgress]);
 
   const onPointerDown = (e: React.PointerEvent) => {
+    pointerFocusRef.current = true;
     if (e.pointerType !== "touch" || exiting) return;
     swipeRef.current = { id: e.pointerId, x: e.clientX, y: e.clientY, horizontal: null };
   };
@@ -203,6 +231,7 @@ export function ToastItem({ toast, onClose, held = false, stackHovered = false, 
     if (swipe.horizontal) setDragX(dx);
   };
   const endSwipe = (e: React.PointerEvent) => {
+    pointerFocusRef.current = false;
     const swipe = swipeRef.current;
     if (!swipe || swipe.id !== e.pointerId) return;
     swipeRef.current = null;
@@ -210,12 +239,14 @@ export function ToastItem({ toast, onClose, held = false, stackHovered = false, 
     const dx = e.clientX - swipe.x;
     if (Math.abs(dx) >= SWIPE_DISMISS_DISTANCE) {
       setFlungTo(Math.sign(dx) * window.innerWidth);
+      toast.onLeave?.();
+      onExit?.();
       try {
         toast.onDismiss?.();
       } catch {
         // A failing listener must not keep the toast on screen.
       }
-      setTimeout(() => onClose(toast.id), 200);
+      setTimeout(() => onClose(toast.id), TOAST_LEAVE_MS);
     } else {
       setDragX(0);
       setPaused(false);
@@ -230,7 +261,7 @@ export function ToastItem({ toast, onClose, held = false, stackHovered = false, 
         e.stopPropagation();
         try {
           action.onClick();
-          dismissByUser();
+          if (!action.keepOpen) dismissByUser();
         } catch {
           // Don't close toast on error so user can retry
         }
@@ -283,13 +314,14 @@ export function ToastItem({ toast, onClose, held = false, stackHovered = false, 
         exiting ? "toast-exit" : "toast-enter",
         toast.onClick && !toast.action && "cursor-pointer"
       )}
-      style={
-        flungTo !== null
-          ? { transform: `translateX(${flungTo}px)`, opacity: 0, transition: "transform 200ms ease-out, opacity 200ms ease-out" }
+      style={{
+        ...toastMotionVars,
+        ...(flungTo !== null
+          ? { transform: `translateX(${flungTo}px)`, opacity: 0, transition: `transform ${TOAST_LEAVE_MS}ms ${TOAST_EASE}, opacity ${TOAST_LEAVE_MS}ms ${TOAST_EASE}` }
           : dragX !== 0
             ? { transform: `translateX(${dragX}px)`, opacity: Math.max(0.3, 1 - Math.abs(dragX) / 240) }
-            : undefined
-      }
+            : undefined),
+      }}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={endSwipe}
@@ -300,7 +332,9 @@ export function ToastItem({ toast, onClose, held = false, stackHovered = false, 
       tabIndex={-1}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      onFocus={() => setFocused(true)}
+      onFocus={() => {
+        if (!pointerFocusRef.current) setFocused(true);
+      }}
       onBlur={(e) => {
         if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setFocused(false);
       }}
@@ -347,7 +381,7 @@ export function ToastItem({ toast, onClose, held = false, stackHovered = false, 
         <div className="flex-1 min-w-[6rem] pt-px">
           <p id={titleId} className="text-[0.84375rem] font-medium text-foreground leading-snug wrap-anywhere">{toast.title}</p>
           {toast.message && (
-            <p className="text-[0.78125rem] mt-0.5 text-muted-foreground leading-snug wrap-anywhere">{toast.message}</p>
+            <p className={cn("text-[0.78125rem] mt-0.5 text-muted-foreground leading-snug", toast.behind !== undefined ? "truncate" : "wrap-anywhere")}>{toast.message}</p>
           )}
           {toast.pluginId && (
             <p className="mt-1 flex items-center gap-1 text-[0.6875rem] text-muted-foreground" data-toast-source="">
@@ -398,6 +432,7 @@ export function ToastItem({ toast, onClose, held = false, stackHovered = false, 
       {!isProgress && !!toast.duration && toast.duration > 0 && (
         <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-foreground/[0.06]">
           <div
+            key={toast.revision}
             className={cn("h-full opacity-60", progressBarStyles[toast.type])}
             style={{
               animation: `toast-progress ${toast.duration}ms linear forwards`,
@@ -431,6 +466,25 @@ function useToastPlacement(
     if (!active || !stack) return;
     let frame = 0;
     let pointer: { x: number; y: number } | null = null;
+    let replyInUse: Element | null = null;
+    let replyUnder: Element | null = null;
+    let restAt: { x: number; y: number } | null = null;
+    let restTimer: ReturnType<typeof setTimeout> | undefined;
+    const settleReply = () => {
+      restTimer = undefined;
+      if (replyUnder !== replyInUse) {
+        replyInUse = replyUnder;
+        schedule();
+      }
+    };
+    const waitForRest = (ms: number) => {
+      clearTimeout(restTimer);
+      restTimer = setTimeout(settleReply, ms);
+    };
+    let glide: Animation | null = null;
+    let placed = false;
+    const canGlide = () =>
+      typeof stack.animate === "function" && !window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
     const near = () => {
       if (!pointer || phone) return false;
       const r = stack.getBoundingClientRect();
@@ -442,14 +496,33 @@ function useToastPlacement(
       frame = 0;
       if (!force && near()) return;
       const rtl = getComputedStyle(stack).direction === "rtl";
-      const place = computeToastPlacement(stack, { phone, rtl });
+      const place = computeToastPlacement(stack, { phone, rtl, replyInUse });
       const dodge = !phone && stackWouldCoverFocus(stack, place, rtl);
-      const set = (prop: "bottom" | "top" | "insetInlineEnd", value: string) => {
-        if (stack.style[prop] !== value) stack.style[prop] = value;
+      const next = {
+        bottom: dodge ? "auto" : `${place.bottom}px`,
+        top: dodge ? `${TOAST_EDGE}px` : "",
+        insetInlineEnd: place.end === null ? "" : `${place.end}px`,
       };
-      set("bottom", dodge ? "auto" : `${place.bottom}px`);
-      set("top", dodge ? `${TOAST_EDGE}px` : "");
-      set("insetInlineEnd", place.end === null ? "" : `${place.end}px`);
+      const props = ["bottom", "top", "insetInlineEnd"] as const;
+      const moved = props.some((prop) => stack.style[prop] !== next[prop]);
+      const from = moved && placed && canGlide() ? stack.getBoundingClientRect() : null;
+      if (moved && glide) {
+        glide.cancel();
+        glide = null;
+      }
+      for (const prop of props) if (stack.style[prop] !== next[prop]) stack.style[prop] = next[prop];
+      placed = true;
+      if (from) {
+        const to = stack.getBoundingClientRect();
+        const dx = Math.round(from.left - to.left);
+        const dy = Math.round(dodge ? from.top - to.top : from.bottom - to.bottom);
+        if (dx !== 0 || dy !== 0) {
+          glide = stack.animate(
+            [{ transform: `translate(${dx}px, ${dy}px)` }, { transform: "translate(0px, 0px)" }],
+            { duration: TOAST_MOVE_MS, easing: TOAST_EASE },
+          );
+        }
+      }
       if (dodge) {
         if (stack.dataset.dodging === undefined) stack.dataset.dodging = "true";
       } else if (stack.dataset.dodging !== undefined) {
@@ -483,19 +556,36 @@ function useToastPlacement(
       childList: true,
       subtree: true,
       attributes: true,
-      attributeFilter: ["class", "style", "hidden", "open", "data-toast-avoid", "data-end-sheet"],
+      attributeFilter: ["class", "style", "hidden", "open", "data-toast-avoid", "data-end-sheet", "data-reply-started"],
     });
 
     const onPointer = (e: PointerEvent) => {
       if (e.pointerType !== "mouse" && e.pointerType !== "pen") return;
       const wasNear = near();
       pointer = { x: e.clientX, y: e.clientY };
+      const target = e.target instanceof Element ? e.target : null;
+      const reply = target && !stack.contains(target) ? target.closest(TOAST_REPLY_BOX) : null;
+      if (reply !== replyUnder) {
+        replyUnder = reply;
+        restAt = pointer;
+        if (reply === replyInUse) clearTimeout(restTimer);
+        else waitForRest(reply ? REPLY_REST_MS : REPLY_LEAVE_MS);
+      } else if (reply && reply !== replyInUse && restAt && Math.hypot(pointer.x - restAt.x, pointer.y - restAt.y) > REPLY_REST_SLOP) {
+        restAt = pointer;
+        waitForRest(REPLY_REST_MS);
+      }
       // Leaving: catch up on what changed meanwhile.
       if (wasNear && !near()) schedule();
     };
     const onPointerOut = (e: PointerEvent) => {
       if (e.relatedTarget) return;
       pointer = null;
+      replyUnder = null;
+      clearTimeout(restTimer);
+      if (replyInUse) {
+        replyInUse = null;
+        schedule();
+      }
       schedule();
     };
     // Focus moved, or the focused element went (no focusin then).
@@ -509,6 +599,8 @@ function useToastPlacement(
     window.addEventListener("resize", schedule);
     return () => {
       cancelAnimationFrame(frame);
+      clearTimeout(restTimer);
+      glide?.cancel();
       mutations.disconnect();
       sizes?.disconnect();
       document.removeEventListener("focusin", schedule);
@@ -523,8 +615,23 @@ function useToastPlacement(
   }, [containerRef, active, phone]);
 }
 
+const STACK_FOLD_AFTER_MS = 550;
+const STACK_LINGER_MARGIN = 40;
+const REPLY_REST_MS = 450;
+const REPLY_LEAVE_MS = 700;
+const REPLY_REST_SLOP = 8;
+
 /** How close (px) the mouse has to be for the stack to hold still. */
 const POINTER_HOLD_MARGIN = 48;
+
+function pointerNearStack(stack: HTMLElement | null, x: number, y: number): boolean {
+  if (!stack) return false;
+  const m = STACK_LINGER_MARGIN;
+  return Array.from(stack.querySelectorAll("[data-deck-front], [data-deck-card], [data-deck-leaving], .toast-item")).some((el) => {
+    const r = el.getBoundingClientRect();
+    return r.width > 0 && r.height > 0 && x >= r.left - m && x <= r.right + m && y >= r.top - m && y <= r.bottom + m;
+  });
+}
 
 export function ToastContainer({ toasts, onClose }: { toasts: Toast[]; onClose: (id: string) => void }) {
   const tCenter = useTranslations("notification_center");
@@ -541,6 +648,37 @@ export function ToastContainer({ toasts, onClose }: { toasts: Toast[]; onClose: 
   // The pointer is on the stack: every countdown waits, so no toast goes
   // and none moves under the pointer.
   const [stackHovered, setStackHovered] = useState(false);
+  const leaveTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const outsideRef = useRef(false);
+  useEffect(() => () => clearTimeout(leaveTimerRef.current), []);
+  useEffect(() => {
+    if (!stackHovered) return;
+    const fold = () => {
+      if (leaveTimerRef.current !== undefined) return;
+      leaveTimerRef.current = setTimeout(() => {
+        leaveTimerRef.current = undefined;
+        setStackHovered(false);
+      }, STACK_FOLD_AFTER_MS);
+    };
+    const linger = () => {
+      clearTimeout(leaveTimerRef.current);
+      leaveTimerRef.current = undefined;
+    };
+    const onMove = (e: PointerEvent) => {
+      if (!outsideRef.current || e.pointerType !== "mouse") return;
+      if (pointerNearStack(containerRef.current, e.clientX, e.clientY)) linger();
+      else fold();
+    };
+    const onOut = (e: PointerEvent) => {
+      if (!e.relatedTarget && outsideRef.current) fold();
+    };
+    document.addEventListener("pointermove", onMove, { passive: true });
+    document.addEventListener("pointerout", onOut);
+    return () => {
+      document.removeEventListener("pointermove", onMove);
+      document.removeEventListener("pointerout", onOut);
+    };
+  }, [stackHovered]);
 
   useEffect(() => {
     setMounted(true);
@@ -600,14 +738,34 @@ export function ToastContainer({ toasts, onClose }: { toasts: Toast[]; onClose: 
       role={toasts.length > 0 ? "region" : undefined}
       aria-label={toasts.length > 0 ? tCenter("title") : undefined}
       style={{ pointerEvents: "none" }}
-      onPointerOver={(e) => { if (e.pointerType === "mouse") setStackHovered(true); }}
-      onPointerLeave={() => setStackHovered(false)}
+      onPointerOver={(e) => {
+        if (e.pointerType !== "mouse") return;
+        clearTimeout(leaveTimerRef.current);
+        leaveTimerRef.current = undefined;
+        outsideRef.current = false;
+        setStackHovered(true);
+      }}
+      onPointerLeave={(e) => {
+        outsideRef.current = true;
+        if (pointerNearStack(containerRef.current, e.clientX, e.clientY)) return;
+        clearTimeout(leaveTimerRef.current);
+        leaveTimerRef.current = setTimeout(() => {
+          leaveTimerRef.current = undefined;
+          setStackHovered(false);
+        }, STACK_FOLD_AFTER_MS);
+      }}
     >
-      {toasts.map((toast) => (
-        <div key={toast.id} style={{ pointerEvents: "auto" }}>
-          <ToastItem toast={toast} onClose={onClose} held={held} stackHovered={stackHovered} onFocusLost={returnFocus} />
-        </div>
-      ))}
+      {toasts.map((toast) =>
+        toast.behind !== undefined ? (
+          <UndoDeck key={toast.id} toast={toast} expanded={stackHovered}>
+            {(onExit, holding) => <ToastItem toast={toast} onClose={onClose} held={held || holding} stackHovered={stackHovered} onFocusLost={returnFocus} onExit={onExit} />}
+          </UndoDeck>
+        ) : (
+          <div key={toast.id} style={{ pointerEvents: "auto" }}>
+            <ToastItem toast={toast} onClose={onClose} held={held} stackHovered={stackHovered} onFocusLost={returnFocus} />
+          </div>
+        )
+      )}
     </div>,
     document.body
   );

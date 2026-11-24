@@ -23,7 +23,7 @@ describe('undoMoveAction', () => {
     receipts.push({ sourceLogin: 'a', sourceJmapAccountId: 'A', sourceEmailId: 'e1', destLogin: 'b', destJmapAccountId: 'B', destEmailId: 'c1' });
 
     action!.onClick();
-    await vi.waitFor(() => expect(toast.success).toHaveBeenCalledWith('Undone'));
+    await vi.waitFor(() => expect(toast.success).toHaveBeenCalledWith('Undone', { group: 'undo' }));
     expect(undoMove).toHaveBeenCalledWith(client, batches, receipts);
     expect(undoMove.mock.calls[0][2]).toHaveLength(1);
   });
