@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ProofreadingStatus } from '../proofreading/proofreading-status';
 import { ProofreadingNotice } from '../proofreading/proofreading-notice';
@@ -6,6 +6,8 @@ import { IssuePopup } from '../proofreading/issue-popup';
 import type { Proofreading } from '../proofreading/use-proofreading';
 import type { PlacedIssue, ProofreaderStatus } from '@/lib/proofreading/composer-proofreader';
 import { useSettingsStore } from '@/stores/settings-store';
+import { usePolicyStore } from '@/stores/policy-store';
+import { DEFAULT_ORGANISATION_POLICY } from '@/lib/admin/organisation-policy';
 import { editorA11yAttributes } from '../rich-text-editor';
 
 // next-intl is mocked in vitest.setup.ts: t(key) gives the key back.
@@ -38,6 +40,7 @@ function proofreading(over: Partial<Proofreading> = {}): Proofreading {
 beforeEach(() => {
   announce.mockReset();
   useSettingsStore.getState().resetToDefaults();
+  usePolicyStore.setState((s) => ({ policy: { ...s.policy, organisation: DEFAULT_ORGANISATION_POLICY } }));
 });
 
 describe('ProofreadingStatus', () => {
@@ -183,6 +186,29 @@ describe('ProofreadingNotice', () => {
     expect(useSettingsStore.getState().proofreadingNoticeSeen).toEqual({ lt: true });
     rerender(<ProofreadingNotice status={status({ forced: true })} />);
     expect(container.innerHTML).toBe('');
+  });
+
+  it('shows the admin\'s own text for the user\'s language, else the built-in one (#1836)', () => {
+    const setNotice = (notice: Record<string, string>) => act(() => {
+      usePolicyStore.setState((s) => ({ policy: { ...s.policy, organisation: { ...s.policy.organisation!, proofreading: { notice } } } }));
+    });
+    setNotice({ en: 'Checked on our own server. Nothing leaves it.' });
+    const { rerender } = render(<ProofreadingNotice status={status()} />);
+    expect(screen.getByTestId('proofreading-notice').textContent).toContain('Checked on our own server. Nothing leaves it.');
+    expect(screen.getByTestId('proofreading-notice').textContent).not.toContain('notice.on');
+    setNotice({ de: 'Nur Deutsch.' });
+    rerender(<ProofreadingNotice status={status()} />);
+    expect(screen.getByTestId('proofreading-notice').textContent).toContain('notice.on');
+  });
+
+  it('uses the admin\'s text in the panel before turning proofreading on', () => {
+    act(() => {
+      usePolicyStore.setState((s) => ({ policy: { ...s.policy, organisation: { ...s.policy.organisation!, proofreading: { notice: { en: 'Stays on our server.' } } } } }));
+    });
+    const p = proofreading({ status: status({ on: false, userOn: false, activePlugins: [] }), issues: [], panel: { focusKey: null } });
+    render(<ProofreadingStatus proofreading={p} plainTextMode={false} />);
+    expect(screen.getByText('Stays on our server.')).toBeInTheDocument();
+    expect(screen.queryByText('panel.notice')).not.toBeInTheDocument();
   });
 });
 

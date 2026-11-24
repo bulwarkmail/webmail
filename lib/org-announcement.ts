@@ -14,25 +14,39 @@ import type { OrganisationPolicy } from '@/lib/admin/organisation-policy';
 
 export type Announcement = OrganisationPolicy['announcement'];
 
+/** Admin texts by locale with a non-blank text. */
+function textEntries(text: Record<string, string> | undefined | null): [string, string][] {
+  return Object.entries(text ?? {}).filter(([, value]) => typeof value === 'string' && value.trim() !== '');
+}
+
+function findLocale(entries: [string, string][], code: string | undefined): string | undefined {
+  if (!code) return undefined;
+  const lower = code.toLowerCase();
+  return entries.find(([key]) => key.toLowerCase() === lower)?.[1];
+}
+
 /**
- * The text for `locale`: the exact locale, then its language (pt-BR → pt),
- * then the admin's fallback locale, then the first text there is. '' when
- * the announcement has no text.
+ * An admin text in the user's language: the exact locale, then its language
+ * (pt-BR → pt), then another variant of that language. Undefined when the
+ * admin wrote none for that language.
+ */
+export function localeText(text: Record<string, string> | undefined | null, locale: string): string | undefined {
+  const entries = textEntries(text);
+  const language = locale.split('-')[0];
+  return findLocale(entries, locale)
+    ?? findLocale(entries, language)
+    ?? entries.find(([key]) => key.split('-')[0].toLowerCase() === language.toLowerCase())?.[1];
+}
+
+/**
+ * The text for `locale`: as localeText, then the admin's fallback locale,
+ * then the first text there is. '' when the announcement has no text.
  */
 export function announcementText(announcement: Announcement | undefined | null, locale: string): string {
-  const text = announcement?.text ?? {};
-  const entries = Object.entries(text).filter(([, value]) => typeof value === 'string' && value.trim() !== '');
+  const entries = textEntries(announcement?.text);
   if (entries.length === 0) return '';
-  const find = (code: string | undefined) => {
-    if (!code) return undefined;
-    const lower = code.toLowerCase();
-    return entries.find(([key]) => key.toLowerCase() === lower)?.[1];
-  };
-  const language = locale.split('-')[0];
-  return find(locale)
-    ?? find(language)
-    ?? entries.find(([key]) => key.split('-')[0].toLowerCase() === language.toLowerCase())?.[1]
-    ?? find(announcement?.fallbackLocale)
+  return localeText(announcement?.text, locale)
+    ?? findLocale(entries, announcement?.fallbackLocale)
     ?? entries[0][1];
 }
 

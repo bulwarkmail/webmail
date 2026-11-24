@@ -22,6 +22,7 @@ import type { Proofreading } from "./use-proofreading";
 import { IssueActions, KIND_DOT, issueListLabel } from "./issue-actions";
 import { issueNavigationKey } from "./text-check-extension";
 import { useComposerBarLabels } from "../composer-bar-labels";
+import { useAdminProofreadingNotice } from "./proofreading-notice";
 
 interface Props {
   proofreading: Proofreading;
@@ -158,7 +159,8 @@ function PanelBody({ proofreading, plainTextMode, issues, onDone, onTurnedOn }: 
   const { status, composerOn, setComposerOn } = proofreading;
   const updateSetting = useSettingsStore((s) => s.updateSetting);
   const noticeSeen = useSettingsStore((s) => s.proofreadingNoticeSeen);
-  const checkers = (status.on ? status.activePlugins : status.availablePlugins);
+  const adminNotice = useAdminProofreadingNotice();
+  const checkers =(status.on ? status.activePlugins : status.availablePlugins);
   const names = new Intl.ListFormat(undefined, { type: "conjunction" }).format(checkers.map((c) => c.label));
 
   const turnOn = () => {
@@ -188,7 +190,9 @@ function PanelBody({ proofreading, plainTextMode, issues, onDone, onTurnedOn }: 
 
       {!status.userOn && !status.forced && (
         <div className="flex flex-col gap-2">
-          <p className="text-sm text-muted-foreground">{t("panel.notice", { checkers: names })}</p>
+          {adminNotice
+            ? <p dir="auto" className="whitespace-pre-line break-words text-sm text-muted-foreground">{adminNotice}</p>
+            : <p className="text-sm text-muted-foreground">{t("panel.notice", { checkers: names })}</p>}
           <button
             type="button"
             data-testid="proofreading-turn-on"

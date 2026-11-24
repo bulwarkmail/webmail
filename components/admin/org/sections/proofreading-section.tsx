@@ -6,10 +6,12 @@
 // be turned off, so the page warns when none is forced on and offers to
 // force one (that part is global: plugins can't be forced per scope).
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useId, useState } from 'react';
 import { SettingItem, SettingsSection, Select } from '@/components/settings/settings-section';
 import { Button } from '@/components/ui/button';
-import { AlertTriangle } from '@/components/icons';
+import { AlertTriangle, Trash2 } from '@/components/icons';
+import { routing } from '@/i18n/routing';
+import { cn } from '@/lib/utils';
 import { apiFetch } from '@/lib/browser-navigation';
 import type { SettingRestriction } from '@/lib/admin/types';
 import {
@@ -17,7 +19,7 @@ import {
   proofreadingPolicyFor, proofreadingState, type PluginProofreadingState, type ProofreadingState,
 } from '@/lib/admin/proofreading-policy';
 import { PROOFREADING_KEY, pluginPolicyKey } from '@/lib/proofreading/gate';
-import { writingLanguageOptions } from '@/lib/proofreading/languages';
+import { languageName, writingLanguageOptions } from '@/lib/proofreading/languages';
 import { InheritNote } from '../org-page';
 import type { OrgPolicyDraft } from '../use-org-policy-draft';
 
@@ -56,6 +58,104 @@ function setPreset(draft: OrgPolicyDraft, key: string, value: unknown | undefine
     else defaults[key] = value;
     if (Object.keys(defaults).length === 0) delete s.policy.defaults;
   });
+}
+
+/** Same cap as the sanitiser. */
+const MAX_NOTICE = 4000;
+
+/**
+ * The notice users see above the composer when proofreading is on, in the
+ * admin's words per language (#1836). Languages without a text keep the
+ * built-in notice, which names the checker plugins.
+ */
+function NoticeEditor({ draft }: { draft: OrgPolicyDraft }) {
+  const id = useId();
+  const { value, own, everyone } = draft.orgValue('proofreading', 'notice');
+  const notice = value ?? {};
+  const languages = Object.keys(notice);
+  const [shown, setShown] = useState<string | null>(null);
+  const current = shown && languages.includes(shown) ? shown : languages[0] ?? null;
+  const unused = routing.locales.filter((code) => !languages.includes(code));
+  const name = (code: string) => languageName(code, 'en');
+  const write = (next: Record<string, string>) => draft.setOrgValue('proofreading', 'notice', next);
+  const remove = (code: string) => {
+    const next = { ...notice };
+    delete next[code];
+    write(next);
+    setShown(null);
+  };
+  const everyoneCount = Object.keys(everyone ?? {}).length;
+
+  return (
+    <div className="border-b border-border py-3" data-search-label="Notice for users">
+      <p className="text-sm font-medium text-foreground">Notice for users</p>
+      <p className="mt-1 text-xs text-muted-foreground">
+        Shown once above the text when proofreading is on, and in the proofreading panel before a user turns it on, so
+        word it for both. Write your own, for example that the text stays on your servers. Languages without a text
+        show the built-in notice, which names the proofreading plugin.
+      </p>
+      <div className="mt-2 flex w-full flex-col items-start gap-2">
+        <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Notice languages">
+          {languages.map((code) => (
+            <button
+              key={code}
+              type="button"
+              aria-pressed={code === current}
+              onClick={() => setShown(code)}
+              className={cn('h-8 rounded-md px-3 text-sm font-medium', code === current ? 'bg-primary text-primary-foreground' : 'bg-muted hover:bg-accent')}
+            >
+              {name(code)}
+            </button>
+          ))}
+          {unused.length > 0 && (
+            <select
+              aria-label="Add a language"
+              data-testid="org-proofreading-notice-add"
+              className="h-8 max-w-full rounded-md border border-input bg-background px-2 text-sm"
+              value=""
+              onChange={(e) => {
+                if (!e.target.value) return;
+                write({ ...notice, [e.target.value]: '' });
+                setShown(e.target.value);
+              }}
+            >
+              <option value="">{languages.length ? 'Add a language…' : 'Write your own…'}</option>
+              {unused.map((code) => <option key={code} value={code}>{name(code)}</option>)}
+            </select>
+          )}
+        </div>
+        {current && (
+          <div className="w-full">
+            <label htmlFor={`${id}-text`} className="mb-1 block text-xs font-medium text-foreground">Notice in {name(current)}</label>
+            <textarea
+              id={`${id}-text`}
+              data-testid="org-proofreading-notice-text"
+              rows={3}
+              dir="auto"
+              maxLength={MAX_NOTICE}
+              className="block w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground hover:border-muted-foreground focus-visible:border-ring focus-visible:outline-hidden"
+              value={notice[current] ?? ''}
+              onChange={(e) => write({ ...notice, [current]: e.target.value.slice(0, MAX_NOTICE) })}
+            />
+            <div className="mt-1 flex flex-wrap items-center justify-between gap-2">
+              <p className="text-xs text-muted-foreground">
+                {(notice[current] ?? '').trim() ? 'Plain text.' : 'An empty text is not saved; this language keeps the built-in notice.'}
+              </p>
+              <button type="button" onClick={() => remove(current)} className="inline-flex items-center gap-1 text-xs text-muted-foreground underline-offset-2 hover:underline">
+                <Trash2 className="h-3 w-3" /> Use the built-in notice in {name(current)}
+              </button>
+            </div>
+          </div>
+        )}
+        <InheritNote
+          draft={draft}
+          own={own}
+          everyone={everyoneCount ? `own notice in ${everyoneCount} ${everyoneCount === 1 ? 'language' : 'languages'}` : 'built-in notice'}
+          onReset={() => draft.clearOrgValue('proofreading', 'notice')}
+        />
+      </div>
+    </div>
+  );
 }
 
 export function ProofreadingSection({ draft }: { draft: OrgPolicyDraft }) {
@@ -199,6 +299,8 @@ export function ProofreadingSection({ draft }: { draft: OrgPolicyDraft }) {
           {forceError && <p className="text-xs text-destructive">{forceError}</p>}
         </div>
       )}
+
+      <NoticeEditor draft={draft} />
 
       <SettingItem label="Writing language" description="Presets the language users write in; proofreading and the browser's spell check use it. Locked, users can't change it.">
         <div className="flex flex-col items-start gap-1 sm:items-end">

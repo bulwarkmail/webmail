@@ -209,9 +209,9 @@ export const ADMIN_PAGES: readonly AdminPageDef[] = [
     label: 'Proofreading',
     description: 'Spelling and grammar checks while users write: required, off, or their choice',
     group: 'organisation',
-    keywords: 'proofreading spelling grammar spell check languagetool writing language mandatory required',
+    keywords: 'proofreading spelling grammar spell check languagetool writing language mandatory required notice disclaimer',
     sections: [
-      { id: 'proofreading', title: 'Proofreading', keywords: 'checker plugin required lock language force' },
+      { id: 'proofreading', title: 'Proofreading', keywords: 'checker plugin required lock language force notice disclaimer wording text' },
     ],
   },
   {

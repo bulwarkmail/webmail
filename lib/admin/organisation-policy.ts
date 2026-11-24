@@ -195,6 +195,14 @@ export interface OrganisationPolicy {
      */
     enabled: boolean;
   };
+  proofreading: {
+    /**
+     * Locale (en, de, pt-BR) to the plain text of the notice above the
+     * composer when proofreading is on. A language without text gets the
+     * built-in notice; {} is the built-in notice everywhere (#1836).
+     */
+    notice: Record<string, string>;
+  };
 }
 
 export const DEFAULT_ORGANISATION_POLICY: OrganisationPolicy = {
@@ -217,6 +225,7 @@ export const DEFAULT_ORGANISATION_POLICY: OrganisationPolicy = {
   },
   calendars: { feeds: [], freeBusyGroup: '' },
   teamMailboxes: { enabled: false },
+  proofreading: { notice: {} },
 };
 
 /** Sections a scope replaces as a whole instead of per leaf. */
@@ -567,6 +576,9 @@ export function sanitizeOrganisationPartial(raw: unknown): DeepPartial<Organisat
 
   const team = section('teamMailboxes');
   if (team) assign('teamMailboxes', { enabled: bool(team.enabled) });
+
+  const proof = section('proofreading');
+  if (proof) assign('proofreading', { notice: sanitizeLocaleText(proof.notice) });
 
   return out;
 }
