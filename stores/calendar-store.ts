@@ -50,6 +50,7 @@ import {
 import { isSettingsLoadSettled, onSettingsLoadSettled, registerCalendarSubscriptionSyncBridge, useSettingsStore } from './settings-store';
 import { applyVisibilityChoices, choicesFromLocalSelection, visibilityKeyOf, withVisibilityChoice } from '@/lib/calendar-visibility';
 import { generateAccountId } from '@/lib/account-utils';
+import { noteRefreshed, oneTabChecks, refreshedInAnyTab } from '@/lib/ical-subscription-refresh';
 import { currentStoreEpoch } from '@/lib/store-epoch';
 import { isCalendarEventArray, isFetchRange, isPartialCalendarEvent } from '@/lib/plugin-calendar-hooks';
 import { sentByPatchValue } from '@/lib/calendar-delegate';
@@ -2426,12 +2427,14 @@ export const useCalendarStore = create<CalendarStore>()(
             }
           }
 
-          // Update last refreshed timestamp
+          // Update last refreshed timestamp, here and for the other tabs
+          const refreshedAt = new Date();
           set((state) => ({
             icalSubscriptions: state.icalSubscriptions.map(s =>
-              s.id === subscriptionId ? { ...s, lastRefreshed: new Date().toISOString() } : s
+              s.id === subscriptionId ? { ...s, lastRefreshed: refreshedAt.toISOString() } : s
             ),
           }));
+          noteRefreshed(subscriptionId, refreshedAt.getTime(), get().icalSubscriptions.map((s) => s.id));
         })();
 
         refreshInFlight.set(subscriptionId, work);
@@ -2449,27 +2452,31 @@ export const useCalendarStore = create<CalendarStore>()(
       },
 
       refreshAllSubscriptions: async (client) => {
-        const { icalSubscriptions } = get();
-        const currentAccountId = client.getAccountId();
-        const owner = subscriptionOwner(client);
-        const now = Date.now();
+        // One tab at a time, and one that finds a feed fetched by another
+        // tab since leaves it (lib/ical-subscription-refresh).
+        await oneTabChecks(async () => {
+          const { icalSubscriptions } = get();
+          const currentAccountId = client.getAccountId();
+          const owner = subscriptionOwner(client);
+          const now = Date.now();
 
-        for (const sub of icalSubscriptions) {
-          // Only refresh subs of this login. Older ones without an owner
-          // are checked (and adopted) by refreshICalSubscription.
-          if (sub.owner ? sub.owner !== owner : (sub.accountId && sub.accountId !== currentAccountId)) continue;
+          for (const sub of icalSubscriptions) {
+            // Only refresh subs of this login. Older ones without an owner
+            // are checked (and adopted) by refreshICalSubscription.
+            if (sub.owner ? sub.owner !== owner : (sub.accountId && sub.accountId !== currentAccountId)) continue;
 
-          const lastRefreshed = sub.lastRefreshed ? new Date(sub.lastRefreshed).getTime() : 0;
-          const intervalMs = sub.refreshInterval * 60 * 1000;
+            const lastRefreshed = Math.max(sub.lastRefreshed ? new Date(sub.lastRefreshed).getTime() : 0, refreshedInAnyTab(sub.id));
+            const intervalMs = sub.refreshInterval * 60 * 1000;
 
-          if (now - lastRefreshed >= intervalMs) {
-            try {
-              await get().refreshICalSubscription(client, sub.id);
-            } catch {
-              debug.warn('calendar', 'Failed to refresh subscription:', sub.name);
+            if (now - lastRefreshed >= intervalMs) {
+              try {
+                await get().refreshICalSubscription(client, sub.id);
+              } catch {
+                debug.warn('calendar', 'Failed to refresh subscription:', sub.name);
+              }
             }
           }
-        }
+        });
       },
 
       forgetICalSubscriptions: (owner) => {

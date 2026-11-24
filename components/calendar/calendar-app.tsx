@@ -556,16 +556,6 @@ export function CalendarApp({ linkSegments: routeSegments, surface = "calendar" 
     }
   }, [client, fetchCalendars, isEmbedded, proInterfaceActive]);
 
-  // Auto-refresh iCal subscriptions
-  useEffect(() => {
-    if (!client) return;
-    // Refresh on mount (respects per-subscription interval)
-    refreshAllSubscriptions(client);
-    // Check again every 5 minutes
-    const interval = setInterval(() => refreshAllSubscriptions(client), 5 * 60 * 1000);
-    return () => clearInterval(interval);
-  }, [client, refreshAllSubscriptions]);
-
   // Auto-add birthday calendar to selected IDs only when the setting flips
   // off→on. Firing on every mount would undo a user's manual hide via the
   // sidebar each time they navigate back to the calendar (see #204).
