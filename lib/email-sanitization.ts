@@ -561,6 +561,16 @@ export function decodeCssEscapes(value: string): string {
   });
 }
 
+/**
+ * CSS as a <style> element's text after decodeCssEscapes: every `<` is
+ * written as its escape again. A style element's text is serialized as it
+ * is, so a decoded `</style>` would end the element and what follows would
+ * reach the frame as markup the sanitizer never saw.
+ */
+function styleElementText(css: string): string {
+  return css.replace(/</g, '\\3c ');
+}
+
 // A url() token also ends at the end of the declaration list: a style
 // attribute's last `url(https://t` needs no closing parenthesis.
 const CSS_URL_PATTERN = /url\(\s*(['"]?)([^)]*?)\1\s*(?:\)|$)/gi;
@@ -756,7 +766,7 @@ export function blockExternalResourcesOnNode(node: Element): boolean {
     const css = node.textContent || '';
     const cleaned = stripExternalStyleSheetCss(css);
     if (cleaned !== css) {
-      node.textContent = cleaned;
+      node.textContent = styleElementText(cleaned);
       blocked = true;
     }
   }
@@ -852,7 +862,7 @@ export function proxyExternalResourcesOnNode(node: Element, proxyBase: string): 
       // A remote sheet is never fetched; its pictures would not be ours to check.
       const withoutImports = decoded.replace(/@import\s+(?:url\([^)]*\)|(['"]).*?\1)[^;]*;?/gi, '');
       const next = proxyCssUrls(withoutImports, proxyBase);
-      if (next !== css) node.textContent = next;
+      if (next !== css) node.textContent = styleElementText(next);
     }
   }
 }
