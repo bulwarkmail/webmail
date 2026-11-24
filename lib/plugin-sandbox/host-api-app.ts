@@ -155,7 +155,7 @@ export const SHARED_SETTINGS = [
   'notificationSoundChoice', 'pushNotifyInboxOnly', 'faviconUnreadBadge', 'unreadBadgeAllAccounts', 'calendarNotificationSound', 'doNotDisturb', 'visualAlerts',
   'calendarInvitationParsingEnabled', 'showTimeInMonthView', 'calendarTintedEvents', 'calendarMonthTimedEvents',
   'calendarLimitHours', 'calendarDayStartHour', 'calendarDayEndHour', 'calendarHideNonWorkingDays',
-  'calendarFreeScroll', 'calendarHoverPreview', 'showTasksOnCalendar', 'showTasksApp',
+  'calendarFreeScroll', 'calendarHoverPreview', 'defaultEventLength', 'showTasksOnCalendar', 'showTasksApp',
   'groupContactsByLetter', 'sortContactsByLastName', 'showContactsDirectory',
   'showAccessibilityButton', 'lineSpacing', 'letterSpacing', 'wordSpacing', 'paragraphSpacing', 'readingWidth',
   'readingMask', 'reduceTransparency', 'showColorNames', 'colorBlindPalette', 'pauseAnimatedImages',
