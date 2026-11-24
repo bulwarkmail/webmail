@@ -75,6 +75,22 @@ export function planZip(nodes: FileNode[], ids: string[]): ZipPlan {
   return plan;
 }
 
+/** Types whose content is compressed already: packing them again only costs time. */
+const COMPRESSED_TYPES = /^(image\/(jpeg|png|gif|webp|heic|heif|avif)|video\/|audio\/(?!wav|x-wav|aiff|x-aiff)|application\/(zip|x-zip-compressed|gzip|x-gzip|x-7z-compressed|x-rar-compressed|vnd\.rar|x-bzip2|x-xz|zstd|pdf|epub\+zip|vnd\.openxmlformats-officedocument\.|vnd\.oasis\.opendocument\.))/i;
+const COMPRESSED_EXTENSIONS = new Set([
+  'jpg', 'jpeg', 'png', 'gif', 'webp', 'heic', 'heif', 'avif',
+  'mp4', 'm4v', 'mov', 'mkv', 'webm', 'avi', 'mp3', 'm4a', 'aac', 'ogg', 'opus', 'flac',
+  'zip', 'gz', 'tgz', '7z', 'rar', 'bz2', 'xz', 'zst', 'pdf', 'epub',
+  'docx', 'xlsx', 'pptx', 'odt', 'ods', 'odp',
+]);
+
+/** Whether a file's content is compressed already (photos, videos, archives, office files). */
+export function isCompressedAlready(node: Pick<FileNode, 'name' | 'type'>): boolean {
+  if (node.type && COMPRESSED_TYPES.test(node.type)) return true;
+  const dot = node.name.lastIndexOf('.');
+  return dot > 0 && COMPRESSED_EXTENSIONS.has(node.name.slice(dot + 1).toLowerCase());
+}
+
 export interface ZipProgress {
   /** 0..1 over fetching and packing. */
   progress: number;
@@ -100,13 +116,17 @@ export async function buildZip(
   for (const entry of plan.files) {
     abortIfAsked();
     onProgress?.({ progress: plan.totalBytes > 0 ? (fetched / plan.totalBytes) * 0.9 : 0, current: entry.path });
-    zip.file(entry.path, await fetchFile(entry.node), { date: entry.node.modified ? new Date(entry.node.modified) : undefined });
+    zip.file(entry.path, await fetchFile(entry.node), {
+      date: entry.node.modified ? new Date(entry.node.modified) : undefined,
+      // Photos, videos and archives are stored as they are: packing them
+      // again saves next to nothing and takes most of the time (#1810).
+      compression: isCompressedAlready(entry.node) ? 'STORE' : 'DEFLATE',
+    });
     fetched += entry.node.size || 0;
   }
   abortIfAsked();
   const blob = await zip.generateAsync(
-    // Photos, videos and office files are compressed already; a light level
-    // keeps big folders quick.
+    // A light level for the rest keeps big folders quick.
     { type: 'blob', compression: 'DEFLATE', compressionOptions: { level: 1 } },
     (meta) => onProgress?.({ progress: 0.9 + (meta.percent / 100) * 0.1 }),
   );

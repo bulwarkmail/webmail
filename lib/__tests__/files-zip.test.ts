@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import JSZip from 'jszip';
 import type { FileNode } from '@/lib/jmap/types';
-import { buildZip, planZip } from '../files-zip';
+import { buildZip, isCompressedAlready, planZip } from '../files-zip';
 
 const dir = (id: string, name: string, parentId: string | null): FileNode => ({
   id, parentId, name, type: '', blobId: null, size: 0, created: '', modified: '',
@@ -42,6 +42,26 @@ describe('folder zip', () => {
     expect(await zip.file('other.txt')!.async('string')).toBe('body of other');
     expect(zip.folder('Taxes/Drafts')).not.toBeNull();
     expect(progress[progress.length - 1]).toBeCloseTo(1);
+  });
+
+  // #1810: photos and videos are compressed already; packing them again
+  // made a big folder take far longer than the download itself.
+  it('stores photos, videos and archives as they are, and packs the rest', async () => {
+    const same = 'a'.repeat(20000);
+    const photo = { ...file('p', 'photo.jpg', null, same.length), type: 'image/jpeg' };
+    const text = file('t', 'notes.txt', null, same.length);
+    const sizeOf = async (node: FileNode) => (await buildZip(planZip([node], [node.id]), async () => new Blob([same]))).size;
+    expect(await sizeOf(photo)).toBeGreaterThan(same.length);
+    expect(await sizeOf(text)).toBeLessThan(1000);
+  });
+
+  it('knows compressed files by type or by name', () => {
+    expect(isCompressedAlready({ name: 'x', type: 'video/mp4' })).toBe(true);
+    expect(isCompressedAlready({ name: 'IMG_1.HEIC', type: 'application/octet-stream' })).toBe(true);
+    expect(isCompressedAlready({ name: 'sheet.xlsx', type: '' })).toBe(true);
+    expect(isCompressedAlready({ name: 'take.wav', type: 'audio/wav' })).toBe(false);
+    expect(isCompressedAlready({ name: 'notes.txt', type: 'text/plain' })).toBe(false);
+    expect(isCompressedAlready({ name: 'image.bmp', type: 'image/bmp' })).toBe(false);
   });
 
   it('stops when canceled', async () => {
