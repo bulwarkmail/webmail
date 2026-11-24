@@ -1815,7 +1815,9 @@
         },
         "include_group": {
           "label": "Grup gelen kutularını dahil et",
-          "description": "Paylaşılan/grup gelen kutularını da birleşik görünüme dahil et."
+          "description": "Paylaşılan/grup gelen kutularını da birleşik görünüme dahil et.",
+          "accounts_label": "Birleşik posta kutusundaki paylaşılan kutular",
+          "accounts_description": "Her gün okumadığınız bir kutunun işaretini kaldırın. Kenar çubuğunda kalır."
         }
       },
       "all_mail": {

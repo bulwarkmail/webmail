@@ -1818,7 +1818,9 @@
         },
         "include_group": {
           "label": "Inclou les safates d'entrada de grup",
-          "description": "Combina també les safates d'entrada compartides o de grup a la vista unificada."
+          "description": "Combina també les safates d'entrada compartides o de grup a la vista unificada.",
+          "accounts_label": "Bústies compartides a la bústia unificada",
+          "accounts_description": "Desmarqueu una bústia que no llegiu cada dia. Continua a la barra lateral."
         }
       },
       "all_mail": {

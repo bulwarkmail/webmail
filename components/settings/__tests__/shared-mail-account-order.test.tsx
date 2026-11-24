@@ -1,4 +1,4 @@
-import { cleanup, render, screen, within } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Mailbox } from '@/lib/jmap/types';
 import { useAccountStore } from '@/stores/account-store';
@@ -71,5 +71,33 @@ describe('the shared mailbox list in Appearance > Accounts', () => {
     useSettingsStore.setState({ sharedMailAccountOrder: { a: ['g3', 'g1'], b: ['g2'] } });
     render(<MultipleAccountsSection />);
     expect(listed()).toEqual(['Charlie', 'Alpha', 'Bravo']);
+  });
+});
+
+// #962: under Include group inboxes, each shared mailbox can be left out of
+// the unified mailbox on its own.
+describe('the shared mailboxes in the unified mailbox', () => {
+  beforeEach(() => {
+    useSettingsStore.setState({ enableUnifiedMailbox: true, includeGroupInUnified: true, unifiedExcludedSharedAccounts: { b: ['g2'] } });
+  });
+
+  it('unticks one for the active login and ticks it again', () => {
+    render(<MultipleAccountsSection />);
+    const list = within(screen.getByTestId('unified-shared-account-list'));
+    const bravo = list.getByRole('checkbox', { name: 'Bravo' });
+    expect(bravo).toHaveAttribute('aria-checked', 'true');
+
+    fireEvent.click(bravo);
+    expect(useSettingsStore.getState().unifiedExcludedSharedAccounts).toEqual({ a: ['g2'], b: ['g2'] });
+    expect(list.getByRole('checkbox', { name: 'Bravo' })).toHaveAttribute('aria-checked', 'false');
+
+    fireEvent.click(list.getByRole('checkbox', { name: 'Bravo' }));
+    expect(useSettingsStore.getState().unifiedExcludedSharedAccounts).toEqual({ b: ['g2'] });
+  });
+
+  it('is not offered while group inboxes stay out of it', () => {
+    useSettingsStore.setState({ includeGroupInUnified: false });
+    render(<MultipleAccountsSection />);
+    expect(screen.queryByTestId('unified-shared-account-list')).toBeNull();
   });
 });

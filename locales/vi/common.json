@@ -1830,7 +1830,9 @@
         },
         "include_group": {
           "label": "Bao gồm hộp thư nhóm",
-          "description": "Gộp cả hộp thư nhóm/được chia sẻ vào chế độ xem hợp nhất."
+          "description": "Gộp cả hộp thư nhóm/được chia sẻ vào chế độ xem hợp nhất.",
+          "accounts_label": "Hộp thư dùng chung trong hộp thư hợp nhất",
+          "accounts_description": "Bỏ chọn hộp thư bạn không đọc hằng ngày. Hộp thư vẫn ở thanh bên."
         }
       },
       "all_mail": {

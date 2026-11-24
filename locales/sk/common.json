@@ -1818,7 +1818,9 @@
         },
         "include_group": {
           "label": "Zahrnúť skupinové schránky",
-          "description": "Zahrnúť do zjednoteného zobrazenia aj zdieľané/skupinové schránky."
+          "description": "Zahrnúť do zjednoteného zobrazenia aj zdieľané/skupinové schránky.",
+          "accounts_label": "Zdieľané schránky v zjednotenej schránke",
+          "accounts_description": "Zrušte začiarknutie schránky, ktorú nečítate každý deň. Zostane na bočnom paneli."
         }
       },
       "all_mail": {

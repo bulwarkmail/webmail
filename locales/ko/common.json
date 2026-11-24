@@ -1815,7 +1815,9 @@
         },
         "include_group": {
           "label": "그룹 받은편지함 포함",
-          "description": "공유/그룹 받은편지함도 통합 보기에 포함합니다."
+          "description": "공유/그룹 받은편지함도 통합 보기에 포함합니다.",
+          "accounts_label": "통합 메일함에 포함할 공유 메일함",
+          "accounts_description": "매일 읽지 않는 메일함은 선택을 해제하세요. 사이드바에는 그대로 남습니다."
         }
       },
       "all_mail": {

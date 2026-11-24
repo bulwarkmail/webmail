@@ -1815,7 +1815,9 @@
         },
         "include_group": {
           "label": "Gruppenpostfächer einbeziehen",
-          "description": "Gemeinsam genutzte/Gruppenpostfächer ebenfalls in die vereinheitlichte Ansicht aufnehmen."
+          "description": "Gemeinsam genutzte/Gruppenpostfächer ebenfalls in die vereinheitlichte Ansicht aufnehmen.",
+          "accounts_label": "Geteilte Postfächer im gemeinsamen Postfach",
+          "accounts_description": "Entfernen Sie den Haken bei einem Postfach, das Sie nicht täglich lesen. Es bleibt in der Seitenleiste."
         }
       },
       "all_mail": {

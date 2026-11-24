@@ -1815,7 +1815,9 @@
         },
         "include_group": {
           "label": "Includi le caselle di gruppo",
-          "description": "Includi anche le caselle condivise o di gruppo nella vista unificata."
+          "description": "Includi anche le caselle condivise o di gruppo nella vista unificata.",
+          "accounts_label": "Caselle condivise nella casella unificata",
+          "accounts_description": "Togli la spunta a una casella che non leggi ogni giorno. Resta nella barra laterale."
         }
       },
       "all_mail": {

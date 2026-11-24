@@ -1818,7 +1818,9 @@
         },
         "include_group": {
           "label": "Kaasa rühma postkastid",
-          "description": "Kaasa ühendatud vaatesse ka jagatud/rühma postkastid."
+          "description": "Kaasa ühendatud vaatesse ka jagatud/rühma postkastid.",
+          "accounts_label": "Jagatud postkastid ühendatud postkastis",
+          "accounts_description": "Eemalda linnuke postkastilt, mida sa iga päev ei loe. See jääb külgribale."
         }
       },
       "all_mail": {

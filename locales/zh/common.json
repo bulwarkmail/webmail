@@ -1815,7 +1815,9 @@
         },
         "include_group": {
           "label": "包含群组收件箱",
-          "description": "在统一视图中也合并共享/群组收件箱。"
+          "description": "在统一视图中也合并共享/群组收件箱。",
+          "accounts_label": "统一邮箱中的共享邮箱",
+          "accounts_description": "取消勾选不常看的邮箱。它仍会显示在侧边栏中。"
         }
       },
       "all_mail": {

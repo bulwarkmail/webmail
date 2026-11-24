@@ -921,6 +921,9 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   const activeHasMore = isScheduledView ? scopedScheduledHasMore : hasMoreEmails;
   const activeIsLoading = isScheduledView ? isLoadingScheduled : isLoading;
   const includeGroupInUnified = useSettingsStore((s) => s.includeGroupInUnified);
+  // A shared account left out of the unified mailbox (or taken back in)
+  // recounts it and reloads its open list (#962).
+  const unifiedExclusions = useSettingsStore((s) => JSON.stringify(s.unifiedExcludedSharedAccounts ?? {}));
   const unifiedCrossAccount = useSettingsStore((s) => s.unifiedCrossAccount);
   const unifiedCrossAccountGate = usePolicyStore((s) => s.isFeatureEnabled('unifiedCrossAccountEnabled'));
   const archiveActionEnabled = useArchiveActionEnabled();
@@ -2382,16 +2385,21 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       if (built.length < 2 && !hasGroupEntry && !isEmbedded) return;
       refreshUnifiedCounts(built);
     });
-  }, [enableUnifiedMailbox, includeGroupInUnified, unifiedCrossAccount, activeAccountId, isEmbedded, isAuthenticated, client, mailboxes, connectedAccountsSignature, buildPopulatedUnifiedAccounts, refreshUnifiedCounts, refreshCrossCounts, showCrossUnread, showCrossStarred, showCrossAll]);
+  }, [enableUnifiedMailbox, includeGroupInUnified, unifiedExclusions, unifiedCrossAccount, activeAccountId, isEmbedded, isAuthenticated, client, mailboxes, connectedAccountsSignature, buildPopulatedUnifiedAccounts, refreshUnifiedCounts, refreshCrossCounts, showCrossUnread, showCrossStarred, showCrossAll]);
 
   // Refetch the open unified/cross list whenever an account joins the connected
   // set. Only growth matters - a shrink (sign-out, disconnect) is already
   // handled by the flows that cause it, and refetching there would fight them.
+  // A shared account left out of the unified mailbox or taken back in reloads
+  // the list too.
   const previousConnectedAccountsRef = useRef<string | null>(null);
+  const previousExclusionsRef = useRef(unifiedExclusions);
   useEffect(() => {
     const previous = previousConnectedAccountsRef.current;
     previousConnectedAccountsRef.current = connectedAccountsSignature;
-    if (!connectedAccountsGrew(previous, connectedAccountsSignature)) return;
+    const exclusionsChanged = previousExclusionsRef.current !== unifiedExclusions;
+    previousExclusionsRef.current = unifiedExclusions;
+    if (!connectedAccountsGrew(previous, connectedAccountsSignature) && !exclusionsChanged) return;
     if (!isAuthenticated || !client) return;
 
     // Read the view at fire time: this effect is keyed on the account set, not
@@ -2414,7 +2422,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
           : fetchCrossViewAction(populated, crossView!);
       })
       .catch(() => { /* per-account failures surface through unifiedErrors */ });
-  }, [connectedAccountsSignature, isAuthenticated, client, buildPopulatedUnifiedAccounts, fetchUnifiedEmailsAction, fetchCrossViewAction]);
+  }, [connectedAccountsSignature, unifiedExclusions, isAuthenticated, client, buildPopulatedUnifiedAccounts, fetchUnifiedEmailsAction, fetchCrossViewAction]);
 
   // Deep links (#733). Applies `/mail/folder|message|thread/<id>` - and the
   // legacy `?email=<id>` the push service worker used to emit - once the JMAP

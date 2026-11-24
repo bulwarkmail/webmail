@@ -1826,7 +1826,9 @@
         },
         "include_group": {
           "label": "Ta med gruppeinnbokser",
-          "description": "Slå òg saman delte innbokser og gruppeinnbokser i den samla visinga."
+          "description": "Slå òg saman delte innbokser og gruppeinnbokser i den samla visinga.",
+          "accounts_label": "Delte postboksar i den samla postboksen",
+          "accounts_description": "Fjern haken ved ein postboks du ikkje les kvar dag. Han blir verande i sidepanelet."
         }
       },
       "all_mail": {

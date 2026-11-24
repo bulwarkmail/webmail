@@ -1815,7 +1815,9 @@
         },
         "include_group": {
           "label": "Inclure les boîtes de groupe",
-          "description": "Inclure également les boîtes partagées ou de groupe dans la vue unifiée."
+          "description": "Inclure également les boîtes partagées ou de groupe dans la vue unifiée.",
+          "accounts_label": "Boîtes partagées dans la boîte unifiée",
+          "accounts_description": "Décochez une boîte que vous ne lisez pas tous les jours. Elle reste dans la barre latérale."
         }
       },
       "all_mail": {

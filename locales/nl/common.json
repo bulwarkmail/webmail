@@ -1815,7 +1815,9 @@
         },
         "include_group": {
           "label": "Groepspostvakken meenemen",
-          "description": "Gedeelde/groepspostvakken ook in de gecombineerde weergave opnemen."
+          "description": "Gedeelde/groepspostvakken ook in de gecombineerde weergave opnemen.",
+          "accounts_label": "Gedeelde postvakken in het gecombineerde postvak",
+          "accounts_description": "Vink een postvak uit dat u niet elke dag leest. Het blijft in de zijbalk."
         }
       },
       "all_mail": {

@@ -1815,7 +1815,9 @@
         },
         "include_group": {
           "label": "Iekļaut grupas pastkastes",
-          "description": "Iekļaut apvienotajā skatā arī koplietotās/grupas pastkastes."
+          "description": "Iekļaut apvienotajā skatā arī koplietotās/grupas pastkastes.",
+          "accounts_label": "Koplietotās pastkastes apvienotajā pastkastē",
+          "accounts_description": "Noņemiet atzīmi pastkastei, ko nelasāt katru dienu. Tā paliek sānjoslā."
         }
       },
       "all_mail": {

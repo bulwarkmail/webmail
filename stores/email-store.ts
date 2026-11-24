@@ -13,6 +13,7 @@ import type { MessagePriority } from "@/lib/message-priority";
 import { withSearchSnippets, type DeferredSnippetBatch } from "@/lib/search-snippet";
 import { afterRequestDispatch } from "@/lib/after-request-dispatch";
 import { useSettingsStore, getMessageListOrderFor } from "@/stores/settings-store";
+import { hiddenSharedMailIds } from "@/lib/shared-mail-visibility";
 import { isMailboxMuted } from "@/lib/notification-mutes";
 import { useCalendarStore } from "@/stores/calendar-store";
 import { orderKeywords, placeHeldRows, sanitizeSortLevels, type HeldKeywords, type SortLevel } from "@/lib/message-list-order";
@@ -2454,9 +2455,12 @@ export async function buildUnifiedAccountClients(
           list.push(m);
           sharedByOwner.set(m.accountId, list);
         }
+        const excluded = hiddenSharedMailIds(useSettingsStore.getState().unifiedExcludedSharedAccounts, a.id);
         for (const [ownerId, ownerMailboxes] of sharedByOwner) {
           const label = ownerMailboxes.find((m) => m.accountName)?.accountName || ownerId;
-          built.push({
+          // Left out of the unified mailbox one by one (#962). Its folders
+          // are still listed for actions below, only the merged views skip it.
+          if (!excluded.includes(ownerId)) built.push({
             accountId: ownerId,
             accountLabel: label,
             client: c,

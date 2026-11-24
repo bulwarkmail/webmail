@@ -1815,7 +1815,9 @@
         },
         "include_group": {
           "label": "Uwzględnij skrzynki grupowe",
-          "description": "Dodaj również udostępnione/grupowe skrzynki do widoku wspólnego."
+          "description": "Dodaj również udostępnione/grupowe skrzynki do widoku wspólnego.",
+          "accounts_label": "Udostępnione skrzynki we wspólnej skrzynce",
+          "accounts_description": "Odznacz skrzynkę, której nie czytasz codziennie. Zostanie na pasku bocznym."
         }
       },
       "all_mail": {

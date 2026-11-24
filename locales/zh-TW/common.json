@@ -1818,7 +1818,9 @@
         },
         "include_group": {
           "label": "包含群組收件匣",
-          "description": "也將共用／群組收件匣合併到整合檢視中。"
+          "description": "也將共用／群組收件匣合併到整合檢視中。",
+          "accounts_label": "整合信箱中的共用信箱",
+          "accounts_description": "取消勾選不常看的信箱。它仍會顯示在側邊欄中。"
         }
       },
       "all_mail": {

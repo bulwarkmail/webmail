@@ -1818,7 +1818,9 @@
         },
         "include_group": {
           "label": "Csoportos postafiókok belefoglalása",
-          "description": "Megosztott/csoportos postafiókok egyesítése az egységes nézetbe."
+          "description": "Megosztott/csoportos postafiókok egyesítése az egységes nézetbe.",
+          "accounts_label": "Megosztott postafiókok az egyesített postafiókban",
+          "accounts_description": "Vegye ki a pipát egy postafiók elől, amelyet nem olvas naponta. Az oldalsávban megmarad."
         }
       },
       "all_mail": {

@@ -1815,7 +1815,9 @@
         },
         "include_group": {
           "label": "Incluir buzones de grupo",
-          "description": "Incluir también los buzones compartidos o de grupo en la vista unificada."
+          "description": "Incluir también los buzones compartidos o de grupo en la vista unificada.",
+          "accounts_label": "Buzones compartidos en el buzón unificado",
+          "accounts_description": "Desmarca un buzón que no lees a diario. Sigue en la barra lateral."
         }
       },
       "all_mail": {

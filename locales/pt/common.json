@@ -1815,7 +1815,9 @@
         },
         "include_group": {
           "label": "Incluir caixas de entrada de grupo",
-          "description": "Incluir também as caixas de entrada compartilhadas ou de grupo na visualização unificada."
+          "description": "Incluir também as caixas de entrada compartilhadas ou de grupo na visualização unificada.",
+          "accounts_label": "Caixas partilhadas na caixa unificada",
+          "accounts_description": "Desmarque uma caixa que não lê todos os dias. Continua na barra lateral."
         }
       },
       "all_mail": {

@@ -1818,7 +1818,9 @@
         },
         "include_group": {
           "label": "Include group inboxes",
-          "description": "Also merge shared/group inboxes into the unified view."
+          "description": "Also merge shared/group inboxes into the unified view.",
+          "accounts_label": "Shared mailboxes in the unified mailbox",
+          "accounts_description": "Untick a mailbox you don't read every day. It stays in the sidebar."
         }
       },
       "all_mail": {

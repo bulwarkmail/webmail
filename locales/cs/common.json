@@ -1815,7 +1815,9 @@
         },
         "include_group": {
           "label": "Zahrnout skupinové schránky",
-          "description": "Zahrnout do sjednoceného zobrazení také sdílené/skupinové schránky."
+          "description": "Zahrnout do sjednoceného zobrazení také sdílené/skupinové schránky.",
+          "accounts_label": "Sdílené schránky ve sjednocené schránce",
+          "accounts_description": "Odškrtněte schránku, kterou nečtete každý den. Zůstane v postranním panelu."
         }
       },
       "all_mail": {

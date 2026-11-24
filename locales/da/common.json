@@ -1818,7 +1818,9 @@
         },
         "include_group": {
           "label": "Inkluder gruppepostkasser",
-          "description": "Inkluder også delte/gruppepostkasser i den samlede visning."
+          "description": "Inkluder også delte/gruppepostkasser i den samlede visning.",
+          "accounts_label": "Delte postkasser i den samlede postkasse",
+          "accounts_description": "Fjern fluebenet ved en postkasse, du ikke læser hver dag. Den bliver i sidepanelet."
         }
       },
       "all_mail": {

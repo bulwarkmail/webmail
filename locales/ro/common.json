@@ -1818,7 +1818,9 @@
         },
         "include_group": {
           "label": "Includeți căsuțele de e-mail de grup",
-          "description": "De asemenea, integrați căsuțele de e-mail partajate/de grup în vizualizarea unificată."
+          "description": "De asemenea, integrați căsuțele de e-mail partajate/de grup în vizualizarea unificată.",
+          "accounts_label": "Cutii partajate în cutia unificată",
+          "accounts_description": "Debifați o cutie pe care nu o citiți zilnic. Rămâne în bara laterală."
         }
       },
       "all_mail": {

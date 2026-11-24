@@ -199,6 +199,8 @@ export function MultipleAccountsSection() {
   const compactSharedMailboxes = useSettingsStore(s => s.compactSharedMailboxes);
   const hiddenSharedMailAccounts = useSettingsStore(s => s.hiddenSharedMailAccounts);
   const hiddenSharedIds = hiddenSharedMailIds(hiddenSharedMailAccounts, activeAccountId);
+  const unifiedExcludedSharedAccounts = useSettingsStore(s => s.unifiedExcludedSharedAccounts);
+  const unifiedExcludedIds = hiddenSharedMailIds(unifiedExcludedSharedAccounts, activeAccountId);
   const sharedMailAccountOrder = useSettingsStore(s => s.sharedMailAccountOrder);
   // In the sidebar's order: by name, then the login's saved order.
   const sharedMailAccounts = useMemo(() => {
@@ -296,6 +298,45 @@ export function MultipleAccountsSection() {
             onChange={(v) => updateSetting('includeGroupInUnified', v)}
           />
         </SettingItem>
+      )}
+
+      {/* Which shared mailboxes the unified mailbox merges, one by one (#962):
+          an info@ read now and then can stay out of it and in the sidebar.
+          With only one, the switch above already is that choice. */}
+      {enableUnifiedMailbox && includeGroupInUnified && activeAccountId && sharedMailAccounts.length > 1
+        && !isSettingHidden('includeGroupInUnified') && !isSettingLocked('includeGroupInUnified') && (
+        <div className="ms-4 border-s-2 border-border ps-3 space-y-2 py-2" data-testid="unified-shared-account-list">
+          <div>
+            <div className="text-sm font-medium text-foreground">{t('unified_mailbox.include_group.accounts_label')}</div>
+            <div className="text-xs text-muted-foreground">{t('unified_mailbox.include_group.accounts_description')}</div>
+          </div>
+          <div className="space-y-0.5">
+            {sharedMailAccounts.map(({ id, name }) => {
+              const checked = !unifiedExcludedIds.includes(id);
+              return (
+                <button
+                  key={id}
+                  type="button"
+                  onClick={() => updateSetting(
+                    'unifiedExcludedSharedAccounts',
+                    setSharedMailAccountHidden(unifiedExcludedSharedAccounts, activeAccountId, id, checked),
+                  )}
+                  className="w-full flex items-center gap-2.5 py-1.5 px-2 rounded-md hover:bg-muted/50 text-start"
+                  role="checkbox"
+                  aria-checked={checked}
+                >
+                  <span className={cn(
+                    "flex items-center justify-center w-4 h-4 rounded border flex-shrink-0 transition-colors",
+                    checked ? "bg-primary border-primary text-primary-foreground" : "border-border"
+                  )}>
+                    {checked && <Check className="w-3 h-3" />}
+                  </span>
+                  <span className="text-sm text-foreground truncate">{name}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
       )}
 
       {enableUnifiedMailbox && anyCrossAllowed && crossViews.map(({ setting, value, allowed, labelKey, descKey }) => (

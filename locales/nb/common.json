@@ -1818,7 +1818,9 @@
         },
         "include_group": {
           "label": "Ta med gruppeinnbokser",
-          "description": "Ta også med delte innbokser og gruppeinnbokser i den samlede visningen."
+          "description": "Ta også med delte innbokser og gruppeinnbokser i den samlede visningen.",
+          "accounts_label": "Delte postbokser i den samlede postboksen",
+          "accounts_description": "Fjern haken ved en postboks du ikke leser hver dag. Den blir værende i sidepanelet."
         }
       },
       "all_mail": {
