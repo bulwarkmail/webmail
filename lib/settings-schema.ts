@@ -28,6 +28,7 @@ import {
 import { locales } from '@/i18n/routing';
 import { UNREAD_SECTION_SIZES } from '@/lib/unread-first';
 import { COMPOSE_PLACEMENTS } from '@/lib/compose-placement';
+import { EVENT_LENGTHS } from '@/lib/calendar-event-length';
 
 /** Which store holds the setting. */
 export type SettingsStoreName = 'settings' | 'theme' | 'locale' | 'calendar';
@@ -332,6 +333,8 @@ const ENTRIES: SettingSchemaEntry[] = [
 
   // --- Calendar ---
   choice('viewMode', 'calendar', `${CAL}default_view`, opts('calendar.views.', ['month', 'week', 'day', 'agenda']), { store: 'calendar' }),
+  // Minutes read "30 minutes", "1.5 hours": formatted.
+  choice('defaultEventLength', 'calendar', `${CAL}default_event_length`, EVENT_LENGTHS.map((value) => ({ value, label: null }))),
   bool('calendarInvitationParsingEnabled', 'calendar', `${CAL}invitation_parsing`),
   bool('showTimeInMonthView', 'calendar', `${CAL}show_time_in_month_view`),
   bool('calendarTintedEvents', 'calendar', `${CAL}tinted_events`),

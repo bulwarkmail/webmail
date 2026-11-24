@@ -2,6 +2,8 @@ import { useState, useCallback, useEffect, useRef, type PointerEvent, type DragE
 import { format } from "date-fns";
 import { useAuthStore } from "@/stores/auth-store";
 import { useCalendarStore } from "@/stores/calendar-store";
+import { useSettingsStore } from "@/stores/settings-store";
+import { endAfterEventLength, eventLengthDuration } from "@/lib/calendar-event-length";
 import { toast } from "@/stores/toast-store";
 import { debug } from "@/lib/debug";
 import { formatIsoInTimeZone, getEventEndDate, getEventStartDate } from "@/lib/calendar-utils";
@@ -384,13 +386,13 @@ export function useTimeGridInteractions({
   // honors a timed `defaultDate` when `defaultEndDate` is present — without it
   // the modal falls back to "next hour from now" (meant for date-only month
   // clicks) and discards the clicked time (#435).
+  // The end is the default length for new events away (#1318).
+  const eventLength = useSettingsStore((s) => s.defaultEventLength);
   const slotToRange = useCallback((day: Date, hour: number): [Date, Date] => {
     const start = new Date(day);
     start.setHours(hour, 0, 0, 0);
-    const end = new Date(day);
-    end.setHours(hour + 1, 0, 0, 0);
-    return [start, end];
-  }, []);
+    return [start, endAfterEventLength(start, eventLength)];
+  }, [eventLength]);
 
   const handleSlotClick = useCallback((day: Date, hour: number) => {
     if (wasDragging.current) return;
@@ -431,7 +433,7 @@ export function useTimeGridInteractions({
       const created = await useCalendarStore.getState().createEvent(client, {
         title,
         start: startStr,
-        duration: "PT1H",
+        duration: eventLengthDuration(eventLength),
         timeZone,
         calendarIds: defaultCal ? { [defaultCal.id]: true } : {},
         status: "confirmed",
@@ -446,7 +448,7 @@ export function useTimeGridInteractions({
       setQuickCreate(null);
       toast.error(errorMessages.error);
     }
-  }, [quickCreate, calendars, errorMessages.created, errorMessages.error]);
+  }, [quickCreate, calendars, eventLength, errorMessages.created, errorMessages.error]);
 
   const handleQuickCreateCancel = useCallback(() => {
     setQuickCreate(null);

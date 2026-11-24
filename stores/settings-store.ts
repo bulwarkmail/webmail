@@ -15,6 +15,7 @@ import { BIRTHDAY_CALENDAR_ID } from '@/lib/birthday-calendar';
 import { generateAccountId } from '@/lib/account-utils';
 import { subscriptionOwnerFor } from '@/lib/calendar-subscription-sync';
 import { sanitizeVisibilityChoices, type CalendarVisibilityChoices } from '@/lib/calendar-visibility';
+import { DEFAULT_EVENT_LENGTH, isEventLength, type EventLength } from '@/lib/calendar-event-length';
 import type { FolderCountMode } from '@/lib/folder-counts';
 import { DEFAULT_FILES_SETTINGS, normalizeFilesSettings, type FilesSettings } from '@/lib/files-settings';
 import { orderForMailbox, sanitizeSortLevels, type MessageListOrderScope, type SortLevel } from '@/lib/message-list-order';
@@ -922,6 +923,8 @@ interface SettingsState extends AccessibilitySettings {
   /** Scroll continuously through months/weeks/days (#759) instead of one period at a time. */
   calendarFreeScroll: boolean;
   calendarHoverPreview: CalendarHoverPreview;
+  /** How long a new event lasts, in minutes (lib/calendar-event-length, #1318). */
+  defaultEventLength: EventLength;
   /** Draw only calendarDayStartHour..calendarDayEndHour in the day and week views (#1164). */
   calendarLimitHours: boolean;
   calendarDayStartHour: number;
@@ -1313,6 +1316,7 @@ const DEFAULT_SETTINGS = {
   showWeekNumbers: false,
   calendarFreeScroll: true,
   calendarHoverPreview: 'delay-500ms' as CalendarHoverPreview,
+  defaultEventLength: DEFAULT_EVENT_LENGTH as EventLength,
   calendarLimitHours: true,
   calendarDayStartHour: 8,
   calendarDayEndHour: 20,
@@ -1597,6 +1601,7 @@ function isAllowedPolicyValue(key: string, value: unknown, restriction?: Setting
   if (key === 'messageDoubleClick' && !MESSAGE_DOUBLE_CLICK.includes(value as MessageDoubleClick)) return false;
   if (key === 'density' && !isDensity(value)) return false;
   if (key === 'calendarMonthTimedEvents' && !MONTH_TIMED_EVENT_STYLES.includes(value as MonthTimedEventStyle)) return false;
+  if (key === 'defaultEventLength' && !isEventLength(value)) return false;
   if (!isAllowedAccessibilityValue(key, value)) return false;
   if (restriction && typeof restriction === 'object') {
     if (Array.isArray(restriction.allowedValues) && !restriction.allowedValues.includes(value)) return false;
@@ -1966,6 +1971,7 @@ export const useSettingsStore = create<SettingsState>()(
           showWeekNumbers: state.showWeekNumbers,
           calendarFreeScroll: state.calendarFreeScroll,
           calendarHoverPreview: state.calendarHoverPreview,
+          defaultEventLength: state.defaultEventLength,
           calendarLimitHours: state.calendarLimitHours,
           calendarDayStartHour: state.calendarDayStartHour,
           calendarDayEndHour: state.calendarDayEndHour,
@@ -2208,6 +2214,9 @@ export const useSettingsStore = create<SettingsState>()(
               // An enum the page doesn't know (an older or newer export, a
               // hand-edited file) keeps the current value.
               if (!isAllowedAccessibilityValue(key, settings[key])) {
+                return;
+              }
+              if (key === 'defaultEventLength' && !isEventLength(settings[key])) {
                 return;
               }
               if (key === 'density' && !isDensity(settings[key])) {
@@ -2686,6 +2695,7 @@ export const useSettingsStore = create<SettingsState>()(
             state.proofreadingPlugins = booleanRecord(state.proofreadingPlugins);
             state.proofreadingNoticeSeen = booleanRecord(state.proofreadingNoticeSeen);
             if (!isWritingLanguage(state.writingLanguage)) state.writingLanguage = 'auto';
+            if (!isEventLength(state.defaultEventLength)) state.defaultEventLength = DEFAULT_EVENT_LENGTH;
             if (!isPlainRecord(state.hiddenSharedMailAccounts)) {
               state.hiddenSharedMailAccounts = {};
             }

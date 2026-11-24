@@ -104,6 +104,7 @@ import { debug } from "@/lib/debug";
 import { consumePendingWebcal, hasPendingWebcal, subscribeToPendingWebcal } from "@/lib/protocol-handlers/session";
 import { useHandoffFiles } from "@/hooks/use-handoff-files";
 import type { ParsedWebcal } from "@/lib/protocol-handlers/webcal";
+import { endAfterEventLength } from "@/lib/calendar-event-length";
 import { appPath, buildCalendarPath, calendarEventLinkState, parseCalendarPath, type CalendarDeepLink } from "@/lib/deep-links";
 import { consumePendingDeepLinkEntry, subscribePendingDeepLink } from "@/lib/deep-link-handoff";
 import { useDeepLinkUrl } from "@/hooks/use-deep-link-url";
@@ -271,6 +272,7 @@ export function CalendarApp({ linkSegments: routeSegments, surface = "calendar" 
   const calendarEnabled = usePolicyStore((s) => s.isFeatureEnabled('calendarEnabled'));
   const { firstDayOfWeek, timeFormat, showWeekNumbers, enableCalendarTasks, showTasksOnCalendar, calendarHoverPreview, showBirthdayCalendar, birthdayCalendarColor, updateSetting } = useSettingsStore();
   const sharedCalendarColors = useSettingsStore((s) => s.sharedCalendarColors);
+  const defaultEventLength = useSettingsStore((s) => s.defaultEventLength);
   const setSharedCalendarColor = useSettingsStore((s) => s.setSharedCalendarColor);
   const removeSharedCalendarColor = useSettingsStore((s) => s.removeSharedCalendarColor);
   const taskStore = useTaskStore();
@@ -1507,7 +1509,7 @@ export function CalendarApp({ linkSegments: routeSegments, surface = "calendar" 
       openCreateModal(start, end, allDay);
       return;
     }
-    const finalEnd = end ?? (allDay ? start : new Date(start.getTime() + 60 * 60 * 1000));
+    const finalEnd = end ?? (allDay ? start : endAfterEventLength(start, defaultEventLength));
     // The account on screen's calendar, not the first account's (pim-p2-4).
     const preferred = preferredTarget(writableCalendars, activeLocalAccountId, lastEventCalendarIds);
     setShowEventModal(false);
@@ -1524,7 +1526,7 @@ export function CalendarApp({ linkSegments: routeSegments, surface = "calendar" 
         ? prev.calendarId
         : preferred?.id ?? "",
     }));
-  }), [isMobile, openCreateModal, writableCalendars, closeDetail, whenEditorsDiscarded, activeLocalAccountId, lastEventCalendarIds]);
+  }), [isMobile, openCreateModal, writableCalendars, closeDetail, whenEditorsDiscarded, activeLocalAccountId, lastEventCalendarIds, defaultEventLength]);
 
   // A day in the month view or the all-day row: an all-day event, the same
   // quick editor as a slot in week and day view.
@@ -2964,9 +2966,7 @@ export function CalendarApp({ linkSegments: routeSegments, surface = "calendar" 
                 d.setHours(hour, 0, 0, 0);
                 // Explicit end so the modal keeps the clicked hour instead of
                 // applying its next-hour fallback for date-only defaults (#435).
-                const end = new Date(date);
-                end.setHours(hour + 1, 0, 0, 0);
-                openCreateModal(d, end);
+                openCreateModal(d, endAfterEventLength(d, defaultEventLength));
               } else {
                 const now = displayNow();
                 d.setHours(now.getHours() + 1, 0, 0, 0);

@@ -156,6 +156,18 @@ describe("useTimeGridInteractions slot clicks (#435)", () => {
     expect(start).toEqual(new Date(2026, 8, 3, 23, 0, 0, 0));
     expect(end).toEqual(new Date(2026, 8, 4, 0, 0, 0, 0));
   });
+
+  // #1318: the default length for new events, not always an hour.
+  describe("with new events set to last 30 minutes", () => {
+    beforeEach(() => useSettingsStore.setState({ defaultEventLength: 30 }));
+    afterEach(() => useSettingsStore.setState({ defaultEventLength: 60 }));
+
+    it("ends a clicked slot after 30 minutes", () => {
+      const { result, onCreateRange } = renderInteractions();
+      act(() => result.current.handleSlotDoubleClick(new Date(2026, 8, 3), 9));
+      expect(onCreateRange.mock.calls[0][1]).toEqual(new Date(2026, 8, 3, 9, 30, 0, 0));
+    });
+  });
 });
 
 

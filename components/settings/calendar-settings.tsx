@@ -11,6 +11,7 @@ import { SettingsSection, SettingItem, Select, ToggleSwitch } from './settings-s
 import { cn } from '@/lib/utils';
 import { formatDisplayHour } from '@/lib/calendar-display-range';
 import { FreeBusyShareSetting } from './free-busy-share-setting';
+import { EVENT_LENGTHS, type EventLength } from '@/lib/calendar-event-length';
 
 // Indexed by Date.getDay(), which is how calendarWorkingDays stores days.
 const DAY_KEYS = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'] as const;
@@ -44,6 +45,7 @@ export function CalendarSettings() {
     showTasksApp,
     showBirthdayCalendar,
     calendarHoverPreview,
+    defaultEventLength,
     calendarLimitHours,
     calendarDayStartHour,
     calendarDayEndHour,
@@ -95,6 +97,20 @@ export function CalendarSettings() {
             { value: 'day', label: tViews('day') },
             { value: 'agenda', label: tViews('agenda') },
           ]}
+        />
+      </SettingItem>
+
+      <SettingItem
+        label={t('default_event_length')}
+        description={t('default_event_length_desc')}
+      >
+        <Select
+          value={String(defaultEventLength)}
+          onChange={(value) => updateSetting('defaultEventLength', Number(value) as EventLength)}
+          options={EVENT_LENGTHS.map((minutes) => ({
+            value: String(minutes),
+            label: minutes < 60 ? t('event_length_minutes', { minutes }) : t('event_length_hours', { hours: minutes / 60 }),
+          }))}
         />
       </SettingItem>
 

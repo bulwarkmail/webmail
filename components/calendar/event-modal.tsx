@@ -51,6 +51,7 @@ import { changesWhen, type EditorAttendee, type EventEditorState } from "@/lib/r
 import { PluginSlot } from "@/components/plugins/plugin-slot";
 import { linkCallback } from "@/lib/plugin-sandbox/slot-callbacks";
 import { useSettingsStore } from "@/stores/settings-store";
+import { endAfterEventLength, eventLengthMs } from "@/lib/calendar-event-length";
 import { cn, generateUUID } from "@/lib/utils";
 import { useFormatEventDate } from "@/hooks/use-format-event-date";
 import { useCalendarLocale } from "@/hooks/use-calendar-locale";
@@ -337,6 +338,8 @@ export function EventModal({
   const closeFirst = useCloseBesideControls(header);
   const locale = useLocale();
   const timeFormat = useSettingsStore((s) => s.timeFormat);
+  // How long a new event lasts (#1318).
+  const defaultEventLength = useSettingsStore((s) => s.defaultEventLength);
   const timeDisplayFmt = timeFormat === "12h" ? "h:mm a" : "HH:mm";
   // Inside a Pro pane the "mobile" layout must cover the pane, not the
   // viewport - a `fixed inset-0` editor from a split pane would take over
@@ -428,7 +431,7 @@ export function EventModal({
       return getEventEndDate(seed);
     }
     if (defaultEndDate) return new Date(defaultEndDate);
-    return addHours(getInitialStart(), 1);
+    return endAfterEventLength(getInitialStart(), defaultEventLength);
   };
 
   const [title, setTitle] = useState(seed?.title || defaultTitle || "");
@@ -989,13 +992,13 @@ export function EventModal({
       // Clock fields, not Dates: see wallFields.
       const startWall = wallFields(startDate, startTime);
       let endWall = wallFields(endDate, endTime);
-      // An end at or before the start becomes an hour - but an event that
-      // lasts no time (a deadline, a reminder) keeps doing so.
+      // An end at or before the start becomes the default length - but an
+      // event that lasts no time (a deadline, a reminder) keeps doing so.
       const lastedNoTime = !!event && !event.showWithoutTime
         && getEventEndDate(event).getTime() === getEventStartDate(event).getTime();
       const order = compareWall(endWall, startWall);
       if (order < 0 || (order === 0 && !lastedNoTime)) {
-        endWall = addToWall(startWall, 3600000);
+        endWall = addToWall(startWall, eventLengthMs(defaultEventLength));
       }
       // Exact time in the event's zone, not the browser's.
       duration = buildDuration(new Date(0), new Date(Math.max(0, zoneWallDurationMs(startWall, endWall, timeZone))));
@@ -1179,7 +1182,7 @@ export function EventModal({
       savingRef.current = false;
       setIsSaving(false);
     }
-  }, [title, description, location, virtualLocation, startDate, startTime, endDate, endTime, allDay, timeZone, initialForm, calendarId, calendars, recurrence, customRule, useDefaultAlerts, defaultAlerts, alertRows, preservedAlerts, attendees, initialAttendees, sendInvitations, freeBusyStatus, privacy, privacyEditable, color, currentUserEmails, userIsOrganizer, organizerOnBehalf, resolveContactName, event, seed, eventDescription, onSave, isSaving, t]);
+  }, [title, description, location, virtualLocation, startDate, startTime, endDate, endTime, allDay, timeZone, initialForm, calendarId, calendars, recurrence, customRule, useDefaultAlerts, defaultAlerts, alertRows, preservedAlerts, attendees, initialAttendees, sendInvitations, freeBusyStatus, privacy, privacyEditable, color, currentUserEmails, userIsOrganizer, organizerOnBehalf, resolveContactName, event, seed, eventDescription, onSave, isSaving, defaultEventLength, t]);
 
   // The user's own answer, and the owner's in a calendar shared with them
   // (lib/calendar-delegate.ts).
