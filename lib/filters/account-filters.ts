@@ -130,25 +130,28 @@ export async function autoReplyIsOff(client: IJMAPClient, accountId?: string): P
  * although an audience is stored (GenerateOptions.vacationAudienceIdle), as
  * it stands while the auto-reply is off.
  *
- * The filters script decides while it is the active one: its include runs,
- * and the save leaves it as it is. Where "managed" is the active script, it
- * runs for every sender and the save keeps that, unless the auto-reply is
- * on: that the server tells. In every other case the include is narrowed: a
- * "vacation" script only runs while the auto-reply is on, and of an include
- * that does not run now nothing tells whom it answers once it does.
+ * Where "managed" runs now, as the active script or included by the active
+ * filters script, the server tells whether the auto-reply is on, and the
+ * include is written to match: whoever writes it for every sender has the
+ * server's word that nobody is answered. In every other case the include is
+ * narrowed: a "vacation" script only runs while the auto-reply is on, and of
+ * an include that does not run now nothing tells whom it answers once it
+ * does.
  */
 export async function isVacationAudienceIdle(
   client: IJMAPClient,
   accountId: string,
   scripts: readonly SieveScript[],
   script: SieveScript | null | undefined,
-  parsed: Pick<ParseResult, 'vacationAudience' | 'vacationAudienceIdle'>,
+  parsed: Pick<ParseResult, 'vacationAudience' | 'includeVacation' | 'vacationScriptName'>,
 ): Promise<boolean> {
   if (!parsed.vacationAudience) return false;
   const active = scripts.find(s => s.isActive);
   if (!active) return false;
-  if (active.id === script?.id) return !!parsed.vacationAudienceIdle;
-  return isManagedScriptName(active.name) && autoReplyIsOff(client, accountId);
+  const managedRuns = active.id === script?.id
+    ? !!parsed.includeVacation && isManagedScriptName(parsed.vacationScriptName ?? VACATION_SCRIPT_NAME)
+    : isManagedScriptName(active.name);
+  return managedRuns && autoReplyIsOff(client, accountId);
 }
 
 // Let plugins graft their managed sections (e.g. an inbox-category

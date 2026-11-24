@@ -71,7 +71,7 @@ interface FilterStore {
   vacationForward: VacationForward | null;
   /** Who gets the auto-reply, when not everyone; carried through every save. */
   vacationAudience: VacationAudience | null;
-  /** The audience waits while the auto-reply is off (see isVacationAudienceIdle); carried through every save. */
+  /** The audience waits while the auto-reply is off (see isVacationAudienceIdle), as of the last load. */
   vacationAudienceIdle: boolean;
   /** The host's server rules region (lib/sieve/server-rules); carried through every save. */
   serverRules: string;
@@ -263,13 +263,17 @@ export const useFilterStore = create<FilterStore>()((set, get) => ({
       if (isOpaque) {
         content = rawScript;
       } else {
+        // For every sender only with the server's word that the auto-reply
+        // is off right now: this page may have been loaded before another
+        // tab or client turned it on.
+        const audienceIdle = vacationAudienceIdle && await autoReplyIsOff(client, selectedAccountId || undefined);
         content = generateScript(rules, vacationSettings || undefined, {
           externalRequires,
           includeVacation,
           vacationScriptName,
           vacationForward,
           vacationAudience,
-          vacationAudienceIdle,
+          vacationAudienceIdle: audienceIdle,
           extensions: sieveCapabilities?.sieveExtensions,
           serverRules,
         });
