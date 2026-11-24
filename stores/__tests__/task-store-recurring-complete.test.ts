@@ -114,6 +114,25 @@ describe('task-store recurring toggleTaskComplete', () => {
     expect(useTaskStore.getState().tasks[0].start).toBe('2026-09-27T08:00:00');
   });
 
+  it('moves a series with a start to its next start, due as long after it as before, as the calendar shows it', async () => {
+    // Starts Wednesday 2026-09-16, due Friday the 18th, repeats on Wednesdays.
+    const task = makeTask({
+      id: 't-span',
+      start: '2026-09-16T00:00:00',
+      due: '2026-09-18T00:00:00',
+      recurrenceRules: [{ ...createRecurrenceRule('weekly'), byDay: [{ day: 'we' }] }],
+    });
+    useTaskStore.setState({ tasks: [task] });
+    const [shown] = groupTasksByDueDay([task], { start: new Date(2026, 8, 21), end: new Date(2026, 8, 27) }).get('2026-09-25')!;
+
+    await useTaskStore.getState().toggleTaskComplete(mockClient as IJMAPClient, task);
+
+    expect(mockClient.updateCalendarTask).toHaveBeenCalledWith('t-span', {
+      progress: 'needs-action', start: '2026-09-23T00:00:00', due: '2026-09-25T00:00:00',
+    });
+    expect(shown.recurrenceId).toBe('2026-09-23T00:00:00');
+  });
+
   it('completes a series that has neither a due date nor a start', async () => {
     const task = makeTask({ id: 't-undated', due: null, start: null, recurrenceRules: [createRecurrenceRule('daily')] });
     useTaskStore.setState({ tasks: [task] });

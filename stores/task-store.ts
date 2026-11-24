@@ -8,7 +8,7 @@ import { taskToView } from '@/lib/plugin-projection';
 import { applyPatchObject, patchedProperties } from '@/lib/jmap/patch-object';
 import { getClientByLocalAccountId } from './client-registry';
 import { getNextRecurrenceDate } from '@/lib/recurrence-expansion';
-import { findTaskOverride, occurrenceRecurrenceId, overridePatch, taskSeriesId } from '@/lib/calendar-tasks';
+import { findTaskOverride, occurrenceRecurrenceId, overridePatch, shiftLocal, taskSeriesId } from '@/lib/calendar-tasks';
 
 /**
  * One signed-in login whose tasks the list shows next to the others'
@@ -296,28 +296,24 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
 
     let updates: Partial<CalendarTask>;
 
-    const refDateStr = task.due || task.start;
-    if (task.progress !== 'completed' && task.recurrenceRules?.length && refDateStr) {
-      const refDate = parseISO(refDateStr);
-      const nextDate = !isNaN(refDate.getTime())
-        ? getNextRecurrenceDate(refDate, task.recurrenceRules[0])
-        : null;
+    // A series repeats from its start (RFC 5545 DTSTART), as the calendar
+    // views expand it; without a start, from its due date.
+    const validDate = (value: string | null | undefined) => {
+      const date = value ? parseISO(value) : null;
+      return date && !isNaN(date.getTime()) ? date : null;
+    };
+    const oldStart = validDate(task.start);
+    const oldDue = validDate(task.due);
+    const anchor = oldStart ?? oldDue;
+    if (task.progress !== 'completed' && task.recurrenceRules?.length && (task.due || task.start)) {
+      const nextDate = anchor ? getNextRecurrenceDate(anchor, task.recurrenceRules[0]) : null;
 
-      if (nextDate) {
+      if (nextDate && anchor) {
         // LocalDateTime also for all-day tasks: keeps consistency across serializations
         const dateFormat = task.showWithoutTime ? "yyyy-MM-dd'T'00:00:00" : "yyyy-MM-dd'T'HH:mm:ss";
-        const newDue = task.due ? format(nextDate, dateFormat) : null;
-        // A series without a due date repeats by its start.
-        let newStart = task.start && !task.due ? format(nextDate, dateFormat) : task.start;
-        if (task.start && task.due) {
-          const oldDue = parseISO(task.due);
-          const oldStart = parseISO(task.start);
-          if (!isNaN(oldDue.getTime()) && !isNaN(oldStart.getTime())) {
-            const shiftMs = nextDate.getTime() - oldDue.getTime();
-            const shiftedStart = new Date(oldStart.getTime() + shiftMs);
-            newStart = format(shiftedStart, dateFormat);
-          }
-        }
+        // The next occurrence is due as long after its start as this one.
+        const newDue = oldDue ? format(shiftLocal(nextDate, anchor, oldDue), dateFormat) : null;
+        const newStart = oldStart ? format(nextDate, dateFormat) : task.start;
         // Moving the anchor restarts the count, so the completed occurrence is used up here.
         const [rule, ...otherRules] = task.recurrenceRules;
         updates = {

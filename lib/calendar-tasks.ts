@@ -42,7 +42,7 @@ export function taskDueDayKey(task: CalendarTask): string | null {
  * days plus minutes of the day. Milliseconds would turn 10:00 into 09:00 or
  * 11:00 when a DST switch lies between them.
  */
-function shiftLocal(value: Date, from: Date, to: Date): Date {
+export function shiftLocal(value: Date, from: Date, to: Date): Date {
   const minuteOfDay = (d: Date) => d.getHours() * 60 + d.getMinutes();
   const total = minuteOfDay(value) + minuteOfDay(to) - minuteOfDay(from);
   const carry = Math.floor(total / 1440);
