@@ -955,16 +955,22 @@ describe('ThreadListItem swipe on a conversation', () => {
     expect(onArchive).toHaveBeenCalledWith(expect.objectContaining({ id: 'b' }));
   });
 
-  // A tablet draws the compact desktop layout (600-1024px) and keeps the swipe;
-  // a mouse in a window that narrow does not get it.
+  // A tablet draws the compact desktop layout (600-1024px), or the full one in
+  // landscape (#1831), and keeps the swipe; a mouse does not get it.
   it.each([
-    ['swipes on a touch screen of a compact desktop', true, 1],
-    ['does not swipe with a mouse', false, 0],
-  ])('%s', (_name, coarse, calls) => {
-    useUIStore.setState({ isMobile: false, isCompact: true, isDesktop: true });
+    ['swipes on a touch screen of a compact desktop', true, true, 1],
+    ['swipes on a touch screen of the full desktop', true, false, 1],
+    ['does not swipe with a mouse', false, true, 0],
+    ['does not swipe with a mouse on the full desktop', false, false, 0],
+  ])('%s', (_name, coarse, compact, calls) => {
+    useUIStore.setState({ isMobile: false, isCompact: compact, isDesktop: true });
     useSettingsStore.setState({ swipeRightAction: 'archive', swipeLeftAction: 'delete' } as never);
+    const width = compact ? 900 : 1366;
     const spy = vi.spyOn(window, 'matchMedia').mockImplementation((query: string) => ({
-      matches: coarse && query === '(pointer: coarse) and (width < 64rem)', media: query, onchange: null,
+      // A media query engine in miniature: only the touch and width parts matter here.
+      matches: coarse && query.includes('(pointer: coarse)')
+        && (!query.includes('width < 64rem') || width < 1024),
+      media: query, onchange: null,
       addEventListener: () => {}, removeEventListener: () => {}, addListener: () => {}, removeListener: () => {},
       dispatchEvent: () => false,
     }) as MediaQueryList);

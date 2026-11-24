@@ -127,13 +127,14 @@ function useShowAccountDot(tintListRowsByAccount: boolean): boolean {
 }
 
 /**
- * Rows swipe on a phone, and on a touch screen below the full desktop: a
- * tablet draws the compact desktop layout and keeps the phone's gesture.
+ * Rows swipe on a phone and on any touch screen, at any width: a tablet in
+ * landscape draws the full desktop layout and keeps the phone's gesture
+ * (#1831). The gesture listens to touch events only, so a mouse never swipes.
  */
 function useSwipeRows(): boolean {
   const isMobile = useUIStore((state) => state.isMobile);
-  const touchCompact = useMediaQuery("(pointer: coarse) and (width < 64rem)");
-  return isMobile || touchCompact;
+  const touchScreen = useMediaQuery("(pointer: coarse)");
+  return isMobile || touchScreen;
 }
 
 /**
