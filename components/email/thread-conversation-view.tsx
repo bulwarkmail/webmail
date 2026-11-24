@@ -61,7 +61,9 @@ import { CONVERSATION_MESSAGE_ATTR, conversationPrintSource, focusedConversation
 import { ConversationMessageMenu } from "./conversation-message-menu";
 import { MessagePrint } from "./message-print";
 import { usePrintListener, usePrinting } from "@/components/print/print-root";
-import { FilePen } from "@/components/icons";
+import { CloudUpload, FilePen } from "@/components/icons";
+import { SaveToFilesDialog, type SaveableAttachment } from "./save-to-files-dialog";
+import { usePolicyStore } from "@/stores/policy-store";
 import { editAccountOf, useEditAttachment } from "@/hooks/use-edit-attachment";
 import { useSettingsStore } from "@/stores/settings-store";
 import { densityShowsAvatar } from "@/lib/density";
@@ -762,6 +764,12 @@ export function ConversationEmailBody({
   const { client: blobClient, accountId } = source;
   const editAccount = source.clientAccountId ?? editAccountOf(email);
   const { canEdit: canEditAttachment, edit: editAttachment } = useEditAttachment(editAccount);
+  // Save to Files, as in the reader (email-viewer): the login's own mail or a
+  // shared or group account of it, whose blob is copied over. Not with
+  // downloads off: the copy in Files would get around the policy.
+  const filesFeatureEnabled = usePolicyStore((s) => s.isFeatureEnabled('filesEnabled'));
+  const canSaveToFiles = filesFeatureEnabled && !!client && blobClient === client && !!client.supportsFiles?.() && !devices.noDownloads;
+  const [saveToFilesTarget, setSaveToFilesTarget] = useState<SaveableAttachment | null>(null);
   // Reported as phishing: a banner, links off, no cards (as in the reader).
   const phishingMarked = usePhishingMarked(email);
   const tPhishing = useTranslations('phishing_report');
@@ -1198,6 +1206,15 @@ export function ConversationEmailBody({
                     <FilePen className="h-4 w-4" />
                   </button>
                 )}
+                {canSaveToFiles && attachment.blobId && (
+                  <IconButton
+                    label={t('email_viewer.save_to_files.title')}
+                    className="-ms-1.5 self-center text-muted-foreground hover:text-foreground"
+                    onClick={(e) => { e.stopPropagation(); setSaveToFilesTarget(attachment); }}
+                  >
+                    <CloudUpload className="h-4 w-4" />
+                  </IconButton>
+                )}
                 <AttachmentPluginMenu emailId={email.id} attachment={attachment} className="-ms-1.5 self-center p-2 rounded-lg" />
                 </span>
               );
@@ -1328,6 +1345,9 @@ export function ConversationEmailBody({
         />
       </div>
 
+      {canSaveToFiles && client && saveToFilesTarget && (
+        <SaveToFilesDialog attachment={saveToFilesTarget} client={client} blobAccountId={accountId} onClose={() => setSaveToFilesTarget(null)} />
+      )}
     </div>
   );
 }
