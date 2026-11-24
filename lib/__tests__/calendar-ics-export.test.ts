@@ -63,6 +63,39 @@ describe('eventToICS', () => {
     expect(line(ics, 'DESCRIPTION:')).toBe('DESCRIPTION:Budget & plans\\nRoom 2');
   });
 
+  // Stalwart 1.0 keeps a participant's address only in calendarAddress, and
+  // its organizer participant may carry no roles: the file had no ORGANIZER
+  // and no ATTENDEE lines.
+  it('reads participants and the organizer as Stalwart 1.0 holds them', () => {
+    const ics = eventToICS(event({
+      organizerCalendarAddress: 'mailto:alice@example.com',
+      participants: {
+        o: { '@type': 'Participant', calendarAddress: 'mailto:alice@example.com', name: 'Alice' },
+        p: { '@type': 'Participant', calendarAddress: 'mailto:john@example.com', name: 'John', roles: { attendee: true }, participationStatus: 'accepted' },
+      } as unknown as CalendarEvent['participants'],
+    }));
+
+    expect(line(ics, 'ORGANIZER')).toBe('ORGANIZER;CN=Alice:mailto:alice@example.com');
+    expect(unfold(ics).split('\r\n').filter((l) => l.startsWith('ATTENDEE'))).toEqual(['ATTENDEE;CN=John;PARTSTAT=ACCEPTED:mailto:john@example.com']);
+  });
+
+  it('writes METHOD:REQUEST for a forwarded invitation, PUBLISH otherwise', () => {
+    expect(line(eventToICS(event()), 'METHOD:')).toBe('METHOD:PUBLISH');
+    expect(line(eventToICS(event(), { method: 'REQUEST' }), 'METHOD:')).toBe('METHOD:REQUEST');
+  });
+
+  it('leaves the days taken out of a series out of the file too', () => {
+    const ics = eventToICS(event({
+      recurrenceRules: [{ '@type': 'RecurrenceRule', frequency: 'weekly' }] as CalendarEvent['recurrenceRules'],
+      recurrenceOverrides: {
+        '2026-11-27T09:00:00': { excluded: true } as never,
+        '2026-12-04T09:00:00': { title: 'Moved' },
+      },
+    }));
+
+    expect(unfold(ics).split('\r\n').filter((l) => l.startsWith('EXDATE'))).toEqual(['EXDATE;TZID=Europe/Berlin:20261127T090000']);
+  });
+
   it('writes a plain-text description as it is', () => {
     const ics = eventToICS(event({ description: 'a <b> c', descriptionContentType: 'text/plain' }));
 

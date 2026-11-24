@@ -6333,6 +6333,17 @@
     "organizer_owner": "{name}（由你代发）",
     "organizer_me": "你"
   },
+  "calendar_forward": {
+    "menu": "转发…",
+    "heading": "转发的邀请",
+    "when": "时间：{value}",
+    "where": "地点：{value}",
+    "organizer": "组织者：{value}",
+    "failed": "无法转发邀请。",
+    "add_replier": "将 {name} 添加到会议",
+    "not_invited": "{name} 未受邀参加此会议。有人转发了邀请。",
+    "added": "已添加到会议"
+  },
   "free_busy_share": {
     "button": "与 {group} 共享我的忙闲时间",
     "already": "你的忙闲时间已与 {group} 共享",

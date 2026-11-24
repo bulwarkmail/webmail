@@ -8,7 +8,7 @@ import { useAuthStore } from '@/stores/auth-store';
 import { useCalendarStore } from '@/stores/calendar-store';
 import { useSettingsStore } from '@/stores/settings-store';
 import { findParticipantByEmails, getInvitationTrustAssessment } from '../../calendar-invitation';
-import { answerInvitation, attendeeOf, readOwnInvitation, type RsvpStatus } from '../../calendar-rsvp';
+import { answerInvitation, attendeeOf, joinAddress, readOwnInvitation, type RsvpStatus } from '../../calendar-rsvp';
 import { readId, sessionClient } from '../host-api-input';
 import { readNamedEmail } from '../host-api-mail';
 import { doCalendarDeleteEvent } from '../host-api-calendar';
@@ -99,6 +99,10 @@ export async function doCalendarRespond(emailIdArg: unknown, statusArg: unknown)
     actingEmails: emails,
     calendarId,
     sharedMailAccount: null,
+    joinAs: (() => {
+      const { primaryIdentity, identities } = useAuthStore.getState();
+      return joinAddress(email, [primaryIdentity, ...identities].filter((i) => i != null));
+    })(),
     findImported: (uid) => ownCopy(client, uid),
     resolveExisting: async () => {
       if (!existing) return null;

@@ -6145,6 +6145,17 @@
     "organizer_owner": "{name} (נשלח על ידך)",
     "organizer_me": "את/ה"
   },
+  "calendar_forward": {
+    "menu": "העברה…",
+    "heading": "הזמנה שהועברה",
+    "when": "מתי: {value}",
+    "where": "איפה: {value}",
+    "organizer": "מארגן: {value}",
+    "failed": "לא ניתן היה להעביר את ההזמנה.",
+    "add_replier": "הוספת {name} לפגישה",
+    "not_invited": "{name} לא מוזמן לפגישה הזו. מישהו העביר אליו את ההזמנה.",
+    "added": "נוסף לפגישה"
+  },
   "free_busy_share": {
     "button": "שתף את הזמינות שלי עם {group}",
     "already": "הזמינות שלך משותפת עם {group}",

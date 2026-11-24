@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { answerInvitation } from '@/lib/calendar-rsvp';
+import { answerInvitation, joinAddress, joinedInvitation } from '@/lib/calendar-rsvp';
+import { uninvitedReplier } from '@/lib/calendar-forward';
 import { createPortal } from 'react-dom';
 import {
   ArrowRight,
@@ -19,6 +20,8 @@ import {
   ChevronDown,
   ChevronUp,
   Repeat,
+  Forward,
+  UserPlus,
 } from '@/components/icons';
 import { useTranslations, useLocale } from 'next-intl';
 import { InvitationPrintSync } from '@/lib/print/invitation-print';
@@ -392,28 +395,37 @@ function getMethodIconTone(method: InvitationMethod, actorStatus?: string | null
 
 interface CalendarInvitationBannerProps {
   email: Email;
+  /**
+   * Forward the message (#1797): the composer keeps its invitation part, so
+   * the person it goes to can answer the organiser.
+   */
+  onForward?: () => void;
 }
 
 type BannerState = 'loading' | 'parsed' | 'rsvp-sent' | 'imported' | 'error';
 
-export function CalendarInvitationBanner({ email }: CalendarInvitationBannerProps) {
+export function CalendarInvitationBanner({ email, onForward }: CalendarInvitationBannerProps) {
   // The reader stays mounted when switching messages. Keep the banner's
   // local RSVP and UI state tied to its invitation message.
-  return <MessageInvitationBanner key={emailKeyFor(email)} email={email} />;
+  return <MessageInvitationBanner key={emailKeyFor(email)} email={email} onForward={onForward} />;
 }
 
-function MessageInvitationBanner({ email }: CalendarInvitationBannerProps) {
+function MessageInvitationBanner({ email, onForward }: CalendarInvitationBannerProps) {
   const shownName = useCollectionNames();
   const t = useTranslations('email_viewer.calendar_invitation');
   const tEvent = useTranslations('ux_pim_event');
   const tCalendar = useTranslations('calendar');
   const tSeries = useTranslations('ux_p2_pim_calx');
   const tTrust = useTranslations('sender_trust');
+  const tForward = useTranslations('calendar_forward');
   const describeError = useCalendarErrorMessage();
   const locale = useLocale();
   const router = useRouter();
   const tRouting = useTranslations('account_routing');
   const activeClient = useAuthStore((s) => s.client);
+  // Who joins an invitation that doesn't list the user (a forwarded one).
+  const primaryIdentity = useAuthStore((s) => s.primaryIdentity);
+  const ownIdentities = useAuthStore((s) => s.identities);
   const getClientForAccount = useAuthStore((s) => s.getClientForAccount);
   const activeLocalAccountId = useAuthStore((s) => s.activeAccountId);
   const viewingAccountId = useEmailStore((s) => s.viewingAccountId);
@@ -520,6 +532,7 @@ function MessageInvitationBanner({ email }: CalendarInvitationBannerProps) {
   const [rsvpStatus, setRsvpStatus] = useState<string | null>(null);
   const [answeredAt, setAnsweredAt] = useState<Date | null>(null);
   const [actionNotice, setActionNotice] = useState<string | null>(null);
+  const [replierAdded, setReplierAdded] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [showCalendarPicker, setShowCalendarPicker] = useState(false);
@@ -869,6 +882,8 @@ function MessageInvitationBanner({ email }: CalendarInvitationBannerProps) {
         calendarId: calId,
         sharedMailAccount,
         answerOptions,
+        // Not listed (a forwarded invitation): join with the address it came to.
+        joinAs: otherLogin ? undefined : joinAddress(email, [primaryIdentity, ...ownIdentities].filter((i) => i != null)),
         resolveExisting: () => (existingEvent
           ? resolveExistingEventForRsvp()
           : parsedEvent.uid ? loadSharedCopy(parsedEvent.uid) : Promise.resolve(null)),
@@ -1061,8 +1076,43 @@ function MessageInvitationBanner({ email }: CalendarInvitationBannerProps) {
     || (parsedEvent?.status && parsedEvent.status !== 'confirmed')
   );
 
+  // Someone the invitation was forwarded to answered: the organiser may add
+  // them. Only for an answer that is theirs, checked like any reply.
+  const replier = client && supportsCalendar && !sharedMailAccount && !otherLogin
+    && trustAssessment?.level === 'trusted' && !existingEvent?.recurrenceId && !replierAdded
+    ? uninvitedReplier(existingEvent, parsedEvent, method, identityEmails)
+    : null;
+
+  const handleAddReplier = async () => {
+    if (!client || !replier || isProcessing) return;
+    setActionNotice(null);
+    setActionError(null);
+    setIsProcessing(true);
+    try {
+      const target = await resolveExistingEventForRsvp();
+      if (!target) {
+        setActionError(t('action_failed'));
+        return;
+      }
+      const { participants } = joinedInvitation(target, replier, replier.status);
+      if (await updateEvent(client, target.id, { participants }, true)) {
+        setReplierAdded(true);
+        setActionNotice(tForward('added'));
+      }
+    } catch (err) {
+      setActionError(describeError(err, t('action_failed')));
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  // A meeting the user is invited to, or organises, goes on as it came.
+  const canForward = Boolean(onForward) && method === 'request' && !isCancellation && !email.keywords?.$draft;
+
   const showActionsRow = showDetails && (
-    canRespond
+    canForward
+    || replier
+    || canRespond
     || (supportsCalendar && !existingEvent && allowsImport && !isResponseOnly && !isCancellation)
     || canApplyProposal
     || (supportsCalendar && (existingEvent || parsedEvent))
@@ -1244,12 +1294,13 @@ function MessageInvitationBanner({ email }: CalendarInvitationBannerProps) {
         )}
 
         {/* Info / actor messages */}
-        {showDetails && (bannerInfo || declinedInfo || actorMessage || actorSummary?.participationComment) && (
+        {showDetails && (bannerInfo || declinedInfo || actorMessage || replier || actorSummary?.participationComment) && (
           <div className="space-y-0.5 text-xs text-muted-foreground">
             {bannerInfo && <p className="leading-relaxed">{bannerInfo}</p>}
             {declinedInfo && <p className="leading-relaxed" data-testid="invitation-declined-occurrences">{declinedInfo}</p>}
             {cancellationOutdated && <p className="leading-relaxed">{t('cancel_outdated')}</p>}
             {actorMessage && <p>{actorMessage}</p>}
+            {replier && <p data-testid="invitation-replier-not-invited">{tForward('not_invited', { name: replier.name || replier.email })}</p>}
             {actorSummary?.participationComment && (
               <p className="italic">{t('actor_note', { comment: actorSummary.participationComment })}</p>
             )}
@@ -1434,6 +1485,29 @@ function MessageInvitationBanner({ email }: CalendarInvitationBannerProps) {
             >
               <CalendarCheck className="w-3.5 h-3.5" />
               {t('apply_proposal')}
+            </button>
+          )}
+
+          {replier && (
+            <button
+              onClick={handleAddReplier}
+              disabled={isProcessing}
+              data-testid="invitation-add-replier"
+              className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground px-3 py-1.5 rounded-md border border-border hover:bg-muted transition-colors min-h-[36px] disabled:opacity-50"
+            >
+              <UserPlus className="w-3.5 h-3.5" />
+              {tForward('add_replier', { name: replier.name || replier.email })}
+            </button>
+          )}
+
+          {canForward && (
+            <button
+              onClick={onForward}
+              data-testid="invitation-forward"
+              className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground px-3 py-1.5 rounded-md border border-border hover:bg-muted transition-colors min-h-[36px]"
+            >
+              <Forward className="w-3.5 h-3.5" />
+              {tForward('menu')}
             </button>
           )}
 

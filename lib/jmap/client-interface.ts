@@ -683,7 +683,7 @@ export interface IJMAPClient {
   getCalendarEvents(calendarIds?: string[], targetAccountId?: string): Promise<CalendarEvent[]>;
   getCalendarEvent(id: string, targetAccountId?: string): Promise<CalendarEvent | null>;
   createCalendarEvent(event: Partial<CalendarEvent>, sendSchedulingMessages?: boolean, targetAccountId?: string): Promise<CalendarEvent>;
-  batchCreateCalendarEvents(events: Partial<CalendarEvent>[], targetAccountId?: string): Promise<{ created: CalendarEvent[]; failed: string[]; notCreated: Record<string, { type?: string; description?: string }> }>;
+  batchCreateCalendarEvents(events: Partial<CalendarEvent>[], targetAccountId?: string, sendSchedulingMessages?: boolean): Promise<{ created: CalendarEvent[]; failed: string[]; notCreated: Record<string, { type?: string; description?: string }> }>;
   updateCalendarEvent(
     eventId: string,
     updates: Partial<CalendarEvent>,

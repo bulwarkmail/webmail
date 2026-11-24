@@ -6333,6 +6333,17 @@
     "organizer_owner": "{name}(내가 대신 보냄)",
     "organizer_me": "나"
   },
+  "calendar_forward": {
+    "menu": "전달…",
+    "heading": "전달된 초대",
+    "when": "일시: {value}",
+    "where": "장소: {value}",
+    "organizer": "주최자: {value}",
+    "failed": "초대를 전달하지 못했습니다.",
+    "add_replier": "{name} 님을 회의에 추가",
+    "not_invited": "{name} 님은 이 회의에 초대되지 않았습니다. 누군가 초대를 전달했습니다.",
+    "added": "회의에 추가됨"
+  },
   "free_busy_share": {
     "button": "내 일정 가능 여부를 {group}과(와) 공유",
     "already": "일정 가능 여부가 {group}과(와) 공유되어 있습니다",

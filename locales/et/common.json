@@ -5693,6 +5693,17 @@
     "organizer_owner": "{name} (saadad sina)",
     "organizer_me": "Sina"
   },
+  "calendar_forward": {
+    "menu": "Edasta…",
+    "heading": "Edastatud kutse",
+    "when": "Millal: {value}",
+    "where": "Kus: {value}",
+    "organizer": "Korraldaja: {value}",
+    "failed": "Kutset ei õnnestunud edastada.",
+    "add_replier": "Lisa {name} koosolekule",
+    "not_invited": "{name} ei ole sellele koosolekule kutsutud. Keegi edastas talle kutse.",
+    "added": "Lisatud koosolekule"
+  },
   "free_busy_share": {
     "button": "Jaga minu vaba/hõivatud aega grupiga {group}",
     "already": "Sinu vaba/hõivatud aeg on jagatud grupiga {group}",

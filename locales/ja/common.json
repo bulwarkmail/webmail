@@ -6333,6 +6333,17 @@
     "organizer_owner": "{name}（あなたが代理で送信）",
     "organizer_me": "あなた"
   },
+  "calendar_forward": {
+    "menu": "転送…",
+    "heading": "転送された招待",
+    "when": "日時: {value}",
+    "where": "場所: {value}",
+    "organizer": "主催者: {value}",
+    "failed": "招待を転送できませんでした。",
+    "add_replier": "{name} を会議に追加",
+    "not_invited": "{name} はこの会議に招待されていません。誰かが招待を転送しました。",
+    "added": "会議に追加しました"
+  },
   "free_busy_share": {
     "button": "自分の空き時間を {group} と共有",
     "already": "空き時間は {group} と共有されています",

@@ -6333,6 +6333,17 @@
     "organizer_owner": "{name} (wysłane przez Ciebie)",
     "organizer_me": "Ty"
   },
+  "calendar_forward": {
+    "menu": "Przekaż dalej…",
+    "heading": "Przekazane zaproszenie",
+    "when": "Kiedy: {value}",
+    "where": "Gdzie: {value}",
+    "organizer": "Organizator: {value}",
+    "failed": "Nie udało się przekazać zaproszenia.",
+    "add_replier": "Dodaj {name} do spotkania",
+    "not_invited": "{name} nie jest zaproszony na to spotkanie. Ktoś przekazał mu zaproszenie.",
+    "added": "Dodano do spotkania"
+  },
   "free_busy_share": {
     "button": "Udostępnij moją dostępność grupie {group}",
     "already": "Twoja dostępność jest udostępniona grupie {group}",

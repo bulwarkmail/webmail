@@ -1,4 +1,4 @@
-import type { CalendarEvent } from "@/lib/jmap/types";
+import type { CalendarEvent, CalendarParticipant } from "@/lib/jmap/types";
 import { descriptionAsText } from "@/lib/calendar-description";
 
 const MAX_LINE_OCTETS = 75;
@@ -56,7 +56,7 @@ function formatNow(): string {
 
 function pushDateProp(
   lines: string[],
-  prop: "DTSTART" | "DTEND",
+  prop: "DTSTART" | "DTEND" | "EXDATE",
   value: string,
   showWithoutTime: boolean,
   tz?: string | null,
@@ -113,14 +113,39 @@ function pushAlerts(lines: string[], event: CalendarEvent): void {
   }
 }
 
-export function eventToICS(event: CalendarEvent): string {
+// The participant's scheduling address: Stalwart 1.0 keeps it only in
+// calendarAddress, older data in email or sendTo.
+function participantAddress(p: CalendarParticipant): string {
+  const address = p.email || p.calendarAddress || p.sendTo?.imip || "";
+  return address.replace(/^mailto:/i, "").trim();
+}
+
+// The days taken out of a series (RFC 5545 EXDATE), in the form of DTSTART.
+function pushExcludedDates(lines: string[], event: CalendarEvent): void {
+  if (!event.recurrenceRules?.length || !event.recurrenceOverrides) return;
+  for (const [recurrenceId, override] of Object.entries(event.recurrenceOverrides)) {
+    if (!(override as { excluded?: boolean } | null)?.excluded) continue;
+    pushDateProp(lines, "EXDATE", recurrenceId, event.showWithoutTime, event.timeZone);
+  }
+}
+
+export interface EventICSOptions {
+  /**
+   * The iTIP method: PUBLISH for a file to import, REQUEST for an invitation
+   * someone forwards (RFC 5546 §3.2.2.6), which keeps the organiser and
+   * attendees so the new person's answer goes to the organiser.
+   */
+  method?: "PUBLISH" | "REQUEST";
+}
+
+export function eventToICS(event: CalendarEvent, options: EventICSOptions = {}): string {
   const now = formatNow();
   const lines: string[] = [
     "BEGIN:VCALENDAR",
     "PRODID:-//Bulwark Mail//Bulwark Webmail//EN",
     "VERSION:2.0",
     "CALSCALE:GREGORIAN",
-    "METHOD:PUBLISH",
+    `METHOD:${options.method ?? "PUBLISH"}`,
     "BEGIN:VEVENT",
     `UID:${event.uid}`,
     `DTSTAMP:${now}`,
@@ -160,17 +185,23 @@ export function eventToICS(event: CalendarEvent): string {
   }
 
   if (event.participants) {
-    const organizer = Object.values(event.participants).find((p) => p.roles?.owner);
-    if (organizer) {
-      const email = organizer.email || organizer.sendTo?.imip?.replace("mailto:", "");
-      if (email) {
-        const cn = organizer.name ? `;CN=${paramValue(organizer.name)}` : "";
-        lines.push(`ORGANIZER${cn}:mailto:${email}`);
-      }
+    // The organizer: the owner participant, else the event's organizer
+    // address (Stalwart writes ORGANIZER there, and its participant may
+    // carry no roles at all).
+    const owner = Object.values(event.participants).find((p) => p.roles?.owner && participantAddress(p));
+    const organizerEmail = owner
+      ? participantAddress(owner)
+      : (event.organizerCalendarAddress || "").replace(/^mailto:/i, "").trim();
+    const organizer = owner ?? Object.values(event.participants).find(
+      (p) => organizerEmail && participantAddress(p).toLowerCase() === organizerEmail.toLowerCase(),
+    );
+    if (organizerEmail) {
+      const cn = organizer?.name ? `;CN=${paramValue(organizer.name)}` : "";
+      lines.push(`ORGANIZER${cn}:mailto:${organizerEmail}`);
     }
     for (const p of Object.values(event.participants)) {
-      if (p.roles?.owner) continue;
-      const email = p.email || p.sendTo?.imip?.replace("mailto:", "");
+      if (p === organizer) continue;
+      const email = participantAddress(p);
       if (!email) continue;
       const cn = p.name ? `;CN=${paramValue(p.name)}` : "";
       const partstat = p.participationStatus
@@ -182,6 +213,7 @@ export function eventToICS(event: CalendarEvent): string {
   }
 
   pushFrequencyRule(lines, event);
+  pushExcludedDates(lines, event);
   pushAlerts(lines, event);
 
   lines.push("END:VEVENT");

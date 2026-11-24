@@ -5701,6 +5701,17 @@
     "organizer_owner": "{name} (sendt av deg)",
     "organizer_me": "Deg"
   },
+  "calendar_forward": {
+    "menu": "Vidaresend…",
+    "heading": "Vidaresend invitasjon",
+    "when": "Når: {value}",
+    "where": "Kvar: {value}",
+    "organizer": "Arrangør: {value}",
+    "failed": "Invitasjonen kunne ikkje vidaresendast.",
+    "add_replier": "Legg {name} til i møtet",
+    "not_invited": "{name} er ikkje invitert til dette møtet. Nokon har vidaresendt invitasjonen.",
+    "added": "Lagt til i møtet"
+  },
   "free_busy_share": {
     "button": "Del ledig/oppteken for meg med {group}",
     "already": "Ledig/oppteken for deg er delt med {group}",

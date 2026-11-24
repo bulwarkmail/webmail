@@ -6333,6 +6333,17 @@
     "organizer_owner": "{name} (envoyé par vous)",
     "organizer_me": "Vous"
   },
+  "calendar_forward": {
+    "menu": "Transférer…",
+    "heading": "Invitation transférée",
+    "when": "Quand : {value}",
+    "where": "Où : {value}",
+    "organizer": "Organisateur : {value}",
+    "failed": "Impossible de transférer l'invitation.",
+    "add_replier": "Ajouter {name} à la réunion",
+    "not_invited": "{name} n'est pas invité à cette réunion. Quelqu'un lui a transféré l'invitation.",
+    "added": "Ajouté à la réunion"
+  },
   "free_busy_share": {
     "button": "Partager mes disponibilités avec {group}",
     "already": "Vos disponibilités sont partagées avec {group}",

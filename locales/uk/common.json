@@ -6333,6 +6333,17 @@
     "organizer_owner": "{name} (надіслано вами)",
     "organizer_me": "Ви"
   },
+  "calendar_forward": {
+    "menu": "Переслати…",
+    "heading": "Переслане запрошення",
+    "when": "Коли: {value}",
+    "where": "Де: {value}",
+    "organizer": "Організатор: {value}",
+    "failed": "Не вдалося переслати запрошення.",
+    "add_replier": "Додати {name} до зустрічі",
+    "not_invited": "{name} не запрошено на цю зустріч. Хтось переслав запрошення.",
+    "added": "Додано до зустрічі"
+  },
   "free_busy_share": {
     "button": "Поділитися моєю зайнятістю з {group}",
     "already": "Вашою зайнятістю поділено з {group}",

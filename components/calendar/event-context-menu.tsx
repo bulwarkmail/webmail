@@ -20,6 +20,7 @@ import {
   HelpCircle,
   X,
   CalendarPlus,
+  Forward,
 } from "@/components/icons";
 import type { CalendarEvent, CalendarParticipant } from "@/lib/jmap/types";
 import { buildCalendarPath } from "@/lib/deep-links";
@@ -71,6 +72,8 @@ interface EventContextMenuProps {
   onCopyToCalendar?: () => void;
   /** Opened over a dialog or popover: drawn at z-[70] rather than z-50. */
   overDialog?: boolean;
+  /** Forward the meeting's invitation in the composer (#1797). Only for a meeting. */
+  onForward?: () => void;
 }
 
 export function EventContextMenu({
@@ -94,12 +97,14 @@ export function EventContextMenu({
   copyTo = [],
   onCopyToCalendar,
   overDialog = false,
+  onForward,
 }: EventContextMenuProps) {
   const tP2 = useTranslations("ux_p2_pim_cal");
   const t = useTranslations("calendar");
   const tDeepLink = useTranslations("deep_link");
   const tP3 = useTranslations("ux_p3_pim_cal");
   const tDelegate = useTranslations("calendar_delegate");
+  const tForward = useTranslations("calendar_forward");
   const copyLink = useCopyLink();
 
   const handle = (fn: () => void) => () => {
@@ -158,6 +163,9 @@ export function EventContextMenu({
       )}
       {editable && <ContextMenuItem icon={Pencil} label={t("events.edit")} onClick={handle(onEdit)} />}
       <ContextMenuItem icon={CopyPlus} label={t("events.duplicate")} onClick={handle(onDuplicate)} />
+      {onForward && (
+        <ContextMenuItem icon={Forward} label={tForward("menu")} onClick={handle(onForward)} testId="event-forward" />
+      )}
       {copyTo.map((target) => (
         <ContextMenuItem
           key={target.address}

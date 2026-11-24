@@ -20,7 +20,7 @@ export type ParticipantMatch = { id: string; participant: CalendarParticipant };
 export interface RsvpStore {
   rsvpEvent: (client: IJMAPClient, eventId: string, participantId: string, status: string, replyTo?: Record<string, string> | null, scope?: 'occurrence' | 'series', options?: { sentBy?: string }) => Promise<boolean>;
   updateEvent: (client: IJMAPClient, id: string, updates: Partial<CalendarEvent>, sendSchedulingMessages?: boolean) => Promise<boolean>;
-  importEvents: (client: IJMAPClient, events: Partial<CalendarEvent>[], calendarId: string, options?: { throwIfNoneImported?: boolean }) => Promise<number | null>;
+  importEvents: (client: IJMAPClient, events: Partial<CalendarEvent>[], calendarId: string, options?: { throwIfNoneImported?: boolean; sendSchedulingMessages?: boolean }) => Promise<number | null>;
   /** The store's events right now (read after an import). */
   events: () => CalendarEvent[];
 }
@@ -42,6 +42,13 @@ export interface RsvpRequest {
   sharedMailAccount: string | null;
   /** Answering for a person as their delegate: SENT-BY names the user. */
   answerOptions?: { sentBy: string };
+  /**
+   * Who answers when the invitation doesn't list the user (it was
+   * forwarded to them, or sent to a list): they join as an attendee, and
+   * the server sends the organiser their REPLY (RFC 5546 §3.2.2.6).
+   * Without it, the event is only added.
+   */
+  joinAs?: { email: string; name?: string };
   /** The stored copy with its participants loaded (or the shared account's copy). */
   resolveExisting: () => Promise<CalendarEvent | null | undefined>;
   /**
@@ -56,6 +63,46 @@ export interface RsvpRequest {
  * in its participants); stopped by a plugin (which said why); or failed.
  */
 export type RsvpOutcome = 'answered' | 'added' | 'stopped' | 'failed';
+
+/**
+ * The address a user who isn't listed joins with: the one of theirs the
+ * message went to (To, then Cc), else the first of `identities`.
+ */
+export function joinAddress(
+  email: Pick<Email, 'to' | 'cc'>,
+  identities: ReadonlyArray<{ email?: string | null; name?: string | null }>,
+): { email: string; name?: string } | undefined {
+  const own = identities.filter((i): i is { email: string; name?: string | null } => Boolean(i.email));
+  const recipients = [...(email.to ?? []), ...(email.cc ?? [])].map((a) => a.email?.toLowerCase());
+  const match = own.find((i) => recipients.includes(i.email.toLowerCase())) ?? own[0];
+  if (!match) return undefined;
+  return { email: match.email, ...(match.name ? { name: match.name } : {}) };
+}
+
+/**
+ * The invitation with the user added as an attendee who answered `status`.
+ * Stalwart sends the REPLY only when the copy is created with the user
+ * among its participants: added by a later update, it sends none.
+ */
+export function joinedInvitation(
+  event: Partial<CalendarEvent>,
+  joinAs: { email: string; name?: string },
+  status: RsvpStatus,
+): Partial<CalendarEvent> {
+  const participants = { ...(event.participants ?? {}) };
+  let key = 'joined';
+  for (let n = 2; key in participants; n++) key = `joined-${n}`;
+  participants[key] = {
+    '@type': 'Participant',
+    ...(joinAs.name ? { name: joinAs.name } : {}),
+    email: joinAs.email,
+    calendarAddress: `mailto:${joinAs.email}`,
+    roles: { attendee: true },
+    participationStatus: status,
+    expectReply: false,
+  } as unknown as CalendarParticipant;
+  return { ...event, participants };
+}
 
 function buildParticipantsForRsvp(
   event: Partial<CalendarEvent>,
@@ -111,6 +158,13 @@ export async function answerInvitation(req: RsvpRequest, status: RsvpStatus): Pr
     return updated ? 'answered' : 'stopped';
   }
   if (eventForRsvp || !calendarId) return 'failed';
+
+  if (!myParticipant && req.joinAs && !sharedMailAccount && replyTo) {
+    const joined = joinedInvitation(parsedEvent, req.joinAs, status);
+    const count = await store.importEvents(client, [joined], calendarId, { throwIfNoneImported: true, sendSchedulingMessages: true });
+    if (count === null) return 'stopped';
+    return count > 0 ? 'answered' : 'failed';
+  }
 
   // A refusal (Stalwart 1.0's participant limit, say) is thrown as it is.
   const imported = await store.importEvents(client, [parsedEvent], calendarId, { throwIfNoneImported: true });

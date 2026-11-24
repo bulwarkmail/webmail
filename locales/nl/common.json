@@ -6333,6 +6333,17 @@
     "organizer_owner": "{name} (verzonden door jou)",
     "organizer_me": "Jij"
   },
+  "calendar_forward": {
+    "menu": "Doorsturen…",
+    "heading": "Doorgestuurde uitnodiging",
+    "when": "Wanneer: {value}",
+    "where": "Waar: {value}",
+    "organizer": "Organisator: {value}",
+    "failed": "De uitnodiging kon niet worden doorgestuurd.",
+    "add_replier": "{name} aan de vergadering toevoegen",
+    "not_invited": "{name} is niet uitgenodigd voor deze vergadering. Iemand heeft de uitnodiging doorgestuurd.",
+    "added": "Aan de vergadering toegevoegd"
+  },
   "free_busy_share": {
     "button": "Mijn vrij/bezet delen met {group}",
     "already": "Je vrij/bezet is gedeeld met {group}",

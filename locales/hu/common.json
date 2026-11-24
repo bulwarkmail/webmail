@@ -5693,6 +5693,17 @@
     "organizer_owner": "{name} (Ön küldi)",
     "organizer_me": "Ön"
   },
+  "calendar_forward": {
+    "menu": "Továbbítás…",
+    "heading": "Továbbított meghívó",
+    "when": "Mikor: {value}",
+    "where": "Hol: {value}",
+    "organizer": "Szervező: {value}",
+    "failed": "A meghívót nem sikerült továbbítani.",
+    "add_replier": "{name} hozzáadása az értekezlethez",
+    "not_invited": "{name} nincs meghívva erre az értekezletre. Valaki továbbította neki a meghívót.",
+    "added": "Hozzáadva az értekezlethez"
+  },
   "free_busy_share": {
     "button": "Szabad/foglalt időim megosztása ezzel: {group}",
     "already": "Szabad/foglalt idői meg vannak osztva ezzel: {group}",

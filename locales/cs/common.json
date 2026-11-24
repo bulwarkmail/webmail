@@ -6333,6 +6333,17 @@
     "organizer_owner": "{name} (odesláno vámi)",
     "organizer_me": "Vy"
   },
+  "calendar_forward": {
+    "menu": "Přeposlat…",
+    "heading": "Přeposlaná pozvánka",
+    "when": "Kdy: {value}",
+    "where": "Kde: {value}",
+    "organizer": "Organizátor: {value}",
+    "failed": "Pozvánku se nepodařilo přeposlat.",
+    "add_replier": "Přidat {name} na schůzku",
+    "not_invited": "{name} na tuto schůzku není pozván. Někdo mu pozvánku přeposlal.",
+    "added": "Přidáno na schůzku"
+  },
   "free_busy_share": {
     "button": "Sdílet můj volný čas se skupinou {group}",
     "already": "Váš volný čas je sdílen se skupinou {group}",

@@ -6333,6 +6333,17 @@
     "organizer_owner": "{name} (gesendet von Ihnen)",
     "organizer_me": "Sie"
   },
+  "calendar_forward": {
+    "menu": "Weiterleiten…",
+    "heading": "Weitergeleitete Einladung",
+    "when": "Wann: {value}",
+    "where": "Wo: {value}",
+    "organizer": "Organisator: {value}",
+    "failed": "Die Einladung konnte nicht weitergeleitet werden.",
+    "add_replier": "{name} zum Termin hinzufügen",
+    "not_invited": "{name} ist zu diesem Termin nicht eingeladen. Jemand hat die Einladung weitergeleitet.",
+    "added": "Zum Termin hinzugefügt"
+  },
   "free_busy_share": {
     "button": "Meine Frei/Gebucht-Zeiten für {group} freigeben",
     "already": "Ihre Frei/Gebucht-Zeiten sind für {group} freigegeben",

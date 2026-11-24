@@ -6333,6 +6333,17 @@
     "organizer_owner": "{name} (sūtāt jūs)",
     "organizer_me": "Jūs"
   },
+  "calendar_forward": {
+    "menu": "Pārsūtīt…",
+    "heading": "Pārsūtīts uzaicinājums",
+    "when": "Kad: {value}",
+    "where": "Kur: {value}",
+    "organizer": "Organizators: {value}",
+    "failed": "Uzaicinājumu neizdevās pārsūtīt.",
+    "add_replier": "Pievienot {name} sanāksmei",
+    "not_invited": "{name} nav uzaicināts uz šo sanāksmi. Kāds viņam pārsūtīja uzaicinājumu.",
+    "added": "Pievienots sanāksmei"
+  },
   "free_busy_share": {
     "button": "Kopīgot manu brīvs/aizņemts ar {group}",
     "already": "Jūsu brīvs/aizņemts ir kopīgots ar {group}",

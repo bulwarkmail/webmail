@@ -5693,6 +5693,17 @@
     "organizer_owner": "{name} (sent by you)",
     "organizer_me": "You"
   },
+  "calendar_forward": {
+    "menu": "Forward…",
+    "heading": "Forwarded invitation",
+    "when": "When: {value}",
+    "where": "Where: {value}",
+    "organizer": "Organizer: {value}",
+    "failed": "The invitation could not be forwarded.",
+    "add_replier": "Add {name} to the meeting",
+    "not_invited": "{name} isn't invited to this meeting. Someone forwarded the invitation to them.",
+    "added": "Added to the meeting"
+  },
   "free_busy_share": {
     "button": "Share my free/busy with {group}",
     "already": "Your free/busy is shared with {group}",

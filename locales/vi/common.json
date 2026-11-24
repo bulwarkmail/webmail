@@ -5705,6 +5705,17 @@
     "organizer_owner": "{name} (do bạn gửi)",
     "organizer_me": "Bạn"
   },
+  "calendar_forward": {
+    "menu": "Chuyển tiếp…",
+    "heading": "Lời mời được chuyển tiếp",
+    "when": "Thời gian: {value}",
+    "where": "Địa điểm: {value}",
+    "organizer": "Người tổ chức: {value}",
+    "failed": "Không thể chuyển tiếp lời mời.",
+    "add_replier": "Thêm {name} vào cuộc họp",
+    "not_invited": "{name} không được mời tham gia cuộc họp này. Có người đã chuyển tiếp lời mời.",
+    "added": "Đã thêm vào cuộc họp"
+  },
   "free_busy_share": {
     "button": "Chia sẻ lịch rảnh/bận của tôi với {group}",
     "already": "Lịch rảnh/bận của bạn đã được chia sẻ với {group}",

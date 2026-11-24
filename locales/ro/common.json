@@ -5693,6 +5693,17 @@
     "organizer_owner": "{name} (trimis de tine)",
     "organizer_me": "Tu"
   },
+  "calendar_forward": {
+    "menu": "Redirecționează…",
+    "heading": "Invitație redirecționată",
+    "when": "Când: {value}",
+    "where": "Unde: {value}",
+    "organizer": "Organizator: {value}",
+    "failed": "Invitația nu a putut fi redirecționată.",
+    "add_replier": "Adaugă pe {name} la întâlnire",
+    "not_invited": "{name} nu este invitat la această întâlnire. Cineva i-a redirecționat invitația.",
+    "added": "Adăugat la întâlnire"
+  },
   "free_busy_share": {
     "button": "Partajează disponibilitatea mea cu {group}",
     "already": "Disponibilitatea dvs. este partajată cu {group}",

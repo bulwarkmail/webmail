@@ -5693,6 +5693,17 @@
     "organizer_owner": "{name} (ارسال‌شده توسط شما)",
     "organizer_me": "شما"
   },
+  "calendar_forward": {
+    "menu": "هدایت…",
+    "heading": "دعوت‌نامهٔ هدایت‌شده",
+    "when": "زمان: {value}",
+    "where": "مکان: {value}",
+    "organizer": "برگزارکننده: {value}",
+    "failed": "دعوت‌نامه هدایت نشد.",
+    "add_replier": "افزودن {name} به جلسه",
+    "not_invited": "{name} به این جلسه دعوت نشده است. کسی دعوت‌نامه را برایش هدایت کرده است.",
+    "added": "به جلسه افزوده شد"
+  },
   "free_busy_share": {
     "button": "هم‌رسانی آزاد/مشغول من با {group}",
     "already": "آزاد/مشغول شما با {group} هم‌رسانی شده است",

@@ -1732,4 +1732,108 @@ describe('CalendarInvitationBanner', () => {
     expect(screen.getAllByText(/Ben Second/).length).toBeGreaterThan(0);
     expect(screen.queryByText('Sent by Ben Second.')).toBeNull();
   });
+
+  // #1797: the meeting goes on to someone else as it came.
+  describe('forwarding', () => {
+    const invite = {
+      uid: 'uid-fwd', title: 'Site visit', start: '2026-12-01T10:00:00Z', duration: 'PT1H',
+      organizerCalendarAddress: 'mailto:boss@example.com',
+      participants: {
+        o: { '@type': 'Participant', calendarAddress: 'mailto:boss@example.com', roles: { owner: true } },
+        u: { '@type': 'Participant', calendarAddress: 'mailto:user@example.com', roles: { attendee: true }, participationStatus: 'needs-action' },
+      },
+    };
+
+    it('offers Forward on an invitation and starts the forward of the message', async () => {
+      mocks.clientMock.parseCalendarEvents.mockResolvedValue([invite]);
+      const onForward = vi.fn();
+      render(<CalendarInvitationBanner email={makeEmail({ id: 'email-fwd', from: [{ email: 'boss@example.com' }] })} onForward={onForward} />);
+      await waitFor(() => expect(screen.getByRole('heading', { name: 'Site visit' })).toBeInTheDocument());
+      fireEvent.click(screen.getByTestId('invitation-forward'));
+      expect(onForward).toHaveBeenCalledTimes(1);
+    });
+
+    it('has no Forward without a way to forward, or on a cancellation', async () => {
+      mocks.clientMock.parseCalendarEvents.mockResolvedValue([invite]);
+      const { unmount } = render(<CalendarInvitationBanner email={makeEmail({ id: 'email-fwd-2', from: [{ email: 'boss@example.com' }] })} />);
+      await waitFor(() => expect(screen.getByRole('heading', { name: 'Site visit' })).toBeInTheDocument());
+      expect(screen.queryByTestId('invitation-forward')).toBeNull();
+      unmount();
+
+      mocks.clientMock.parseCalendarEvents.mockResolvedValue([{ ...invite, status: 'cancelled' }]);
+      render(<CalendarInvitationBanner
+        email={makeEmail({
+          id: 'email-fwd-3', from: [{ email: 'boss@example.com' }],
+          attachments: [{ partId: '1', blobId: 'blob-c', size: 256, type: 'text/calendar; method=CANCEL', name: 'cancel.ics' }],
+        })}
+        onForward={vi.fn()}
+      />);
+      await waitFor(() => expect(screen.getByRole('heading', { name: 'Site visit' })).toBeInTheDocument());
+      expect(screen.queryByTestId('invitation-forward')).toBeNull();
+    });
+
+    // The person it was forwarded to answered; Stalwart leaves the meeting as
+    // it is, and the organiser decides (RFC 5546 3.2.2.6).
+    const stored = {
+      id: 'ev-fwd', uid: 'uid-fwd', title: 'Site visit', start: '2026-12-01T10:00:00Z', duration: 'PT1H',
+      calendarIds: { 'cal-1': true },
+      organizerCalendarAddress: 'mailto:user@example.com',
+      participants: {
+        o: { '@type': 'Participant', calendarAddress: 'mailto:user@example.com', roles: { owner: true, attendee: true }, participationStatus: 'accepted' },
+        b: { '@type': 'Participant', calendarAddress: 'mailto:bob@example.com', roles: { attendee: true }, participationStatus: 'needs-action' },
+      },
+    };
+    const replyFrom = (who: string, status: string) => ({
+      uid: 'uid-fwd', title: 'Site visit', start: '2026-12-01T10:00:00Z', duration: 'PT1H',
+      organizerCalendarAddress: 'mailto:user@example.com',
+      participants: {
+        o: { '@type': 'Participant', calendarAddress: 'mailto:user@example.com', roles: { owner: true } },
+        r: { '@type': 'Participant', name: 'Carol', calendarAddress: `mailto:${who}`, roles: { attendee: true }, participationStatus: status },
+      },
+    });
+    const replyEmail = (id: string, from: string) => makeEmail({
+      id, from: [{ email: from }],
+      attachments: [{ partId: '1', blobId: `blob-${id}`, size: 256, type: 'text/calendar; method=REPLY', name: 'reply.ics' }],
+    });
+
+    it('lets the organiser add someone who answered a forwarded invitation', async () => {
+      mocks.calendarState.events = [stored];
+      mocks.calendarState.updateEvent.mockResolvedValue(true);
+      mocks.clientMock.parseCalendarEvents.mockResolvedValue([replyFrom('carol@example.com', 'accepted')]);
+      render(<CalendarInvitationBanner email={replyEmail('email-r1', 'carol@example.com')} />);
+
+      await waitFor(() => expect(screen.getByTestId('invitation-add-replier')).toBeInTheDocument());
+      expect(screen.getByTestId('invitation-replier-not-invited')).toBeInTheDocument();
+      fireEvent.click(screen.getByTestId('invitation-add-replier'));
+
+      await waitFor(() => expect(mocks.calendarState.updateEvent).toHaveBeenCalledWith(mocks.clientMock, 'ev-fwd', {
+        participants: expect.objectContaining({
+          o: stored.participants.o,
+          b: stored.participants.b,
+          joined: expect.objectContaining({ calendarAddress: 'mailto:carol@example.com', name: 'Carol', participationStatus: 'accepted' }),
+        }),
+      }, true));
+      await waitFor(() => expect(screen.queryByTestId('invitation-add-replier')).toBeNull());
+    });
+
+    it('offers nothing for an invited attendee, a "no" or an answer someone else sent', async () => {
+      mocks.calendarState.events = [stored];
+      mocks.clientMock.parseCalendarEvents.mockResolvedValue([replyFrom('bob@example.com', 'accepted')]);
+      const first = render(<CalendarInvitationBanner email={replyEmail('email-r2', 'bob@example.com')} />);
+      await waitFor(() => expect(screen.getByRole('heading', { name: 'Site visit' })).toBeInTheDocument());
+      expect(screen.queryByTestId('invitation-add-replier')).toBeNull();
+      first.unmount();
+
+      mocks.clientMock.parseCalendarEvents.mockResolvedValue([replyFrom('carol@example.com', 'declined')]);
+      const second = render(<CalendarInvitationBanner email={replyEmail('email-r3', 'carol@example.com')} />);
+      await waitFor(() => expect(screen.getByRole('heading', { name: 'Site visit' })).toBeInTheDocument());
+      expect(screen.queryByTestId('invitation-add-replier')).toBeNull();
+      second.unmount();
+
+      mocks.clientMock.parseCalendarEvents.mockResolvedValue([replyFrom('carol@example.com', 'accepted')]);
+      render(<CalendarInvitationBanner email={replyEmail('email-r4', 'mallory@evil.example')} />);
+      await waitFor(() => expect(screen.getByRole('heading', { name: 'Site visit' })).toBeInTheDocument());
+      expect(screen.queryByTestId('invitation-add-replier')).toBeNull();
+    });
+  });
 });

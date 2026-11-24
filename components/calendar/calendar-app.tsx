@@ -52,6 +52,8 @@ import { useContextMenu } from "@/hooks/use-context-menu";
 import { useRefreshGesture } from "@/hooks/use-refresh-gesture";
 import { useCalendarPushRefresh } from "@/hooks/use-calendar-push-refresh";
 import { downloadEventICS } from "@/lib/calendar-ics-export";
+import { isForwardableMeeting } from "@/lib/calendar-forward";
+import { useForwardInvitation } from "@/components/calendar/use-forward-invitation";
 import { ICalImportModal } from "@/components/calendar/ical-import-modal";
 import { ICalSubscriptionModal } from "@/components/calendar/ical-subscription-modal";
 import { ProtocolAccountPicker } from "@/components/protocol/protocol-account-picker";
@@ -1882,6 +1884,8 @@ export function CalendarApp({ linkSegments: routeSegments, surface = "calendar" 
     handleDuplicateEvent(event);
   }, [detailEvent, closeDetail, handleDuplicateEvent]);
 
+  const forwardInvitation = useForwardInvitation();
+
   const handleExportICS = useCallback((event: CalendarEvent) => {
     try {
       downloadEventICS(event);
@@ -2929,6 +2933,14 @@ export function CalendarApp({ linkSegments: routeSegments, surface = "calendar" 
           onCopyToCalendar={!answersOnlyMenu && canCopyToCalendar(eventContextMenu.data) ? () => {
             const event = eventContextMenu.data!;
             setCopyToCalendarEvent(event);
+          } : undefined}
+          onForward={!answersOnlyMenu && isForwardableMeeting(eventContextMenu.data) ? () => {
+            const event = eventContextMenu.data!;
+            // It goes to the mail page: an editor's unsaved changes are asked about first.
+            whenEditorsDiscarded(() => {
+              closeDetail();
+              void forwardInvitation(event);
+            });
           } : undefined}
         />
       )}

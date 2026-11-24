@@ -5693,6 +5693,17 @@
     "organizer_owner": "{name} (enviat per vós)",
     "organizer_me": "Vós"
   },
+  "calendar_forward": {
+    "menu": "Reenvia…",
+    "heading": "Invitació reenviada",
+    "when": "Quan: {value}",
+    "where": "On: {value}",
+    "organizer": "Organitzador: {value}",
+    "failed": "No s'ha pogut reenviar la invitació.",
+    "add_replier": "Afegeix {name} a la reunió",
+    "not_invited": "{name} no està convidat a aquesta reunió. Algú li ha reenviat la invitació.",
+    "added": "Afegit a la reunió"
+  },
   "free_busy_share": {
     "button": "Comparteix la meva disponibilitat amb {group}",
     "already": "La vostra disponibilitat està compartida amb {group}",

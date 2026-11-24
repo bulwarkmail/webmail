@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import type { IJMAPClient } from '../jmap/client-interface';
 import type { CalendarEvent } from '../jmap/types';
-import { answerInvitation, attendeeOf, type RsvpRequest } from '../calendar-rsvp';
+import { answerInvitation, attendeeOf, joinAddress, type RsvpRequest } from '../calendar-rsvp';
 
 // The banner's three ways of answering an invitation, now in one place that
 // calendar.respond uses too.
@@ -71,6 +71,37 @@ describe('answerInvitation', () => {
     expect(await answerInvitation(request({ store: { ...request().store, importEvents: vi.fn(async () => null) } } as never), 'accepted')).toBe('stopped');
     expect(await answerInvitation(request({ myParticipant: null, store: { ...request().store, events: () => [{ id: 'new', uid: 'u1', participants: {} } as never] } } as never), 'accepted')).toBe('added');
     expect(await answerInvitation(request({ calendarId: undefined }), 'accepted')).toBe('failed');
+  });
+
+  // A forwarded invitation doesn't list the user (#1797). Stalwart sends the
+  // organiser a REPLY only when the copy is created with the user in it.
+  it('joins an invitation that doesn\'t list the user, so the organiser gets the answer', async () => {
+    const forwarded = { ...parsed, participants: { p1: organiser, p3: { email: 'carol@example.org', roles: { attendee: true } } } } as unknown as Partial<CalendarEvent>;
+    const req = request({ parsedEvent: forwarded, myParticipant: null, joinAs: { email: 'bob@example.org', name: 'Bob' } });
+    expect(await answerInvitation(req, 'tentative')).toBe('answered');
+    expect(req.store.importEvents).toHaveBeenCalledWith(req.client, [expect.objectContaining({
+      uid: 'u1',
+      participants: expect.objectContaining({
+        p1: organiser,
+        joined: expect.objectContaining({ calendarAddress: 'mailto:bob@example.org', name: 'Bob', participationStatus: 'tentative', roles: { attendee: true } }),
+      }),
+    })], 'cal1', { throwIfNoneImported: true, sendSchedulingMessages: true });
+    expect(req.store.rsvpEvent).not.toHaveBeenCalled();
+  });
+
+  it('only adds an unlisted invitation when there is no one to join as', async () => {
+    const forwarded = { ...parsed, participants: { p1: organiser } } as unknown as Partial<CalendarEvent>;
+    const store = { ...request().store, events: () => [{ id: 'new', uid: 'u1', participants: { p1: organiser } } as never] };
+    const plain = request({ parsedEvent: forwarded, myParticipant: null, store } as never);
+    expect(await answerInvitation(plain, 'accepted')).toBe('added');
+    expect(plain.store.importEvents).toHaveBeenCalledWith(plain.client, [forwarded], 'cal1', { throwIfNoneImported: true });
+  });
+
+  it('joins with the address the message went to', () => {
+    const identities = [{ email: 'bob@example.org', name: 'Bob' }, { email: 'sales@example.org', name: 'Sales' }];
+    expect(joinAddress({ to: [{ name: '', email: 'SALES@example.org' }], cc: null } as never, identities)).toEqual({ email: 'sales@example.org', name: 'Sales' });
+    expect(joinAddress({ to: [{ name: '', email: 'list@example.org' }] } as never, identities)).toEqual({ email: 'bob@example.org', name: 'Bob' });
+    expect(joinAddress({ to: [] } as never, [])).toBeUndefined();
   });
 
   it('treats an owner who isn\'t an attendee as the organiser', () => {

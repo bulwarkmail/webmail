@@ -6333,6 +6333,17 @@
     "organizer_owner": "{name} (inviato da te)",
     "organizer_me": "Tu"
   },
+  "calendar_forward": {
+    "menu": "Inoltra…",
+    "heading": "Invito inoltrato",
+    "when": "Quando: {value}",
+    "where": "Dove: {value}",
+    "organizer": "Organizzatore: {value}",
+    "failed": "Impossibile inoltrare l'invito.",
+    "add_replier": "Aggiungi {name} alla riunione",
+    "not_invited": "{name} non è invitato a questa riunione. Qualcuno gli ha inoltrato l'invito.",
+    "added": "Aggiunto alla riunione"
+  },
   "free_busy_share": {
     "button": "Condividi la mia disponibilità con {group}",
     "already": "La tua disponibilità è condivisa con {group}",

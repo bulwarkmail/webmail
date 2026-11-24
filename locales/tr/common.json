@@ -5693,6 +5693,17 @@
     "organizer_owner": "{name} (sizin tarafınızdan gönderilir)",
     "organizer_me": "Siz"
   },
+  "calendar_forward": {
+    "menu": "İlet…",
+    "heading": "İletilen davet",
+    "when": "Ne zaman: {value}",
+    "where": "Nerede: {value}",
+    "organizer": "Düzenleyen: {value}",
+    "failed": "Davet iletilemedi.",
+    "add_replier": "{name} kişisini toplantıya ekle",
+    "not_invited": "{name} bu toplantıya davetli değil. Birisi daveti ona iletti.",
+    "added": "Toplantıya eklendi"
+  },
   "free_busy_share": {
     "button": "Müsaitlik durumumu {group} ile paylaş",
     "already": "Müsaitlik durumunuz {group} ile paylaşılıyor",

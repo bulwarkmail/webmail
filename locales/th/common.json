@@ -3093,6 +3093,17 @@
     "organizer_owner": "{name} (คุณส่งแทน)",
     "organizer_me": "คุณ"
   },
+  "calendar_forward": {
+    "menu": "ส่งต่อ…",
+    "heading": "คำเชิญที่ส่งต่อ",
+    "when": "เมื่อ: {value}",
+    "where": "ที่: {value}",
+    "organizer": "ผู้จัด: {value}",
+    "failed": "ไม่สามารถส่งต่อคำเชิญได้",
+    "add_replier": "เพิ่ม {name} ในการประชุม",
+    "not_invited": "{name} ไม่ได้รับเชิญในการประชุมนี้ มีคนส่งต่อคำเชิญให้",
+    "added": "เพิ่มในการประชุมแล้ว"
+  },
   "free_busy_share": {
     "button": "แชร์เวลาว่าง/ไม่ว่างของฉันกับ {group}",
     "already": "แชร์เวลาว่าง/ไม่ว่างของคุณกับ {group} แล้ว",

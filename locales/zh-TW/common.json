@@ -5693,6 +5693,17 @@
     "organizer_owner": "{name}（由你代為傳送）",
     "organizer_me": "你"
   },
+  "calendar_forward": {
+    "menu": "轉寄…",
+    "heading": "轉寄的邀請",
+    "when": "時間：{value}",
+    "where": "地點：{value}",
+    "organizer": "主辦人：{value}",
+    "failed": "無法轉寄邀請。",
+    "add_replier": "將 {name} 加入會議",
+    "not_invited": "{name} 未受邀參加此會議。有人轉寄了邀請。",
+    "added": "已加入會議"
+  },
   "free_busy_share": {
     "button": "與 {group} 共用我的忙碌/空閒時間",
     "already": "你的忙碌/空閒時間已與 {group} 共用",

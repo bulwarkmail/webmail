@@ -152,6 +152,18 @@ describe('EventContextMenu answers', () => {
     expect(screen.getAllByRole('menuitem').map((item) => item.textContent))
       .toEqual(['participants.accept', 'participants.maybe', 'participants.decline']);
   });
+
+  // #1797: Forward… passes the meeting on; the calendar offers it for meetings.
+  it('forwards the meeting when the calendar offers it', () => {
+    const onForward = vi.fn();
+    const { unmount } = render(<EventContextMenu {...base} menuRef={createRef()} onForward={onForward} />);
+    fireEvent.click(screen.getByTestId('event-forward'));
+    expect(onForward).toHaveBeenCalledTimes(1);
+    unmount();
+
+    render(<EventContextMenu {...base} menuRef={createRef()} />);
+    expect(screen.queryByTestId('event-forward')).toBeNull();
+  });
 });
 
 describe('CalendarAgendaView invitations', () => {

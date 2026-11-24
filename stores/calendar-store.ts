@@ -1033,13 +1033,15 @@ interface CalendarStore {
    * Create `events` in the calendar, linking those whose UID the account
    * already has; resolves to how many were created or linked, or null when a
    * plugin stopped the import. With `throwIfNoneImported`, rejects with the
-   * server's first refusal (its SetError type kept) when none was.
+   * server's first refusal (its SetError type kept) when none was. With
+   * `sendSchedulingMessages`, the server sends the iTIP messages the new
+   * events call for (joining a forwarded invitation sends the REPLY).
    */
   importEvents: (
     client: IJMAPClient,
     events: Partial<CalendarEvent>[],
     calendarId: string,
-    options?: { throwIfNoneImported?: boolean },
+    options?: { throwIfNoneImported?: boolean; sendSchedulingMessages?: boolean },
   ) => Promise<number | null>;
   updateCalendar: (client: IJMAPClient, calendarId: string, updates: Partial<Calendar>) => Promise<void>;
   /** Store `orderedIds` in that order by renumbering their sortOrder. */
@@ -2626,7 +2628,7 @@ async function importEventsUnhooked(
   client: IJMAPClient,
   events: Partial<CalendarEvent>[],
   calendarId: string,
-  options?: { throwIfNoneImported?: boolean },
+  options?: { throwIfNoneImported?: boolean; sendSchedulingMessages?: boolean },
 ): Promise<number> {
   const get = useCalendarStore.getState;
   const set = useCalendarStore.setState;
@@ -2800,7 +2802,7 @@ async function importEventsUnhooked(
   for (let i = 0; i < prepared.length; i += BATCH_SIZE) {
     const batch = prepared.slice(i, i + BATCH_SIZE);
     try {
-      const { created, failed, notCreated } = await client.batchCreateCalendarEvents(batch, targetAccountId);
+      const { created, failed, notCreated } = await client.batchCreateCalendarEvents(batch, targetAccountId, options?.sendSchedulingMessages ?? false);
       imported += created.length;
       if (failed.length > 0) {
         const first = Object.values(notCreated)[0];

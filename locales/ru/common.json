@@ -6333,6 +6333,17 @@
     "organizer_owner": "{name} (отправлено вами)",
     "organizer_me": "Вы"
   },
+  "calendar_forward": {
+    "menu": "Переслать…",
+    "heading": "Пересланное приглашение",
+    "when": "Когда: {value}",
+    "where": "Где: {value}",
+    "organizer": "Организатор: {value}",
+    "failed": "Не удалось переслать приглашение.",
+    "add_replier": "Добавить {name} на встречу",
+    "not_invited": "{name} не приглашён на эту встречу. Кто-то переслал ему приглашение.",
+    "added": "Добавлен на встречу"
+  },
   "free_busy_share": {
     "button": "Открыть мою занятость для {group}",
     "already": "Ваша занятость открыта для {group}",

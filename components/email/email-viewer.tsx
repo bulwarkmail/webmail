@@ -6021,7 +6021,7 @@ export function EmailViewer({
                 {/* Calendar Invitation Banner */}
                 {hasCalendarInvitation && (
                   <div className="py-1">
-                    <CalendarInvitationBanner email={email} />
+                    <CalendarInvitationBanner email={email} onForward={onForward} />
                   </div>
                 )}
 

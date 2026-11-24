@@ -6333,6 +6333,17 @@
     "organizer_owner": "{name} (enviado por ti)",
     "organizer_me": "Tú"
   },
+  "calendar_forward": {
+    "menu": "Reenviar…",
+    "heading": "Invitación reenviada",
+    "when": "Cuándo: {value}",
+    "where": "Dónde: {value}",
+    "organizer": "Organizador: {value}",
+    "failed": "No se pudo reenviar la invitación.",
+    "add_replier": "Añadir a {name} a la reunión",
+    "not_invited": "{name} no está invitado a esta reunión. Alguien le reenvió la invitación.",
+    "added": "Añadido a la reunión"
+  },
   "free_busy_share": {
     "button": "Compartir mi disponibilidad con {group}",
     "already": "Tu disponibilidad está compartida con {group}",

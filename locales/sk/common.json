@@ -5693,6 +5693,17 @@
     "organizer_owner": "{name} (odoslané vami)",
     "organizer_me": "Vy"
   },
+  "calendar_forward": {
+    "menu": "Preposlať…",
+    "heading": "Preposlaná pozvánka",
+    "when": "Kedy: {value}",
+    "where": "Kde: {value}",
+    "organizer": "Organizátor: {value}",
+    "failed": "Pozvánku sa nepodarilo preposlať.",
+    "add_replier": "Pridať {name} na stretnutie",
+    "not_invited": "{name} nie je pozvaný na toto stretnutie. Niekto mu pozvánku preposlal.",
+    "added": "Pridané na stretnutie"
+  },
   "free_busy_share": {
     "button": "Zdieľať môj voľný čas so skupinou {group}",
     "already": "Váš voľný čas je zdieľaný so skupinou {group}",

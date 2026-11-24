@@ -5693,6 +5693,17 @@
     "organizer_owner": "{name} (مُرسَل منك)",
     "organizer_me": "أنت"
   },
+  "calendar_forward": {
+    "menu": "إعادة توجيه…",
+    "heading": "دعوة معاد توجيهها",
+    "when": "الموعد: {value}",
+    "where": "المكان: {value}",
+    "organizer": "المنظِّم: {value}",
+    "failed": "تعذّرت إعادة توجيه الدعوة.",
+    "add_replier": "إضافة {name} إلى الاجتماع",
+    "not_invited": "{name} غير مدعو إلى هذا الاجتماع. أعاد أحدهم توجيه الدعوة إليه.",
+    "added": "أُضيف إلى الاجتماع"
+  },
   "free_busy_share": {
     "button": "مشاركة أوقات توفري مع {group}",
     "already": "أوقات توفرك مشتركة مع {group}",
