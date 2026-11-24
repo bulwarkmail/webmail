@@ -244,7 +244,9 @@
     "mv_add_another_account": "Add another account",
     "mv_manage_account": "Manage your account",
     "mv_storage_used": "{percent}% of {total} used",
-    "accessibility": "Accessibility"
+    "accessibility": "Accessibility",
+    "folder_hidden": "Folder hidden. Show it again in Settings › Folders & tags.",
+    "folder_hide_failed": "Couldn't hide the folder."
   },
   "account_unread": {
     "others": "Unread in other accounts: {count}",
@@ -2889,7 +2891,16 @@
       "error_delete": "Couldn't delete the folder",
       "error_delete_has_children": "Couldn't delete the folder: it still contains subfolders. Delete or move them first.",
       "error_delete_has_email": "Couldn't delete the folder: it still contains emails. Move or delete them first.",
-      "error_role": "Couldn't change the folder role"
+      "error_role": "Couldn't change the folder role",
+      "hide_unsubscribed": {
+        "label": "Hide unsubscribed folders",
+        "description": "Folders you unsubscribe from here or in another app, such as Thunderbird, leave the sidebar. Their mail stays on the server."
+      },
+      "show_folder": "Show in sidebar",
+      "hide_folder": "Hide from sidebar",
+      "show_folder_named": "Show {name} in the sidebar",
+      "hide_folder_named": "Hide {name} from the sidebar",
+      "error_subscription": "Couldn't show or hide the folder."
     },
     "advanced": {
       "debug_mode": {
@@ -4222,7 +4233,8 @@
     "toast_error_delete_has_email": "Folder is not empty. Empty it first.",
     "delete_with_contents_title": "Folder is not empty",
     "delete_with_contents_message": "The folder \"{name}\" still contains {count, plural, one {1 message} other {# messages}}. Delete the folder and all of its messages? This cannot be undone.",
-    "delete_with_contents_confirm": "Delete folder and messages"
+    "delete_with_contents_confirm": "Delete folder and messages",
+    "hide_folder": "Hide from sidebar"
   },
   "mail_p2_folders": {
     "all_folders": "All folders",

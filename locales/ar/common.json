@@ -244,7 +244,9 @@
     "mv_add_another_account": "إضافة حساب آخر",
     "mv_manage_account": "إدارة حسابك",
     "mv_storage_used": "تم استخدام {percent}% من {total}",
-    "accessibility": "إمكانية الوصول"
+    "accessibility": "إمكانية الوصول",
+    "folder_hidden": "تم إخفاء المجلد. يمكنك إظهاره مجددًا من الإعدادات › المجلدات والوسوم.",
+    "folder_hide_failed": "تعذّر إخفاء المجلد."
   },
   "account_unread": {
     "others": "غير مقروءة في الحسابات الأخرى: {count}",
@@ -2889,7 +2891,16 @@
       "error_delete": "فشل حذف المجلد",
       "error_delete_has_children": "لا يمكن حذف المجلد: لا يزال يحتوي على مجلدات فرعية. احذفها أو انقلها أولًا.",
       "error_delete_has_email": "لا يمكن حذف المجلد: لا يزال يحتوي على رسائل. انقلها أو احذفها أولًا.",
-      "error_role": "فشل تحديث دور المجلد"
+      "error_role": "فشل تحديث دور المجلد",
+      "hide_unsubscribed": {
+        "label": "إخفاء المجلدات غير المشترك بها",
+        "description": "المجلدات التي تلغي الاشتراك بها هنا أو في تطبيق آخر مثل Thunderbird تختفي من الشريط الجانبي. تبقى رسائلها على الخادم."
+      },
+      "show_folder": "إظهار في الشريط الجانبي",
+      "hide_folder": "إخفاء من الشريط الجانبي",
+      "show_folder_named": "إظهار {name} في الشريط الجانبي",
+      "hide_folder_named": "إخفاء {name} من الشريط الجانبي",
+      "error_subscription": "تعذّر إظهار المجلد أو إخفاؤه."
     },
     "advanced": {
       "debug_mode": {
@@ -4222,7 +4233,8 @@
     "toast_error_delete_has_email": "المجلد ليس فارغًا. أفرغه أولًا.",
     "delete_with_contents_title": "المجلد ليس فارغًا",
     "delete_with_contents_message": "لا يزال المجلد \"{name}\" يحتوي على {count, plural, one {رسالة واحدة} other {# رسائل}}. هل تريد حذف المجلد وكل رسائله؟ لا يمكن التراجع عن هذا.",
-    "delete_with_contents_confirm": "حذف المجلد والرسائل"
+    "delete_with_contents_confirm": "حذف المجلد والرسائل",
+    "hide_folder": "إخفاء من الشريط الجانبي"
   },
   "mail_p2_folders": {
     "all_folders": "كل المجلدات",

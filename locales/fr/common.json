@@ -244,7 +244,9 @@
     "mv_add_another_account": "Ajouter un autre compte",
     "mv_manage_account": "Gérer votre compte",
     "mv_storage_used": "{percent} % de {total} utilisés",
-    "accessibility": "Accessibilité"
+    "accessibility": "Accessibilité",
+    "folder_hidden": "Dossier masqué. Vous pouvez le réafficher dans Paramètres › Dossiers et étiquettes.",
+    "folder_hide_failed": "Impossible de masquer le dossier."
   },
   "account_unread": {
     "others": "Non lus dans les autres comptes : {count}",
@@ -2882,7 +2884,16 @@
       "error_delete": "Échec de la suppression du dossier",
       "error_delete_has_children": "Impossible de supprimer le dossier : il contient encore des sous-dossiers. Supprimez-les ou déplacez-les d'abord.",
       "error_delete_has_email": "Impossible de supprimer le dossier : il contient encore des e-mails. Déplacez-les ou supprimez-les d'abord.",
-      "error_role": "Échec de la mise à jour du rôle du dossier"
+      "error_role": "Échec de la mise à jour du rôle du dossier",
+      "hide_unsubscribed": {
+        "label": "Masquer les dossiers non abonnés",
+        "description": "Les dossiers dont vous vous désabonnez ici ou dans une autre application, comme Thunderbird, quittent la barre latérale. Leurs messages restent sur le serveur."
+      },
+      "show_folder": "Afficher dans la barre latérale",
+      "hide_folder": "Masquer de la barre latérale",
+      "show_folder_named": "Afficher {name} dans la barre latérale",
+      "hide_folder_named": "Masquer {name} de la barre latérale",
+      "error_subscription": "Impossible d'afficher ou de masquer le dossier."
     },
     "advanced": {
       "debug_mode": {
@@ -4222,7 +4233,8 @@
     "delete_with_contents_confirm": "Supprimer le dossier et les messages",
     "placeholder_folder_name": "Nom du dossier",
     "create": "Créer",
-    "rename_confirm": "Renommer"
+    "rename_confirm": "Renommer",
+    "hide_folder": "Masquer de la barre latérale"
   },
   "mail_p2_folders": {
     "all_folders": "Tous les dossiers",

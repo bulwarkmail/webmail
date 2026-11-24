@@ -7,14 +7,14 @@ import { useAuthStore } from '@/stores/auth-store';
 import { useSettingsStore } from '@/stores/settings-store';
 import { usePolicyStore } from '@/stores/policy-store';
 import { toast } from '@/stores/toast-store';
-import { SettingsSection, SettingItem, Select } from './settings-section';
+import { SettingsSection, SettingItem, Select, ToggleSwitch } from './settings-section';
 import {
   Plus, Pencil, Trash2, Check, X, FolderPlus, Folder,
   Inbox, Send, FileText, Trash, ShieldAlert, Archive,
   Star, Heart, Bookmark, Tag, Flag, Briefcase, Users,
   Bell, Zap, Globe, Lock, Eye, MessageSquare, Mail,
   AlertTriangle, NotebookPen, CalendarClock, BellOff, CheckSquare, Square,
-  MoreVertical, Palette, ListOrdered,
+  MoreVertical, Palette, ListOrdered, EyeOff,
   type AppIcon,
 } from '@/components/icons';
 import { IconButton } from '@/components/ui/icon-button';
@@ -41,6 +41,7 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import { isFolderCountMode } from '@/lib/folder-counts';
 import { localizeMailboxName } from '@/lib/mailbox-label';
+import { canHideFolder } from '@/lib/folder-subscriptions';
 
 // Must match the per-level indentation used in the row styles below: dragging
 // a folder this many pixels right/left targets one nesting level deeper/higher.
@@ -171,15 +172,15 @@ export function FolderSettings() {
   const folderName = (mb: { role?: string | null; name: string }): string =>
     localizeMailboxName(mb.role, mb.name, (k) => tSidebar(`mailboxes.${k}`));
   const { client } = useAuthStore();
-  const { mailboxes, fetchMailboxes, createMailbox, renameMailbox, deleteMailbox, setMailboxRole, reorderMailboxes, moveMailbox, moveMailboxes } = useEmailStore();
+  const { mailboxes, fetchMailboxes, createMailbox, renameMailbox, deleteMailbox, setMailboxRole, setMailboxSubscribed, reorderMailboxes, moveMailbox, moveMailboxes } = useEmailStore();
 
   const sensors = useSensors(
     // Small activation distance so clicking the row's buttons still works.
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
-  const { folderIcons, setFolderIcon, folderCountModes, updateSetting } = useSettingsStore();
-  const { isFeatureEnabled } = usePolicyStore();
+  const { folderIcons, setFolderIcon, folderCountModes, hideUnsubscribedFolders, updateSetting } = useSettingsStore();
+  const { isFeatureEnabled, isSettingHidden, isSettingLocked } = usePolicyStore();
   const folderIconsAllowed = isFeatureEnabled('folderIconsEnabled');
 
   useEffect(() => {
@@ -714,7 +715,13 @@ export function FolderSettings() {
                 />
               )}
             </div>
-            <span className="text-sm text-foreground truncate" title={folderName(mb)} dir="auto">{folderName(mb)}</span>
+            <span
+              className={cn("text-sm truncate", canToggleShown(mb) && mb.isSubscribed === false ? "text-muted-foreground" : "text-foreground")}
+              title={folderName(mb)}
+              dir="auto"
+            >
+              {folderName(mb)}
+            </span>
             {mb.unreadEmails > 0 && (
               <span className="text-xs tabular-nums px-1.5 py-0.5 rounded-full bg-primary text-primary-foreground font-medium flex-shrink-0">
                 {mb.unreadEmails}
@@ -738,6 +745,17 @@ export function FolderSettings() {
               className="px-1.5 py-0.5 text-xs max-w-[9rem] pointer-coarse:max-w-[12rem]"
               options={countModeOptions}
             />
+            {canToggleShown(mb) && (
+              <IconButton
+                label={mb.isSubscribed === false
+                  ? t('show_folder_named', { name: folderName(mb) })
+                  : t('hide_folder_named', { name: folderName(mb) })}
+                onClick={() => toggleShown(mb)}
+                className="text-muted-foreground"
+              >
+                {mb.isSubscribed === false ? <EyeOff /> : <Eye />}
+              </IconButton>
+            )}
             {mb.myRights?.mayCreateChild && (
               <IconButton
                 label={t('create_subfolder')}
@@ -786,6 +804,16 @@ export function FolderSettings() {
     updateSetting('folderCountModes', isFolderCountMode(value) ? { ...rest, [id]: value } : rest);
   };
 
+  // Show or hide a folder in the sidebar: its subscription on the server, so
+  // other apps that list only subscribed folders follow (#1398).
+  const canToggleShown = (mb: MailboxNode) => hideUnsubscribedFolders && canHideFolder(mb);
+  const toggleShown = (mb: MailboxNode) => {
+    if (!client) return;
+    setMailboxSubscribed(client, mb.id, mb.isSubscribed === false).catch(() => {
+      toast.error(t('error_subscription'));
+    });
+  };
+
   const renderRowMenu = () => {
     const mb = contextMenu.data;
     if (!mb) return null;
@@ -813,6 +841,13 @@ export function FolderSettings() {
             />
           ))}
         </ContextMenuSubMenu>
+        {canToggleShown(mb) && (
+          <ContextMenuItem
+            icon={mb.isSubscribed === false ? Eye : EyeOff}
+            label={mb.isSubscribed === false ? t('show_folder') : t('hide_folder')}
+            onClick={run(() => toggleShown(mb))}
+          />
+        )}
         {canDelete && (
           <>
             <ContextMenuSeparator />
@@ -829,6 +864,18 @@ export function FolderSettings() {
       <ConfirmDialog {...confirmProps} />
       {/* Folder List - primary section */}
       <SettingsSection id="folders" title={t('folder_list')} description={t('folder_list_description')}>
+        {!isSettingHidden('hideUnsubscribedFolders') && (
+          <SettingItem
+            label={t('hide_unsubscribed.label')}
+            description={t('hide_unsubscribed.description')}
+            locked={isSettingLocked('hideUnsubscribedFolders')}
+          >
+            <ToggleSwitch
+              checked={hideUnsubscribedFolders}
+              onChange={(v) => updateSetting('hideUnsubscribedFolders', v)}
+            />
+          </SettingItem>
+        )}
         {selectedCount > 0 && (
           <div className="sticky top-0 z-20 flex flex-wrap items-center gap-2 p-2.5 rounded-md border border-border bg-background">
             <span className="text-sm text-foreground me-auto">

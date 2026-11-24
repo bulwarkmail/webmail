@@ -1054,6 +1054,10 @@ interface SettingsState extends AccessibilitySettings {
   tintListRowsByAccount: boolean; // In the unified view, tint rows by account colour instead of showing the account dot
   showAccountDot: boolean; // In the unified view, show the account colour dot next to the sender
   showFolderTotalCount: boolean; // Show total message count next to folders/tags (alongside unread)
+  // Own folders unsubscribed on the server (JMAP isSubscribed) leave the
+  // sidebar. Off by default: folders made through JMAP before #951 are
+  // unsubscribed and would disappear. (#1398)
+  hideUnsubscribedFolders: boolean;
   // Mail folders of shared (group/delegated) JMAP accounts in the sidebar.
   // Turning it off hides every shared account's folders; their calendars,
   // contacts and files stay. (#1228)
@@ -1405,6 +1409,7 @@ const DEFAULT_SETTINGS = {
   tintListRowsByAccount: false,
   showAccountDot: true,
   showFolderTotalCount: true,
+  hideUnsubscribedFolders: false,
   showSharedMailAccounts: true,
   compactSharedMailboxes: false,
   hiddenSharedMailAccounts: {} as Record<string, string[]>,
@@ -2010,6 +2015,7 @@ export const useSettingsStore = create<SettingsState>()(
           tintListRowsByAccount: state.tintListRowsByAccount,
           showAccountDot: state.showAccountDot,
           showFolderTotalCount: state.showFolderTotalCount,
+          hideUnsubscribedFolders: state.hideUnsubscribedFolders,
           showSharedMailAccounts: state.showSharedMailAccounts,
           compactSharedMailboxes: state.compactSharedMailboxes,
           hiddenSharedMailAccounts: state.hiddenSharedMailAccounts,

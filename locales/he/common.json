@@ -243,7 +243,9 @@
     "mv_add_another_account": "הוספת חשבון נוסף",
     "mv_manage_account": "ניהול החשבון",
     "mv_storage_used": "נוצלו {percent}% מתוך {total}",
-    "accessibility": "נגישות"
+    "accessibility": "נגישות",
+    "folder_hidden": "התיקייה הוסתרה. אפשר להציג אותה שוב בהגדרות › תיקיות ותגיות.",
+    "folder_hide_failed": "לא ניתן היה להסתיר את התיקייה."
   },
   "account_unread": {
     "others": "לא נקראו בחשבונות האחרים: {count}",
@@ -2826,7 +2828,16 @@
       "error_delete_has_children": "לא ניתן למחוק תיקייה: היא עדיין מכילה תיקיות משנה. מחק או העבר אותם תחילה.",
       "error_delete_has_email": "לא ניתן למחוק תיקייה: היא עדיין מכילה הודעות דוא\"ל. העבר או מחק אותם תחילה.",
       "error_role": "עדכון תפקיד התיקייה נכשל",
-      "role_memos": "הערות"
+      "role_memos": "הערות",
+      "hide_unsubscribed": {
+        "label": "הסתרת תיקיות ללא מינוי",
+        "description": "תיקיות שאתם מבטלים את המינוי אליהן כאן או באפליקציה אחרת, כמו Thunderbird, יוצאות מסרגל הצד. הדואר שלהן נשאר בשרת."
+      },
+      "show_folder": "הצגה בסרגל הצד",
+      "hide_folder": "הסתרה מסרגל הצד",
+      "show_folder_named": "הצגת {name} בסרגל הצד",
+      "hide_folder_named": "הסתרת {name} מסרגל הצד",
+      "error_subscription": "לא ניתן היה להציג או להסתיר את התיקייה."
     },
     "advanced": {
       "debug_mode": {
@@ -6088,7 +6099,8 @@
     "toast_error_delete_has_email": "התיקייה אינה ריקה. תרוקנה קודם.",
     "delete_with_contents_title": "התיקייה אינה ריקה",
     "delete_with_contents_message": "התיקייה \"{name}\" עדיין מכילה {count, plural, one {הודעה אחת} other {# הודעות}}. למחוק את התיקייה ואת כל ההודעות שבה? לא ניתן לבטל פעולה זו.",
-    "delete_with_contents_confirm": "מחיקת התיקייה וההודעות"
+    "delete_with_contents_confirm": "מחיקת התיקייה וההודעות",
+    "hide_folder": "הסתרה מסרגל הצד"
   },
   "mail_p2_folders": {
     "all_folders": "כל התיקיות",

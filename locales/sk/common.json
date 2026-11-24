@@ -244,7 +244,9 @@
     "mv_add_another_account": "Pridať ďalší účet",
     "mv_manage_account": "Spravovať účet",
     "mv_storage_used": "Využité {percent} % z {total}",
-    "accessibility": "Prístupnosť"
+    "accessibility": "Prístupnosť",
+    "folder_hidden": "Priečinok je skrytý. Znova ho zobrazíte v Nastavenia › Priečinky a štítky.",
+    "folder_hide_failed": "Priečinok sa nepodarilo skryť."
   },
   "account_unread": {
     "others": "Neprečítané v ostatných účtoch: {count}",
@@ -2889,7 +2891,16 @@
       "error_delete": "Priečinok sa nepodarilo odstrániť",
       "error_delete_has_children": "Priečinok sa nedá odstrániť: stále obsahuje podpriečinky. Najprv ich odstráňte alebo presuňte.",
       "error_delete_has_email": "Priečinok sa nedá odstrániť: stále obsahuje e-maily. Najprv ich presuňte alebo odstráňte.",
-      "error_role": "Rolu priečinka sa nepodarilo aktualizovať"
+      "error_role": "Rolu priečinka sa nepodarilo aktualizovať",
+      "hide_unsubscribed": {
+        "label": "Skryť neodoberané priečinky",
+        "description": "Priečinky, ktorých odber zrušíte tu alebo v inej aplikácii, napríklad v Thunderbirde, zmiznú z bočného panela. Ich pošta zostane na serveri."
+      },
+      "show_folder": "Zobraziť na bočnom paneli",
+      "hide_folder": "Skryť z bočného panela",
+      "show_folder_named": "Zobraziť {name} na bočnom paneli",
+      "hide_folder_named": "Skryť {name} z bočného panela",
+      "error_subscription": "Priečinok sa nepodarilo zobraziť ani skryť."
     },
     "advanced": {
       "debug_mode": {
@@ -4222,7 +4233,8 @@
     "toast_error_delete_has_email": "Priečinok nie je prázdny. Najprv ho vyprázdnite.",
     "delete_with_contents_title": "Priečinok nie je prázdny",
     "delete_with_contents_message": "Priečinok „{name}“ stále obsahuje {count, plural, one {1 správu} few {# správy} other {# správ}}. Odstrániť priečinok aj všetky jeho správy? Túto akciu nie je možné vrátiť späť.",
-    "delete_with_contents_confirm": "Odstrániť priečinok a správy"
+    "delete_with_contents_confirm": "Odstrániť priečinok a správy",
+    "hide_folder": "Skryť z bočného panela"
   },
   "mail_p2_folders": {
     "all_folders": "Všetky priečinky",

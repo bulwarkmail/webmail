@@ -244,7 +244,9 @@
     "mv_add_another_account": "Přidat další účet",
     "mv_manage_account": "Spravovat účet",
     "mv_storage_used": "Využito {percent} % z {total}",
-    "accessibility": "Přístupnost"
+    "accessibility": "Přístupnost",
+    "folder_hidden": "Složka je skrytá. Znovu ji zobrazíte v Nastavení › Složky a štítky.",
+    "folder_hide_failed": "Složku se nepodařilo skrýt."
   },
   "account_unread": {
     "others": "Nepřečtené v ostatních účtech: {count}",
@@ -2882,7 +2884,16 @@
       "error_delete": "Složku se nepodařilo odstranit",
       "error_delete_has_children": "Složku nelze odstranit: stále obsahuje podsložky. Nejprve je odstraňte nebo přesuňte.",
       "error_delete_has_email": "Složku nelze odstranit: stále obsahuje zprávy. Nejprve je přesuňte nebo odstraňte.",
-      "error_role": "Roli složky se nepodařilo aktualizovat"
+      "error_role": "Roli složky se nepodařilo aktualizovat",
+      "hide_unsubscribed": {
+        "label": "Skrýt neodebírané složky",
+        "description": "Složky, jejichž odběr zrušíte tady nebo v jiné aplikaci, například Thunderbirdu, zmizí z postranního panelu. Jejich pošta zůstane na serveru."
+      },
+      "show_folder": "Zobrazit v postranním panelu",
+      "hide_folder": "Skrýt z postranního panelu",
+      "show_folder_named": "Zobrazit {name} v postranním panelu",
+      "hide_folder_named": "Skrýt {name} z postranního panelu",
+      "error_subscription": "Složku se nepodařilo zobrazit ani skrýt."
     },
     "advanced": {
       "debug_mode": {
@@ -4222,7 +4233,8 @@
     "toast_error_delete_has_email": "Složka není prázdná. Nejprve ji vyprázdněte.",
     "delete_with_contents_title": "Složka není prázdná",
     "delete_with_contents_message": "Složka „{name}“ stále obsahuje {count, plural, one {1 zprávu} few {# zprávy} other {# zpráv}}. Smazat složku i všechny její zprávy? Tuto akci nelze vrátit.",
-    "delete_with_contents_confirm": "Smazat složku i zprávy"
+    "delete_with_contents_confirm": "Smazat složku i zprávy",
+    "hide_folder": "Skrýt z postranního panelu"
   },
   "mail_p2_folders": {
     "all_folders": "Všechny složky",

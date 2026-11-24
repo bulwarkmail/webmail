@@ -244,7 +244,9 @@
     "mv_add_another_account": "Başka bir hesap ekle",
     "mv_manage_account": "Hesabınızı yönetin",
     "mv_storage_used": "{total} alanın %{percent} kadarı kullanıldı",
-    "accessibility": "Erişilebilirlik"
+    "accessibility": "Erişilebilirlik",
+    "folder_hidden": "Klasör gizlendi. Ayarlar › Klasörler ve etiketler bölümünden yeniden gösterebilirsiniz.",
+    "folder_hide_failed": "Klasör gizlenemedi."
   },
   "account_unread": {
     "others": "Diğer hesaplarda okunmamış: {count}",
@@ -2882,7 +2884,16 @@
       "error_delete": "Klasör silinemedi",
       "error_delete_has_children": "Klasör silinemiyor: hâlâ alt klasörler içeriyor. Önce onları silin veya taşıyın.",
       "error_delete_has_email": "Klasör silinemiyor: hâlâ e-postalar içeriyor. Önce onları taşıyın veya silin.",
-      "error_role": "Klasör rolü güncellenemedi"
+      "error_role": "Klasör rolü güncellenemedi",
+      "hide_unsubscribed": {
+        "label": "Abone olunmayan klasörleri gizle",
+        "description": "Burada veya Thunderbird gibi başka bir uygulamada aboneliğini bıraktığınız klasörler kenar çubuğundan kalkar. Postaları sunucuda kalır."
+      },
+      "show_folder": "Kenar çubuğunda göster",
+      "hide_folder": "Kenar çubuğundan gizle",
+      "show_folder_named": "{name} klasörünü kenar çubuğunda göster",
+      "hide_folder_named": "{name} klasörünü kenar çubuğundan gizle",
+      "error_subscription": "Klasör gösterilemedi veya gizlenemedi."
     },
     "advanced": {
       "debug_mode": {
@@ -4222,7 +4233,8 @@
     "toast_error_delete_has_email": "Klasör boş değil. Önce boşaltın.",
     "delete_with_contents_title": "Klasör boş değil",
     "delete_with_contents_message": "\"{name}\" klasöründe hâlâ {count} ileti var. Klasör ve tüm iletileri silinsin mi? Bu işlem geri alınamaz.",
-    "delete_with_contents_confirm": "Klasörü ve iletileri sil"
+    "delete_with_contents_confirm": "Klasörü ve iletileri sil",
+    "hide_folder": "Kenar çubuğundan gizle"
   },
   "mail_p2_folders": {
     "all_folders": "Tüm klasörler",

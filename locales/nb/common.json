@@ -244,7 +244,9 @@
     "mv_add_another_account": "Legg til en annen konto",
     "mv_manage_account": "Administrer kontoen",
     "mv_storage_used": "{percent} % av {total} brukt",
-    "accessibility": "Tilgjengelighet"
+    "accessibility": "Tilgjengelighet",
+    "folder_hidden": "Mappen er skjult. Vis den igjen under Innstillinger › Mapper og etiketter.",
+    "folder_hide_failed": "Kunne ikke skjule mappen."
   },
   "account_unread": {
     "others": "Uleste i andre kontoer: {count}",
@@ -2889,7 +2891,16 @@
       "error_delete": "Kunne ikke slette mappen",
       "error_delete_has_children": "Kan ikke slette mappen: den inneholder fortsatt undermapper. Slett eller flytt dem først.",
       "error_delete_has_email": "Kan ikke slette mappen: den inneholder fortsatt e-poster. Flytt eller slett dem først.",
-      "error_role": "Kunne ikke oppdatere mapperollen"
+      "error_role": "Kunne ikke oppdatere mapperollen",
+      "hide_unsubscribed": {
+        "label": "Skjul mapper du ikke abonnerer på",
+        "description": "Mapper du avslutter abonnementet på her eller i en annen app, som Thunderbird, forsvinner fra sidepanelet. E-posten deres blir liggende på serveren."
+      },
+      "show_folder": "Vis i sidepanelet",
+      "hide_folder": "Skjul fra sidepanelet",
+      "show_folder_named": "Vis {name} i sidepanelet",
+      "hide_folder_named": "Skjul {name} fra sidepanelet",
+      "error_subscription": "Kunne ikke vise eller skjule mappen."
     },
     "advanced": {
       "debug_mode": {
@@ -4222,7 +4233,8 @@
     "toast_error_delete_has_email": "Mappen er ikke tom. Tøm den først.",
     "delete_with_contents_title": "Mappen er ikke tom",
     "delete_with_contents_message": "Mappen «{name}» inneholder fortsatt {count, plural, one {1 melding} other {# meldinger}}. Slette mappen og alle meldingene i den? Dette kan ikke angres.",
-    "delete_with_contents_confirm": "Slett mappe og meldinger"
+    "delete_with_contents_confirm": "Slett mappe og meldinger",
+    "hide_folder": "Skjul fra sidepanelet"
   },
   "mail_p2_folders": {
     "all_folders": "Alle mapper",

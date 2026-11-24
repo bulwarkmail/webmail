@@ -3,6 +3,7 @@
 import { useTranslations } from "next-intl";
 import { Mailbox, UnifiedMailboxRole } from "@/lib/jmap/types";
 import { getMailboxPath } from "@/lib/utils";
+import { canHideFolder } from "@/lib/folder-subscriptions";
 import { localizeMailboxName } from "@/lib/mailbox-label";
 import {
   ContextMenu,
@@ -141,6 +142,8 @@ interface MailboxContextMenuProps {
   onRefresh?: () => void;
   /** Hide a shared account's mail folders from the sidebar (#1228). */
   onHideSharedAccount?: (accountId: string) => void;
+  /** Unsubscribe from an own folder so it leaves the sidebar; only while unsubscribed folders are hidden (#1398). */
+  onHideFolder?: (mailboxId: string) => void;
   /** Move a shared account one place up or down among the visible ones. */
   sharedAccountOrder?: {
     canMove: (accountId: string, direction: "up" | "down") => boolean;
@@ -170,6 +173,7 @@ export function MailboxContextMenu({
   onImportEmail,
   onRefresh,
   onHideSharedAccount,
+  onHideFolder,
   sharedAccountOrder,
   notifications,
 }: MailboxContextMenuProps) {
@@ -404,6 +408,15 @@ export function MailboxContextMenu({
           />
         );
       })()}
+      {onHideFolder && canHideFolder(mailbox) && (
+        <ContextMenuItem
+          icon={EyeOff}
+          label={t("hide_folder")}
+          onClick={() => handleAction(() => onHideFolder(mailbox.id))}
+          disabled={offline}
+          testId="mailbox-hide-folder"
+        />
+      )}
 
       {target.sharedAccountId && (
         <>

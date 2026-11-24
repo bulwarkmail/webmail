@@ -244,7 +244,9 @@
     "mv_add_another_account": "新增其他帳戶",
     "mv_manage_account": "管理您的帳戶",
     "mv_storage_used": "已使用 {total} 中的 {percent}%",
-    "accessibility": "無障礙"
+    "accessibility": "無障礙",
+    "folder_hidden": "資料夾已隱藏。可在 設定 › 資料夾與標籤 中重新顯示。",
+    "folder_hide_failed": "無法隱藏該資料夾。"
   },
   "account_unread": {
     "others": "其他帳號中的未讀郵件：{count}",
@@ -2889,7 +2891,16 @@
       "error_delete": "無法刪除信件匣",
       "error_delete_has_children": "無法刪除信件匣：其中仍有子信件匣。請先刪除或移動它們。",
       "error_delete_has_email": "無法刪除信件匣：其中仍有郵件。請先移動或刪除這些郵件。",
-      "error_role": "無法更新信件匣角色"
+      "error_role": "無法更新信件匣角色",
+      "hide_unsubscribed": {
+        "label": "隱藏未訂閱的資料夾",
+        "description": "在這裡或在 Thunderbird 等其他應用程式中取消訂閱的資料夾會從側邊欄消失。其中的郵件仍保留在伺服器上。"
+      },
+      "show_folder": "在側邊欄顯示",
+      "hide_folder": "從側邊欄隱藏",
+      "show_folder_named": "在側邊欄顯示 {name}",
+      "hide_folder_named": "從側邊欄隱藏 {name}",
+      "error_subscription": "無法顯示或隱藏該資料夾。"
     },
     "advanced": {
       "debug_mode": {
@@ -4222,7 +4233,8 @@
     "toast_error_delete_has_email": "信件匣不是空的，請先清空。",
     "delete_with_contents_title": "資料夾不是空的",
     "delete_with_contents_message": "資料夾「{name}」中仍有 {count} 封郵件。要刪除該資料夾及其所有郵件嗎？此操作無法復原。",
-    "delete_with_contents_confirm": "刪除資料夾和郵件"
+    "delete_with_contents_confirm": "刪除資料夾和郵件",
+    "hide_folder": "從側邊欄隱藏"
   },
   "mail_p2_folders": {
     "all_folders": "所有信件匣",

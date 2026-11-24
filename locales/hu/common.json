@@ -244,7 +244,9 @@
     "mv_add_another_account": "Másik fiók hozzáadása",
     "mv_manage_account": "Fiók kezelése",
     "mv_storage_used": "{total} {percent}%-a foglalt",
-    "accessibility": "Kisegítő lehetőségek"
+    "accessibility": "Kisegítő lehetőségek",
+    "folder_hidden": "A mappa el van rejtve. A Beállítások › Mappák és címkék alatt újra megjelenítheti.",
+    "folder_hide_failed": "A mappát nem sikerült elrejteni."
   },
   "account_unread": {
     "others": "Olvasatlan a többi fiókban: {count}",
@@ -2885,7 +2887,16 @@
       "error_delete": "Nem sikerült törölni a mappát",
       "error_delete_has_children": "Nem törölhető a mappa: almappákat tartalmaz. Előbb töröld vagy helyezd át azokat.",
       "error_delete_has_email": "Nem törölhető a mappa: e-maileket tartalmaz. Előbb helyezd át vagy töröld azokat.",
-      "error_role": "Nem sikerült frissíteni a mappa szerepkört"
+      "error_role": "Nem sikerült frissíteni a mappa szerepkört",
+      "hide_unsubscribed": {
+        "label": "Nem előfizetett mappák elrejtése",
+        "description": "Az itt vagy más alkalmazásban, például a Thunderbirdben lemondott mappák eltűnnek az oldalsávról. A leveleik a szerveren maradnak."
+      },
+      "show_folder": "Megjelenítés az oldalsávon",
+      "hide_folder": "Elrejtés az oldalsávról",
+      "show_folder_named": "{name} megjelenítése az oldalsávon",
+      "hide_folder_named": "{name} elrejtése az oldalsávról",
+      "error_subscription": "A mappát nem sikerült megjeleníteni vagy elrejteni."
     },
     "advanced": {
       "debug_mode": {
@@ -4222,7 +4233,8 @@
     "toast_error_delete_has_email": "A mappa nem üres. Ürítsd ki először.",
     "delete_with_contents_title": "A mappa nem üres",
     "delete_with_contents_message": "A(z) „{name}” mappa még {count, plural, one {1 üzenetet} other {# üzenetet}} tartalmaz. Törlöd a mappát az összes üzenetével együtt? Ez nem vonható vissza.",
-    "delete_with_contents_confirm": "Mappa és üzenetek törlése"
+    "delete_with_contents_confirm": "Mappa és üzenetek törlése",
+    "hide_folder": "Elrejtés az oldalsávról"
   },
   "mail_p2_folders": {
     "all_folders": "Összes mappa",

@@ -244,7 +244,9 @@
     "mv_add_another_account": "Adicionar outra conta",
     "mv_manage_account": "Gerenciar sua conta",
     "mv_storage_used": "{percent}% de {total} usado",
-    "accessibility": "Acessibilidade"
+    "accessibility": "Acessibilidade",
+    "folder_hidden": "Pasta oculta. Pode mostrá-la de novo em Configurações › Pastas e etiquetas.",
+    "folder_hide_failed": "Não foi possível ocultar a pasta."
   },
   "account_unread": {
     "others": "Não lidas em outras contas: {count}",
@@ -2882,7 +2884,16 @@
       "error_delete": "Falha ao excluir a pasta",
       "error_delete_has_children": "Não é possível excluir a pasta: ela ainda contém subpastas. Exclua ou mova-as primeiro.",
       "error_delete_has_email": "Não é possível excluir a pasta: ela ainda contém e-mails. Mova ou exclua-os primeiro.",
-      "error_role": "Não foi possível alterar a função da pasta"
+      "error_role": "Não foi possível alterar a função da pasta",
+      "hide_unsubscribed": {
+        "label": "Ocultar pastas sem subscrição",
+        "description": "As pastas cuja subscrição cancela aqui ou noutra aplicação, como o Thunderbird, saem da barra lateral. O correio fica no servidor."
+      },
+      "show_folder": "Mostrar na barra lateral",
+      "hide_folder": "Ocultar da barra lateral",
+      "show_folder_named": "Mostrar {name} na barra lateral",
+      "hide_folder_named": "Ocultar {name} da barra lateral",
+      "error_subscription": "Não foi possível mostrar nem ocultar a pasta."
     },
     "advanced": {
       "debug_mode": {
@@ -4222,7 +4233,8 @@
     "delete_with_contents_confirm": "Excluir pasta e mensagens",
     "placeholder_folder_name": "Nome da pasta",
     "create": "Criar",
-    "rename_confirm": "Renomear"
+    "rename_confirm": "Renomear",
+    "hide_folder": "Ocultar da barra lateral"
   },
   "mail_p2_folders": {
     "all_folders": "Todas as pastas",

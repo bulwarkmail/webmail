@@ -718,6 +718,11 @@ interface EmailStore {
   renameMailbox: (client: IJMAPClient, mailboxId: string, name: string) => Promise<boolean>;
   deleteMailbox: (client: IJMAPClient, mailboxId: string, options?: { removeEmails?: boolean }) => Promise<boolean>;
   setMailboxRole: (client: IJMAPClient, mailboxId: string, role: string | null) => Promise<void>;
+  /**
+   * Subscribes to a folder or unsubscribes from it on the server (JMAP
+   * isSubscribed, IMAP SUBSCRIBE). Shown at once, undone if the server says no.
+   */
+  setMailboxSubscribed: (client: IJMAPClient, mailboxId: string, isSubscribed: boolean) => Promise<void>;
   reorderMailboxes: (client: IJMAPClient, orderedIds: string[]) => Promise<void>;
   moveMailbox: (client: IJMAPClient, mailboxId: string, newParentId: string | null, orderedSiblingIds?: string[]) => Promise<void>;
   /** Reparents several folders at once; resolves with the ids the server refused. */
@@ -8592,6 +8597,29 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
       throw error;
     }
     return true;
+  },
+
+  setMailboxSubscribed: async (client, mailboxId, isSubscribed) => {
+    const target = resolveMailboxMutationContext(client, mailboxId);
+    const viewingId = get().viewingAccountId;
+    const apply = (value: boolean) => {
+      const patch = (list: Mailbox[]) => list.map(mb => mb.id === mailboxId ? { ...mb, isSubscribed: value } : mb);
+      if (viewingId) {
+        set((state) => ({
+          accountMailboxes: { ...state.accountMailboxes, [viewingId]: patch(state.accountMailboxes[viewingId] ?? []) },
+        }));
+      } else {
+        set((state) => ({ mailboxes: patch(state.mailboxes) }));
+      }
+    };
+    const previous = resolveActionMailboxes().find(mb => mb.id === mailboxId)?.isSubscribed ?? true;
+    apply(isSubscribed);
+    try {
+      await target.client.updateMailbox(target.mailboxId, { isSubscribed }, target.accountId);
+    } catch (error) {
+      apply(previous);
+      throw error;
+    }
   },
 
   setMailboxRole: async (client, mailboxId, role) => {

@@ -244,7 +244,9 @@
     "mv_add_another_account": "Legg til ein annan konto",
     "mv_manage_account": "Administrer kontoen din",
     "mv_storage_used": "{percent} % av {total} brukt",
-    "accessibility": "Tilgjenge"
+    "accessibility": "Tilgjenge",
+    "folder_hidden": "Mappa er gøymd. Vis ho att under Innstillingar › Mapper og etikettar.",
+    "folder_hide_failed": "Kunne ikkje gøyma mappa."
   },
   "account_unread": {
     "others": "Ulesne i andre kontoar: {count}",
@@ -2897,7 +2899,16 @@
       "error_delete": "Klarte ikkje slette mappa",
       "error_delete_has_children": "Klarte ikkje slette mappa: ho inneheld framleis undermapper. Slett eller flytt dei først.",
       "error_delete_has_email": "Klarte ikkje slette mappa: ho inneheld framleis e-post. Flytt eller slett han først.",
-      "error_role": "Klarte ikkje endre mapperolla"
+      "error_role": "Klarte ikkje endre mapperolla",
+      "hide_unsubscribed": {
+        "label": "Gøym mapper du ikkje abonnerer på",
+        "description": "Mapper du seier opp abonnementet på her eller i ein annan app, som Thunderbird, forsvinn frå sidefeltet. E-posten deira blir liggjande på tenaren."
+      },
+      "show_folder": "Vis i sidefeltet",
+      "hide_folder": "Gøym frå sidefeltet",
+      "show_folder_named": "Vis {name} i sidefeltet",
+      "hide_folder_named": "Gøym {name} frå sidefeltet",
+      "error_subscription": "Kunne ikkje visa eller gøyma mappa."
     },
     "advanced": {
       "debug_mode": {
@@ -4230,7 +4241,8 @@
     "toast_error_delete_has_email": "Mappa er ikkje tom. Tøm ho først.",
     "delete_with_contents_title": "Mappa er ikkje tom",
     "delete_with_contents_message": "Mappa «{name}» inneheld framleis {count, plural, one {1 melding} other {# meldingar}}. Slette mappa og alle meldingane i ho? Dette kan ikkje angrast.",
-    "delete_with_contents_confirm": "Slett mappa og meldingane"
+    "delete_with_contents_confirm": "Slett mappa og meldingane",
+    "hide_folder": "Gøym frå sidefeltet"
   },
   "mail_p2_folders": {
     "all_folders": "Alle mapper",

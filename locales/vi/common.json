@@ -244,7 +244,9 @@
     "mv_add_another_account": "Thêm tài khoản khác",
     "mv_manage_account": "Quản lý tài khoản của bạn",
     "mv_storage_used": "Đã dùng {percent}% dung lượng {total}",
-    "accessibility": "Hỗ trợ tiếp cận"
+    "accessibility": "Hỗ trợ tiếp cận",
+    "folder_hidden": "Đã ẩn thư mục. Hiện lại trong Cài đặt › Thư mục và nhãn.",
+    "folder_hide_failed": "Không thể ẩn thư mục."
   },
   "account_unread": {
     "others": "Chưa đọc trong các tài khoản khác: {count}",
@@ -2901,7 +2903,16 @@
       "error_delete": "Không thể xóa thư mục",
       "error_delete_has_children": "Không thể xóa thư mục: nó vẫn chứa các thư mục con. Xóa hoặc di chuyển chúng trước.",
       "error_delete_has_email": "Không thể xóa thư mục: nó vẫn chứa email. Di chuyển hoặc xóa chúng trước.",
-      "error_role": "Không thể thay đổi vai trò thư mục"
+      "error_role": "Không thể thay đổi vai trò thư mục",
+      "hide_unsubscribed": {
+        "label": "Ẩn thư mục chưa đăng ký",
+        "description": "Thư mục bạn hủy đăng ký ở đây hoặc trong ứng dụng khác, như Thunderbird, sẽ rời khỏi thanh bên. Thư của chúng vẫn ở trên máy chủ."
+      },
+      "show_folder": "Hiện trong thanh bên",
+      "hide_folder": "Ẩn khỏi thanh bên",
+      "show_folder_named": "Hiện {name} trong thanh bên",
+      "hide_folder_named": "Ẩn {name} khỏi thanh bên",
+      "error_subscription": "Không thể hiện hoặc ẩn thư mục."
     },
     "advanced": {
       "debug_mode": {
@@ -4234,7 +4245,8 @@
     "toast_error_delete_has_email": "Thư mục không trống. Làm trống nó trước.",
     "delete_with_contents_title": "Thư mục không trống",
     "delete_with_contents_message": "Thư mục \"{name}\" vẫn chứa {count, plural, one {1 thư} other {# thư}}. Xóa thư mục và tất cả thư của nó? Điều này không thể hoàn tác được.",
-    "delete_with_contents_confirm": "Xóa thư mục và thư"
+    "delete_with_contents_confirm": "Xóa thư mục và thư",
+    "hide_folder": "Ẩn khỏi thanh bên"
   },
   "mail_p2_folders": {
     "all_folders": "Tất cả thư mục",

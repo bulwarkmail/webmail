@@ -244,7 +244,9 @@
     "mv_add_another_account": "添加其他账户",
     "mv_manage_account": "管理您的账户",
     "mv_storage_used": "已使用 {total} 中的 {percent}%",
-    "accessibility": "无障碍"
+    "accessibility": "无障碍",
+    "folder_hidden": "文件夹已隐藏。可在 设置 › 文件夹与标签 中重新显示。",
+    "folder_hide_failed": "无法隐藏该文件夹。"
   },
   "account_unread": {
     "others": "其他账户中的未读邮件：{count}",
@@ -2882,7 +2884,16 @@
       "error_delete": "删除文件夹失败",
       "error_delete_has_children": "无法删除文件夹：其中仍包含子文件夹。请先删除或移动它们。",
       "error_delete_has_email": "无法删除文件夹：其中仍包含邮件。请先移动或删除这些邮件。",
-      "error_role": "无法更新文件夹角色"
+      "error_role": "无法更新文件夹角色",
+      "hide_unsubscribed": {
+        "label": "隐藏未订阅的文件夹",
+        "description": "在这里或在 Thunderbird 等其他应用中取消订阅的文件夹会从侧边栏消失。其中的邮件仍保留在服务器上。"
+      },
+      "show_folder": "在侧边栏显示",
+      "hide_folder": "从侧边栏隐藏",
+      "show_folder_named": "在侧边栏显示 {name}",
+      "hide_folder_named": "从侧边栏隐藏 {name}",
+      "error_subscription": "无法显示或隐藏该文件夹。"
     },
     "advanced": {
       "debug_mode": {
@@ -4222,7 +4233,8 @@
     "delete_with_contents_confirm": "删除文件夹和邮件",
     "placeholder_folder_name": "文件夹名称",
     "create": "创建",
-    "rename_confirm": "重命名"
+    "rename_confirm": "重命名",
+    "hide_folder": "从侧边栏隐藏"
   },
   "mail_p2_folders": {
     "all_folders": "所有文件夹",

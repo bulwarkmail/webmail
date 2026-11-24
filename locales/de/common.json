@@ -244,7 +244,9 @@
     "mv_add_another_account": "Weiteres Konto hinzufügen",
     "mv_manage_account": "Konto verwalten",
     "mv_storage_used": "{percent} % von {total} belegt",
-    "accessibility": "Barrierefreiheit"
+    "accessibility": "Barrierefreiheit",
+    "folder_hidden": "Ordner ausgeblendet. Unter Einstellungen › Ordner & Tags können Sie ihn wieder einblenden.",
+    "folder_hide_failed": "Der Ordner konnte nicht ausgeblendet werden."
   },
   "account_unread": {
     "others": "Ungelesen in anderen Konten: {count}",
@@ -2882,7 +2884,16 @@
       "error_delete": "Ordner konnte nicht gelöscht werden",
       "error_delete_has_children": "Ordner kann nicht gelöscht werden: Er enthält noch Unterordner. Löschen oder verschieben Sie diese zuerst.",
       "error_delete_has_email": "Ordner kann nicht gelöscht werden: Er enthält noch E-Mails. Verschieben oder löschen Sie diese zuerst.",
-      "error_role": "Ordnerrolle konnte nicht aktualisiert werden"
+      "error_role": "Ordnerrolle konnte nicht aktualisiert werden",
+      "hide_unsubscribed": {
+        "label": "Nicht abonnierte Ordner ausblenden",
+        "description": "Ordner, die Sie hier oder in einer anderen App wie Thunderbird nicht mehr abonnieren, verschwinden aus der Seitenleiste. Die E-Mails darin bleiben auf dem Server."
+      },
+      "show_folder": "In Seitenleiste anzeigen",
+      "hide_folder": "In Seitenleiste ausblenden",
+      "show_folder_named": "{name} in der Seitenleiste anzeigen",
+      "hide_folder_named": "{name} in der Seitenleiste ausblenden",
+      "error_subscription": "Der Ordner konnte nicht ein- oder ausgeblendet werden."
     },
     "advanced": {
       "debug_mode": {
@@ -4222,7 +4233,8 @@
     "toast_error_delete_has_email": "Ordner ist nicht leer. Leere ihn zuerst.",
     "delete_with_contents_title": "Ordner ist nicht leer",
     "delete_with_contents_message": "Der Ordner „{name}“ enthält noch {count, plural, one {1 Nachricht} other {# Nachrichten}}. Ordner samt allen Nachrichten löschen? Das kann nicht rückgängig gemacht werden.",
-    "delete_with_contents_confirm": "Ordner und Nachrichten löschen"
+    "delete_with_contents_confirm": "Ordner und Nachrichten löschen",
+    "hide_folder": "In Seitenleiste ausblenden"
   },
   "mail_p2_folders": {
     "all_folders": "Alle Ordner",

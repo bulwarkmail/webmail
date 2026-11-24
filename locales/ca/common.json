@@ -244,7 +244,9 @@
     "mv_add_another_account": "Afegeix un altre compte",
     "mv_manage_account": "Gestiona el teu compte",
     "mv_storage_used": "{percent}% de {total} utilitzat",
-    "accessibility": "Accessibilitat"
+    "accessibility": "Accessibilitat",
+    "folder_hidden": "Carpeta amagada. La podeu tornar a mostrar a Configuració › Carpetes i etiquetes.",
+    "folder_hide_failed": "No s'ha pogut amagar la carpeta."
   },
   "account_unread": {
     "others": "Sense llegir en altres comptes: {count}",
@@ -2889,7 +2891,16 @@
       "error_delete": "No s'ha pogut suprimir la carpeta",
       "error_delete_has_children": "No es pot suprimir la carpeta: encara conté subcarpetes. Suprimiu-les o moveu-les primer.",
       "error_delete_has_email": "No es pot suprimir la carpeta: encara conté correus. Moveu-los o suprimiu-los primer.",
-      "error_role": "No s'ha pogut actualitzar el rol de la carpeta"
+      "error_role": "No s'ha pogut actualitzar el rol de la carpeta",
+      "hide_unsubscribed": {
+        "label": "Amaga les carpetes no subscrites",
+        "description": "Les carpetes de les quals us doneu de baixa aquí o en una altra aplicació, com ara Thunderbird, surten de la barra lateral. El correu es queda al servidor."
+      },
+      "show_folder": "Mostra a la barra lateral",
+      "hide_folder": "Amaga de la barra lateral",
+      "show_folder_named": "Mostra {name} a la barra lateral",
+      "hide_folder_named": "Amaga {name} de la barra lateral",
+      "error_subscription": "No s'ha pogut mostrar ni amagar la carpeta."
     },
     "advanced": {
       "debug_mode": {
@@ -4222,7 +4233,8 @@
     "toast_error_delete_has_email": "La carpeta no és buida. Buideu-la primer.",
     "delete_with_contents_title": "La carpeta no està buida",
     "delete_with_contents_message": "La carpeta \"{name}\" encara conté {count, plural, one {1 missatge} other {# missatges}}. Vols suprimir la carpeta i tots els seus missatges? No es pot desfer.",
-    "delete_with_contents_confirm": "Suprimeix la carpeta i els missatges"
+    "delete_with_contents_confirm": "Suprimeix la carpeta i els missatges",
+    "hide_folder": "Amaga de la barra lateral"
   },
   "mail_p2_folders": {
     "all_folders": "Totes les carpetes",

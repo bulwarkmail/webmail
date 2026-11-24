@@ -93,6 +93,7 @@ import { buildSettingsPath, SCHEDULED_MAILBOX_ID, scopedScheduledMailboxId } fro
 import { useTour } from "@/components/tour/tour-provider";
 import { toUnicodeEmail } from "@/lib/idn";
 import { hiddenSharedMailIds, isSharedMailAccountVisible, setSharedMailAccountHidden } from "@/lib/shared-mail-visibility";
+import { withoutUnsubscribed } from "@/lib/folder-subscriptions";
 import { moveSharedMailAccount, sharedMailOrderIds, sortSharedMailAccounts, SHARED_ACCOUNT_DRAG_MIME } from "@/lib/shared-mail-order";
 import { compactSharedMailbox } from "@/lib/compact-shared-mailbox";
 import {
@@ -1779,6 +1780,7 @@ function SidebarImpl({
   const includeGroupInUnified = useSettingsStore(s => s.includeGroupInUnified);
   const showSharedMailAccounts = useSettingsStore(s => s.showSharedMailAccounts);
   const compactSharedMailboxes = useSettingsStore(s => s.compactSharedMailboxes);
+  const hideUnsubscribedFolders = useSettingsStore(s => s.hideUnsubscribedFolders);
   const hiddenSharedMailAccounts = useSettingsStore(s => s.hiddenSharedMailAccounts);
   const sharedMailAccountOrder = useSettingsStore(s => s.sharedMailAccountOrder);
   // Mountain View draws its navigation icons in the text colour.
@@ -1929,7 +1931,8 @@ function SidebarImpl({
 
   // Kept while the folders are the same: the folder rows are memoised on their nodes.
   const mailboxTree = useMemo(() => buildMailboxTree(mailboxes), [mailboxes]);
-  const ownTree = mailboxTree.filter(n => !n.id.startsWith('shared-account-') && !isServerScheduledNode(n));
+  const ownFolders = mailboxTree.filter(n => !n.id.startsWith('shared-account-') && !isServerScheduledNode(n));
+  const ownTree = hideUnsubscribedFolders ? withoutUnsubscribed(ownFolders) : ownFolders;
   const hiddenSharedIds = hiddenSharedMailIds(hiddenSharedMailAccounts, activeAccountId);
   // In the login's saved order, hidden ones included so that one hidden and
   // shown again comes back to its place.
@@ -2006,9 +2009,10 @@ function SidebarImpl({
         const accountMailboxList = isActive
           ? mailboxes
           : (accountMailboxes?.[account.id] ?? []);
-        const tree = buildMailboxTree(accountMailboxList).filter(
+        const folders = buildMailboxTree(accountMailboxList).filter(
           (n) => !n.id.startsWith('shared-account-') && !(isActive && isServerScheduledNode(n))
         );
+        const tree = hideUnsubscribedFolders ? withoutUnsubscribed(folders) : folders;
         // The active login's shared mailboxes are in `mailboxes`; the others'
         // are kept beside their own folders (#1486).
         const hiddenIds = hiddenSharedMailIds(hiddenSharedMailAccounts, account.id);
@@ -2502,6 +2506,18 @@ function SidebarImpl({
       sharedAccountId: isRow ? accountId : undefined,
     });
   };
+
+  // Unsubscribes, so the folder leaves the sidebar here and in other apps that
+  // show only subscribed folders (#1398).
+  const hideFolder = hideUnsubscribedFolders
+    ? (mailboxId: string) => {
+        const client = useAuthStore.getState().client;
+        if (!client) return;
+        useEmailStore.getState().setMailboxSubscribed(client, mailboxId, false)
+          .then(() => toast.info(t("folder_hidden")))
+          .catch(() => toast.error(t("folder_hide_failed")));
+      }
+    : undefined;
 
   const hideSharedAccount = activeAccountId
     ? (accountId: string) => {
@@ -3150,6 +3166,7 @@ function SidebarImpl({
         onImportEmail={onImportEmail}
         onRefresh={onRefreshMailboxes}
         onHideSharedAccount={hideSharedAccount}
+        onHideFolder={hideFolder}
         sharedAccountOrder={activeAccountId ? sharedAccountOrder : undefined}
         notifications={notificationActions}
       />

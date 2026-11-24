@@ -331,6 +331,7 @@ export const tabSearchEntries: Record<Tab, SettingsSearchEntry[]> = {
   ],
   organize: [
     { label: 'settings.folders.folder_list' },
+    { label: 'settings.folders.hide_unsubscribed.label' },
     { label: 'settings.folders.standard_roles', advanced: true },
     { label: 'settings.folders.role_inbox', advanced: true },
     { label: 'settings.folders.role_drafts', advanced: true },

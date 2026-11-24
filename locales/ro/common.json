@@ -244,7 +244,9 @@
     "mv_add_another_account": "Adaugă alt cont",
     "mv_manage_account": "Gestionează contul",
     "mv_storage_used": "{percent}% din {total} folosit",
-    "accessibility": "Accesibilitate"
+    "accessibility": "Accesibilitate",
+    "folder_hidden": "Dosar ascuns. Îl puteți afișa din nou în Setări › Dosare și etichete.",
+    "folder_hide_failed": "Dosarul nu a putut fi ascuns."
   },
   "account_unread": {
     "others": "Necitite în alte conturi: {count}",
@@ -2889,7 +2891,16 @@
       "error_delete": "Nu s-a putut șterge folderul",
       "error_delete_has_children": "Nu se poate șterge folderul: acesta conține încă subfoldere. Ștergeți-le sau mutați-le mai întâi.",
       "error_delete_has_email": "Nu se poate șterge folderul: acesta conține încă e-mailuri. Mutați-le sau ștergeți-le mai întâi.",
-      "error_role": "Nu s-a putut actualiza rolul folderului"
+      "error_role": "Nu s-a putut actualiza rolul folderului",
+      "hide_unsubscribed": {
+        "label": "Ascunde dosarele neabonate",
+        "description": "Dosarele de la care vă dezabonați aici sau în altă aplicație, cum ar fi Thunderbird, dispar din bara laterală. Mesajele lor rămân pe server."
+      },
+      "show_folder": "Afișează în bara laterală",
+      "hide_folder": "Ascunde din bara laterală",
+      "show_folder_named": "Afișează {name} în bara laterală",
+      "hide_folder_named": "Ascunde {name} din bara laterală",
+      "error_subscription": "Dosarul nu a putut fi afișat sau ascuns."
     },
     "advanced": {
       "debug_mode": {
@@ -4222,7 +4233,8 @@
     "toast_error_delete_has_email": "Dosarul nu este gol. Goliți-l mai întâi.",
     "delete_with_contents_title": "Dosarul nu este gol",
     "delete_with_contents_message": "Dosarul „{name}” încă mai conține {count, plural, one {1 mesaj} other {# mesaje}}. Ștergi dosarul și toate mesajele sale? Acțiunea nu poate fi anulată.",
-    "delete_with_contents_confirm": "Șterge dosarul și mesajele"
+    "delete_with_contents_confirm": "Șterge dosarul și mesajele",
+    "hide_folder": "Ascunde din bara laterală"
   },
   "mail_p2_folders": {
     "all_folders": "Toate dosarele",

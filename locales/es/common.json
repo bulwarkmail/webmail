@@ -244,7 +244,9 @@
     "mv_add_another_account": "Añadir otra cuenta",
     "mv_manage_account": "Gestionar tu cuenta",
     "mv_storage_used": "{percent}% de {total} usado",
-    "accessibility": "Accesibilidad"
+    "accessibility": "Accesibilidad",
+    "folder_hidden": "Carpeta oculta. Puedes volver a mostrarla en Configuración › Carpetas y etiquetas.",
+    "folder_hide_failed": "No se pudo ocultar la carpeta."
   },
   "account_unread": {
     "others": "Sin leer en otras cuentas: {count}",
@@ -2882,7 +2884,16 @@
       "error_delete": "Error al eliminar la carpeta",
       "error_delete_has_children": "No se puede eliminar la carpeta: aún contiene subcarpetas. Elimínelas o muévalas primero.",
       "error_delete_has_email": "No se puede eliminar la carpeta: aún contiene correos. Muévalos o elimínelos primero.",
-      "error_role": "Error al actualizar el rol de la carpeta"
+      "error_role": "Error al actualizar el rol de la carpeta",
+      "hide_unsubscribed": {
+        "label": "Ocultar carpetas sin suscripción",
+        "description": "Las carpetas de las que te das de baja aquí o en otra aplicación, como Thunderbird, salen de la barra lateral. Su correo se queda en el servidor."
+      },
+      "show_folder": "Mostrar en la barra lateral",
+      "hide_folder": "Ocultar de la barra lateral",
+      "show_folder_named": "Mostrar {name} en la barra lateral",
+      "hide_folder_named": "Ocultar {name} de la barra lateral",
+      "error_subscription": "No se pudo mostrar ni ocultar la carpeta."
     },
     "advanced": {
       "debug_mode": {
@@ -4222,7 +4233,8 @@
     "delete_with_contents_confirm": "Eliminar carpeta y mensajes",
     "placeholder_folder_name": "Nombre de carpeta",
     "create": "Crear",
-    "rename_confirm": "Renombrar"
+    "rename_confirm": "Renombrar",
+    "hide_folder": "Ocultar de la barra lateral"
   },
   "mail_p2_folders": {
     "all_folders": "Todas las carpetas",

@@ -399,7 +399,9 @@
     "mv_add_another_account": "เพิ่มบัญชีอื่น",
     "mv_manage_account": "จัดการบัญชีของคุณ",
     "mv_storage_used": "ใช้ไป {percent}% จาก {total}",
-    "accessibility": "การเข้าถึง"
+    "accessibility": "การเข้าถึง",
+    "folder_hidden": "ซ่อนโฟลเดอร์แล้ว แสดงอีกครั้งได้ที่ การตั้งค่า › โฟลเดอร์และแท็ก",
+    "folder_hide_failed": "ไม่สามารถซ่อนโฟลเดอร์ได้"
   },
   "account_unread": {
     "others": "ยังไม่ได้อ่านในบัญชีอื่น: {count}",
@@ -1162,7 +1164,8 @@
     "toast_error_delete_has_email": "โฟลเดอร์นี้ไม่ว่าง กรุณาล้างข้อความออกก่อน",
     "delete_with_contents_title": "โฟลเดอร์ไม่ว่าง",
     "delete_with_contents_message": "โฟลเดอร์ “{name}” ยังมีข้อความอยู่ {count, plural, other {# ข้อความ}} ต้องการลบโฟลเดอร์และข้อความทั้งหมดภายในหรือไม่? การดำเนินการนี้ไม่สามารถยกเลิกได้",
-    "delete_with_contents_confirm": "ลบโฟลเดอร์และข้อความทั้งหมด"
+    "delete_with_contents_confirm": "ลบโฟลเดอร์และข้อความทั้งหมด",
+    "hide_folder": "ซ่อนจากแถบด้านข้าง"
   },
   "mail_p2_folders": {
     "all_folders": "โฟลเดอร์ทั้งหมด",
@@ -6076,7 +6079,16 @@
       "error_delete": "ลบโฟลเดอร์ไม่สำเร็จ",
       "error_delete_has_children": "ไม่สามารถลบโฟลเดอร์ได้: ยังมีโฟลเดอร์ย่อยอยู่ภายใน ลบหรือย้ายออกก่อน",
       "error_delete_has_email": "ไม่สามารถลบโฟลเดอร์ได้: ยังมีอีเมลอยู่ภายใน ย้ายหรือลบออกก่อน",
-      "error_role": "อัปเดตบทบาทของโฟลเดอร์ไม่สำเร็จ"
+      "error_role": "อัปเดตบทบาทของโฟลเดอร์ไม่สำเร็จ",
+      "hide_unsubscribed": {
+        "label": "ซ่อนโฟลเดอร์ที่ไม่ได้สมัครรับ",
+        "description": "โฟลเดอร์ที่คุณยกเลิกการสมัครรับที่นี่หรือในแอปอื่น เช่น Thunderbird จะหายไปจากแถบด้านข้าง อีเมลยังคงอยู่บนเซิร์ฟเวอร์"
+      },
+      "show_folder": "แสดงในแถบด้านข้าง",
+      "hide_folder": "ซ่อนจากแถบด้านข้าง",
+      "show_folder_named": "แสดง {name} ในแถบด้านข้าง",
+      "hide_folder_named": "ซ่อน {name} จากแถบด้านข้าง",
+      "error_subscription": "ไม่สามารถแสดงหรือซ่อนโฟลเดอร์ได้"
     },
     "security": {
       "masked_addresses": {

@@ -244,7 +244,9 @@
     "mv_add_another_account": "Nog een account toevoegen",
     "mv_manage_account": "Account beheren",
     "mv_storage_used": "{percent}% van {total} gebruikt",
-    "accessibility": "Toegankelijkheid"
+    "accessibility": "Toegankelijkheid",
+    "folder_hidden": "Map verborgen. Toon hem weer via Instellingen › Mappen en tags.",
+    "folder_hide_failed": "De map kon niet worden verborgen."
   },
   "account_unread": {
     "others": "Ongelezen in andere accounts: {count}",
@@ -2882,7 +2884,16 @@
       "error_delete": "Map verwijderen mislukt",
       "error_delete_has_children": "Map kan niet worden verwijderd: deze bevat nog submappen. Verwijder of verplaats deze eerst.",
       "error_delete_has_email": "Map kan niet worden verwijderd: deze bevat nog e-mails. Verplaats of verwijder deze eerst.",
-      "error_role": "Maprol bijwerken mislukt"
+      "error_role": "Maprol bijwerken mislukt",
+      "hide_unsubscribed": {
+        "label": "Mappen zonder abonnement verbergen",
+        "description": "Mappen waarvoor u hier of in een andere app, zoals Thunderbird, het abonnement opzegt, verdwijnen uit de zijbalk. De mail blijft op de server."
+      },
+      "show_folder": "Tonen in zijbalk",
+      "hide_folder": "Verbergen in zijbalk",
+      "show_folder_named": "{name} tonen in de zijbalk",
+      "hide_folder_named": "{name} verbergen in de zijbalk",
+      "error_subscription": "De map kon niet worden getoond of verborgen."
     },
     "advanced": {
       "debug_mode": {
@@ -4222,7 +4233,8 @@
     "delete_with_contents_confirm": "Map en berichten verwijderen",
     "placeholder_folder_name": "Mapnaam",
     "create": "Aanmaken",
-    "rename_confirm": "Hernoemen"
+    "rename_confirm": "Hernoemen",
+    "hide_folder": "Verbergen in zijbalk"
   },
   "mail_p2_folders": {
     "all_folders": "Alle mappen",

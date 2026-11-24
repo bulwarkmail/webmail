@@ -244,7 +244,9 @@
     "mv_add_another_account": "Aggiungi un altro account",
     "mv_manage_account": "Gestisci il tuo account",
     "mv_storage_used": "{percent}% di {total} utilizzato",
-    "accessibility": "Accessibilità"
+    "accessibility": "Accessibilità",
+    "folder_hidden": "Cartella nascosta. Puoi mostrarla di nuovo in Impostazioni › Cartelle ed etichette.",
+    "folder_hide_failed": "Impossibile nascondere la cartella."
   },
   "account_unread": {
     "others": "Non letti negli altri account: {count}",
@@ -2882,7 +2884,16 @@
       "error_delete": "Impossibile eliminare la cartella",
       "error_delete_has_children": "Impossibile eliminare la cartella: contiene ancora sottocartelle. Eliminale o spostale prima.",
       "error_delete_has_email": "Impossibile eliminare la cartella: contiene ancora email. Spostale o eliminale prima.",
-      "error_role": "Impossibile aggiornare il ruolo della cartella"
+      "error_role": "Impossibile aggiornare il ruolo della cartella",
+      "hide_unsubscribed": {
+        "label": "Nascondi le cartelle non sottoscritte",
+        "description": "Le cartelle di cui annulli la sottoscrizione qui o in un'altra app, come Thunderbird, escono dalla barra laterale. La loro posta resta sul server."
+      },
+      "show_folder": "Mostra nella barra laterale",
+      "hide_folder": "Nascondi dalla barra laterale",
+      "show_folder_named": "Mostra {name} nella barra laterale",
+      "hide_folder_named": "Nascondi {name} dalla barra laterale",
+      "error_subscription": "Impossibile mostrare o nascondere la cartella."
     },
     "advanced": {
       "debug_mode": {
@@ -4222,7 +4233,8 @@
     "delete_with_contents_confirm": "Elimina cartella e messaggi",
     "placeholder_folder_name": "Nome cartella",
     "create": "Crea",
-    "rename_confirm": "Rinomina"
+    "rename_confirm": "Rinomina",
+    "hide_folder": "Nascondi dalla barra laterale"
   },
   "mail_p2_folders": {
     "all_folders": "Tutte le cartelle",

@@ -244,7 +244,9 @@
     "mv_add_another_account": "Pievienot citu kontu",
     "mv_manage_account": "Pārvaldīt kontu",
     "mv_storage_used": "Izmantoti {percent}% no {total}",
-    "accessibility": "Pieejamība"
+    "accessibility": "Pieejamība",
+    "folder_hidden": "Mape paslēpta. To var atkal parādīt sadaļā Iestatījumi › Mapes un tagi.",
+    "folder_hide_failed": "Mapi neizdevās paslēpt."
   },
   "account_unread": {
     "others": "Nelasītas citos kontos: {count}",
@@ -2882,7 +2884,16 @@
       "error_delete": "Neizdevās izdzēst mapi",
       "error_role": "Neizdevās atjaunināt mapes lomu",
       "error_delete_has_children": "Nevar dzēst mapi: tajā joprojām ir apakšmapes. Vispirms tās dzēsiet vai pārvietojiet.",
-      "error_delete_has_email": "Nevar dzēst mapi: tajā joprojām ir e-pasti. Vispirms tos pārvietojiet vai dzēsiet."
+      "error_delete_has_email": "Nevar dzēst mapi: tajā joprojām ir e-pasti. Vispirms tos pārvietojiet vai dzēsiet.",
+      "hide_unsubscribed": {
+        "label": "Paslēpt neabonētās mapes",
+        "description": "Mapes, kuru abonementu atceļat šeit vai citā lietotnē, piemēram, Thunderbird, pazūd no sānjoslas. To pasts paliek serverī."
+      },
+      "show_folder": "Rādīt sānjoslā",
+      "hide_folder": "Paslēpt no sānjoslas",
+      "show_folder_named": "Rādīt {name} sānjoslā",
+      "hide_folder_named": "Paslēpt {name} no sānjoslas",
+      "error_subscription": "Mapi neizdevās parādīt vai paslēpt."
     },
     "advanced": {
       "debug_mode": {
@@ -4222,7 +4233,8 @@
     "delete_with_contents_confirm": "Dzēst mapi un ziņas",
     "placeholder_folder_name": "Mapes nosaukums",
     "create": "Izveidot",
-    "rename_confirm": "Pārsaukt"
+    "rename_confirm": "Pārsaukt",
+    "hide_folder": "Paslēpt no sānjoslas"
   },
   "mail_p2_folders": {
     "all_folders": "Visas mapes",

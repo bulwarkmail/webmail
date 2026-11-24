@@ -174,6 +174,7 @@ const ENTRIES: SettingSchemaEntry[] = [
   bool('showToolbarLabels', 'appearance', `${AP}toolbar_labels.label`),
   bool('colorfulSidebarIcons', 'appearance', `${AP}colorful_sidebar_icons.label`),
   bool('showFolderTotalCount', 'appearance', `${AP}show_folder_total_count.label`),
+  bool('hideUnsubscribedFolders', 'organize', 'settings.folders.hide_unsubscribed.label'),
   bool('sidebarAccountSwitcher', 'appearance', `${AP}sidebar_account_switcher.label`),
   choice('composePlacement', 'appearance', `${AP}compose_placement.label`,
     opts(`${AP}compose_placement.`, COMPOSE_PLACEMENTS)),

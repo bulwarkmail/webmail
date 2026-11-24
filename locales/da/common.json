@@ -244,7 +244,9 @@
     "mv_add_another_account": "Tilføj en anden konto",
     "mv_manage_account": "Administrer din konto",
     "mv_storage_used": "{percent}% af {total} brugt",
-    "accessibility": "Tilgængelighed"
+    "accessibility": "Tilgængelighed",
+    "folder_hidden": "Mappen er skjult. Vis den igen under Indstillinger › Mapper og tags.",
+    "folder_hide_failed": "Mappen kunne ikke skjules."
   },
   "account_unread": {
     "others": "Ulæste i andre konti: {count}",
@@ -2885,7 +2887,16 @@
       "error_delete": "Kunne ikke slette mappe",
       "error_delete_has_children": "Kan ikke slette mappe: den indeholder stadig undermapper. Slet eller flyt dem først.",
       "error_delete_has_email": "Kan ikke slette mappe: den indeholder stadig e-mails. Flyt eller slet dem først.",
-      "error_role": "Kunne ikke opdatere mappens rolle"
+      "error_role": "Kunne ikke opdatere mappens rolle",
+      "hide_unsubscribed": {
+        "label": "Skjul mapper, du ikke abonnerer på",
+        "description": "Mapper, du afmelder her eller i en anden app som Thunderbird, forsvinder fra sidepanelet. Deres mails bliver på serveren."
+      },
+      "show_folder": "Vis i sidepanelet",
+      "hide_folder": "Skjul i sidepanelet",
+      "show_folder_named": "Vis {name} i sidepanelet",
+      "hide_folder_named": "Skjul {name} i sidepanelet",
+      "error_subscription": "Mappen kunne ikke vises eller skjules."
     },
     "advanced": {
       "debug_mode": {
@@ -4222,7 +4233,8 @@
     "toast_error_delete_has_email": "Mappen er ikke tom. Tøm den først.",
     "delete_with_contents_title": "Mappen er ikke tom",
     "delete_with_contents_message": "Mappen \"{name}\" indeholder stadig {count, plural, one {1 besked} other {# beskeder}}. Slet mappen og alle dens beskeder? Dette kan ikke fortrydes.",
-    "delete_with_contents_confirm": "Slet mappe og beskeder"
+    "delete_with_contents_confirm": "Slet mappe og beskeder",
+    "hide_folder": "Skjul i sidepanelet"
   },
   "mail_p2_folders": {
     "all_folders": "Alle mapper",

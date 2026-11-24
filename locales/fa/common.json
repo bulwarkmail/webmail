@@ -244,7 +244,9 @@
     "mv_add_another_account": "افزودن حساب دیگر",
     "mv_manage_account": "مدیریت حساب",
     "mv_storage_used": "{percent}٪ از {total} استفاده شده",
-    "accessibility": "دسترس‌پذیری"
+    "accessibility": "دسترس‌پذیری",
+    "folder_hidden": "پوشه پنهان شد. از تنظیمات › پوشه‌ها و برچسب‌ها دوباره نمایشش دهید.",
+    "folder_hide_failed": "پنهان کردن پوشه ممکن نشد."
   },
   "account_unread": {
     "others": "خوانده‌نشده در حساب‌های دیگر: {count}",
@@ -2889,7 +2891,16 @@
       "error_delete": "حذف پوشه ناموفق بود",
       "error_delete_has_children": "نمی‌توان پوشه را حذف کرد: همچنان زیرپوشه دارد. ابتدا آنها را حذف یا منتقل کنید.",
       "error_delete_has_email": "نمی‌توان پوشه را حذف کرد: همچنان حاوی ایمیل است. ابتدا آنها را منتقل یا حذف کنید.",
-      "error_role": "به‌روزرسانی نقش پوشه ناموفق بود"
+      "error_role": "به‌روزرسانی نقش پوشه ناموفق بود",
+      "hide_unsubscribed": {
+        "label": "پنهان کردن پوشه‌های بدون اشتراک",
+        "description": "پوشه‌هایی که اینجا یا در برنامه‌ای دیگر مانند Thunderbird اشتراکشان را لغو می‌کنید از نوار کناری حذف می‌شوند. نامه‌هایشان روی سرور می‌ماند."
+      },
+      "show_folder": "نمایش در نوار کناری",
+      "hide_folder": "پنهان کردن از نوار کناری",
+      "show_folder_named": "نمایش {name} در نوار کناری",
+      "hide_folder_named": "پنهان کردن {name} از نوار کناری",
+      "error_subscription": "نمایش یا پنهان کردن پوشه ممکن نشد."
     },
     "advanced": {
       "debug_mode": {
@@ -4222,7 +4233,8 @@
     "toast_error_delete_has_email": "خالی نیست",
     "delete_with_contents_title": "پوشه خالی نیست",
     "delete_with_contents_message": "پوشه «{name}» هنوز شامل {count, plural, one {۱ پیام} other {# پیام}} است. پوشه و همه پیام‌های آن حذف شود؟ این عمل قابل بازگشت نیست.",
-    "delete_with_contents_confirm": "حذف پوشه و پیام‌ها"
+    "delete_with_contents_confirm": "حذف پوشه و پیام‌ها",
+    "hide_folder": "پنهان کردن از نوار کناری"
   },
   "mail_p2_folders": {
     "all_folders": "همه پوشه‌ها",

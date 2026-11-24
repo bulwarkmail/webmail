@@ -244,7 +244,9 @@
     "mv_add_another_account": "別のアカウントを追加",
     "mv_manage_account": "アカウントを管理",
     "mv_storage_used": "{total} のうち {percent}% を使用中",
-    "accessibility": "アクセシビリティ"
+    "accessibility": "アクセシビリティ",
+    "folder_hidden": "フォルダーを非表示にしました。設定 › フォルダーとタグで再表示できます。",
+    "folder_hide_failed": "フォルダーを非表示にできませんでした。"
   },
   "account_unread": {
     "others": "他のアカウントの未読: {count}",
@@ -2882,7 +2884,16 @@
       "error_delete": "フォルダーの削除に失敗しました",
       "error_delete_has_children": "フォルダーを削除できません：サブフォルダーが含まれています。先にサブフォルダーを削除または移動してください。",
       "error_delete_has_email": "フォルダーを削除できません：メールが含まれています。先にメールを移動または削除してください。",
-      "error_role": "フォルダーの役割の更新に失敗しました"
+      "error_role": "フォルダーの役割の更新に失敗しました",
+      "hide_unsubscribed": {
+        "label": "購読していないフォルダーを非表示",
+        "description": "ここや Thunderbird などの別のアプリで購読を解除したフォルダーはサイドバーに表示されなくなります。メールはサーバーに残ります。"
+      },
+      "show_folder": "サイドバーに表示",
+      "hide_folder": "サイドバーから非表示",
+      "show_folder_named": "{name} をサイドバーに表示",
+      "hide_folder_named": "{name} をサイドバーから非表示",
+      "error_subscription": "フォルダーの表示を切り替えられませんでした。"
     },
     "advanced": {
       "debug_mode": {
@@ -4222,7 +4233,8 @@
     "delete_with_contents_confirm": "フォルダーとメッセージを削除",
     "placeholder_folder_name": "フォルダー名",
     "create": "作成",
-    "rename_confirm": "名前を変更"
+    "rename_confirm": "名前を変更",
+    "hide_folder": "サイドバーから非表示"
   },
   "mail_p2_folders": {
     "all_folders": "すべてのフォルダー",

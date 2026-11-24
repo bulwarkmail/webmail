@@ -244,7 +244,9 @@
     "mv_add_another_account": "다른 계정 추가",
     "mv_manage_account": "계정 관리",
     "mv_storage_used": "{total} 중 {percent}% 사용",
-    "accessibility": "접근성"
+    "accessibility": "접근성",
+    "folder_hidden": "폴더를 숨겼습니다. 설정 › 폴더 및 태그에서 다시 표시할 수 있습니다.",
+    "folder_hide_failed": "폴더를 숨기지 못했습니다."
   },
   "account_unread": {
     "others": "다른 계정의 읽지 않은 메일: {count}",
@@ -2882,7 +2884,16 @@
       "error_delete": "폴더를 삭제하지 못했어요",
       "error_delete_has_children": "안에 하위 폴더가 있어서 삭제할 수 없어요. 먼저 이동하거나 삭제해 주세요.",
       "error_delete_has_email": "안에 메일이 있어서 삭제할 수 없어요. 메일을 이동하거나 삭제해 주세요.",
-      "error_role": "폴더 역할을 업데이트하지 못했어요"
+      "error_role": "폴더 역할을 업데이트하지 못했어요",
+      "hide_unsubscribed": {
+        "label": "구독하지 않은 폴더 숨기기",
+        "description": "여기나 Thunderbird 같은 다른 앱에서 구독을 해제한 폴더는 사이드바에서 사라집니다. 메일은 서버에 그대로 남습니다."
+      },
+      "show_folder": "사이드바에 표시",
+      "hide_folder": "사이드바에서 숨기기",
+      "show_folder_named": "{name}을(를) 사이드바에 표시",
+      "hide_folder_named": "{name}을(를) 사이드바에서 숨기기",
+      "error_subscription": "폴더를 표시하거나 숨기지 못했습니다."
     },
     "advanced": {
       "debug_mode": {
@@ -4222,7 +4233,8 @@
     "delete_with_contents_confirm": "폴더와 메시지 삭제",
     "placeholder_folder_name": "폴더 이름",
     "create": "만들기",
-    "rename_confirm": "이름 바꾸기"
+    "rename_confirm": "이름 바꾸기",
+    "hide_folder": "사이드바에서 숨기기"
   },
   "mail_p2_folders": {
     "all_folders": "모든 폴더",

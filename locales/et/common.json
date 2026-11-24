@@ -244,7 +244,9 @@
     "mv_add_another_account": "Lisa veel üks konto",
     "mv_manage_account": "Halda oma kontot",
     "mv_storage_used": "{percent}% mahust {total} kasutatud",
-    "accessibility": "Juurdepääsetavus"
+    "accessibility": "Juurdepääsetavus",
+    "folder_hidden": "Kaust on peidetud. Saad selle uuesti nähtavaks teha jaotises Seaded › Kaustad ja sildid.",
+    "folder_hide_failed": "Kausta ei õnnestunud peita."
   },
   "account_unread": {
     "others": "Lugemata teistes kontodes: {count}",
@@ -2889,7 +2891,16 @@
       "error_delete": "Kausta kustutamine ebaõnnestus",
       "error_delete_has_children": "Kausta ei saa kustutada: selles on veel alamkaustu. Kustuta või liiguta need enne.",
       "error_delete_has_email": "Kausta ei saa kustutada: selles on veel kirju. Liiguta või kustuta need enne.",
-      "error_role": "Kausta rolli uuendamine ebaõnnestus"
+      "error_role": "Kausta rolli uuendamine ebaõnnestus",
+      "hide_unsubscribed": {
+        "label": "Peida tellimata kaustad",
+        "description": "Kaustad, mille tellimuse siin või mõnes teises rakenduses, näiteks Thunderbirdis, lõpetad, kaovad külgribalt. Nende kirjad jäävad serverisse."
+      },
+      "show_folder": "Näita külgribal",
+      "hide_folder": "Peida külgribalt",
+      "show_folder_named": "Näita kausta {name} külgribal",
+      "hide_folder_named": "Peida kaust {name} külgribalt",
+      "error_subscription": "Kausta ei õnnestunud näidata ega peita."
     },
     "advanced": {
       "debug_mode": {
@@ -4222,7 +4233,8 @@
     "toast_error_delete_has_email": "Kaust ei ole tühi. Tühjenda see enne.",
     "delete_with_contents_title": "Kaust ei ole tühi",
     "delete_with_contents_message": "Kaust \"{name}\" sisaldab veel {count, plural, one {1 sõnum} other {# sõnumit}}. Kas kustutada kaust ja kõik selle sõnumid? Seda ei saa tagasi võtta.",
-    "delete_with_contents_confirm": "Kustuta kaust ja sõnumid"
+    "delete_with_contents_confirm": "Kustuta kaust ja sõnumid",
+    "hide_folder": "Peida külgribalt"
   },
   "mail_p2_folders": {
     "all_folders": "Kõik kaustad",

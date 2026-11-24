@@ -244,7 +244,9 @@
     "mv_add_another_account": "Dodaj kolejne konto",
     "mv_manage_account": "Zarządzaj kontem",
     "mv_storage_used": "Wykorzystano {percent}% z {total}",
-    "accessibility": "Dostępność"
+    "accessibility": "Dostępność",
+    "folder_hidden": "Folder ukryty. Możesz go znów pokazać w Ustawienia › Foldery i tagi.",
+    "folder_hide_failed": "Nie udało się ukryć folderu."
   },
   "account_unread": {
     "others": "Nieprzeczytane na innych kontach: {count}",
@@ -2882,7 +2884,16 @@
       "error_delete": "Nie udało się usunąć folderu",
       "error_delete_has_children": "Nie można usunąć folderu: nadal zawiera podfoldery. Najpierw usuń je lub przenieś.",
       "error_delete_has_email": "Nie można usunąć folderu: nadal zawiera wiadomości e-mail. Najpierw je przenieś lub usuń.",
-      "error_role": "Nie udało się zaktualizować roli folderu"
+      "error_role": "Nie udało się zaktualizować roli folderu",
+      "hide_unsubscribed": {
+        "label": "Ukryj niesubskrybowane foldery",
+        "description": "Foldery, których subskrypcję anulujesz tutaj lub w innej aplikacji, np. Thunderbird, znikają z paska bocznego. Ich poczta zostaje na serwerze."
+      },
+      "show_folder": "Pokaż na pasku bocznym",
+      "hide_folder": "Ukryj na pasku bocznym",
+      "show_folder_named": "Pokaż {name} na pasku bocznym",
+      "hide_folder_named": "Ukryj {name} na pasku bocznym",
+      "error_subscription": "Nie udało się pokazać ani ukryć folderu."
     },
     "advanced": {
       "debug_mode": {
@@ -4222,7 +4233,8 @@
     "delete_with_contents_confirm": "Usuń folder i wiadomości",
     "placeholder_folder_name": "Nazwa folderu",
     "create": "Utwórz",
-    "rename_confirm": "Zmień nazwę"
+    "rename_confirm": "Zmień nazwę",
+    "hide_folder": "Ukryj na pasku bocznym"
   },
   "mail_p2_folders": {
     "all_folders": "Wszystkie foldery",
