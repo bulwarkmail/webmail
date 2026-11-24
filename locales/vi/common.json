@@ -5716,6 +5716,10 @@
     "not_invited": "{name} không được mời tham gia cuộc họp này. Có người đã chuyển tiếp lời mời.",
     "added": "Đã thêm vào cuộc họp"
   },
+  "calendar_invitations": {
+    "title": "Lời mời",
+    "from": "Từ {name}"
+  },
   "free_busy_share": {
     "button": "Chia sẻ lịch rảnh/bận của tôi với {group}",
     "already": "Lịch rảnh/bận của bạn đã được chia sẻ với {group}",

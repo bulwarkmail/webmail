@@ -6344,6 +6344,10 @@
     "not_invited": "{name} não está convidado para esta reunião. Alguém lhe reencaminhou o convite.",
     "added": "Adicionado à reunião"
   },
+  "calendar_invitations": {
+    "title": "Convites",
+    "from": "De {name}"
+  },
   "free_busy_share": {
     "button": "Compartilhar minha disponibilidade com {group}",
     "already": "Sua disponibilidade está compartilhada com {group}",

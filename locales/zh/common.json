@@ -6344,6 +6344,10 @@
     "not_invited": "{name} 未受邀参加此会议。有人转发了邀请。",
     "added": "已添加到会议"
   },
+  "calendar_invitations": {
+    "title": "邀请",
+    "from": "来自 {name}"
+  },
   "free_busy_share": {
     "button": "与 {group} 共享我的忙闲时间",
     "already": "你的忙闲时间已与 {group} 共享",

@@ -6344,6 +6344,10 @@
     "not_invited": "{name} はこの会議に招待されていません。誰かが招待を転送しました。",
     "added": "会議に追加しました"
   },
+  "calendar_invitations": {
+    "title": "招待",
+    "from": "{name} から"
+  },
   "free_busy_share": {
     "button": "自分の空き時間を {group} と共有",
     "already": "空き時間は {group} と共有されています",

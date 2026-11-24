@@ -6344,6 +6344,10 @@
     "not_invited": "{name} na tuto schůzku není pozván. Někdo mu pozvánku přeposlal.",
     "added": "Přidáno na schůzku"
   },
+  "calendar_invitations": {
+    "title": "Pozvánky",
+    "from": "Od {name}"
+  },
   "free_busy_share": {
     "button": "Sdílet můj volný čas se skupinou {group}",
     "already": "Váš volný čas je sdílen se skupinou {group}",

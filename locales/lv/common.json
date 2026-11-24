@@ -6344,6 +6344,10 @@
     "not_invited": "{name} nav uzaicināts uz šo sanāksmi. Kāds viņam pārsūtīja uzaicinājumu.",
     "added": "Pievienots sanāksmei"
   },
+  "calendar_invitations": {
+    "title": "Uzaicinājumi",
+    "from": "No {name}"
+  },
   "free_busy_share": {
     "button": "Kopīgot manu brīvs/aizņemts ar {group}",
     "already": "Jūsu brīvs/aizņemts ir kopīgots ar {group}",

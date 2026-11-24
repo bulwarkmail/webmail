@@ -6344,6 +6344,10 @@
     "not_invited": "{name} is niet uitgenodigd voor deze vergadering. Iemand heeft de uitnodiging doorgestuurd.",
     "added": "Aan de vergadering toegevoegd"
   },
+  "calendar_invitations": {
+    "title": "Uitnodigingen",
+    "from": "Van {name}"
+  },
   "free_busy_share": {
     "button": "Mijn vrij/bezet delen met {group}",
     "already": "Je vrij/bezet is gedeeld met {group}",

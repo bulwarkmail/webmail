@@ -5704,6 +5704,10 @@
     "not_invited": "{name} nincs meghívva erre az értekezletre. Valaki továbbította neki a meghívót.",
     "added": "Hozzáadva az értekezlethez"
   },
+  "calendar_invitations": {
+    "title": "Meghívók",
+    "from": "Feladó: {name}"
+  },
   "free_busy_share": {
     "button": "Szabad/foglalt időim megosztása ezzel: {group}",
     "already": "Szabad/foglalt idői meg vannak osztva ezzel: {group}",

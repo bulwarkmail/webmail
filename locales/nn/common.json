@@ -5712,6 +5712,10 @@
     "not_invited": "{name} er ikkje invitert til dette møtet. Nokon har vidaresendt invitasjonen.",
     "added": "Lagt til i møtet"
   },
+  "calendar_invitations": {
+    "title": "Invitasjonar",
+    "from": "Frå {name}"
+  },
   "free_busy_share": {
     "button": "Del ledig/oppteken for meg med {group}",
     "already": "Ledig/oppteken for deg er delt med {group}",

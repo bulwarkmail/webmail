@@ -6344,6 +6344,10 @@
     "not_invited": "{name} non è invitato a questa riunione. Qualcuno gli ha inoltrato l'invito.",
     "added": "Aggiunto alla riunione"
   },
+  "calendar_invitations": {
+    "title": "Inviti",
+    "from": "Da {name}"
+  },
   "free_busy_share": {
     "button": "Condividi la mia disponibilità con {group}",
     "already": "La tua disponibilità è condivisa con {group}",

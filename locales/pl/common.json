@@ -6344,6 +6344,10 @@
     "not_invited": "{name} nie jest zaproszony na to spotkanie. Ktoś przekazał mu zaproszenie.",
     "added": "Dodano do spotkania"
   },
+  "calendar_invitations": {
+    "title": "Zaproszenia",
+    "from": "Od {name}"
+  },
   "free_busy_share": {
     "button": "Udostępnij moją dostępność grupie {group}",
     "already": "Twoja dostępność jest udostępniona grupie {group}",

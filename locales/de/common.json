@@ -6344,6 +6344,10 @@
     "not_invited": "{name} ist zu diesem Termin nicht eingeladen. Jemand hat die Einladung weitergeleitet.",
     "added": "Zum Termin hinzugefügt"
   },
+  "calendar_invitations": {
+    "title": "Einladungen",
+    "from": "Von {name}"
+  },
   "free_busy_share": {
     "button": "Meine Frei/Gebucht-Zeiten für {group} freigeben",
     "already": "Ihre Frei/Gebucht-Zeiten sind für {group} freigegeben",

@@ -5704,6 +5704,10 @@
     "not_invited": "{name} bu toplantıya davetli değil. Birisi daveti ona iletti.",
     "added": "Toplantıya eklendi"
   },
+  "calendar_invitations": {
+    "title": "Davetler",
+    "from": "Gönderen: {name}"
+  },
   "free_busy_share": {
     "button": "Müsaitlik durumumu {group} ile paylaş",
     "already": "Müsaitlik durumunuz {group} ile paylaşılıyor",

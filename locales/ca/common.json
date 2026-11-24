@@ -5704,6 +5704,10 @@
     "not_invited": "{name} no està convidat a aquesta reunió. Algú li ha reenviat la invitació.",
     "added": "Afegit a la reunió"
   },
+  "calendar_invitations": {
+    "title": "Invitacions",
+    "from": "De {name}"
+  },
   "free_busy_share": {
     "button": "Comparteix la meva disponibilitat amb {group}",
     "already": "La vostra disponibilitat està compartida amb {group}",

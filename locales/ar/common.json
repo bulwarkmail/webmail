@@ -5704,6 +5704,10 @@
     "not_invited": "{name} غير مدعو إلى هذا الاجتماع. أعاد أحدهم توجيه الدعوة إليه.",
     "added": "أُضيف إلى الاجتماع"
   },
+  "calendar_invitations": {
+    "title": "الدعوات",
+    "from": "من {name}"
+  },
   "free_busy_share": {
     "button": "مشاركة أوقات توفري مع {group}",
     "already": "أوقات توفرك مشتركة مع {group}",

@@ -5704,6 +5704,10 @@
     "not_invited": "{name} nu este invitat la această întâlnire. Cineva i-a redirecționat invitația.",
     "added": "Adăugat la întâlnire"
   },
+  "calendar_invitations": {
+    "title": "Invitații",
+    "from": "De la {name}"
+  },
   "free_busy_share": {
     "button": "Partajează disponibilitatea mea cu {group}",
     "already": "Disponibilitatea dvs. este partajată cu {group}",

@@ -6344,6 +6344,10 @@
     "not_invited": "{name} 님은 이 회의에 초대되지 않았습니다. 누군가 초대를 전달했습니다.",
     "added": "회의에 추가됨"
   },
+  "calendar_invitations": {
+    "title": "초대",
+    "from": "보낸 사람: {name}"
+  },
   "free_busy_share": {
     "button": "내 일정 가능 여부를 {group}과(와) 공유",
     "already": "일정 가능 여부가 {group}과(와) 공유되어 있습니다",

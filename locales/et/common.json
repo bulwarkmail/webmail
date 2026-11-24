@@ -5704,6 +5704,10 @@
     "not_invited": "{name} ei ole sellele koosolekule kutsutud. Keegi edastas talle kutse.",
     "added": "Lisatud koosolekule"
   },
+  "calendar_invitations": {
+    "title": "Kutsed",
+    "from": "Saatja: {name}"
+  },
   "free_busy_share": {
     "button": "Jaga minu vaba/hõivatud aega grupiga {group}",
     "already": "Sinu vaba/hõivatud aeg on jagatud grupiga {group}",

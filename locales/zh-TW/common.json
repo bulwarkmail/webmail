@@ -5704,6 +5704,10 @@
     "not_invited": "{name} 未受邀參加此會議。有人轉寄了邀請。",
     "added": "已加入會議"
   },
+  "calendar_invitations": {
+    "title": "邀請",
+    "from": "來自 {name}"
+  },
   "free_busy_share": {
     "button": "與 {group} 共用我的忙碌/空閒時間",
     "already": "你的忙碌/空閒時間已與 {group} 共用",

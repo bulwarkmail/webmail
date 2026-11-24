@@ -54,6 +54,8 @@ import { useCalendarPushRefresh } from "@/hooks/use-calendar-push-refresh";
 import { downloadEventICS } from "@/lib/calendar-ics-export";
 import { isForwardableMeeting } from "@/lib/calendar-forward";
 import { useForwardInvitation } from "@/components/calendar/use-forward-invitation";
+import { PendingInvitations } from "@/components/calendar/pending-invitations";
+import { answerTargetId } from "@/lib/calendar-pending-invitations";
 import { ICalImportModal } from "@/components/calendar/ical-import-modal";
 import { ICalSubscriptionModal } from "@/components/calendar/ical-subscription-modal";
 import { ProtocolAccountPicker } from "@/components/protocol/protocol-account-picker";
@@ -1886,6 +1888,25 @@ export function CalendarApp({ linkSegments: routeSegments, surface = "calendar" 
 
   const forwardInvitation = useForwardInvitation();
 
+  // The sidebar's list of invitations not answered yet (#1669).
+  const handlePendingRespond = useCallback(async (event: CalendarEvent, participantId: string, status: RsvpStatus) => {
+    if (!client) return false;
+    try {
+      const sent = await rsvpEvent(client, answerTargetId(event), participantId, status, undefined, "series");
+      if (sent) toast.success(t("notifications.rsvp_updated"));
+      return sent;
+    } catch (error) {
+      toast.error(describeError(error, t("notifications.rsvp_error")));
+      return false;
+    }
+  }, [client, rsvpEvent, describeError, t]);
+  const handlePendingOpen = useCallback((event: CalendarEvent) => {
+    setNarrowSidebarOpen(false);
+    const start = getEventStartDate(event);
+    if (!Number.isNaN(start.getTime())) jumpTo(start);
+    openEditModal(event);
+  }, [jumpTo, openEditModal]);
+
   const handleExportICS = useCallback((event: CalendarEvent) => {
     try {
       downloadEventICS(event);
@@ -2629,6 +2650,9 @@ export function CalendarApp({ linkSegments: routeSegments, surface = "calendar" 
         showWeekNumbers={showWeekNumbers}
       />
       </div>
+      )}
+      {!tasksSurface && (
+        <PendingInvitations userEmailsFor={userEmailsFor} onOpen={handlePendingOpen} onRespond={handlePendingRespond} />
       )}
       <CalendarSidebarPanel
         viewMode={normalizedViewMode}

@@ -5704,6 +5704,10 @@
     "not_invited": "{name} isn't invited to this meeting. Someone forwarded the invitation to them.",
     "added": "Added to the meeting"
   },
+  "calendar_invitations": {
+    "title": "Invitations",
+    "from": "From {name}"
+  },
   "free_busy_share": {
     "button": "Share my free/busy with {group}",
     "already": "Your free/busy is shared with {group}",

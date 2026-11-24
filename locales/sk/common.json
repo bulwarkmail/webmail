@@ -5704,6 +5704,10 @@
     "not_invited": "{name} nie je pozvaný na toto stretnutie. Niekto mu pozvánku preposlal.",
     "added": "Pridané na stretnutie"
   },
+  "calendar_invitations": {
+    "title": "Pozvánky",
+    "from": "Od {name}"
+  },
   "free_busy_share": {
     "button": "Zdieľať môj voľný čas so skupinou {group}",
     "already": "Váš voľný čas je zdieľaný so skupinou {group}",
