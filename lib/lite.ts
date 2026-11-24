@@ -110,5 +110,12 @@ export const LITE_CONFIG_PATH = '/config.json';
 /** Optional admin policy file next to `config.json`; missing means defaults. */
 export const LITE_POLICY_PATH = '/policy.json';
 
+/**
+ * Optional list of the deployment's own themes next to `policy.json` (#1582),
+ * in the shape of the `themes` list of /api/plugins. Each theme's files are
+ * `themes/<id>/theme.css` and, with `hasSkin`, `themes/<id>/skin.css`.
+ */
+export const LITE_THEMES_PATH = '/themes.json';
+
 /** sessionStorage key the 404 shim parks a deep link under (see not-found.tsx). */
 export const LITE_PENDING_PATH_KEY = 'bulwark-lite:pending-path';

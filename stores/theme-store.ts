@@ -16,7 +16,7 @@ import { apiFetch } from '@/lib/browser-navigation';
 import { fetchServerPluginList } from '@/lib/server-plugin-list';
 import { themeHooks } from '@/lib/plugin-hooks';
 import { syncThemeColorMeta } from '@/lib/theme-color-meta';
-import { IS_LITE } from '@/lib/lite';
+import { IS_LITE, IS_LITE_STALWART, LITE_THEMES_PATH, withLiteBuildId } from '@/lib/lite';
 
 type Theme = 'light' | 'dark' | 'system';
 
@@ -415,8 +415,6 @@ export const useThemeStore = create<ThemeState>()(
       },
 
       syncServerThemes: async () => {
-        // Server-managed themes come from the admin dashboard; none in Lite.
-        if (IS_LITE) return;
         if (themeSyncPromise) {
           await themeSyncPromise;
           return;
@@ -424,6 +422,13 @@ export const useThemeStore = create<ThemeState>()(
 
         themeSyncPromise = (async () => {
           try {
+            // Lite has no admin dashboard: the deployment's own themes are
+            // static files next to policy.json (#1582).
+            if (IS_LITE) {
+              const themes = await fetchLiteThemes();
+              if (themes) await applyServerThemes(themes, true);
+              return;
+            }
             const res = await fetchServerPluginList();
             if (!res.ok) return;
 
@@ -444,7 +449,9 @@ export const useThemeStore = create<ThemeState>()(
       },
 
       syncSignInTheme: async () => {
-        if (IS_LITE || themeSyncPromise || signInThemePromise) return;
+        // Lite's themes are public files: the sign-in page gets all of them.
+        if (IS_LITE) return get().syncServerThemes();
+        if (themeSyncPromise || signInThemePromise) return;
         const signInTheme = usePolicyStore.getState().policy.signInTheme;
         // Only the answer to a visitor carries it; signed in, the full sync runs.
         if (signInTheme === undefined) return;
@@ -769,12 +776,80 @@ function dedupeInstalledThemes(themes: InstalledTheme[]): InstalledTheme[] {
   return [...byId.values()];
 }
 
-async function downloadThemeAsset(theme: ServerThemeInfo, kind: 'css' | 'skin'): Promise<string | null> {
+/**
+ * The themes of a Lite deployment (#1582): `themes.json` next to policy.json,
+ * as `{ "themes": [...] }` in the shape /api/plugins lists them. No file is
+ * no themes; a file that can't be read leaves the installed ones as they are
+ * (null).
+ */
+async function fetchLiteThemes(): Promise<ServerThemeInfo[] | null> {
+  try {
+    // Asked again on each load, as policy.json is (#1563).
+    const res = IS_LITE_STALWART
+      ? await apiFetch(withLiteBuildId(LITE_THEMES_PATH), { cache: 'no-cache' })
+      : await apiFetch(LITE_THEMES_PATH, { cache: 'no-store' });
+    if (res.status === 404) return [];
+    if (!res.ok) return null;
+    return parseLiteThemes(await res.json());
+  } catch {
+    console.warn('[theme-store] themes.json could not be read');
+    return null;
+  }
+}
+
+const THEME_VARIANTS = ['light', 'dark'];
+/** As an extension's id (lib/extension-package.ts), which this store doesn't load. */
+const THEME_ID_RE = /^[a-z0-9][a-z0-9-]*[a-z0-9]$/;
+const text = (value: unknown, max: number) => (typeof value === 'string' ? value.trim().slice(0, max) : '');
+
+/** The well-formed entries of a themes.json; the rest are left out. */
+export function parseLiteThemes(data: unknown): ServerThemeInfo[] {
+  const list = data && typeof data === 'object' ? (data as { themes?: unknown }).themes : undefined;
+  if (!Array.isArray(list)) return [];
+  const seen = new Set<string>();
+  const out: ServerThemeInfo[] = [];
+  for (const item of list) {
+    if (!item || typeof item !== 'object') continue;
+    const raw = item as Record<string, unknown>;
+    const id = typeof raw.id === 'string' ? raw.id : '';
+    const name = text(raw.name, 100);
+    if (!THEME_ID_RE.test(id) || seen.has(id) || !name) continue;
+    seen.add(id);
+    const variants = Array.isArray(raw.variants)
+      ? raw.variants.filter((v): v is string => typeof v === 'string' && THEME_VARIANTS.includes(v))
+      : [];
+    out.push({
+      id,
+      name,
+      version: text(raw.version, 40) || '1.0.0',
+      author: text(raw.author, 100),
+      description: text(raw.description, 500),
+      variants: variants.length > 0 ? [...new Set(variants)] : [...THEME_VARIANTS],
+      forceEnabled: raw.forceEnabled === true,
+      hasSkin: raw.hasSkin === true,
+      ...(text(raw.contentHash, 128) ? { contentHash: text(raw.contentHash, 128) } : {}),
+    });
+  }
+  return out;
+}
+
+/** Where a theme's file is: the admin's upload, or in Lite the static file. */
+function themeAssetUrl(theme: ServerThemeInfo, kind: 'css' | 'skin'): string {
   // The content hash in the URL keeps a browser cache from serving the
   // previous upload.
   const version = theme.contentHash ? `?v=${encodeURIComponent(theme.contentHash)}` : '';
+  if (IS_LITE) {
+    const path = `/themes/${encodeURIComponent(theme.id)}/${kind === 'css' ? 'theme' : 'skin'}.css`;
+    return version ? `${path}${version}` : withLiteBuildId(path);
+  }
+  return `/api/admin/themes/${encodeURIComponent(theme.id)}/${kind}${version}`;
+}
+
+async function downloadThemeAsset(theme: ServerThemeInfo, kind: 'css' | 'skin'): Promise<string | null> {
   try {
-    const res = await apiFetch(`/api/admin/themes/${encodeURIComponent(theme.id)}/${kind}${version}`);
+    const url = themeAssetUrl(theme, kind);
+    // A Lite file without a hash may change under the same build: ask again.
+    const res = IS_LITE && !theme.contentHash ? await apiFetch(url, { cache: 'no-cache' }) : await apiFetch(url);
     if (!res.ok) return null;
     return await res.text();
   } catch {
@@ -789,7 +864,7 @@ usePolicyStore.subscribe((state, prev) => {
   if (state.policy !== prev.policy) {
     useThemeStore.getState().applyColorModePolicy();
     useThemeStore.getState().applyThemePolicyDefault();
-    if (state.policy.signInTheme !== undefined) void useThemeStore.getState().syncSignInTheme();
+    if (state.policy.signInTheme !== undefined || IS_LITE) void useThemeStore.getState().syncSignInTheme();
   }
 });
 
