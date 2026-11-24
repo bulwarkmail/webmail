@@ -29,6 +29,8 @@ const UNSTAMPED_BLOB_KEYS = new Set<string>([
   'templatesInMetadata',
   'icalSubscriptions',
   'deletedSubscriptionIds',
+  // Stamped per entry inside (lib/plugin-sync.ts).
+  'pluginSync',
 ]);
 
 export function isStampedBlobKey(key: string): boolean {

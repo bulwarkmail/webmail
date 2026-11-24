@@ -13,6 +13,7 @@ import { MAX_ACCOUNT_SLOTS } from '@/lib/account-utils';
 import { mergeStoredTemplates } from '@/lib/template-merge';
 import { mergeStoredSubscriptions } from '@/lib/calendar-subscription-sync';
 import { mergeStoredSettingStamps } from '@/lib/settings-sync-stamps';
+import { mergeStoredPluginSync } from '@/lib/plugin-sync';
 import { storedDataUnavailableResponse } from '@/lib/stored-data-errors';
 
 /** Largest settings blob a client may store (templates and signatures included). */
@@ -222,10 +223,10 @@ export async function POST(request: NextRequest) {
     await updateUserSettings(
       accountName,
       storageServerUrl(serverUrl),
-      (stored) => mergeStoredSubscriptions(
+      (stored) => mergeStoredPluginSync(stored, mergeStoredSubscriptions(
         stored,
         mergeStoredTemplates(stored, mergeStoredSettingStamps(stored, filteredSettings)),
-      ),
+      )),
     );
     return NextResponse.json({ ok: true });
   } catch (error) {

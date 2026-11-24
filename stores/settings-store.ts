@@ -45,6 +45,8 @@ import {
   readStamps,
   type LocalSettingStamps,
 } from '@/lib/settings-sync-stamps';
+import { PLUGIN_SYNC_FIELD } from '@/lib/plugin-sync';
+import { exportPluginSync, importPluginSync, onPluginSyncChange, setPluginSyncAccount } from '@/lib/plugin-sandbox/synced-prefs';
 import { nextStamp } from '@/lib/settings-metadata-sync';
 import { getDesktopBridge } from '@/lib/desktop/bridge';
 import { forgetSignedOutChoices, signedOutChoices } from '@/lib/signed-out-choices';
@@ -2067,6 +2069,11 @@ export const useSettingsStore = create<SettingsState>()(
           // not registered, so an importing device leaves its templates alone.
           // Templates the account keeps itself are left out of a sync push;
           // the flag has the stored blob drop its old copy (mergeStoredTemplates).
+          // Only in a push: a settings file is for this browser's own settings.
+          // Plugins' on/off, settings and synced storage, per account (#1327).
+          ...(opts?.forSync && syncUsername && syncServerUrl
+            ? { [PLUGIN_SYNC_FIELD]: exportPluginSync(generateAccountId(syncUsername, syncServerUrl)) }
+            : {}),
           ...(templateSync && opts?.forSync && templateSync.storedInAccount
             ? { templatesInMetadata: true }
             : templateSync
@@ -2393,6 +2400,7 @@ export const useSettingsStore = create<SettingsState>()(
             settings.deletedTemplateIds,
             { merge: Boolean(opts?.serverAccountId), accountId: opts?.serverAccountId }
           );
+          if (opts?.serverAccountId) importPluginSync(opts.serverAccountId, settings[PLUGIN_SYNC_FIELD]);
           calendarSubscriptionSyncBridge?.applySyncedState(
             settings.icalSubscriptions,
             settings.deletedSubscriptionIds,
@@ -3179,6 +3187,16 @@ if (typeof window !== 'undefined') {
     if (useSettingsStore.getState().settingsSyncDisabled) return;
     triggerSync();
   };
+
+  // And when a plugin's on/off, settings or synced storage change (#1327).
+  setPluginSyncAccount(() => {
+    const target = settingsSyncTarget();
+    return target ? generateAccountId(target.username, target.serverUrl) : null;
+  });
+  onPluginSyncChange(() => {
+    if (useSettingsStore.getState().settingsSyncDisabled) return;
+    triggerSync();
+  });
 
   // Ensure template-store and calendar-store are loaded (and bridges registered) even before
   // any UI component imports them, so the first sync push already carries them.

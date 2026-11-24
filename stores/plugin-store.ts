@@ -9,6 +9,9 @@ import type { InstalledPlugin, PluginStatus, PluginTier } from '@/lib/plugin-typ
 import { pluginStorage } from '@/lib/plugin-storage';
 import { useLocaleStore } from '@/stores/locale-store';
 import { useSettingsStore } from '@/stores/settings-store';
+import {
+  connectSyncedPrefs, stampPluginOn, stampPluginSettings, syncedPluginOn, syncedPluginSettings,
+} from '@/lib/plugin-sandbox/synced-prefs';
 import { getEffectiveLocale } from '@/i18n/detect-locale';
 import { removeAllPluginHooks } from '@/lib/plugin-hooks';
 import { requestConsent } from '@/lib/plugin-sandbox/consent';
@@ -30,6 +33,8 @@ import { onFullSignOut } from '@/lib/sign-out-cleanup';
 import { forgetDeclaredHooks, setSendGuardSource } from '@/lib/plugin-send-guards';
 
 let pluginInitializationPromise: Promise<void> | null = null;
+// Plugins being turned on or off because another device did (#1327): not a change made here.
+const applyingSynced = new Set<string>();
 // One-time guard so we attach the locale and regional subscriptions only once.
 let regionalSubscribed = false;
 
@@ -235,7 +240,7 @@ export const usePluginStore = create<PluginStoreState>()(
           managed: false,
           forceEnabled: false,
           adminApproved: false, // Requires admin approval before it can be enabled
-          settings: existing?.settings ?? {},
+          settings: existing?.settings ?? syncedPluginSettings(manifest.id) ?? {},
           settingsSchema: manifest.settingsSchema,
           ...(manifest.locales ? { locales: manifest.locales } : {}),
           ...(bundleHash ? { bundleHash } : {}),
@@ -323,6 +328,8 @@ export const usePluginStore = create<PluginStoreState>()(
             p.id === id ? { ...p, enabled: true, status: 'enabled' as PluginStatus, error: undefined, chosen: true, autoEnabled: false } : p
           ),
         }));
+        // The admin's plugins are the same in every browser: the choice follows the account.
+        if (plugin.managed && !applyingSynced.has(id)) stampPluginOn(id, true);
 
         // Load it immediately
         const updatedPlugin = get().plugins.find(p => p.id === id);
@@ -345,6 +352,7 @@ export const usePluginStore = create<PluginStoreState>()(
             p.id === id ? { ...p, enabled: false, status: 'disabled' as PluginStatus, error: undefined, chosen: true, autoEnabled: false } : p
           ),
         });
+        if (plugin.managed && !applyingSynced.has(id)) stampPluginOn(id, false);
       },
 
       updatePluginSettings: (id: string, settings: Record<string, unknown>) => {
@@ -360,6 +368,8 @@ export const usePluginStore = create<PluginStoreState>()(
         }
         const updated = { ...plugin, settings: { ...plugin.settings, ...accepted } };
         set({ plugins: plugins.map(p => (p.id === id ? updated : p)) });
+        // They follow the account to the user's other browsers (#1327).
+        stampPluginSettings(id, updated.settings);
         // The subscription at the end of this file passes it on to the
         // running plugin.
       },
@@ -731,15 +741,17 @@ async function syncServerPlugins(
       if (isNew || !local) {
         // An admin's plugin is on for everyone unless the admin chose
         // "Off until users turn it on".
-        const on = sp.forceEnabled || sp.defaultOn !== false;
+        // What the user chose for it in another browser comes first (#1327).
+        const synced = syncedPluginOn(sp.id);
+        const on = sp.forceEnabled || (synced ?? sp.defaultOn !== false);
         const plugin: InstalledPlugin = {
           id: sp.id,
           type: sp.type as InstalledPlugin['type'],
           enabled: on,
           status: on ? 'enabled' : 'installed',
-          ...(on && !sp.forceEnabled ? { autoEnabled: true } : {}),
+          ...(synced !== undefined ? { chosen: true } : on && !sp.forceEnabled ? { autoEnabled: true } : {}),
           adminApproved: true, // Server-managed plugins are always approved
-          settings: {},
+          settings: syncedPluginSettings(sp.id) ?? {},
           ...serverMeta(sp),
         };
         set(state =>
@@ -755,15 +767,17 @@ async function syncServerPlugins(
       // the admin's default decides: on, or off ("Off until users turn it
       // on"), which only takes back what the default turned on.
       const followsDefault = !local.chosen && !sp.forceEnabled;
+      // Not chosen here, but in another browser of the account (#1327).
+      const synced = followsDefault ? syncedPluginOn(sp.id) : undefined;
       const defaultOn = sp.defaultOn !== false;
-      const shouldAutoEnable = !local.enabled && (sp.forceEnabled || (followsDefault && defaultOn));
-      const shouldAutoDisable = local.enabled && followsDefault && !defaultOn && !!local.autoEnabled;
+      const shouldAutoEnable = !local.enabled && (sp.forceEnabled || synced === true || (followsDefault && synced === undefined && defaultOn));
+      const shouldAutoDisable = local.enabled && followsDefault && (synced === false || (synced === undefined && !defaultOn && !!local.autoEnabled));
       if (shouldAutoDisable) deactivatePlugin(sp.id);
       const next: InstalledPlugin = {
         ...local,
         ...serverMeta(sp),
-        ...(shouldAutoEnable ? { enabled: true, status: 'enabled' as const, ...(sp.forceEnabled ? {} : { autoEnabled: true }) } : {}),
-        ...(shouldAutoDisable ? { enabled: false, status: 'installed' as const, autoEnabled: false } : {}),
+        ...(shouldAutoEnable ? { enabled: true, status: 'enabled' as const, ...(sp.forceEnabled ? {} : synced ? { chosen: true } : { autoEnabled: true }) } : {}),
+        ...(shouldAutoDisable ? { enabled: false, status: 'installed' as const, autoEnabled: false, ...(synced === false ? { chosen: true } : {}) } : {}),
       };
       if (needsBundle || JSON.stringify(next) !== JSON.stringify(local)) {
         set(state => ({
@@ -1006,3 +1020,59 @@ export function whenPluginsStarted(timeoutMs = 20_000): Promise<void> {
 // The list for code that shouldn't import this store (lib/plugin-sandbox/known-plugins.ts).
 setKnownPlugins(usePluginStore.getState().plugins);
 usePluginStore.subscribe((state) => setKnownPlugins(state.plugins));
+
+// ─── Plugin sync (#1327) ──────────────────────────────────────
+// Whether an admin's plugin is on and each plugin's settings follow the
+// account through Settings Sync, as do api.storage keys a plugin stored with
+// { sync: true } (lib/plugin-sandbox/synced-prefs.ts).
+
+/** Another browser of the account turned an admin's plugin on or off. */
+function applySyncedOn(id: string, on: boolean): void {
+  const state = usePluginStore.getState();
+  const plugin = state.plugins.find((p) => p.id === id);
+  // Not here yet: the server sync takes the choice when it arrives.
+  if (!plugin?.managed || plugin.forceEnabled || usePolicyStore.getState().isPluginForceEnabled(id)) return;
+  if (plugin.enabled === on && plugin.chosen) return;
+  if (!state.initialized) {
+    // Plugins haven't started: the start takes it from the record.
+    usePluginStore.setState({
+      plugins: state.plugins.map((p) => (p.id === id
+        ? { ...p, enabled: on, status: on ? 'enabled' as PluginStatus : 'installed' as PluginStatus, chosen: true, autoEnabled: false }
+        : p)),
+    });
+    return;
+  }
+  applyingSynced.add(id);
+  if (!on) {
+    try { state.disablePlugin(id); } finally { applyingSynced.delete(id); }
+    return;
+  }
+  void state.enablePlugin(id).finally(() => applyingSynced.delete(id));
+}
+
+/** Another browser of the account changed a plugin's settings. */
+function applySyncedSettings(id: string, settings: Record<string, unknown>): void {
+  const plugin = usePluginStore.getState().plugins.find((p) => p.id === id);
+  if (!plugin) return;
+  const schema = plugin.settingsSchema ?? {};
+  const accepted: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(settings)) {
+    accepted[key] = schema[key] ? coerceSetting(schema[key], value) : value;
+  }
+  if (JSON.stringify(accepted) === JSON.stringify(plugin.settings)) return;
+  usePluginStore.setState((state) => ({
+    plugins: state.plugins.map((p) => (p.id === id ? { ...p, settings: accepted } : p)),
+  }));
+}
+
+connectSyncedPrefs({
+  pluginIds: () => usePluginStore.getState().plugins.map((p) => p.id),
+  pluginState: (id) => {
+    const plugin = usePluginStore.getState().plugins.find((p) => p.id === id);
+    return plugin
+      ? { managed: !!plugin.managed, enabled: plugin.enabled, chosen: !!plugin.chosen, settings: plugin.settings ?? {} }
+      : null;
+  },
+  applyOn: applySyncedOn,
+  applySettings: applySyncedSettings,
+});

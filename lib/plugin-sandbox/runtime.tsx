@@ -590,7 +590,14 @@ function buildCoreApi(manifest: PluginManifest) {
     },
     storage: {
       get: (key: string) => callApi('storage.get', [key]),
-      set: (key: string, value: unknown) => callApi('storage.set', [key, value]),
+      /**
+       * `{ sync: true }` keeps the key in the account's synced settings: it
+       * reaches every browser of the account, and later sets and removes of
+       * the key follow. At most 16 KB per plugin; past that the set throws
+       * "Synced plugin storage is full". Never put a secret here.
+       */
+      set: (key: string, value: unknown, options?: { sync?: boolean }) =>
+        callApi('storage.set', options === undefined ? [key, value] : [key, value, options]),
       remove: (key: string) => callApi('storage.remove', [key]),
       keys: () => callApi('storage.keys', []),
     },

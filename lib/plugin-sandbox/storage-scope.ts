@@ -13,6 +13,8 @@
  */
 
 const PLUGIN_PREFIX = 'plugin:';
+/** Where plugin sync keeps its record per account (synced-prefs.ts). */
+export const PLUGIN_SYNC_RECORD_PREFIX = 'plugin-sync:@';
 
 function accountTag(accountId: string): string {
   return `@${encodeURIComponent(accountId)}:`;
@@ -81,7 +83,9 @@ export function hostOnlyPluginKey(pluginId: string, accountId: string, name: str
 /** Delete what every plugin stored for this account. */
 export function clearPluginStorageForAccount(accountId: string): void {
   const tag = accountTag(accountId);
+  const syncRecord = `${PLUGIN_SYNC_RECORD_PREFIX}${encodeURIComponent(accountId)}`;
   removeKeys((key) => {
+    if (key === syncRecord) return true;
     if (!key.startsWith(PLUGIN_PREFIX)) return false;
     const idEnd = key.indexOf(':', PLUGIN_PREFIX.length);
     if (idEnd <= 0) return false;
@@ -95,6 +99,6 @@ export function clearPluginStorageForAccount(accountId: string): void {
 
 /** Delete all plugin storage: nobody is signed in any more. */
 export function clearAllPluginStorage(): void {
-  removeKeys((key) => key.startsWith(PLUGIN_PREFIX));
+  removeKeys((key) => key.startsWith(PLUGIN_PREFIX) || key.startsWith(PLUGIN_SYNC_RECORD_PREFIX));
   claimed.clear();
 }

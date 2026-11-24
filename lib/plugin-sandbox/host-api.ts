@@ -28,6 +28,7 @@ import { useAccountStore } from '@/stores/account-store';
 import { returnToOwnAccount } from '@/lib/impersonation/return-client';
 import { isPopoutWindow } from '@/lib/popout/window-role';
 import { claimLegacyPluginStorage, pluginStoragePrefix } from './storage-scope';
+import { isSyncedStorageKey, stampSyncedStorage, stampSyncedStorageRemoved } from './synced-prefs';
 import { useIdentityStore } from '@/stores/identity-store';
 import { resolveEmailBlobContext, useEmailStore } from '@/stores/email-store';
 import { keywordPointer } from '../jmap/patch-pointer';
@@ -434,11 +435,18 @@ function storageGet(pluginId: string, key: string): unknown {
  */
 export const PLUGIN_STORAGE_QUOTA_BYTES = 1024 * 1024;
 
-function storageSet(pluginId: string, key: string, value: unknown): void {
+/**
+ * `{ sync: true }` keeps the key in the account's synced settings (#1327):
+ * the value reaches every browser of the account, and later sets and removes
+ * of the key follow it there. Up to 16 KB per plugin.
+ */
+function storageSet(pluginId: string, key: string, value: unknown, options?: unknown): void {
   if (typeof window === 'undefined') return;
   if (typeof key !== 'string' || key.length === 0 || key.length > 256) {
     throw new Error('storage.set: key must be a string of 1-256 characters');
   }
+  const sync = readObject(options, 'storage.set', 'options', ['sync'], true).sync;
+  if (sync !== undefined && typeof sync !== 'boolean') throw new Error('storage.set: sync must be true or false');
   const prefix = storagePrefix(pluginId);
   const serialized = JSON.stringify(value);
   if (serialized === undefined) throw new Error('storage.set: value is not JSON-serialisable');
@@ -452,10 +460,17 @@ function storageSet(pluginId: string, key: string, value: unknown): void {
   if (used + prefix.length + key.length + serialized.length > PLUGIN_STORAGE_QUOTA_BYTES) {
     throw new Error(`Plugin storage is full (${Math.round(PLUGIN_STORAGE_QUOTA_BYTES / 1024)} KB per account)`);
   }
+  const accountId = useAccountStore.getState().activeAccountId;
+  // Signed out there is no account to sync with.
+  if (accountId && (sync === true || isSyncedStorageKey(pluginId, accountId, key))) {
+    stampSyncedStorage(pluginId, accountId, key, serialized, window.localStorage.getItem(prefix + key));
+  }
   window.localStorage.setItem(prefix + key, serialized);
 }
 function storageRemove(pluginId: string, key: string): void {
   if (typeof window === 'undefined') return;
+  const accountId = useAccountStore.getState().activeAccountId;
+  if (accountId && typeof key === 'string') stampSyncedStorageRemoved(pluginId, accountId, key);
   window.localStorage.removeItem(storagePrefix(pluginId) + key);
 }
 function storageKeys(pluginId: string): string[] {
@@ -2212,7 +2227,7 @@ export async function dispatchApiCall(
     }
 
     case 'storage.get': return storageGet(plugin.id, args[0] as string);
-    case 'storage.set': storageSet(plugin.id, args[0] as string, args[1]); return undefined;
+    case 'storage.set': storageSet(plugin.id, args[0] as string, args[1], args[2]); return undefined;
     case 'storage.remove': storageRemove(plugin.id, args[0] as string); return undefined;
     case 'storage.keys': return storageKeys(plugin.id);
 
