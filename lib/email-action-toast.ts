@@ -105,7 +105,7 @@ export function undoKeywordAction(
   return {
     label: labels.undo,
     hint: labels.hint,
-    keys: points.map((p) => p.key),
+    keys: points.flatMap((p) => Object.keys(p.changes).map((name) => `${name}:${p.key}`)),
     onClick: () => {
       void (async () => {
         const { patchEmailKeywords } = useEmailStore.getState();
@@ -258,7 +258,7 @@ export function undoMoveAction(
     label: labels.undo,
     hint: labels.hint,
     subject: subjectOf(batches),
-    keys: batches.flatMap((b) => b.points.map((p) => b.messages?.[p.id]?.key ?? p.id)),
+    keys: batches.flatMap((b) => b.points.map((p) => `mailboxes:${b.messages?.[p.id]?.key ?? p.id}`)),
     onClick: () => {
       void (async () => {
         try {

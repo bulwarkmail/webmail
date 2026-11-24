@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { toastWithUndo, undoMoveAction } from '../email-action-toast';
+import { toastWithUndo, undoKeywordAction, undoMoveAction } from '../email-action-toast';
 import { clearUndoHistory, recordUndo, undoHistory, undoLatest } from '../undo-history';
 import { resetUndoDeck } from '../undo-deck';
 import { useToastStore } from '@/stores/toast-store';
@@ -24,7 +24,7 @@ beforeEach(() => {
   clearUndoHistory();
   resetUndoDeck();
   useToastStore.setState({ toasts: [] });
-  useEmailStore.setState({ undoMove: vi.fn().mockResolvedValue(undefined) as never });
+  useEmailStore.setState({ undoMove: vi.fn().mockResolvedValue(undefined) as never, patchEmailKeywords: vi.fn().mockResolvedValue(undefined) as never });
 });
 
 describe('the undo deck', () => {
@@ -147,6 +147,28 @@ describe('the undo deck', () => {
     expect(undoHistory().map((e) => e.label)).toEqual(['Archived other']);
     expect(front().title).toBe('Archived other');
     expect(front().behind ?? []).toHaveLength(0);
+  });
+
+  it('keeps the Undo of an archive after undoing an earlier star on the same message', async () => {
+    const starred = [{ id: 'x2', key: 'x2', changes: { $flagged: false } }];
+    toastWithUndo('Starred', undoKeywordAction(client, starred, labels));
+    toastWithUndo('Archived', undoMoveAction(client, [{ client, points: [point('x2')], messages: { x2: { key: 'x2' } } }], labels));
+
+    front().behind![0].action.onClick();
+    await settle();
+
+    expect(undoHistory().map((e) => e.label)).toEqual(['Archived']);
+    expect(front().title).toBe('Archived');
+  });
+
+  it('drops a later change of the same flag once an earlier one is undone', async () => {
+    toastWithUndo('Starred', undoKeywordAction(client, [{ id: 'x3', key: 'x3', changes: { $flagged: false } }], labels));
+    toastWithUndo('Unstarred', undoKeywordAction(client, [{ id: 'x3', key: 'x3', changes: { $flagged: true } }], labels));
+
+    front().behind![0].action.onClick();
+    await settle();
+
+    expect(undoHistory()).toHaveLength(0);
   });
 
   it('starts a new card instead of joining a deck that is already on its way out', () => {
