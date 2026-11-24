@@ -12,6 +12,7 @@ import { isFilePreviewable } from "@/lib/file-preview";
 import { useSettingsStore, type TimeFormat } from "@/stores/settings-store";
 import type { MessagePrintFields } from "@/components/email/message-print";
 import { useRemoteContentHeldBackAnywhere } from "@/hooks/use-third-party-mode";
+import { useRemoteContentProxyBase } from "@/hooks/use-remote-content-proxy";
 import { ROW_ITEM_ATTR, ROW_MORE_ATTR, useFirstRowLimit } from "@/hooks/use-first-row-limit";
 
 // A parsed message/rfc822 (.eml), as produced by postal-mime. Only the fields
@@ -68,7 +69,11 @@ export function EmlPreview({ message, onOpenAttachment, linksOff, downloadsOff =
   // organisation locks "block" in any signed-in account (the attachment's
   // account isn't known here), and until the policy is known.
   const remoteBlockedByOrg = useRemoteContentHeldBackAnywhere();
-  const blockRemote = useSettingsStore((state) => state.externalContentPolicy) !== "allow" || remoteBlockedByOrg;
+  // The fully locked frame has no origin of its own, so it can't load
+  // through this server: with remote content proxied (#1021) it stays off
+  // here rather than coming from the sender.
+  const remoteProxied = useRemoteContentProxyBase() !== null;
+  const blockRemote = useSettingsStore((state) => state.externalContentPolicy) !== "allow" || remoteBlockedByOrg || remoteProxied;
   const tFiles = useTranslations("files");
   const timeFormat = useSettingsStore((state) => state.timeFormat);
 

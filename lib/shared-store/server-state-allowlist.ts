@@ -36,6 +36,7 @@ export const SERVER_STATE_ALLOWLIST: AllowedState[] = [
   { site: 'app/api/favicon/route.ts#upstreamInFlight', class: 'per-process', why: 'caps this process\'s concurrent upstream fetches' },
   { site: 'app/api/favicon/route.ts#cache', class: 'cache', why: 'sender icons from a public service, 14 days' },
   { site: 'app/api/favicon/route.ts#negativeCache', class: 'cache', why: 'sender icons that failed, 1 day' },
+  { site: 'app/api/remote-content/[token]/route.ts#inFlight', class: 'per-process', why: 'caps this process\'s concurrent remote picture fetches' },
   { site: 'app/api/ready/route.ts#last', class: 'cache', why: 'the last store ping, 1 s, so probes can\'t flood the store' },
   { site: 'lib/tracing/config.ts#globalThis:ACTIVE', class: 'per-process', why: 'whether this process registered the OpenTelemetry SDK at startup' },
   { site: 'lib/error-reporting/debug-ids.ts#cache', class: 'per-process', why: 'debug ids of the bundle files this process loaded, read from globalThis' },

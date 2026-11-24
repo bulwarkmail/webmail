@@ -53,6 +53,13 @@ export const RUNNING_PER_CALLER = 16;
  * run at most SESSIONLESS_MAX_IN_FLIGHT (lib/bimi/lookup.ts).
  */
 export const SESSIONLESS_RUNNING_PER_CALLER = 4;
+/**
+ * Remote pictures in mail through /api/remote-content (#1021): a newsletter
+ * alone can hold a hundred, so a mailbox gets more fetches per minute and
+ * more at once than for icons. Signed in only.
+ */
+export const REMOTE_CONTENT_FETCHES_PER_MINUTE = 600;
+export const REMOTE_CONTENT_RUNNING_PER_CALLER = 24;
 /** A running lookup that is never given back (a crash) stops counting after this. */
 const RUNNING_WINDOW_MS = 5 * 60_000;
 
@@ -79,6 +86,9 @@ export interface SenderIconCaller {
   /** No session: the mobile app. It gets the logo itself and nothing more. */
   sessionless: boolean;
 }
+
+/** The routes that fetch from outside hosts for the mail view: sender logos and icons, remote pictures. */
+export type SenderIconRoute = 'bimi' | 'favicon' | 'remote-content';
 
 export type SenderIconAccess = { caller: SenderIconCaller } | { refusal: NextResponse };
 
@@ -125,7 +135,7 @@ async function sessionOwners(request: NextRequest): Promise<string[]> {
  * count it, and with every other such caller against the ceilings they
  * share.
  */
-export async function senderIconAccess(request: NextRequest, route: 'bimi' | 'favicon'): Promise<SenderIconAccess> {
+export async function senderIconAccess(request: NextRequest, route: SenderIconRoute): Promise<SenderIconAccess> {
   const site = request.headers.get('sec-fetch-site');
   if (site !== null && site !== 'same-origin') return { refusal: new NextResponse(null, { status: 403, headers: NO_STORE }) };
   if (await canSeeInstanceDetails(request)) {
@@ -156,9 +166,11 @@ export interface LookupLease {
 }
 
 /** One lookup's share of the caller's budget and running count on `route`. */
-export function lookupLease(caller: SenderIconCaller, route: 'bimi' | 'favicon'): LookupLease {
-  const perMinute = caller.sessionless ? SESSIONLESS_LOOKUPS_PER_MINUTE : LOOKUPS_PER_MINUTE;
-  const running = caller.sessionless ? SESSIONLESS_RUNNING_PER_CALLER : RUNNING_PER_CALLER;
+export function lookupLease(caller: SenderIconCaller, route: SenderIconRoute): LookupLease {
+  const perMinute = caller.sessionless ? SESSIONLESS_LOOKUPS_PER_MINUTE
+    : route === 'remote-content' ? REMOTE_CONTENT_FETCHES_PER_MINUTE : LOOKUPS_PER_MINUTE;
+  const running = caller.sessionless ? SESSIONLESS_RUNNING_PER_CALLER
+    : route === 'remote-content' ? REMOTE_CONTENT_RUNNING_PER_CALLER : RUNNING_PER_CALLER;
   let held: Array<{ key: string; resetAt: number }> = [];
   return {
     async take() {

@@ -26,6 +26,7 @@ import { useSettingsStore } from "@/stores/settings-store";
 import { useCloseOnBack } from "@/hooks/use-close-on-back";
 import type { FileResourceView } from "@/lib/plugin-types";
 import { useRemoteContentHeldBackAnywhere } from "@/hooks/use-third-party-mode";
+import { useRemoteContentProxyBase } from "@/hooks/use-remote-content-proxy";
 import { printPdfUrl } from "@/lib/print-pdf";
 import { printFile } from "@/lib/print-file";
 import { printMessageInWindow } from "@/components/email/message-print-window";
@@ -245,7 +246,11 @@ export function FilePreviewModal({ name, onClose, onDownload, getFileContent, fi
   // organisation locks "block" in any signed-in account (the attachment's
   // account isn't known here), and until the policy is known.
   const remoteBlockedByOrg = useRemoteContentHeldBackAnywhere();
-  const blockRemote = useSettingsStore((state) => state.externalContentPolicy) !== "allow" || remoteBlockedByOrg;
+  // The fully locked frame has no origin of its own, so it can't load
+  // through this server: with remote content proxied (#1021) it stays off
+  // here rather than coming from the sender.
+  const remoteProxied = useRemoteContentProxyBase() !== null;
+  const blockRemote = useSettingsStore((state) => state.externalContentPolicy) !== "allow" || remoteBlockedByOrg || remoteProxied;
   // An attachment of the previewed .eml, shown in a preview of its own in
   // place of this one. It holds a Back entry of its own, so Escape and Back
   // close it first and come back here.

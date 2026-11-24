@@ -8,6 +8,8 @@ import type { MessagePrintFields } from "./message-print";
 export interface MessagePrintWindowOptions {
   /** Remote content stays blocked: the window gets the reader's strict CSP. */
   externalBlocked: boolean;
+  /** Remote pictures come through this server (#1021): the CSP allows only its folder. */
+  remoteProxyBase?: string | null;
   /** Organisation > Devices > Watermark, for this message's account. */
   watermark?: string | null;
   /** A window opened in the click that asked (the list's row menu); else one is opened here. */
@@ -69,7 +71,7 @@ export function printMessageInWindow(fields: MessagePrintFields, options: Messag
   // inherited one.
   printWindow.document.write(`<!DOCTYPE html>
 <html><head><meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="${emailIframeCsp(options.externalBlocked)}">
+<meta http-equiv="Content-Security-Policy" content="${emailIframeCsp(options.externalBlocked, [], options.remoteProxyBase ?? null)}">
 <meta name="referrer" content="no-referrer">
 <title>${escapeHtml(subjectText)}</title>
 <style>

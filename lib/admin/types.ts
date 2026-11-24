@@ -90,6 +90,11 @@ export interface FeatureGates {
   tagsAboveSharedEnabled: boolean;
   /** Booking, parcel and order cards read from schema.org markup in mail. */
   structuredMailEnabled: boolean;
+  /**
+   * Remote pictures in mail load through this server (/api/remote-content),
+   * so senders don't see the reader's address (#1021). Global only.
+   */
+  remoteContentProxyEnabled: boolean;
 }
 
 export const DEFAULT_FEATURE_GATES: FeatureGates = {
@@ -125,6 +130,7 @@ export const DEFAULT_FEATURE_GATES: FeatureGates = {
   archiveActionEnabled: true,
   tagsAboveSharedEnabled: false,
   structuredMailEnabled: true,
+  remoteContentProxyEnabled: false,
 };
 
 export type ColorMode = 'light' | 'dark' | 'system';

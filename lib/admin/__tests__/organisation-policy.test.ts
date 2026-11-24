@@ -53,6 +53,7 @@ describe('applyLitePolicy', () => {
     expect(policy.scopes?.[0].policy.features).toEqual({ calendarEnabled: false, ...{
       pluginsEnabled: false, pluginsUploadEnabled: false, sidebarAppsEnabled: false,
       accountArchiveEnabled: false, accountArchivePasswordsEnabled: false,
+      remoteContentProxyEnabled: false,
     } });
   });
 });

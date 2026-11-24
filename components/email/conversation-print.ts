@@ -12,6 +12,7 @@ import { printMessageInWindow, type MessagePrintWindowOptions } from "./message-
 export interface ConversationPrintSource {
   fields: MessagePrintFields;
   externalBlocked: boolean;
+  remoteProxyBase?: string | null;
   watermark: string | null;
   noPrint: boolean;
 }
@@ -67,6 +68,7 @@ export function printConversationMessage(emailId: string, labels: MessagePrintWi
   if (!source || source.noPrint) return false;
   printMessageInWindow(source.fields, {
     externalBlocked: source.externalBlocked,
+    remoteProxyBase: source.remoteProxyBase,
     watermark: source.watermark,
     labels,
   });

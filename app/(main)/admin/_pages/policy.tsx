@@ -43,6 +43,7 @@ const FEATURE_GATE_LABELS: Partial<Record<keyof FeatureGates, { label: string; d
   contactsEnabled: { label: 'Contacts', description: 'Show contacts and address books.' },
   smimeEnabled: { label: 'S/MIME', description: 'Let users add certificates to sign and encrypt mail.', term: 'smime' },
   externalContentEnabled: { label: 'Choice of remote content', description: 'Let users choose whether pictures and other content from the web load in messages.' },
+  remoteContentProxyEnabled: { label: 'Remote pictures through this server', description: 'When a user loads remote content, this server fetches the pictures and passes them on, so senders see this server instead of the reader\'s IP address, browser and the moment each reader opens the mail. Whether remote content loads is still up to the user. Only pictures come through (PNG, JPEG, GIF, WebP, AVIF, BMP, ICO, up to 10 MB each); remote fonts, videos, sounds and SVG pictures stay off. Pictures in attached messages and HTML files stay off too. Needs SESSION_SECRET; not in Bulwark Lite.' },
   debugModeEnabled: { label: 'Debug mode', description: 'Let users turn on extra logging when they report a problem.' },
   folderIconsEnabled: { label: 'Folder icons', description: 'Let users pick an icon for each folder.' },
   hoverActionsConfigEnabled: { label: 'Hover buttons', description: 'Let users choose which buttons show when they point at a message in the list.' },

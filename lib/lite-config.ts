@@ -166,4 +166,5 @@ const LITE_PINNED_FEATURES = {
   // Kept by this app's server, which Lite does not have.
   accountArchiveEnabled: false,
   accountArchivePasswordsEnabled: false,
+  remoteContentProxyEnabled: false,
 } as const;

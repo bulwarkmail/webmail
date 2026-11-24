@@ -92,6 +92,7 @@ export const GLOBAL_ONLY_FEATURES: ReadonlySet<string> = new Set([
   'requirePluginApproval',
   'accountArchiveEnabled',
   'accountArchivePasswordsEnabled',
+  'remoteContentProxyEnabled',
 ]);
 const FEATURE_KEYS = new Set(Object.keys(DEFAULT_FEATURE_GATES).filter((key) => !GLOBAL_ONLY_FEATURES.has(key)));
 

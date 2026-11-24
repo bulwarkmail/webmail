@@ -1,4 +1,5 @@
 import DOMPurify from 'dompurify';
+import { proxiedResourceUrl } from './remote-content-proxy';
 
 /**
  * Unified DOMPurify configuration for email content
@@ -106,15 +107,27 @@ export function sanitizeEmailHtmlForIframe(html: string): string {
  * `@font-face`). cid: parts are rewritten to blob: URLs beforehand, so they
  * survive the strict variant.
  */
-export function emailIframeCsp(externalBlocked: boolean, appFontSources: readonly string[] = []): string {
+export function emailIframeCsp(
+  externalBlocked: boolean,
+  appFontSources: readonly string[] = [],
+  proxyBase: string | null = null,
+): string {
   // The folders of the app's own bundled fonts (Settings > Accessibility, mail
   // in the app's font). A path, never the whole origin: a mail must not be able
   // to make requests to the app's other URLs.
-  const appFonts = appFontSources.filter((src) => /^https?:\/\/[^\s;,'"]+\/$/.test(src));
+  const isFolderSource = (src: string) => /^https?:\/\/[^\s;,'"]+\/$/.test(src);
+  const appFonts = appFontSources.filter(isFolderSource);
   const fontSrc = ['data:', ...appFonts].join(' ');
-  return externalBlocked
-    ? `default-src 'none'; img-src data: blob:; style-src 'unsafe-inline'; font-src ${fontSrc}; media-src data: blob:; base-uri 'none'; form-action 'none'; frame-src 'none'`
-    : `default-src 'none'; img-src data: blob: http: https:; style-src 'unsafe-inline'; font-src ${fontSrc} http: https:; media-src data: blob: http: https:; base-uri 'none'; form-action 'none'; frame-src 'none'`;
+  if (externalBlocked) {
+    return `default-src 'none'; img-src data: blob:; style-src 'unsafe-inline'; font-src ${fontSrc}; media-src data: blob:; base-uri 'none'; form-action 'none'; frame-src 'none'`;
+  }
+  // Remote content through this server (#1021): pictures only from the
+  // proxy's folder, fonts and media stay closed, so anything the rewrite
+  // missed still can't reach the sender.
+  if (proxyBase && isFolderSource(proxyBase)) {
+    return `default-src 'none'; img-src data: blob: ${proxyBase}; style-src 'unsafe-inline'; font-src ${fontSrc}; media-src data: blob:; base-uri 'none'; form-action 'none'; frame-src 'none'`;
+  }
+  return `default-src 'none'; img-src data: blob: http: https:; style-src 'unsafe-inline'; font-src ${fontSrc} http: https:; media-src data: blob: http: https:; base-uri 'none'; form-action 'none'; frame-src 'none'`;
 }
 
 /** Outcome of {@link sanitizeEmailBodyForIframe}. */
@@ -144,10 +157,14 @@ export interface IframeBodySanitizeResult {
  * @param blockExternal Whether the user's policy blocks external resources for
  *   this message ('block', or 'ask' before the user allowed, and sender not
  *   trusted).
+ * @param proxyBase With remote content allowed, load remote pictures through
+ *   this server instead (lib/remote-content-proxy.ts, #1021). Pass the same
+ *   value to {@link emailIframeCsp}.
  */
 export function sanitizeEmailBodyForIframe(
   html: string,
   blockExternal: boolean,
+  proxyBase: string | null = null,
 ): IframeBodySanitizeResult {
   const config = blockExternal
     ? {
@@ -167,6 +184,8 @@ export function sanitizeEmailBodyForIframe(
       if (blockExternalResourcesOnNode(node)) {
         blockedExternalContent = true;
       }
+    } else if (proxyBase) {
+      proxyExternalResourcesOnNode(node, proxyBase);
     }
     // http(s) links open in a new tab; other schemes keep their default.
     applyNewTabToAnchor(node);
@@ -743,6 +762,99 @@ export function blockExternalResourcesOnNode(node: Element): boolean {
   }
 
   return blocked;
+}
+
+/** Each external url() and image-set() string in CSS pointed at the proxy; unproxiable ones emptied. */
+function proxyCssUrls(css: string, proxyBase: string): string {
+  if (!styleHasExternalUrl(css)) return css;
+  const proxied = (inner: string) => proxiedResourceUrl(inner, proxyBase);
+  return decodeCssEscapes(css)
+    .replace(CSS_IMAGE_SET_PATTERN, (full, args: string) => {
+      if (!imageSetHasExternalUrl(args)) return full;
+      const rewritten = args.replace(CSS_STRING_PATTERN, (str, q: string, inner: string) => {
+        if (!isExternalResourceUrl(inner)) return str;
+        const url = proxied(inner);
+        return url ? `${q}${url}${q}` : `${q}${q}`;
+      });
+      return full.replace(args, rewritten);
+    })
+    .replace(CSS_URL_PATTERN, (full, _q, inner: string) => {
+      if (!isExternalResourceUrl(inner) || inner.startsWith(proxyBase)) return full;
+      const url = proxied(inner);
+      return url ? `url("${url}")` : 'url()';
+    });
+}
+
+/** A srcset with its external candidates proxied, unproxiable ones left out; null when none is left. */
+function proxySrcset(srcset: string, proxyBase: string): string | null {
+  // A data: URI holds commas, so such a list can't be split safely.
+  if (/data:/i.test(srcset)) return null;
+  const candidates: string[] = [];
+  for (const part of srcset.split(',')) {
+    const [url, ...descriptors] = part.trim().split(/\s+/);
+    if (!url) continue;
+    if (!isExternalResourceUrl(url)) {
+      candidates.push(part.trim());
+      continue;
+    }
+    const proxied = proxiedResourceUrl(url, proxyBase);
+    if (proxied) candidates.push([proxied, ...descriptors].join(' '));
+  }
+  return candidates.length > 0 ? candidates.join(', ') : null;
+}
+
+/**
+ * Load-through-the-server counterpart of {@link blockExternalResourcesOnNode}
+ * for a message whose remote content is allowed while the admin's
+ * `remoteContentProxyEnabled` gate is on (#1021). Every remote picture
+ * (img src and srcset, picture sources, video posters, background
+ * attributes, url() and image-set() in styles and <style> blocks) is pointed
+ * at /api/remote-content on this server. What the route doesn't serve
+ * (audio and video sources, tracks, @import) is dropped, and the frame's CSP
+ * (emailIframeCsp with the same proxyBase) refuses anything else remote.
+ */
+export function proxyExternalResourcesOnNode(node: Element, proxyBase: string): void {
+  const tag = node.tagName;
+  const proxyAttr = (attr: string, keepUnproxied = false) => {
+    const value = node.getAttribute(attr);
+    if (!isExternalResourceUrl(value) || value!.startsWith(proxyBase)) return;
+    const url = proxiedResourceUrl(value, proxyBase);
+    if (url) node.setAttribute(attr, url);
+    else if (keepUnproxied) node.setAttribute(attr, TRANSPARENT_BLOCKED_PIXEL);
+    else node.removeAttribute(attr);
+  };
+
+  if (tag === 'IMG') proxyAttr('src', true);
+  if (tag === 'IMG' || tag === 'SOURCE') {
+    const srcset = node.getAttribute('srcset');
+    if (srcset && srcsetHasExternalUrl(srcset)) {
+      const next = proxySrcset(srcset, proxyBase);
+      if (next) node.setAttribute('srcset', next);
+      else node.removeAttribute('srcset');
+    }
+  }
+  if (tag === 'VIDEO') proxyAttr('poster');
+  // Audio and video are not proxied.
+  if (tag === 'SOURCE' || tag === 'VIDEO' || tag === 'AUDIO' || tag === 'TRACK') {
+    if (isExternalResourceUrl(node.getAttribute('src'))) node.removeAttribute('src');
+  }
+  proxyAttr('background');
+
+  const styleAttr = node.getAttribute('style');
+  if (styleAttr && styleHasExternalUrl(styleAttr)) {
+    node.setAttribute('style', proxyCssUrls(styleAttr, proxyBase));
+  }
+
+  if (tag === 'STYLE') {
+    const css = node.textContent || '';
+    const decoded = decodeCssEscapes(css);
+    if (/url\(|@import|image-set\(/i.test(decoded)) {
+      // A remote sheet is never fetched; its pictures would not be ours to check.
+      const withoutImports = decoded.replace(/@import\s+(?:url\([^)]*\)|(['"]).*?\1)[^;]*;?/gi, '');
+      const next = proxyCssUrls(withoutImports, proxyBase);
+      if (next !== css) node.textContent = next;
+    }
+  }
 }
 
 const PARKED_ATTR_PREFIX = 'data-bulwark-remote-';
