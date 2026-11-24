@@ -5502,6 +5502,8 @@
       "cancel": "취소",
       "save": "저장",
       "quick_add_placeholder": "할 일 추가...",
+      "add_subtask": "하위 작업 추가…",
+      "subtask_of": "{title}의 하위 작업",
       "due_today": "오늘 마감",
       "due_tomorrow": "내일 마감",
       "overdue": "기한 지남"

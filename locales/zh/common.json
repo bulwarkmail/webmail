@@ -5502,6 +5502,8 @@
       "cancel": "取消",
       "save": "保存",
       "quick_add_placeholder": "添加任务...",
+      "add_subtask": "添加子任务…",
+      "subtask_of": "{title} 的子任务",
       "due_today": "今天",
       "due_tomorrow": "明天",
       "overdue": "逾期"

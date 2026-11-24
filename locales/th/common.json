@@ -4908,6 +4908,8 @@
       "cancel": "ยกเลิก",
       "save": "บันทึก",
       "quick_add_placeholder": "เพิ่มงาน...",
+      "add_subtask": "เพิ่มงานย่อย…",
+      "subtask_of": "งานย่อยของ {title}",
       "due_today": "วันนี้",
       "due_tomorrow": "พรุ่งนี้",
       "overdue": "เกินกำหนด"

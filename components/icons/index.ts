@@ -248,6 +248,7 @@ export {
   IconNote as StickyNote,
   IconBuildingStore as Store,
   IconStrikethrough as Strikethrough,
+  IconSubtask as Subtask,
   IconSun as Sun,
   IconColorSwatch as SwatchBook,
   IconTable as Table,

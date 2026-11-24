@@ -5528,6 +5528,8 @@
       "cancel": "Annuller",
       "save": "Gem",
       "quick_add_placeholder": "Tilføj en opgave...",
+      "add_subtask": "Tilføj underopgave…",
+      "subtask_of": "Underopgave til {title}",
       "due_today": "I dag",
       "due_tomorrow": "I morgen",
       "overdue": "Forfalden"

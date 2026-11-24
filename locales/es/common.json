@@ -5502,6 +5502,8 @@
       "cancel": "Cancelar",
       "save": "Guardar",
       "quick_add_placeholder": "Agregar una tarea...",
+      "add_subtask": "Añadir subtarea…",
+      "subtask_of": "Subtarea de {title}",
       "due_today": "Vence hoy",
       "due_tomorrow": "Vence mañana",
       "overdue": "Vencida"

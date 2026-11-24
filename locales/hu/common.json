@@ -5531,6 +5531,8 @@
       "cancel": "Mégse",
       "save": "Mentés",
       "quick_add_placeholder": "Feladat hozzáadása...",
+      "add_subtask": "Részfeladat hozzáadása…",
+      "subtask_of": "Részfeladat ehhez: {title}",
       "due_today": "Ma",
       "due_tomorrow": "Holnap",
       "overdue": "Lejárt"

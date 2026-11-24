@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { TimeField } from "@/components/ui/time-field";
 import { IconButton } from "@/components/ui/icon-button";
-import { X, Trash2, CalendarDays, Bell, Flag, Repeat, Pencil } from "@/components/icons";
+import { X, Trash2, CalendarDays, Bell, Flag, Repeat, Pencil, Subtask } from "@/components/icons";
+import { findParentTask, subtaskRelatedTo } from "@/lib/task-subtasks";
 import { format, parseISO } from "date-fns";
 import { RecurrenceEditor, buildRecurrenceSummary, isSimpleRecurrenceRule } from "./recurrence-editor";
 import { createRecurrenceRule } from "@/lib/recurrence-rule";
@@ -37,6 +38,10 @@ interface TaskModalProps {
   isMobile?: boolean;
   /** Subscribed feeds are read-only: no tasks go there. */
   isSubscriptionCalendar?: (calendarId: string) => boolean;
+  /** A new task is made as a subtask of this one, in its list (#1048). */
+  parentTask?: CalendarTask | null;
+  /** "Add subtask…" on a task being edited: opens a new task under it. */
+  onAddSubtask?: (parent: CalendarTask) => void;
 }
 
 type PriorityLevel = "none" | "high" | "medium" | "low";
@@ -74,6 +79,8 @@ export function TaskModal({
   onDirtyChange,
   isMobile = false,
   isSubscriptionCalendar,
+  parentTask,
+  onAddSubtask,
 }: TaskModalProps) {
   const t = useTranslations("calendar");
   const tUx = useTranslations("ux_pim_calendar");
@@ -99,7 +106,12 @@ export function TaskModal({
     holdingTasks: tasks.flatMap((x) => Object.keys(x.calendarIds ?? {})),
   }), [calendars, isSubscriptionCalendar, tasks]);
   // A new task goes to the first task-only list of the account on screen (pim-8).
-  const defaultCalendarId = defaultTaskList(writableCalendars, activeLocalAccountId)?.id ?? calendars[0]?.id ?? "";
+  // A new subtask goes into its parent's list.
+  const newParent = task ? null : parentTask ?? null;
+  const parentCalendarId = newParent ? Object.keys(newParent.calendarIds ?? {})[0] : undefined;
+  const defaultCalendarId = parentCalendarId ?? defaultTaskList(writableCalendars, activeLocalAccountId)?.id ?? calendars[0]?.id ?? "";
+  // The task this one is a subtask of: the one it is made under, or the one its relatedTo names.
+  const shownParent = useMemo(() => newParent ?? (task ? findParentTask(task, tasks) : null), [newParent, task, tasks]);
 
   const [title, setTitle] = useState(task?.title ?? "");
   const [description, setDescription] = useState(task?.description ?? "");
@@ -221,6 +233,8 @@ export function TaskModal({
         progress,
         calendarIds: { [calendarId]: true },
       };
+      // A task being edited keeps the relatedTo it has, also other apps' links.
+      if (newParent) data.relatedTo = subtaskRelatedTo(newParent);
 
       // A series repeats from its due date, or from its start when it has
       // none; without either there is nothing to repeat from.
@@ -287,7 +301,7 @@ export function TaskModal({
     } finally {
       setSaving(false);
     }
-  }, [title, description, dueDate, dueTime, showTime, priority, progress, calendarId, recurrence, customRule, recurrenceTouched, alertOption, alertTouched, isEdit, task, onSave, onClose]);
+  }, [title, description, dueDate, dueTime, showTime, priority, progress, calendarId, recurrence, customRule, recurrenceTouched, alertOption, alertTouched, isEdit, task, newParent, onSave, onClose]);
   const saveRef = useRef(handleSave);
   useLayoutEffect(() => {
     saveRef.current = handleSave;
@@ -333,6 +347,12 @@ export function TaskModal({
 
       {/* Body */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        {shownParent && (
+          <p data-testid="task-parent" className="flex min-w-0 items-center gap-1.5 text-xs text-muted-foreground">
+            <Subtask className="h-3.5 w-3.5 flex-shrink-0" aria-hidden="true" />
+            <span className="truncate">{t("tasks.subtask_of", { title: shownParent.title || t("tasks.no_title") })}</span>
+          </p>
+        )}
         {/* Title */}
         <Input
           ref={titleRef}
@@ -352,6 +372,13 @@ export function TaskModal({
           rows={3}
           className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-hidden resize-none"
         />
+
+        {task && onAddSubtask && writableCalendars.some((c) => task.calendarIds?.[c.id]) && (
+          <Button variant="ghost" size="sm" className="-ms-2" onClick={() => onAddSubtask(task)} data-testid="task-add-subtask">
+            <Subtask className="h-4 w-4 me-1" aria-hidden="true" />
+            {t("tasks.add_subtask")}
+          </Button>
+        )}
 
         {/* Due Date */}
         <div className="space-y-2">

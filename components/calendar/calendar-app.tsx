@@ -395,6 +395,7 @@ export function CalendarApp({ linkSegments: routeSegments, surface = "calendar" 
   }, [showEventModal]);
   const [showTaskModal, setShowTaskModal] = useState(false);
   const [editTask, setEditTask] = useState<import("@/lib/jmap/types").CalendarTask | null>(null);
+  const [newTaskParent, setNewTaskParent] = useState<CalendarTask | null>(null);
   const [mobileReturnToMonth, setMobileReturnToMonth] = useState(false);
   // Whether the open event or task editor holds unsaved changes (R5).
   const eventEditorDirtyRef = useRef(false);
@@ -901,6 +902,15 @@ export function CalendarApp({ linkSegments: routeSegments, surface = "calendar" 
   const openCreateTaskModal = useCallback(() => whenEditorsDiscarded(() => {
     closeEventPanelForTask();
     setEditTask(null);
+    setNewTaskParent(null);
+    setShowTaskModal(true);
+  }), [closeEventPanelForTask, whenEditorsDiscarded]);
+
+  // The list's "Add subtask…" (#1048): a new task under `parent`.
+  const openCreateSubtaskModal = useCallback((parent: CalendarTask) => whenEditorsDiscarded(() => {
+    closeEventPanelForTask();
+    setEditTask(null);
+    setNewTaskParent(parent);
     setShowTaskModal(true);
   }), [closeEventPanelForTask, whenEditorsDiscarded]);
 
@@ -2447,6 +2457,7 @@ export function CalendarApp({ linkSegments: routeSegments, surface = "calendar" 
               onSetDue={handleSetTaskDue}
               moveLists={writableTaskCalendars}
               onMoveTask={handleMoveTask}
+              onAddSubtask={openCreateSubtaskModal}
               onQuickCreate={(title, due) => {
                 // Into the first task-only list, else the default calendar,
                 // else the first the user may write to (pim-8).
@@ -2854,8 +2865,10 @@ export function CalendarApp({ linkSegments: routeSegments, surface = "calendar" 
           {!isMobile && showTaskModal && (
             <div data-end-sheet="" className="w-[400px] border-s border-border flex-shrink-0 overflow-hidden">
               <TaskModal
-                key={editTask?.id ?? 'new-task'}
+                key={editTask?.id ?? (newTaskParent ? `new-subtask:${newTaskParent.id}` : 'new-task')}
                 task={editTask}
+                parentTask={newTaskParent}
+                onAddSubtask={openCreateSubtaskModal}
                 calendars={displayCalendars}
                 isSubscriptionCalendar={isSubscriptionCalendar}
                 onSave={handleSaveTask}
@@ -3047,8 +3060,10 @@ export function CalendarApp({ linkSegments: routeSegments, surface = "calendar" 
           className={isPaneScoped ? "absolute inset-0 z-40 flex flex-col bg-background" : "fixed inset-0 z-50 flex flex-col bg-background pt-[var(--titlebar-inset)]"}
         >
           <TaskModal
-            key={editTask?.id ?? 'new-task'}
+            key={editTask?.id ?? (newTaskParent ? `new-subtask:${newTaskParent.id}` : 'new-task')}
             task={editTask}
+            parentTask={newTaskParent}
+            onAddSubtask={openCreateSubtaskModal}
             calendars={displayCalendars}
             isSubscriptionCalendar={isSubscriptionCalendar}
             onSave={handleSaveTask}

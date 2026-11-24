@@ -5531,6 +5531,8 @@
       "cancel": "Цуцлах",
       "save": "Хадгалах",
       "quick_add_placeholder": "Даалгавар нэмэх...",
+      "add_subtask": "Дэд даалгавар нэмэх…",
+      "subtask_of": "{title}-н дэд даалгавар",
       "due_today": "Өнөөдөр",
       "due_tomorrow": "Маргааш",
       "overdue": "Хугацаа хэтэрсэн"

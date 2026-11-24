@@ -5502,6 +5502,8 @@
       "cancel": "Скасувати",
       "save": "зберегти",
       "quick_add_placeholder": "Додати завдання...",
+      "add_subtask": "Додати підзавдання…",
+      "subtask_of": "Підзавдання завдання {title}",
       "due_today": "Сьогодні",
       "due_tomorrow": "завтра",
       "overdue": "Прострочена"

@@ -5502,6 +5502,8 @@
       "cancel": "Annulla",
       "save": "Salva",
       "quick_add_placeholder": "Aggiungi un'attività...",
+      "add_subtask": "Aggiungi sottoattività…",
+      "subtask_of": "Sottoattività di {title}",
       "due_today": "Scade oggi",
       "due_tomorrow": "Scade domani",
       "overdue": "Scaduta"

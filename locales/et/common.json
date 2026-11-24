@@ -5531,6 +5531,8 @@
       "cancel": "Tühista",
       "save": "Salvesta",
       "quick_add_placeholder": "Lisa ülesanne...",
+      "add_subtask": "Lisa alamülesanne…",
+      "subtask_of": "Ülesande {title} alamülesanne",
       "due_today": "Täna",
       "due_tomorrow": "Homme",
       "overdue": "Tähtaeg möödas"

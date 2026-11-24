@@ -5502,6 +5502,8 @@
       "cancel": "キャンセル",
       "save": "保存",
       "quick_add_placeholder": "タスクを追加...",
+      "add_subtask": "サブタスクを追加…",
+      "subtask_of": "{title} のサブタスク",
       "due_today": "今日が期限",
       "due_tomorrow": "明日が期限",
       "overdue": "期限切れ"

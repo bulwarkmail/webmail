@@ -5531,6 +5531,8 @@
       "cancel": "Zrušiť",
       "save": "Uložiť",
       "quick_add_placeholder": "Pridať úlohu...",
+      "add_subtask": "Pridať podúlohu…",
+      "subtask_of": "Podúloha úlohy {title}",
       "due_today": "Dnes",
       "due_tomorrow": "Zajtra",
       "overdue": "Po termíne"

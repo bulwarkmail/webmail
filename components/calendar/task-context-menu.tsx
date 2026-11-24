@@ -9,7 +9,7 @@ import {
   ContextMenuSeparator,
   ContextMenuSubMenu,
 } from "@/components/ui/context-menu";
-import { Briefcase, Calendar as CalendarIcon, CalendarDays, CalendarEvent, CalendarX, Check, Eye, FolderInput, RotateCcw, Sun, Trash2 } from "@/components/icons";
+import { Briefcase, Calendar as CalendarIcon, CalendarDays, CalendarEvent, CalendarX, Check, Eye, FolderInput, RotateCcw, Subtask, Sun, Trash2 } from "@/components/icons";
 import { displayNow } from "@/lib/timezone";
 import type { Calendar, CalendarTask } from "@/lib/jmap/types";
 import { useCollectionNames } from "@/hooks/use-collection-names";
@@ -41,6 +41,8 @@ interface TaskContextMenuProps {
   /** The lists the task can go to; the one it's in is marked. */
   lists?: Calendar[];
   onMoveTo?: (calendarId: string) => void;
+  /** Opens a new task under this one (#1048). */
+  onAddSubtask?: () => void;
   onDelete?: () => void;
 }
 
@@ -48,7 +50,7 @@ interface TaskContextMenuProps {
  * A task's right-click menu (pim-p3-10), as events, contacts and files have: open it,
  * tick it off, give it a day, move it to another list, delete it (Del).
  */
-export function TaskContextMenu({ task, position, isOpen, onClose, menuRef, onOpen, onToggleComplete, onSetDue, lists, onMoveTo, onDelete }: TaskContextMenuProps) {
+export function TaskContextMenu({ task, position, isOpen, onClose, menuRef, onOpen, onToggleComplete, onSetDue, lists, onMoveTo, onAddSubtask, onDelete }: TaskContextMenuProps) {
   const t = useTranslations("calendar");
   const tPc = useTranslations("ux_p3_pim_pc");
   const shownName = useCollectionNames();
@@ -63,6 +65,7 @@ export function TaskContextMenu({ task, position, isOpen, onClose, menuRef, onOp
     <ContextMenu ref={menuRef} isOpen={isOpen} position={position} onClose={onClose} label={task.title || t("tasks.no_title")}>
       <ContextMenuItem icon={Eye} label={tPc("task_open")} onClick={handle(onOpen)} shortcut="Enter" />
       <ContextMenuItem icon={done ? RotateCcw : Check} label={done ? t("tasks.mark_incomplete") : t("tasks.mark_complete")} onClick={handle(onToggleComplete)} testId="task-menu-toggle" />
+      {onAddSubtask && <ContextMenuItem icon={Subtask} label={t("tasks.add_subtask")} onClick={handle(onAddSubtask)} testId="task-menu-add-subtask" />}
       {onSetDue && (
         <ContextMenuSubMenu icon={CalendarDays} label={t("tasks.due_date")} testId="task-menu-due">
           <ContextMenuItem icon={CalendarEvent} label={t("tasks.due_today")} onClick={handle(() => onSetDue("today"))} />

@@ -5502,6 +5502,8 @@
       "cancel": "Annuleren",
       "save": "Opslaan",
       "quick_add_placeholder": "Taak toevoegen...",
+      "add_subtask": "Subtaak toevoegen…",
+      "subtask_of": "Subtaak van {title}",
       "due_today": "Vervalt vandaag",
       "due_tomorrow": "Vervalt morgen",
       "overdue": "Achterstallig"

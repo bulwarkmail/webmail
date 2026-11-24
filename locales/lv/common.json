@@ -5501,6 +5501,8 @@
       "cancel": "Atcelt",
       "save": "Saglabāt",
       "quick_add_placeholder": "Pievienot uzdevumu...",
+      "add_subtask": "Pievienot apakšuzdevumu…",
+      "subtask_of": "Apakšuzdevums uzdevumam {title}",
       "due_today": "Šodien",
       "due_tomorrow": "Rīt",
       "overdue": "Kavēts"

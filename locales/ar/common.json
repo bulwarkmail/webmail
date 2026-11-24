@@ -5531,6 +5531,8 @@
       "cancel": "إلغاء",
       "save": "حفظ",
       "quick_add_placeholder": "أضف مهمة...",
+      "add_subtask": "إضافة مهمة فرعية…",
+      "subtask_of": "مهمة فرعية من {title}",
       "due_today": "اليوم",
       "due_tomorrow": "غدًا",
       "overdue": "متأخرة"

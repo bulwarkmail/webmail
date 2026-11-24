@@ -16,6 +16,7 @@ import { useCollectionNames } from "@/hooks/use-collection-names";
 import { parseTaskDue } from "@/lib/task-due-parser";
 import { useContextMenu } from "@/hooks/use-context-menu";
 import { TaskContextMenu, type TaskDueChoice } from "./task-context-menu";
+import { nestTasks } from "@/lib/task-subtasks";
 
 interface TaskListViewProps {
   tasks: CalendarTask[];
@@ -32,7 +33,12 @@ interface TaskListViewProps {
   /** The lists a task can be moved to. */
   moveLists?: Calendar[];
   onMoveTask?: (task: CalendarTask, calendarId: string) => void;
+  /** Right-click "Add subtask…" (#1048). */
+  onAddSubtask?: (parent: CalendarTask) => void;
 }
+
+// A subtask's row starts further in, one step per level, up to four.
+const DEPTH_INDENT = ["ps-4", "ps-10", "ps-16", "ps-[5.5rem]", "ps-28"];
 
 /**
  * Where a new task goes (pim-8): the first task-only list, else the default
@@ -247,6 +253,7 @@ export function TaskListView({
   onSetDue,
   moveLists,
   onMoveTask,
+  onAddSubtask,
 }: TaskListViewProps) {
   const shownName = useCollectionNames();
   const t = useTranslations("calendar");
@@ -259,6 +266,8 @@ export function TaskListView({
     () => filterTasksForList(tasks, hiddenTaskListIds, filter),
     [tasks, hiddenTaskListIds, filter],
   );
+  // Subtasks right under their parent (#1048).
+  const rows = useMemo(() => nestTasks(filteredTasks), [filteredTasks]);
 
   const handleToggle = useCallback((e: React.MouseEvent, task: CalendarTask) => {
     e.stopPropagation();
@@ -292,7 +301,7 @@ export function TaskListView({
     <div className="flex-1 overflow-y-auto max-md:pb-20">
       {onQuickCreate && <QuickAddTask onQuickCreate={onQuickCreate} />}
       <div className="divide-y divide-border">
-        {filteredTasks.map(task => {
+        {rows.map(({ task, depth, parent }) => {
           const cal = calendars.find(c => task.calendarIds[c.id]);
           const isCompleted = task.progress === "completed";
           const priorityIcon = getTaskPriorityIcon(task.priority);
@@ -303,11 +312,13 @@ export function TaskListView({
               key={task.id}
               data-menu-row=""
               data-task-id={task.id}
+              data-task-depth={depth}
               onClick={() => onSelectTask(task)}
               onContextMenu={(e) => openContextMenu(e, task)}
               onKeyDown={(e) => handleRowKeyDown(e, task)}
               className={cn(
-                "flex items-start gap-3 px-4 py-3 cursor-pointer hover:bg-muted/50 transition-colors",
+                "flex items-start gap-3 pe-4 py-3 cursor-pointer hover:bg-muted/50 transition-colors",
+                DEPTH_INDENT[Math.min(depth, DEPTH_INDENT.length - 1)],
                 selectedTaskId === task.id && "bg-muted",
               )}
             >
@@ -331,6 +342,7 @@ export function TaskListView({
                 onClick={(e) => { e.stopPropagation(); onSelectTask(task); }}
                 className="flex-1 min-w-0 text-start rounded-sm focus-visible:outline-hidden"
               >
+                {parent && <span className="sr-only">{t("tasks.subtask_of", { title: parent.title || t("tasks.no_title") })}</span>}
                 <span className="flex items-center gap-1.5">
                   <span className={cn(
                     "text-sm font-medium truncate",
@@ -372,6 +384,7 @@ export function TaskListView({
           onSetDue={onSetDue ? (choice) => onSetDue(menuTask, choice) : undefined}
           lists={moveLists}
           onMoveTo={onMoveTask ? (calendarId) => onMoveTask(menuTask, calendarId) : undefined}
+          onAddSubtask={onAddSubtask && (!moveLists || moveLists.some((list) => menuTask.calendarIds?.[list.id])) ? () => onAddSubtask(menuTask) : undefined}
           onDelete={onDeleteTask ? () => onDeleteTask(menuTask) : undefined}
         />
       )}

@@ -5531,6 +5531,8 @@
       "cancel": "Avbryt",
       "save": "Lagre",
       "quick_add_placeholder": "Legg til en oppgave...",
+      "add_subtask": "Legg til deloppgave…",
+      "subtask_of": "Deloppgave av {title}",
       "due_today": "I dag",
       "due_tomorrow": "I morgen",
       "overdue": "Forfalt"

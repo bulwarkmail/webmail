@@ -5502,6 +5502,8 @@
       "cancel": "Abbrechen",
       "save": "Speichern",
       "quick_add_placeholder": "Aufgabe hinzufügen…",
+      "add_subtask": "Unteraufgabe hinzufügen…",
+      "subtask_of": "Unteraufgabe von {title}",
       "due_today": "Heute fällig",
       "due_tomorrow": "Morgen fällig",
       "overdue": "Überfällig"

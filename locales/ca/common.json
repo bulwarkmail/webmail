@@ -5531,6 +5531,8 @@
       "cancel": "Cancel·la",
       "save": "Desa",
       "quick_add_placeholder": "Afegiu una tasca...",
+      "add_subtask": "Afegeix una subtasca…",
+      "subtask_of": "Subtasca de {title}",
       "due_today": "Avui",
       "due_tomorrow": "Demà",
       "overdue": "Vençuda"

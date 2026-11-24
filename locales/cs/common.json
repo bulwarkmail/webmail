@@ -5502,6 +5502,8 @@
       "cancel": "Zrušit",
       "save": "Uložit",
       "quick_add_placeholder": "Přidat úkol...",
+      "add_subtask": "Přidat podúkol…",
+      "subtask_of": "Podúkol úkolu {title}",
       "due_today": "Dnes",
       "due_tomorrow": "Zítra",
       "overdue": "Po termínu"

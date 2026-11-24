@@ -5528,6 +5528,8 @@
       "cancel": "Cancelar",
       "save": "Salvar",
       "quick_add_placeholder": "Adicionar uma tarefa…",
+      "add_subtask": "Adicionar subtarefa…",
+      "subtask_of": "Subtarefa de {title}",
       "due_today": "Vence hoje",
       "due_tomorrow": "Vence amanhã",
       "overdue": "Atrasada"

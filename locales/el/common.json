@@ -5543,6 +5543,8 @@
       "cancel": "Ακύρωση",
       "save": "Αποθήκευση",
       "quick_add_placeholder": "Προσθήκη εργασίας…",
+      "add_subtask": "Προσθήκη υποεργασίας…",
+      "subtask_of": "Υποεργασία του {title}",
       "due_today": "Σήμερα",
       "due_tomorrow": "Αύριο",
       "overdue": "Εκπρόθεσμη"

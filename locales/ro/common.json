@@ -5531,6 +5531,8 @@
       "cancel": "Anulează",
       "save": "Salvare",
       "quick_add_placeholder": "Adăugați o sarcină...",
+      "add_subtask": "Adaugă o subsarcină…",
+      "subtask_of": "Subsarcină a sarcinii {title}",
       "due_today": "Astăzi",
       "due_tomorrow": "Mâine",
       "overdue": "Restant"

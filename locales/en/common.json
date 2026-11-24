@@ -5531,6 +5531,8 @@
       "cancel": "Cancel",
       "save": "Save",
       "quick_add_placeholder": "Add a task…",
+      "add_subtask": "Add subtask…",
+      "subtask_of": "Subtask of {title}",
       "due_today": "Today",
       "due_tomorrow": "Tomorrow",
       "overdue": "Overdue"

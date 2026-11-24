@@ -5502,6 +5502,8 @@
       "cancel": "Отмена",
       "save": "Сохранить",
       "quick_add_placeholder": "Добавить задачу...",
+      "add_subtask": "Добавить подзадачу…",
+      "subtask_of": "Подзадача задачи {title}",
       "due_today": "Сегодня",
       "due_tomorrow": "Завтра",
       "overdue": "Просрочено"

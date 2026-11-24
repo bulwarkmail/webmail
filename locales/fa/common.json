@@ -5531,6 +5531,8 @@
       "cancel": "انصراف",
       "save": "ذخیره",
       "quick_add_placeholder": "افزودن وظیفه...",
+      "add_subtask": "افزودن زیرکار…",
+      "subtask_of": "زیرکارِ {title}",
       "due_today": "امروز",
       "due_tomorrow": "فردا",
       "overdue": "عقب‌افتاده"

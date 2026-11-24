@@ -5543,6 +5543,8 @@
       "cancel": "Hủy",
       "save": "Lưu",
       "quick_add_placeholder": "Thêm công việc…",
+      "add_subtask": "Thêm việc con…",
+      "subtask_of": "Việc con của {title}",
       "due_today": "Hôm nay",
       "due_tomorrow": "Ngày mai",
       "overdue": "Quá hạn"

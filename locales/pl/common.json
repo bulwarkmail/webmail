@@ -5502,6 +5502,8 @@
       "cancel": "Anuluj",
       "save": "Zapisz",
       "quick_add_placeholder": "Dodaj zadanie...",
+      "add_subtask": "Dodaj podzadanie…",
+      "subtask_of": "Podzadanie zadania {title}",
       "due_today": "Dzisiaj",
       "due_tomorrow": "Jutro",
       "overdue": "Zaległe"

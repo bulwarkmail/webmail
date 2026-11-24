@@ -5528,6 +5528,8 @@
       "cancel": "İptal",
       "save": "Kaydet",
       "quick_add_placeholder": "Görev ekle...",
+      "add_subtask": "Alt görev ekle…",
+      "subtask_of": "{title} görevinin alt görevi",
       "due_today": "Bugün",
       "due_tomorrow": "Yarın",
       "overdue": "Gecikmiş"

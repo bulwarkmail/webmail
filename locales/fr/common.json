@@ -5528,6 +5528,8 @@
       "cancel": "Annuler",
       "save": "Enregistrer",
       "quick_add_placeholder": "Ajouter une tâche...",
+      "add_subtask": "Ajouter une sous-tâche…",
+      "subtask_of": "Sous-tâche de {title}",
       "due_today": "Échéance aujourd'hui",
       "due_tomorrow": "Échéance demain",
       "overdue": "En retard"

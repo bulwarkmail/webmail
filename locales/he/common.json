@@ -5356,6 +5356,8 @@
       "cancel": "לְבַטֵל",
       "save": "שמור",
       "quick_add_placeholder": "הוסף משימה...",
+      "add_subtask": "הוספת תת-משימה…",
+      "subtask_of": "תת-משימה של {title}",
       "due_today": "היום",
       "due_tomorrow": "מחר",
       "overdue": "באיחור"
