@@ -1267,7 +1267,7 @@ export function resolveStalwartBoot(pathname, mount, locales, shells, preferredL
     for (var j = 0; j < segs.length; j++) if (parts[at + j] !== segs[j]) { match = false; break; }
     if (match && (!best || segs.length > best.split("/").length)) best = dir;
   }
-  if (best) return { locale: locale, shell: locale + "/" + best + "/index.html", canonical: at ? null : mount + "/" + locale + "/" + parts.join("/") + "/" };
+  if (best) return { locale: locale, shell: locale + "/" + best + "/index.html", canonical: at ? null : mount + "/" + locale + "/" + parts.join("/") + (parts.length > 1 ? "" : "/") };
   if (at && parts.length === 1) return { locale: locale, shell: locale + "/index.html", canonical: null };
   return { locale: locale, shell: locale + "/index.html", canonical: mount + "/" + locale + "/" };
 }
