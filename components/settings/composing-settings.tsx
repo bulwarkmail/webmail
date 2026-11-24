@@ -47,12 +47,14 @@ export function ComposingSettings() {
     signatureNewMailEnabled,
     signatureReplyForwardEnabled,
     signatureSeparatorEnabled,
+    archiveAfterReply,
     updateSetting,
   } = useSettingsStore();
   const { client } = useAuthStore();
   const delayedSendSupported = client?.hasDelayedSend() ?? false;
   // Catch-all matching only rewrites From, which the admin can switch off.
   const customFromEnabled = usePolicyStore((s) => s.isFeatureEnabled('customFromEnabled'));
+  const archiveActionEnabled = usePolicyStore((s) => s.isFeatureEnabled('archiveActionEnabled'));
 
   return (
     <div className="space-y-8">
@@ -268,6 +270,15 @@ export function ComposingSettings() {
             onChange={(checked) => updateSetting('placeholderWarningEnabled', checked)}
           />
         </SettingItem>
+
+        {archiveActionEnabled && (
+          <SettingItem label={t('archive_after_reply.label')} description={t('archive_after_reply.description')}>
+            <ToggleSwitch
+              checked={archiveAfterReply}
+              onChange={(checked) => updateSetting('archiveAfterReply', checked)}
+            />
+          </SettingItem>
+        )}
 
         <PrivacyLinkRow topic="receipts" />
       </SettingsSection>
