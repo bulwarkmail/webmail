@@ -48,7 +48,7 @@ function cacheKey(email: Email, source: string, listeners: number, generation: n
  * account of the folder listed, or else the browsed login's own account.
  * Without a badge handler it reads nothing: every list row runs this.
  */
-function useRowSource(email: Email, enabled: boolean): string {
+export function useRowSource(email: Email, enabled: boolean): string {
   const activeLogin = useAuthStore((state) => state.activeAccountId);
   return useEmailStore((state) => {
     if (!enabled) return "";

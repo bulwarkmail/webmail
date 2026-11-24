@@ -215,6 +215,7 @@ import { useArchiveActionEnabled } from "@/lib/archive-gate";
 import { archiveInboxTarget } from "@/lib/archive-inbox";
 import { useRemoteContentBlockedByOrg, useRemoteContentHeldBack } from "@/hooks/use-third-party-mode";
 import { useSenderWarning } from "@/hooks/use-sender-warning";
+import { usePluginSender } from "@/hooks/use-plugin-sender";
 import { useBrandDomain } from "@/hooks/use-brand-domain";
 import { BrandVerifiedBadge } from "@/components/email/brand-verified-badge";
 import { MessageDetailsPanel, MessageRecipientsLine, senderCheckText } from "./message-details";
@@ -894,9 +895,12 @@ function ConversationDate({ date, timeFormat, variant, className }: { date: stri
  */
 function MvConversationCard({ email, onOpen, timeFormat, compact, shortDates }: { email: Email; onOpen?: (email: Email) => void; timeFormat: '12h' | '24h'; compact?: boolean; shortDates?: boolean }) {
   const tSidebar = useTranslations('sidebar');
-  const sender = email.from?.[0];
+  // A plugin may show another sender than From (onSenderResolve, #633).
+  const pluginSender = usePluginSender(email);
+  const sender = pluginSender ?? email.from?.[0];
   const senderWarning = useSenderWarning(email);
-  const brandDomain = useBrandDomain(email);
+  // A brand logo vouches for From's domain, not for a sender a plugin shows.
+  const brandDomain = useBrandDomain(pluginSender ? undefined : email);
   const unread = !email.keywords?.$seen;
   return (
     <button
@@ -978,9 +982,12 @@ export function MvExpandedConversationCard({
   const keyTip = useKeyTip();
   const tSidebar = useTranslations('sidebar');
   const externalContent = useConversationExternalContent();
-  const sender = email.from?.[0];
+  // A plugin may show another sender than From (onSenderResolve, #633).
+  const pluginSender = usePluginSender(email);
+  const sender = pluginSender ?? email.from?.[0];
   const senderWarning = useSenderWarning(email);
-  const brandDomain = useBrandDomain(email);
+  // A brand logo vouches for From's domain, not for a sender a plugin shows.
+  const brandDomain = useBrandDomain(pluginSender ? undefined : email);
   const hasBody = !!email.bodyValues;
   const [showDetails, setShowDetails] = useState(false);
   // The details panel, as the open message has it (#1744).
@@ -1560,7 +1567,11 @@ export function EmailViewer({
   // The policy of the message's own account: in the unified inbox or a Pro
   // tab that may be another signed-in account than the active one.
   const remoteBlockedByOrg = useRemoteContentBlockedByOrg(email?.sourceClientAccountId);
-  const brandDomain = useBrandDomain(email);
+  // A plugin may show another sender than From (onSenderResolve, #633); the
+  // header shows it, everything that acts on the sender keeps From.
+  const pluginSender = usePluginSender(email);
+  // A brand logo vouches for From's domain, not for a sender a plugin shows.
+  const brandDomain = useBrandDomain(pluginSender ? undefined : email);
   // Also true while the policy is still loading: trust can't unblock yet.
   const remoteHeldBack = useRemoteContentHeldBack(email?.sourceClientAccountId);
   const tThirdParty = useTranslations('third_party');
@@ -4617,7 +4628,11 @@ export function EmailViewer({
     );
   }
 
-  const sender = email.from?.[0];
+  const sender = pluginSender ?? email.from?.[0];
+  // Under a sender a plugin shows, the message's own From is a hover away.
+  const shownSenderTitle = pluginSender && email.from?.[0]?.email
+    ? `${t('from')}: ${email.from[0].email}`
+    : sender?.email || undefined;
   const { verification: senderVerification, label: senderVerificationLabel, message: senderVerificationMessage } = senderCheckText(email, t);
   const isStarred = email.keywords?.$flagged;
   const isUnread = !email.keywords?.$seen;
@@ -5572,7 +5587,7 @@ export function EmailViewer({
             <button
               onClick={() => sender?.email && handleViewContactSidebar(null, sender.email)}
               className="cursor-pointer group flex-shrink-0"
-              title={sender?.email || undefined}
+              title={shownSenderTitle}
             >
               <Avatar
                 name={sender?.name}
@@ -5737,7 +5752,7 @@ export function EmailViewer({
             <button
               onClick={() => sender?.email && handleViewContactSidebar(null, sender.email)}
               className="cursor-pointer group flex-shrink-0"
-              title={sender?.email || undefined}
+              title={shownSenderTitle}
             >
               <Avatar
                 name={sender?.name}

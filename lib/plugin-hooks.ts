@@ -2,6 +2,7 @@
 
 import type { CalendarEventFormView, Disposable } from './plugin-types';
 import { rowBadgeHandlersChanged } from './plugin-sandbox/row-badges';
+import { senderHandlersChanged } from './plugin-sandbox/sender-resolve';
 
 // ─── Error Tracker (Circuit Breaker) ─────────────────────────
 
@@ -892,6 +893,10 @@ export const sidebarAppHooks = {
 // and return a URL string to use as the avatar, or undefined/null to pass through to the next handler.
 export const avatarHooks = {
   onAvatarResolve: new HookBus(),
+  // Transform hook (#633): handlers receive (current: { name, email } | null,
+  // { email: EmailSummary }) and return the sender to show for the message
+  // instead of its From, or undefined/null to pass through. Display only.
+  onSenderResolve: new HookBus(undefined, { onChange: senderHandlersChanged }),
 };
 
 // §7.23 Router Hooks
