@@ -48,6 +48,8 @@ vi.mock('@/lib/offline/offline-mode', () => ({
   registerOfflineHooks: () => {},
   offlineSessionFor: async () => { order.push('local copy'); return {}; },
   markStartedOffline: () => {},
+  // Real storage deletion is covered by auth-store-retain-accounts.
+  wipeAccount: async () => {},
 }));
 
 const heard = vi.hoisted(() => [] as string[]);
@@ -198,7 +200,7 @@ describe('a login the server ended, at a start', () => {
     useAccountStore.setState({ accounts: [account(ALICE, 0, mode as 'basic' | 'oauth')] } as never);
     answer = (url, method) => (url.includes(route) && method === 'PUT' ? json(401, { error: 'session_expired', maxHours: 8 }) : null);
     await useAuthStore.getState().checkAuth();
-    await vi.waitFor(() => expect(useAccountStore.getState().getAccountById(ALICE)).toBeUndefined());
+    await vi.waitFor(() => expect(useAccountStore.getState().getAccountById(ALICE)?.awaitingSignIn).toBe(true));
     expect(heard).toEqual([ALICE]);
     expect(kinds).toEqual(['session']);
     expect(readRefusedLogins()[ALICE]).toMatchObject({ kind: 'session', certain: true });
@@ -239,7 +241,7 @@ describe('a login the server ended, at a switch', () => {
     await useAuthStore.getState().switchAccount(BOB);
     expect(heard).toEqual([BOB]);
     expect(reasons).toEqual(['evicted']);
-    expect(useAccountStore.getState().getAccountById(BOB)).toBeUndefined();
+    expect(useAccountStore.getState().getAccountById(BOB)?.awaitingSignIn).toBe(true);
     expect(isEvicted(BOB)).toBe(true);
     expect(useOfflineStore.getState().enabled).toContain(BOB);
   });
@@ -305,7 +307,7 @@ describe('a password the server keeps refusing', () => {
     await vi.waitFor(() => expect(heard).toEqual([ALICE]));
     expect(Object.keys(readRefusedLogins())).toEqual([ALICE]);
     expect(certain).toEqual([false]);
-    expect(useAccountStore.getState().accounts).toEqual([]);
+    expect(useAccountStore.getState().getAccountById(ALICE)?.awaitingSignIn).toBe(true);
     expect(isEvicted(ALICE)).toBe(true);
   });
 
@@ -317,7 +319,7 @@ describe('a password the server keeps refusing', () => {
       answer = (url, method) => (url.includes('/api/auth/session') && method === 'PUT' ? json(401, { error: 'No session' }) : null);
       await useAuthStore.getState().switchAccount(BOB);
       // Got as far as the failure that would read the mark.
-      expect(useAccountStore.getState().getAccountById(BOB)).toBeUndefined();
+      expect(useAccountStore.getState().getAccountById(BOB)?.awaitingSignIn).toBe(true);
     }
 
     beforeEach(() => {
@@ -386,7 +388,7 @@ describe('a password the server keeps refusing', () => {
       const client = await running();
       useOfflineStore.setState({ enabled: [ALICE] });
       client.refused(CREDENTIALS_REFUSED_CONFIRM_MS);
-      await vi.waitFor(() => expect(useAccountStore.getState().getAccountById(ALICE)).toBeUndefined());
+      await vi.waitFor(() => expect(useAccountStore.getState().getAccountById(ALICE)?.awaitingSignIn).toBe(true));
       expect(Object.keys(readRefusedLogins())).toEqual([ALICE]);
       expect(heard).toEqual([ALICE]);
       expect(certain).toEqual([true]);

@@ -1,9 +1,8 @@
 import { beforeAll, expect, it, vi } from 'vitest';
 import { createConfig } from '@/lib/__tests__/fixtures/config';
 
-// An OAuth account that cannot be restored is dropped from the list. Only its
-// session cookie was cleared: the refresh token stayed in the browser for its
-// full lifetime, unrevoked, for an account the app no longer shows.
+// An OAuth account that cannot be restored stays listed for a new sign-in,
+// but its refresh token must still be revoked and cleared with the session.
 vi.mock('@/lib/jmap/client', () => {
   class JMAPClient {
     constructor(public serverUrl: string, public username: string, public password: string) {}
@@ -50,6 +49,6 @@ it('clears the refresh token of an OAuth account it could not restore', async ()
   await useAuthStore.getState().checkAuth();
   await vi.waitFor(() => expect(requests).toContain('DELETE /api/auth/session?slot=2'));
 
-  expect(useAccountStore.getState().accounts).toHaveLength(0);
+  expect(useAccountStore.getState().getAccountById(ssoAccount.id)).toMatchObject({ awaitingSignIn: true, isConnected: false });
   expect(requests).toContain('DELETE /api/auth/token?slot=2');
 });

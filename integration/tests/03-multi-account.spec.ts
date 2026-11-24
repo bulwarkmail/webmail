@@ -37,6 +37,65 @@ test.describe('Multi-account sync', () => {
     }
   });
 
+  test('an expired background session keeps its sign-in target and recovers the same account', async ({ page }) => {
+    test.setTimeout(5 * 60 * 1_000);
+    const recovered = expect.configure({ timeout: 60 * 1_000 });
+    await login(page, alice);
+    await addAccount(page, bob);
+    const aliceId = await page.evaluate((email) => {
+      const registry = JSON.parse(localStorage.getItem('account-registry')!);
+      return registry.state.accounts.find((account: { username: string }) => account.username === email).id as string;
+    }, alice.email);
+    const bobId = await accountSwitcher(page).getAttribute('data-active-account-id');
+    // End the real remembered session through Bulwark, without removing its registry entry.
+    const slot = await page.evaluate((id) => {
+      const registry = JSON.parse(localStorage.getItem('account-registry')!);
+      return registry.state.accounts.find((account: { id: string }) => account.id === id).cookieSlot as number;
+    }, aliceId);
+    await page.evaluate(async (slot) => {
+      const answer = await fetch(`/api/auth/session?slot=${slot}`, { method: 'DELETE' });
+      if (!answer.ok) throw new Error(`Session cleanup failed: ${answer.status}`);
+    }, slot);
+    await page.reload();
+    await recovered(accountSwitcher(page)).toHaveAttribute('data-active-account-id', bobId!);
+    await accountSwitcher(page).click();
+    const pending = page.locator(`[data-testid="account-option"][data-account-id="${aliceId}"]`).first();
+    await recovered(pending).toContainText('Sign in again');
+    await pending.click();
+    await recovered(page.locator('#username')).toHaveValue(alice.email);
+    await page.fill('#password', alice.password);
+    await page.locator('[data-testid="login-submit"]').click();
+    await recovered(accountSwitcher(page)).toHaveAttribute('data-active-account-id', aliceId);
+    await accountSwitcher(page).click();
+    await recovered(page.locator('[data-testid="account-option"]')).toHaveCount(2);
+    await recovered(page.locator(`[data-testid="account-option"][data-account-id="${aliceId}"]`).first()).not.toContainText('Sign in again');
+  });
+
+  test('all expired accounts can be managed and recovered on a narrow RTL sign-in page', async ({ page }) => {
+    test.setTimeout(5 * 60 * 1_000);
+    const recovered = expect.configure({ timeout: 60 * 1_000 });
+    await login(page, alice);
+    const aliceId = await accountSwitcher(page).getAttribute('data-active-account-id');
+    await addAccount(page, bob);
+    await page.evaluate(async () => {
+      const answer = await fetch('/api/auth/session?all=true', { method: 'DELETE' });
+      if (!answer.ok) throw new Error(`Session cleanup failed: ${answer.status}`);
+    });
+    await page.reload();
+    await recovered(page.locator('[data-testid="pending-accounts"] li')).toHaveCount(2);
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto('/ar/login');
+    await recovered(page.locator('html')).toHaveAttribute('dir', 'rtl');
+    const pending = page.locator('[data-testid="pending-accounts"]');
+    await pending.locator('li').filter({ hasText: bob.email }).getByTestId('pending-account-remove').click();
+    await recovered(pending.locator('li')).toHaveCount(1);
+    await pending.getByTestId('pending-account-sign-in').click();
+    await recovered(page.locator('#username')).toHaveValue(alice.email);
+    await page.fill('#password', alice.password);
+    await page.getByTestId('login-submit').click();
+    await recovered(accountSwitcher(page)).toHaveAttribute('data-active-account-id', aliceId!);
+  });
+
   test('both accounts connect and their Inbox counters stay isolated', async ({ page }) => {
     // Pre-seed: two unread for alice, one for bob.
     await send(alice, subj('iso-a1'));

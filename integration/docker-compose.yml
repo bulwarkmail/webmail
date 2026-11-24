@@ -52,15 +52,15 @@ services:
     environment:
       # Browser-facing JMAP URL. The browser (Playwright) reaches Stalwart on
       # the host-published port; the webmail server never fetches this URL
-      # itself for trusted basic-auth logins, so it need not be container-
-      # reachable. Setting JMAP_SERVER_URL also puts the app in "env-managed"
+      # itself too, to verify remembered sessions. The test image forwards its
+      # loopback port to Stalwart. Setting JMAP_SERVER_URL puts the app in "env-managed"
       # mode, which skips the first-run setup wizard.
       JMAP_SERVER_URL: http://localhost:8025
       STALWART_FEATURES: "true"
       APP_NAME: "Bulwark Webmail (Integration)"
       # Enables "Remember me" / settings-sync cookies. Not required for the
       # sync tests but harmless and avoids noisy warnings.
-      SESSION_SECRET: integration-not-a-real-secret
+      SESSION_SECRET: integration-only-not-a-real-secret-at-least-32-characters
       LOG_LEVEL: info
     depends_on:
       stalwart:

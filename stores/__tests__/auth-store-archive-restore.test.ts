@@ -3,7 +3,7 @@ import { createConfig } from '@/lib/__tests__/fixtures/config';
 
 // Accounts restored from the account list backup carry no credentials. They
 // must stay listed until signed in, and opening one must lead to the sign-in
-// form instead of dropping it like an account whose session ran out.
+// form, as does an account whose session could not be restored.
 vi.mock('@/lib/jmap/client', () => {
   class JMAPClient {
     constructor(public serverUrl: string, public username: string, public password: string) {}
@@ -80,7 +80,7 @@ it('keeps a restored account through a reload and sends it to the sign-in form',
   expect(useAccountStore.getState().accounts.map(a => a.id)).toEqual([signedIn.id, 'alice@x.test@mail.x.test']);
 
   await useAuthStore.getState().switchAccount('alice@x.test@mail.x.test');
-  expect(redirect).toHaveBeenCalledWith(expect.stringMatching(/\/login\?mode=add-account&username=alice%40x\.test$/));
+  expect(redirect).toHaveBeenCalledWith('/en/login?mode=add-account&account=alice%40x.test%40mail.x.test');
   expect(useAccountStore.getState().accounts).toHaveLength(2);
   expect(useAuthStore.getState().activeAccountId).toBe(signedIn.id);
 });
@@ -118,6 +118,7 @@ it('treats a browser left with only accounts awaiting sign-in as signed out, not
   expect(useAuthStore.getState().isAuthenticated).toBe(false);
   expect(useAuthStore.getState().error).not.toBe('connection_failed');
   expect(useAccountStore.getState().accounts.map(a => a.id)).toEqual(['alice@x.test@mail.x.test']);
+  expect(useAccountStore.getState().accounts.every(a => a.awaitingSignIn)).toBe(true);
 });
 
 it('signs in to a restored account with its saved password without leaving the active one', async () => {
