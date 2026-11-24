@@ -73,8 +73,10 @@ export function listReachableHosts({ get, policy, env, buildRelayUrl = DEFAULT_R
   };
 
   add('JMAP server', get('jmapServerUrl'), 'JMAP_SERVER_URL', 'both');
+  if (get('jmapServerUrl')) add('JMAP server (internal)', get('jmapInternalServerUrl'), 'JMAP_INTERNAL_SERVER_URL', 'server');
   for (const server of parseJmapServers(get('jmapServers'))) {
     add('JMAP server', server.url, `JMAP_SERVERS (${server.label})`, 'both');
+    add('JMAP server (internal)', server.internalUrl, `JMAP_SERVERS (${server.label})`, 'server');
     add('OAuth issuer', server.oauth?.issuerUrl, `JMAP_SERVERS (${server.label})`, 'both');
     add('OAuth issuer', server.oauth?.endSessionUrl, `JMAP_SERVERS (${server.label})`, 'browser');
   }

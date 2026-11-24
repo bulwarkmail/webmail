@@ -21,6 +21,7 @@ import { MAX_ACCOUNT_SLOTS } from '@/lib/account-utils';
 import { writeSignInStamp } from '@/lib/auth/session-age';
 import { callbackIssuerAccepted } from '@/lib/oauth/discovery';
 import { loggableError } from '@/lib/oauth/answer-summary';
+import { serverSideJmapUrl } from '@/lib/stalwart/internal-url';
 
 const SSO_PENDING_COOKIE = 'sso_pending';
 const SSO_PENDING_MAX_AGE_MS = 5 * 60 * 1000; // 5 minutes
@@ -53,7 +54,7 @@ async function accountName(serverUrl: string, accessToken: string, idToken: stri
     // Not a JWT, or none: the server can say.
   }
   try {
-    const session = await fetch(`${serverUrl.replace(/\/+$/, '')}/.well-known/jmap`, {
+    const session = await fetch(serverSideJmapUrl(`${serverUrl.replace(/\/+$/, '')}/.well-known/jmap`), {
       headers: { Authorization: `Bearer ${accessToken}` },
       redirect: 'error',
       signal: AbortSignal.timeout(5000),

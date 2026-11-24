@@ -4,6 +4,7 @@ import path from 'node:path';
 import { configManager } from '@/lib/admin/config-manager';
 import { getStateDir } from '@/lib/admin/paths';
 import { observeUpstream } from '@/lib/metrics/upstream';
+import { serverSideJmapUrl } from '@/lib/stalwart/internal-url';
 import { bootState, getStore, isSharedMode } from '@/lib/shared-store';
 import { getSettingsDir } from '@/lib/settings-sync';
 import { getDir as getTelemetryDir } from '@/lib/telemetry/state';
@@ -91,7 +92,9 @@ async function checkStalwart(): Promise<CheckResult> {
     return 'fail';
   }
   try {
-    const response = await observeUpstream('stalwart', () => fetch(url, {
+    // Probed the way Bulwark's server reaches it: the internal URL when set (#1294).
+    const target = serverSideJmapUrl(url.toString());
+    const response = await observeUpstream('stalwart', () => fetch(target, {
       method: 'GET',
       redirect: 'manual',
       signal: AbortSignal.timeout(STALWART_TIMEOUT_MS),

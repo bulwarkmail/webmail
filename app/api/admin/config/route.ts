@@ -143,6 +143,20 @@ export async function PATCH(request: NextRequest) {
       }
     }
 
+    // Bulwark's server sends JMAP requests there (#1294): an http(s) URL or nothing.
+    if ('jmapInternalServerUrl' in updates) {
+      const value = updates.jmapInternalServerUrl;
+      let ok = value === '' || value === null;
+      if (typeof value === 'string' && value.trim()) {
+        try {
+          ok = ['http:', 'https:'].includes(new URL(value.trim()).protocol);
+        } catch {
+          ok = false;
+        }
+      }
+      if (!ok) return NextResponse.json({ error: 'jmapInternalServerUrl must be an http(s) URL' }, { status: 400 });
+    }
+
     // Turning off Stalwart admin auto-login without a Bulwark admin password
     // would leave the dashboard with no way in at all (#870).
     if ('stalwartAdminAccess' in updates && updates.stalwartAdminAccess !== 'auto') {

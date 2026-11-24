@@ -27,6 +27,12 @@ export interface JmapServerEntry {
    * dashboard.
    */
   adminAccess?: boolean;
+  /**
+   * Where Bulwark's own server reaches this server, when `url` (what browsers
+   * use) doesn't work from inside its network (#1294). Never sent to the
+   * browser outside the admin dashboard.
+   */
+  internalUrl?: string;
   oauth?: JmapServerOAuthConfig & {
     /**
      * Set on the admin dashboard's view of an entry instead of the secret
@@ -112,11 +118,13 @@ export function parseJmapServers(raw: unknown): JmapServerEntry[] {
         if (endSessionUrl && isHttpUrl(endSessionUrl)) oauth.endSessionUrl = endSessionUrl;
       }
     }
+    const internalUrl = typeof e.internalUrl === 'string' ? trimUrl(e.internalUrl) : '';
     out.push({
       id,
       label: label || id,
       url,
       ...(domains.length > 0 ? { domains } : {}),
+      ...(internalUrl && isHttpUrl(internalUrl) ? { internalUrl } : {}),
       ...(oauth ? { oauth } : {}),
       // Only an explicit true: anything else is the default, off.
       ...(e.adminAccess === true ? { adminAccess: true } : {}),

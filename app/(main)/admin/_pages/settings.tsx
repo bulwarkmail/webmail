@@ -122,6 +122,7 @@ export function SettingsPage() {
         <SettingsSection id="general" title="General">
           <ConfigTextItem label="Application name" configKey="appName" value={currentValue('appName') as string} source={config.appName?.source} onChange={handleChange} onRevert={handleRevert} />
           <ConfigTextItem label="JMAP server URL" term="jmap" configKey="jmapServerUrl" value={currentValue('jmapServerUrl') as string} source={config.jmapServerUrl?.source} onChange={handleChange} onRevert={handleRevert} placeholder="https://mail.example.com" wide />
+          <ConfigTextItem label="Internal JMAP server URL" description="Where Bulwark's server reaches the JMAP server when the public URL doesn't work from inside its network, e.g. a container name. Browsers keep using the URL above. Empty uses the URL above." configKey="jmapInternalServerUrl" value={currentValue('jmapInternalServerUrl') as string} source={config.jmapInternalServerUrl?.source} onChange={handleChange} onRevert={handleRevert} placeholder="http://stalwart:8080" wide advanced />
           <ConfigToggleItem label="Allow custom JMAP endpoint" description="Show a JMAP server URL field on the login form, allowing users to connect to any JMAP server" configKey="allowCustomJmapEndpoint" value={currentValue('allowCustomJmapEndpoint') as boolean} source={config.allowCustomJmapEndpoint?.source} onChange={handleChange} onRevert={handleRevert} />
           {!!currentValue('allowCustomJmapEndpoint') && (
             <ConfigNote tone="warning">

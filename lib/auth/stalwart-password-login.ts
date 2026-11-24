@@ -1,5 +1,6 @@
 import { logger } from '@/lib/logger';
 import { DisallowedUrlError, fetchPublicUrl } from '@/lib/security/url-guard';
+import { serverSideJmapUrl } from '@/lib/stalwart/internal-url';
 import { generateCodeVerifier, generateCodeChallenge, generateState } from '@/lib/oauth/pkce';
 import { forwardedClientHeaders } from '@/lib/auth/client-address';
 import { loggableError } from '@/lib/oauth/answer-summary';
@@ -128,11 +129,13 @@ export function isAllowedLoginRedirect(from: string, to: string): boolean {
  * is followed once and only within the same host; anywhere else is an error.
  */
 async function fetchConfiguredServer(input: string, init: RequestInit): Promise<Response> {
-  const first = await fetch(input, { ...init, redirect: 'manual' });
+  // The server's internal address for Bulwark, when the admin set one (#1294).
+  const target = serverSideJmapUrl(input);
+  const first = await fetch(target, { ...init, redirect: 'manual' });
   if (first.status < 300 || first.status >= 400) return first;
   const location = first.headers.get('location');
-  const next = location ? new URL(location, input).toString() : null;
-  if (!next || !isAllowedLoginRedirect(input, next)) {
+  const next = location ? serverSideJmapUrl(new URL(location, target).toString()) : null;
+  if (!next || !isAllowedLoginRedirect(target, next)) {
     throw new Error(`${input} redirects to another host`);
   }
   return fetch(next, { ...init, redirect: 'error' });

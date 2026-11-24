@@ -7,6 +7,7 @@ import {
 import { forwardedClientHeaders } from '@/lib/auth/client-address';
 import { observeUpstream } from '@/lib/metrics/upstream';
 import { desktopRedirectRefused } from '@/lib/desktop/server-redirect';
+import { serverSideJmapUrl } from '@/lib/stalwart/internal-url';
 
 const VERIFY_TIMEOUT_MS = 10000;
 const MAX_REDIRECTS = 3;
@@ -369,7 +370,7 @@ async function fetchIdentityEmails(
     const response = await observeUpstream('stalwart', async (trace) => {
       const init = { ...requestInit, headers: { ...requestInit.headers, ...trace } };
       return options.trusted
-        ? await fetch(apiUrl, { ...init, redirect: 'manual' })
+        ? await fetch(serverSideJmapUrl(apiUrl), { ...init, redirect: 'manual' })
         : await fetchPublicUrl(apiUrl, init);
     });
     if (!response.ok) {
@@ -442,12 +443,14 @@ async function fetchVerifiedSession(
       };
       // Untrusted (user-supplied) endpoints connect through the rebinding-safe
       // fetch so the address validated above is the one the socket uses.
-      // Admin-configured servers may legitimately live on private addresses.
+      // Admin-configured servers may legitimately live on private addresses,
+      // and may have an internal address for this server (#1294). Redirects
+      // still resolve against the public URL and are mapped again.
       const target = currentUrl;
       response = await observeUpstream('stalwart', async (trace) => {
         const init = { ...requestInit, headers: { ...requestInit.headers, ...trace } };
         return options.trusted
-          ? await fetch(target, { ...init, redirect: 'manual' })
+          ? await fetch(serverSideJmapUrl(target), { ...init, redirect: 'manual' })
           : await fetchPublicUrl(target, init);
       });
 

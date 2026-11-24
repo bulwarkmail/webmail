@@ -301,6 +301,9 @@ export const CONFIG_ENV_MAP: Record<string, { envVar?: string; fileEnvVar?: stri
   appDescription: { envVar: 'APP_DESCRIPTION', type: 'string', defaultValue: '' },
   searchEngineIndexing: { envVar: 'SEARCH_ENGINE_INDEXING', type: 'boolean', defaultValue: false },
   jmapServerUrl: { envVar: 'JMAP_SERVER_URL', type: 'url', defaultValue: '' },
+  // Where Bulwark's own server reaches jmapServerUrl, e.g. a container name;
+  // browsers keep using jmapServerUrl (#1294, lib/stalwart/internal-url.ts).
+  jmapInternalServerUrl: { envVar: 'JMAP_INTERNAL_SERVER_URL', type: 'url', defaultValue: '' },
   stalwartFeaturesEnabled: { envVar: 'STALWART_FEATURES', type: 'boolean', defaultValue: true },
   // Server-side switch for /api/account/stalwart/jmap. Independent of the UI
   // flag above so operators can keep the client features but block the

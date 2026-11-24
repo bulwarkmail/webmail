@@ -83,7 +83,7 @@ export const ADMIN_PAGES: readonly AdminPageDef[] = [
     group: 'top',
     keywords: 'settings application name jmap server url demo mode stalwart features search engine indexing',
     sections: [
-      { id: 'general', title: 'General', keywords: 'app name jmap url custom endpoint demo mode stalwart indexing' },
+      { id: 'general', title: 'General', keywords: 'app name jmap url internal url docker container custom endpoint demo mode stalwart indexing' },
       { id: 'login', title: 'Login page', keywords: 'version 2fa totp code access token remember me heading subtitle' },
       { id: 'servers', title: 'JMAP servers', keywords: 'multi server domain auto pick list' },
       { id: 'wopi', title: 'Document editing', keywords: 'wopi collabora onlyoffice office files host url' },

@@ -21,6 +21,7 @@ import { fetchPublicUrl, type PublicFetchResponse } from '@/lib/security/url-gua
 import { observeUpstream } from '@/lib/metrics/upstream';
 import { desktopRedirectRefused } from '@/lib/desktop/server-redirect';
 import { acquireStoredCredential, refusedCredentialResponse } from '@/lib/stalwart/stored-credential-budget';
+import { serverSideJmapUrl } from '@/lib/stalwart/internal-url';
 
 const MAX_REDIRECTS = 5;
 /** Deadline for one upstream request when the caller sets none. */
@@ -118,7 +119,8 @@ async function fetchUnbudgeted(
   // The desktop app's approved server gets its hops checked by hand as well.
   const approvedOnDesktop = process.env.NEXT_PUBLIC_BULWARK_DESKTOP === '1' && trusted !== false;
   if (trusted !== false && !approvedOnDesktop) {
-    return fetch(url, init);
+    // A configured server may have an internal address for Bulwark's server (#1294).
+    return fetch(serverSideJmapUrl(url), init);
   }
 
   const { redirect, headers: initHeaders, ...rest } = init;
