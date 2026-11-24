@@ -163,15 +163,21 @@ export function createMaskedEmailManager() {
       }
       return addresses;
     },
-    async create(input: { description: string; forDomain: string }): Promise<string> {
+    async create(input: { description: string; forDomain: string; emailDomain?: string }): Promise<string> {
       const result = await request<{
         created?: Record<string, { id: string }>;
-        notCreated?: Record<string, { type: string; description?: string }>;
+        notCreated?: Record<string, { type: string; description?: string; properties?: string[] }>;
       }>('x:MaskedEmail/set', { create: { new: {
         // Stalwart refuses a present but empty string; no description is null.
         description: input.description || null, forDomain: input.forDomain || null, [enabledProperty]: true,
+        // Without emailDomain the server uses the domain of the account name.
+        ...(input.emailDomain ? { emailDomain: input.emailDomain } : {}),
       } } });
       const error = result.notCreated?.new;
+      // A refused domain is about this one choice, not a missing permission.
+      if (error?.type === 'forbidden' && Array.isArray(error.properties) && error.properties.includes('emailDomain')) {
+        throw new MaskedEmailError('domainNotAllowed', error.description);
+      }
       if (error) throw new MaskedEmailError(error.type, error.description);
       if (typeof result.created?.new?.id !== 'string') throw new MaskedEmailError('invalidResponse');
       return result.created.new.id;

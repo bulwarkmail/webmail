@@ -17,6 +17,7 @@ vi.mock('@/lib/lite', () => ({ IS_LITE: false }));
 
 import { apiFetch } from '@/lib/browser-navigation';
 import { bumpStoreEpoch } from '@/lib/store-epoch';
+import { useIdentityStore } from '@/stores/identity-store';
 import { MaskedAddressesSection } from '@/components/settings/masked-addresses-section';
 
 const namespaces = ['urn:stalwart:jmap', 'urn:inbuxa:jmap:registry'];
@@ -35,6 +36,7 @@ let denied: 'read' | 'create' | 'update' | 'destroy' | null = null;
 let destroyReply: 'success' | 'ambiguous' | 'unsupported' = 'success';
 beforeEach(() => {
   bumpStoreEpoch();
+  useIdentityStore.setState({ identities: [] });
   state.client = client(namespaces[1]);
   state.account = 'session-a';
   state.slot = 1;
@@ -66,6 +68,8 @@ beforeEach(() => {
     if (args.create) {
       if (denied === 'create') return reply(method, { notCreated: { new: { type: 'forbidden' } } });
       const input = args.create.new;
+      // Stalwart's answer for a domain the account has no address on.
+      if (input.emailDomain === 'other.test') return reply(method, { notCreated: { new: { type: 'forbidden', properties: ['emailDomain'] } } });
       records.push({ ...initial(), id: 'new', email: 'new@example.test', description: input.description, forDomain: input.forDomain, enabled: input[enabledProperty] });
       return reply(method, { created: { new: { id: 'new' } } });
     }
@@ -128,6 +132,41 @@ describe('Masked Addresses Security UI', () => {
     await screen.findByText('new@example.test');
     expect(records[1]).toMatchObject({ forDomain: 'https://new.example.test', description: 'New site', enabled: true });
     expect(requests().filter(([, args]) => args.create)).toHaveLength(1);
+  });
+  it('creates on a domain picked from the account addresses (#1703)', async () => {
+    useIdentityStore.setState({ identities: [
+      { id: 'a', name: 'Me', email: 'me@example.test' }, { id: 'b', name: 'Alias', email: 'Alias@Spare.example' },
+      { id: 'c', name: 'Me again', email: 'other@example.test' },
+    ] as never });
+    render(<MaskedAddressesSection />);
+    await screen.findByText('mask@example.test');
+    const select = screen.getByLabelText('domain') as HTMLSelectElement;
+    expect([...select.options].map(option => option.value)).toEqual(['', 'example.test', 'spare.example']);
+    fireEvent.change(select, { target: { value: 'spare.example' } });
+    fireEvent.click(screen.getByRole('button', { name: 'create' }));
+    await screen.findByText('new@example.test');
+    expect(requests().find(([, args]) => args.create)[1].create.new.emailDomain).toBe('spare.example');
+  });
+  it('leaves the domain to the server when the account has one domain', async () => {
+    useIdentityStore.setState({ identities: [{ id: 'a', name: 'Me', email: 'me@example.test' }] as never });
+    render(<MaskedAddressesSection />);
+    await screen.findByText('mask@example.test');
+    expect(screen.queryByLabelText('domain')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'create' }));
+    await screen.findByText('new@example.test');
+    expect(requests().find(([, args]) => args.create)[1].create.new).not.toHaveProperty('emailDomain');
+  });
+  it('keeps creating possible when the server refuses the picked domain', async () => {
+    useIdentityStore.setState({ identities: [
+      { id: 'a', name: 'Me', email: 'me@example.test' }, { id: 'b', name: 'Other', email: 'me@other.test' },
+    ] as never });
+    render(<MaskedAddressesSection />);
+    await screen.findByText('mask@example.test');
+    fireEvent.change(screen.getByLabelText('domain'), { target: { value: 'other.test' } });
+    fireEvent.click(screen.getByRole('button', { name: 'create' }));
+    await screen.findByText('domain_not_allowed');
+    expect(screen.getByRole('button', { name: 'create' })).toBeEnabled();
+    expect(screen.queryByText('create_forbidden')).not.toBeInTheDocument();
   });
   it.each(['create', 'update'] as const)('disables refused %s operations while retaining copy and the other operation', async operation => {
     denied = operation;

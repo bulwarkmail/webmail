@@ -4,6 +4,7 @@ import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { useAuthStore } from '@/stores/auth-store';
 import { useAccountStore } from '@/stores/account-store';
+import { useIdentityStore } from '@/stores/identity-store';
 import { getActiveAccountSlot } from '@/lib/auth/active-account-slot';
 import { currentStoreEpoch } from '@/lib/store-epoch';
 import { createMaskedEmailManager, maskedEmailErrorType, maskedEmailUnavailable, type MaskedAddress, type MaskedEmailManager } from '@/lib/stalwart/masked-email';
@@ -14,6 +15,22 @@ import { useConfirmDialog } from '@/hooks/use-confirm-dialog';
 import { SettingsSection } from './settings-section';
 
 const PAGE_SIZE = 10;
+
+/**
+ * Domains of the account's own addresses, as its identities list them.
+ * Stalwart only accepts a masked address domain the account has an address
+ * on, so these are the useful choices (#1703).
+ */
+export function maskedAddressDomains(emails: readonly string[]): string[] {
+  const domains = new Set<string>();
+  for (const email of emails) {
+    const at = email.lastIndexOf('@');
+    const domain = at > 0 ? email.slice(at + 1).trim().toLowerCase() : '';
+    if (/^[a-z0-9-]+(\.[a-z0-9-]+)+$/.test(domain)) domains.add(domain);
+  }
+  return [...domains].sort();
+}
+
 type View = { context: MaskedEmailManager | null; status: 'loading' | 'ready' | 'forbidden' | 'unavailable' | 'error'; addresses: MaskedAddress[] };
 
 function MaskedAddressRow({ address, expanded, busy, canUpdate, canDelete, onExpand, onUpdate, onDelete }: {
@@ -97,6 +114,9 @@ export function MaskedAddressesSection() {
   const [notice, setNotice] = useState<string | null>(null);
   const [description, setDescription] = useState('');
   const [website, setWebsite] = useState('');
+  const [emailDomain, setEmailDomain] = useState('');
+  const identities = useIdentityStore(s => s.identities);
+  const domains = useMemo(() => maskedAddressDomains(identities.map(identity => identity.email)), [identities]);
   const labelId = useId();
   const { confirm, dialogProps } = useConfirmDialog();
   const closeConfirmation = dialogProps.onClose;
@@ -105,7 +125,7 @@ export function MaskedAddressesSection() {
     closeConfirmation(); confirming.current = null; operation.current = null;
     setView({ context, status: 'loading', addresses: [] });
     setBusy(false); setCanCreate(true); setCanUpdate(true); setCanDelete(true); setDeleteNeedsRefresh(false);
-    setExpandedId(null); setPage(0); setNotice(null); setDescription(''); setWebsite('');
+    setExpandedId(null); setPage(0); setNotice(null); setDescription(''); setWebsite(''); setEmailDomain('');
     if (context) context.list().then(addresses => {
       if (!cancelled && context.isCurrent()) { setView({ context, status: 'ready', addresses }); setShownFor(context); }
     }).catch(error => {
@@ -165,7 +185,8 @@ export function MaskedAddressesSection() {
         if (kind === 'destroy') {
           setDeleteNeedsRefresh(type !== 'forbidden');
           setNotice(type === 'forbidden' ? 'delete_forbidden' : type === 'deleteUnconfirmed' ? 'delete_unconfirmed' : 'delete_failed');
-        } else setNotice(type === 'forbidden' ? `${kind}_forbidden` : type === 'overQuota' ? 'over_quota' : type === 'rateLimit' ? 'rate_limit' : 'save_failed');
+        } else setNotice(type === 'forbidden' ? `${kind}_forbidden` : type === 'domainNotAllowed' ? 'domain_not_allowed' :
+          type === 'overQuota' ? 'over_quota' : type === 'rateLimit' ? 'rate_limit' : 'save_failed');
       }
       end(); return false;
     }
@@ -219,9 +240,21 @@ export function MaskedAddressesSection() {
           {!canUpdate && <p role="status" className="text-sm text-muted-foreground">{t('update_forbidden')}</p>}
           {!canDelete && <p role="status" className="text-sm text-muted-foreground">{t('delete_forbidden')}</p>}
           <form className="space-y-3 border-t border-border pt-4" onSubmit={e => {
-            e.preventDefault(); if (canCreate) void mutate('create', () => context.create({ description, forDomain: website }));
+            e.preventDefault();
+            if (canCreate) void mutate('create', () => context.create({ description, forDomain: website,
+              emailDomain: domains.includes(emailDomain) ? emailDomain : '' }));
           }}>
             <h4 className="text-sm font-medium">{t('create')}</h4>
+            {/* One domain leaves nothing to choose; the server picks it. */}
+            {domains.length > 1 && <div>
+              <label htmlFor={`${labelId}-domain`} className="mb-1 block text-xs text-muted-foreground">{t('domain')}</label>
+              <select id={`${labelId}-domain`} value={domains.includes(emailDomain) ? emailDomain : ''} dir="auto"
+                onChange={e => setEmailDomain(e.target.value)} disabled={busy || !canCreate}
+                className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm text-foreground hover:border-muted-foreground focus-visible:border-ring focus-visible:outline-hidden disabled:cursor-not-allowed disabled:opacity-50">
+                <option value="">{t('domain_default')}</option>
+                {domains.map(domain => <option key={domain} value={domain}>{domain}</option>)}
+              </select>
+            </div>}
             <div>
               <label htmlFor={`${labelId}-website`} className="mb-1 block text-xs text-muted-foreground">{t('website')}</label>
               <Input id={`${labelId}-website`} value={website} onChange={e => setWebsite(e.target.value)} disabled={busy || !canCreate} />
