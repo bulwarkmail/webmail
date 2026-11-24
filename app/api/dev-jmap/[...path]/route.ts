@@ -68,6 +68,76 @@ function nextState(): string {
   return `mock-state-${++stateCounter}`;
 }
 
+interface EmailChange {
+  state: number;
+  created: string[];
+  updated: string[];
+  destroyed: string[];
+}
+
+const EMAIL_CHANGE_LOG_LIMIT = 5000;
+const EMAIL_STATE_PREFIX = `mock-email-${crypto.randomUUID().slice(0, 8)}-`;
+let emailState = 0;
+const emailChangeLog: EmailChange[] = [];
+const emailStateListeners = new Set<() => void>();
+
+function emailStateString(state = emailState): string {
+  return `${EMAIL_STATE_PREFIX}${state}`;
+}
+
+function recordEmailChanges(changes: { created?: string[]; updated?: string[]; destroyed?: string[] }): void {
+  const created = changes.created ?? [];
+  const updated = changes.updated ?? [];
+  const destroyed = changes.destroyed ?? [];
+  if (created.length + updated.length + destroyed.length === 0) return;
+  emailState += 1;
+  emailChangeLog.push({ state: emailState, created, updated, destroyed });
+  if (emailChangeLog.length > EMAIL_CHANGE_LOG_LIMIT) emailChangeLog.shift();
+  for (const notify of emailStateListeners) notify();
+}
+
+function handleEmailChanges(args: MethodArgs, callId: string): MethodResult {
+  const sinceState = String(args.sinceState ?? '');
+  const since = sinceState.startsWith(EMAIL_STATE_PREFIX) && /^\d+$/.test(sinceState.slice(EMAIL_STATE_PREFIX.length))
+    ? Number(sinceState.slice(EMAIL_STATE_PREFIX.length))
+    : Number.NaN;
+  const oldestKnown = emailChangeLog.length > 0 ? emailChangeLog[0].state - 1 : emailState;
+  if (!Number.isSafeInteger(since) || since > emailState || since < oldestKnown) {
+    return ['error', { type: 'cannotCalculateChanges', description: `Unknown state ${sinceState}` }, callId];
+  }
+  const maxChanges = typeof args.maxChanges === 'number' && args.maxChanges > 0 ? args.maxChanges : Number.POSITIVE_INFINITY;
+  let changed = new Map<string, 'created' | 'updated' | 'destroyed'>();
+  let reached = since;
+  for (const entry of emailChangeLog) {
+    if (entry.state <= since) continue;
+    const next = new Map(changed);
+    for (const id of entry.created) next.set(id, 'created');
+    for (const id of entry.updated) if (!next.has(id)) next.set(id, 'updated');
+    for (const id of entry.destroyed) {
+      if (next.get(id) === 'created') next.delete(id);
+      else next.set(id, 'destroyed');
+    }
+    if (next.size > maxChanges) {
+      if (reached === since) {
+        return ['error', { type: 'cannotCalculateChanges', description: 'More changes in one state than maxChanges' }, callId];
+      }
+      break;
+    }
+    changed = next;
+    reached = entry.state;
+  }
+  const idsOf = (kind: 'created' | 'updated' | 'destroyed') => [...changed].filter(([, k]) => k === kind).map(([id]) => id);
+  return ['Email/changes', {
+    accountId: ACCOUNT_ID,
+    oldState: sinceState,
+    newState: emailStateString(reached),
+    hasMoreChanges: reached < emailState,
+    created: idsOf('created'),
+    updated: idsOf('updated'),
+    destroyed: idsOf('destroyed'),
+  }, callId];
+}
+
 const mailboxes: MockMailbox[] = [
   { id: 'mb-inbox', name: 'Inbox', role: 'inbox', sortOrder: 1, totalEmails: 5, unreadEmails: 2 },
   { id: 'mb-drafts', name: 'Drafts', role: 'drafts', sortOrder: 2, totalEmails: 1, unreadEmails: 0 },
@@ -1651,12 +1721,15 @@ function handleMailboxSet(args: MethodArgs, callId: string): MethodResult {
         mailboxes.splice(idx, 1);
         // Move emails from deleted mailbox to trash
         const trash = mailboxes.find((m) => m.role === 'trash');
+        const moved: string[] = [];
         for (const e of emails) {
           if (e.mailboxIds[id]) {
             delete e.mailboxIds[id];
             if (trash) e.mailboxIds[trash.id] = true;
+            moved.push(e.id);
           }
         }
+        recordEmailChanges({ updated: moved });
         destroyed.push(id);
       }
     }
@@ -1797,10 +1870,11 @@ function handleEmailGet(args: MethodArgs, callId: string): MethodResult {
     });
   }
 
-  return ['Email/get', { accountId: ACCOUNT_ID, state: nextState(), list: result, notFound: [] }, callId];
+  return ['Email/get', { accountId: ACCOUNT_ID, state: emailStateString(), list: result, notFound: [] }, callId];
 }
 
 function handleEmailSet(args: MethodArgs, callId: string): MethodResult {
+  const oldState = emailStateString();
   const updated: Record<string, null> = {};
   const created: Record<string, { id: string }> = {};
   const destroyed: string[] = [];
@@ -1825,6 +1899,14 @@ function handleEmailSet(args: MethodArgs, callId: string): MethodResult {
           if (v) cleaned[k] = true;
         }
         email.keywords = cleaned;
+      }
+
+      for (const [key, value] of Object.entries(changes)) {
+        if (key.startsWith('mailboxIds/')) {
+          const mailboxId = pointerTokenValue(key.slice('mailboxIds/'.length));
+          if (value) email.mailboxIds[mailboxId] = true;
+          else delete email.mailboxIds[mailboxId];
+        }
       }
 
       // Patch-style keyword updates: "keywords/$seen", "keywords/$flagged", etc.
@@ -1898,8 +1980,9 @@ function handleEmailSet(args: MethodArgs, callId: string): MethodResult {
     }
   }
 
+  recordEmailChanges({ created: Object.values(created).map((c) => c.id), updated: Object.keys(updated), destroyed });
   recomputeMailboxCounts();
-  return ['Email/set', { accountId: ACCOUNT_ID, oldState: nextState(), newState: nextState(), created, updated, destroyed, notCreated: null, notUpdated: null, notDestroyed: null }, callId];
+  return ['Email/set', { accountId: ACCOUNT_ID, oldState, newState: emailStateString(), created, updated, destroyed, notCreated: null, notUpdated: null, notDestroyed: null }, callId];
 }
 
 function handleIdentityGet(_args: MethodArgs, callId: string): MethodResult {
@@ -2474,7 +2557,7 @@ const METHOD_HANDLERS: Record<string, MethodHandler> = {
   'Email/query': handleEmailQuery,
   'Email/get': handleEmailGet,
   'Email/set': handleEmailSet,
-  'Email/changes': (_args, callId) => ['Email/changes', { accountId: ACCOUNT_ID, oldState: nextState(), newState: nextState(), hasMoreChanges: false, created: [], updated: [], destroyed: [] }, callId],
+  'Email/changes': handleEmailChanges,
   'Thread/get': handleThreadGet,
   'Identity/get': handleIdentityGet,
   'Identity/set': handleIdentitySet,
@@ -2786,36 +2869,53 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     const ping = parseInt(new URL(request.url).searchParams.get('ping') || '0', 10);
     const pingInterval = ping > 0 ? ping : 30;
 
+    let stop = () => {};
     const stream = new ReadableStream({
       start(controller) {
         const encoder = new TextEncoder();
-        // Send initial state event
-        const stateEvent = JSON.stringify({
-          '@type': 'StateChange',
-          changed: {
-            [ACCOUNT_ID]: {
-              'Email': nextState(),
-              'Mailbox': nextState(),
-              'Thread': nextState(),
+        const sendState = () => {
+          const stateEvent = JSON.stringify({
+            '@type': 'StateChange',
+            changed: {
+              [ACCOUNT_ID]: {
+                'Email': emailStateString(),
+                'Mailbox': nextState(),
+                'Thread': nextState(),
+              },
             },
-          },
-        });
-        controller.enqueue(encoder.encode(`event: state\ndata: ${stateEvent}\n\n`));
+          });
+          try {
+            controller.enqueue(encoder.encode(`event: state\ndata: ${stateEvent}\n\n`));
+          } catch {
+            stop();
+          }
+        };
+        sendState();
+        emailStateListeners.add(sendState);
 
         // Send periodic pings to keep the connection alive
         const interval = setInterval(() => {
           try {
             controller.enqueue(encoder.encode(`event: ping\ndata: ${JSON.stringify({ interval: pingInterval })}\n\n`));
           } catch {
-            clearInterval(interval);
+            stop();
           }
         }, pingInterval * 1000);
 
         // Close after 5 minutes to prevent indefinite connections in dev
-        setTimeout(() => {
-          clearInterval(interval);
+        const closeTimer = setTimeout(() => {
+          stop();
           try { controller.close(); } catch { /* already closed */ }
         }, 5 * 60 * 1000);
+
+        stop = () => {
+          clearInterval(interval);
+          clearTimeout(closeTimer);
+          emailStateListeners.delete(sendState);
+        };
+      },
+      cancel() {
+        stop();
       },
     });
 

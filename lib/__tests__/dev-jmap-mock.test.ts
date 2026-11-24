@@ -229,6 +229,125 @@ describe('dev-jmap mock server', () => {
     });
   });
 
+  describe('POST /api - Email/changes', () => {
+    async function call(methodCalls: unknown[]) {
+      const req = makeRequest('http://localhost:3000/api/dev-jmap/api', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', host: 'localhost:3000' },
+        body: JSON.stringify({ methodCalls }),
+      });
+      const res = await POST(req, { params: Promise.resolve({ path: ['api'] }) });
+      return (await res.json()).methodResponses;
+    }
+
+    async function emailState(): Promise<string> {
+      const [[, got]] = await call([['Email/get', { accountId: 'dev-account-001', ids: [] }, 'g0']]);
+      return got.state;
+    }
+
+    async function changesSince(sinceState: string, maxChanges?: number) {
+      const [[name, result]] = await call([['Email/changes', { accountId: 'dev-account-001', sinceState, ...(maxChanges ? { maxChanges } : {}) }, 'c0']]);
+      return { name, result };
+    }
+
+    it('reports nothing and keeps the state when nothing changed', async () => {
+      const since = await emailState();
+      expect(await emailState()).toBe(since);
+      const { result } = await changesSince(since);
+      expect(result).toMatchObject({ oldState: since, newState: since, hasMoreChanges: false, created: [], updated: [], destroyed: [] });
+    });
+
+    it('reports a message moved to another folder, at the state the move answered with', async () => {
+      const since = await emailState();
+      const [[, set]] = await call([['Email/set', { accountId: 'dev-account-001', update: { 'email-002': { mailboxIds: { 'mb-archive': true } } } }, 's0']]);
+      expect(set.oldState).toBe(since);
+      expect(set.newState).not.toBe(since);
+
+      const { result } = await changesSince(since);
+      expect(result.updated).toEqual(['email-002']);
+      expect(result.created).toEqual([]);
+      expect(result.newState).toBe(set.newState);
+      expect(await emailState()).toBe(set.newState);
+    });
+
+    it('reports a message added to a folder by a mailboxIds patch', async () => {
+      const since = await emailState();
+      await call([['Email/set', { accountId: 'dev-account-001', update: { 'email-003': { 'mailboxIds/mb-archive': true } } }, 's0']]);
+      const [[, got]] = await call([['Email/get', { accountId: 'dev-account-001', ids: ['email-003'], properties: ['mailboxIds'] }, 'g0']]);
+      expect(got.list[0].mailboxIds['mb-archive']).toBe(true);
+      expect((await changesSince(since)).result.updated).toEqual(['email-003']);
+    });
+
+    it('reports created and destroyed messages, and nothing for one that came and went', async () => {
+      const since = await emailState();
+      const [[, created]] = await call([['Email/set', { accountId: 'dev-account-001', create: { a: { mailboxIds: { 'mb-drafts': true }, subject: 'kept' }, b: { mailboxIds: { 'mb-drafts': true }, subject: 'gone' } } }, 's0']]);
+      const kept = created.created.a.id as string;
+      const gone = created.created.b.id as string;
+      await call([['Email/set', { accountId: 'dev-account-001', destroy: [gone, 'email-004'] }, 's1']]);
+
+      const { result } = await changesSince(since);
+      expect(result.created).toEqual([kept]);
+      expect(result.updated).toEqual([]);
+      expect(result.destroyed).toEqual(['email-004']);
+    });
+
+    it('stops at maxChanges and says there is more', async () => {
+      const since = await emailState();
+      await call([['Email/set', { accountId: 'dev-account-001', update: { 'email-005': { 'keywords/$seen': true } } }, 's0']]);
+      await call([['Email/set', { accountId: 'dev-account-001', update: { 'email-006': { 'keywords/$seen': true } } }, 's1']]);
+
+      const first = await changesSince(since, 1);
+      expect(first.result.updated).toEqual(['email-005']);
+      expect(first.result.hasMoreChanges).toBe(true);
+      const rest = await changesSince(first.result.newState, 1);
+      expect(rest.result.updated).toEqual(['email-006']);
+      expect(rest.result.hasMoreChanges).toBe(false);
+    });
+
+    it('pushes the new Email state to an open event stream', async () => {
+      const req = makeRequest('http://localhost:3000/api/dev-jmap/eventsource?types=*&ping=30', { headers: { host: 'localhost:3000' } });
+      const res = await GET(req, { params: Promise.resolve({ path: ['eventsource'] }) });
+      const reader = res.body!.getReader();
+      const decoder = new TextDecoder();
+      const nextState = async () => {
+        const { value } = await reader.read();
+        const data = /data: (.*)/.exec(decoder.decode(value))![1];
+        return JSON.parse(data).changed['dev-account-001'].Email as string;
+      };
+      expect(await nextState()).toBe(await emailState());
+
+      const [[, set]] = await call([['Email/set', { accountId: 'dev-account-001', update: { 'email-007': { mailboxIds: { 'mb-archive': true } } } }, 's0']]);
+      expect(await nextState()).toBe(set.newState);
+      await reader.cancel();
+    });
+
+    it('refuses a state it never handed out', async () => {
+      const { name, result } = await changesSince('mock-state-unknown');
+      expect(name).toBe('error');
+      expect(result.type).toBe('cannotCalculateChanges');
+    });
+
+    it('refuses a state from before the server restarted', async () => {
+      const post = async (route: { POST: typeof POST }, methodCalls: unknown[]) => {
+        const req = makeRequest('http://localhost:3000/api/dev-jmap/api', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', host: 'localhost:3000' },
+          body: JSON.stringify({ methodCalls }),
+        });
+        const res = await route.POST(req, { params: Promise.resolve({ path: ['api'] }) });
+        return (await res.json()).methodResponses;
+      };
+      vi.resetModules();
+      const before = (await loadRoute()) as unknown as { POST: typeof POST };
+      const [[, got]] = await post(before, [['Email/get', { accountId: 'dev-account-001', ids: [] }, 'g0']]);
+      vi.resetModules();
+      const after = (await loadRoute()) as unknown as { POST: typeof POST };
+      const [[name, result]] = await post(after, [['Email/changes', { accountId: 'dev-account-001', sinceState: got.state }, 'c0']]);
+      expect(name).toBe('error');
+      expect(result.type).toBe('cannotCalculateChanges');
+    });
+  });
+
   describe('POST /api - Identity/get', () => {
     it('should return identities', async () => {
       const req = makeRequest('http://localhost:3000/api/dev-jmap/api', {
