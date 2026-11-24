@@ -2274,7 +2274,7 @@
       },
       "always_light_mode": {
         "label": "Mostra sempre els correus en mode clar",
-        "description": "Renderitza el contingut del correu en mode clar encara que l'aplicació estigui en mode fosc, evitant problemes de conversió del mode fosc"
+        "description": "Mostra els correus, i el text que escrius, sobre un fons clar encara que l'aplicació estigui en mode fosc"
       },
       "external_content": {
         "label": "Contingut extern",

@@ -2286,7 +2286,7 @@
       },
       "always_light_mode": {
         "label": "Luôn hiển thị thư ở chế độ sáng",
-        "description": "Hiển thị nội dung thư ở chế độ sáng ngay cả khi ứng dụng đang ở chế độ tối, tránh lỗi chuyển đổi chế độ tối"
+        "description": "Hiển thị thư và văn bản bạn đang viết trên nền sáng ngay cả khi ứng dụng ở chế độ tối"
       },
       "external_content": {
         "label": "Nội dung bên ngoài",

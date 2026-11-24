@@ -2271,7 +2271,7 @@
       },
       "always_light_mode": {
         "label": "E-mails altijd in lichte modus weergeven",
-        "description": "E-mailinhoud in lichte modus weergeven, zelfs wanneer de app in donkere modus staat, om problemen met donkere modus-conversie te voorkomen"
+        "description": "E-mails, en de tekst die je schrijft, op een lichte achtergrond tonen, ook als de app in donkere modus staat"
       },
       "external_content": {
         "label": "Externe inhoud",

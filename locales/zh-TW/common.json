@@ -2274,7 +2274,7 @@
       },
       "always_light_mode": {
         "label": "一律以淺色模式顯示郵件",
-        "description": "即使應用程式使用深色模式，也以淺色模式呈現郵件內容，避免深色模式轉換問題"
+        "description": "即使應用程式使用深色模式，也在淺色背景上顯示郵件和你正在撰寫的文字"
       },
       "external_content": {
         "label": "外部內容",

@@ -1213,6 +1213,7 @@ export function RichTextEditor({
       <div
         ref={toolbarRef}
         data-testid="rich-text-toolbar"
+        data-editor-toolbar=""
         role="toolbar"
         aria-label={tComposer("formatting")}
         onKeyDown={onToolbarKeyDown}

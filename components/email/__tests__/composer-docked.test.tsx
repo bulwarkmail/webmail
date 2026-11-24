@@ -2,6 +2,8 @@ import { render, screen, fireEvent, within } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import React from 'react';
 import { EmailComposer } from '../email-composer';
+import { useSettingsStore } from '@/stores/settings-store';
+import { useThemeStore } from '@/stores/theme-store';
 
 // mail-p2-2: a reply docked under its message starts compact: no Subject
 // line, no From line when there's only one address to send from, and the
@@ -114,6 +116,16 @@ vi.mock('@/stores/settings-store', () => {
   hook.getState = () => state;
   hook.setState = (p: Partial<typeof state>) => Object.assign(state, p);
   return { useSettingsStore: hook };
+});
+
+// The theme the light-page test switches; the real store tells plugins (mocked here).
+vi.mock('@/stores/theme-store', () => {
+  const state = { resolvedTheme: 'light' as 'light' | 'dark' };
+  const hook = (sel?: (s: typeof state) => unknown) =>
+    typeof sel === 'function' ? sel(state) : state;
+  hook.getState = () => state;
+  hook.setState = (p: Partial<typeof state>) => Object.assign(state, p);
+  return { useThemeStore: hook };
 });
 
 vi.mock('@/stores/contact-store', () => {
@@ -306,6 +318,25 @@ describe('a reply docked under its message', () => {
     const page = container.querySelector('[data-composer-writing]');
     expect(page).not.toBeNull();
     expect(page!.contains(screen.getByTestId('rich-text-editor'))).toBe(true);
+  });
+
+  // #1521: "Always show emails in light mode" makes the writing area a light
+  // page in a dark theme (app/globals.css), and only then.
+  it.each([
+    [true, 'dark', true],
+    [false, 'dark', false],
+    [true, 'light', false],
+  ] as const)('light mode setting %s in a %s theme: light writing area %s', (always, theme, light) => {
+    const before = useThemeStore.getState().resolvedTheme;
+    useSettingsStore.setState({ emailAlwaysLightMode: always } as never);
+    useThemeStore.setState({ resolvedTheme: theme });
+    try {
+      const { container } = render(<EmailComposer initialData={DATA} docked />);
+      expect(container.querySelector('[data-composer-writing]')!.hasAttribute('data-light-paper')).toBe(light);
+    } finally {
+      useSettingsStore.setState({ emailAlwaysLightMode: false } as never);
+      useThemeStore.setState({ resolvedTheme: before });
+    }
   });
 
   // At 900 px the To row is narrow: the typing space beside a chip may get

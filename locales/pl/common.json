@@ -2271,7 +2271,7 @@
       },
       "always_light_mode": {
         "label": "Zawsze wyświetlaj wiadomości w trybie jasnym",
-        "description": "Renderuj treść wiadomości e-mail w trybie jasnym nawet wtedy, gdy aplikacja jest w trybie ciemnym, aby uniknąć problemów z konwersją trybu ciemnego"
+        "description": "Pokazuj wiadomości i pisany tekst na jasnym tle, nawet gdy aplikacja jest w trybie ciemnym"
       },
       "external_content": {
         "label": "Treści zewnętrzne",

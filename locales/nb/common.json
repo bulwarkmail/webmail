@@ -2274,7 +2274,7 @@
       },
       "always_light_mode": {
         "label": "Vis alltid e-poster i lysmodus",
-        "description": "Vis e-postinnhold i lys modus selv når programmet bruker mørk modus. Dette unngår problemer ved konvertering til mørk modus."
+        "description": "Vis e-post, og teksten du skriver, på lys bakgrunn selv når appen bruker mørk modus"
       },
       "external_content": {
         "label": "Eksternt innhold",

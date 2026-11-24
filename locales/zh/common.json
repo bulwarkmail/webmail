@@ -2271,7 +2271,7 @@
       },
       "always_light_mode": {
         "label": "始终以浅色模式显示邮件",
-        "description": "即使应用处于深色模式，也以浅色模式呈现邮件内容，避免深色模式转换问题"
+        "description": "即使应用处于深色模式，也在浅色背景上显示邮件和你正在撰写的文字"
       },
       "external_content": {
         "label": "外部内容",

@@ -2271,7 +2271,7 @@
       },
       "always_light_mode": {
         "label": "Mostrar correos siempre en modo claro",
-        "description": "Mostrar el contenido del correo en modo claro incluso cuando la aplicación está en modo oscuro, evitando problemas de conversión"
+        "description": "Mostrar los correos, y el texto que escribes, sobre fondo claro aunque la aplicación esté en modo oscuro"
       },
       "external_content": {
         "label": "Contenido Externo",

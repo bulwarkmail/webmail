@@ -2274,7 +2274,7 @@
       },
       "always_light_mode": {
         "label": "Kuva kirjad alati heledas režiimis",
-        "description": "Kuva kirja sisu heledas režiimis ka siis, kui rakendus on tumedas režiimis, vältimaks tumeda režiimi teisendusprobleeme"
+        "description": "Näita kirju ja kirjutatavat teksti heledal taustal ka siis, kui rakendus on tumedas režiimis"
       },
       "external_content": {
         "label": "Väline sisu",

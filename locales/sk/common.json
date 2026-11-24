@@ -2274,7 +2274,7 @@
       },
       "always_light_mode": {
         "label": "Vždy zobrazovať e-maily v svetlom režime",
-        "description": "Vykresľovať obsah e-mailu v svetlom režime aj keď je aplikácia v tmavom režime"
+        "description": "Zobrazovať e-maily aj text, ktorý píšete, na svetlom pozadí, aj keď je aplikácia v tmavom režime"
       },
       "external_content": {
         "label": "Externý obsah",

@@ -2271,7 +2271,7 @@
       },
       "always_light_mode": {
         "label": "E-Mails immer im Hellmodus anzeigen",
-        "description": "E-Mail-Inhalte im Hellmodus darstellen, auch wenn die App im Dunkelmodus ist, um Probleme bei der Dunkelmodus-Konvertierung zu vermeiden"
+        "description": "E-Mails und den Text, den Sie schreiben, auf hellem Hintergrund zeigen, auch wenn die App im Dunkelmodus ist"
       },
       "external_content": {
         "label": "Externe Inhalte",

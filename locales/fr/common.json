@@ -2271,7 +2271,7 @@
       },
       "always_light_mode": {
         "label": "Toujours afficher les e-mails en mode clair",
-        "description": "Afficher le contenu des e-mails en mode clair même lorsque l'application est en mode sombre, évitant les problèmes de conversion"
+        "description": "Afficher les e-mails, et le texte que vous écrivez, sur fond clair même lorsque l'application est en mode sombre"
       },
       "external_content": {
         "label": "Contenu externe",

@@ -2271,7 +2271,7 @@
       },
       "always_light_mode": {
         "label": "E-postaları Her Zaman Açık Modda Göster",
-        "description": "Uygulama koyu moddayken bile e-posta içeriğini açık modda göster; koyu mod dönüşüm sorunlarını önler"
+        "description": "Uygulama koyu moddayken bile e-postaları ve yazdığınız metni açık arka planda göster"
       },
       "external_content": {
         "label": "Harici İçerik",

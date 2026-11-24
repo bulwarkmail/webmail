@@ -2282,7 +2282,7 @@
       },
       "always_light_mode": {
         "label": "Vis alltid e-post i lys modus",
-        "description": "Vis e-postinnhald i lys modus òg når appen er i mørk modus, slik at du unngår problem med mørk modus-konvertering"
+        "description": "Vis e-post, og teksten du skriv, på lys bakgrunn òg når appen er i mørk modus"
       },
       "external_content": {
         "label": "Eksternt innhald",

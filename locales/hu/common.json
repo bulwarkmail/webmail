@@ -2274,7 +2274,7 @@
       },
       "always_light_mode": {
         "label": "E-mailek mindig világos módban",
-        "description": "E-mail tartalom megjelenítése világos módban akkor is, ha az alkalmazás sötét módban van, elkerülve a sötét mód konverziós problémáit"
+        "description": "Az e-mailek és az Ön által írt szöveg megjelenítése világos háttéren akkor is, ha az alkalmazás sötét módban van"
       },
       "external_content": {
         "label": "Külső tartalom",

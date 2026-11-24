@@ -2271,7 +2271,7 @@
       },
       "always_light_mode": {
         "label": "Vždy zobrazovat zprávy ve světlém režimu",
-        "description": "Vykreslovat obsah e-mailu ve světlém režimu, i když je aplikace v tmavém režimu, aby se předešlo problémům s konverzí"
+        "description": "Zobrazovat e-maily i text, který píšete, na světlém pozadí, i když je aplikace v tmavém režimu"
       },
       "external_content": {
         "label": "Externí obsah",

@@ -2271,7 +2271,7 @@
       },
       "always_light_mode": {
         "label": "메일 내용은 항상 라이트 모드로 보기",
-        "description": "다크 모드를 사용할 때도 메일 본문은 라이트 모드로 표시해서 화면이 깨지는 걸 방지해요"
+        "description": "다크 모드를 사용할 때도 메일과 작성 중인 글을 밝은 배경에 표시해요"
       },
       "external_content": {
         "label": "외부 콘텐츠",

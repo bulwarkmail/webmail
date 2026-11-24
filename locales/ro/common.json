@@ -2274,7 +2274,7 @@
       },
       "always_light_mode": {
         "label": "Afișați întotdeauna e-mailurile în modul luminos",
-        "description": "Afișați conținutul e-mailurilor în modul luminos chiar și atunci când aplicația se află în modul întunecat, evitând astfel problemele de conversie asociate modului întunecat"
+        "description": "Afișați e-mailurile și textul pe care îl scrieți pe fundal luminos, chiar și când aplicația este în modul întunecat"
       },
       "external_content": {
         "label": "Conținut extern",

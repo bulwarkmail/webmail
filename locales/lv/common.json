@@ -2271,7 +2271,7 @@
       },
       "always_light_mode": {
         "label": "Vienmēr rādīt vēstules gaišajā režīmā",
-        "description": "Rādīt vēstules saturu gaišajā režīmā, pat ja lietotne ir tumšajā režīmā"
+        "description": "Rādīt vēstules un rakstīto tekstu uz gaiša fona, pat ja lietotne ir tumšajā režīmā"
       },
       "external_content": {
         "label": "Ārējais saturs",

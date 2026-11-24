@@ -2271,7 +2271,7 @@
       },
       "always_light_mode": {
         "label": "Mostra sempre le email in modalità chiara",
-        "description": "Visualizza il contenuto delle email in modalità chiara anche quando l'app è in modalità scura, evitando problemi di conversione"
+        "description": "Mostra le email, e il testo che scrivi, su sfondo chiaro anche quando l'app è in modalità scura"
       },
       "external_content": {
         "label": "Contenuti esterni",

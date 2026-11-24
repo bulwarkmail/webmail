@@ -1105,6 +1105,98 @@ html[data-window-controls-left] [data-window-rail] {
   }
 }
 
+/* "Always show emails in light mode" (emailAlwaysLightMode) in a dark theme:
+   the composer's writing area (data-light-paper) is a light page, so the
+   message looks as it will on the white background most recipients read on.
+   The fields above it and the formatting toolbar keep the app's colours,
+   kept from the composer (the page's parent) before the page sets its own.
+   Not in a forced-colours mode, where the browser picks every colour. */
+@media (forced-colors: none) {
+  :has(> [data-composer-writing][data-light-paper]) {
+    --app-color-border: var(--color-border);
+    --app-color-input: var(--color-input);
+    --app-color-ring: var(--color-ring);
+    --app-color-background: var(--color-background);
+    --app-color-foreground: var(--color-foreground);
+    --app-color-primary: var(--color-primary);
+    --app-color-primary-foreground: var(--color-primary-foreground);
+    --app-color-secondary: var(--color-secondary);
+    --app-color-secondary-foreground: var(--color-secondary-foreground);
+    --app-color-muted: var(--color-muted);
+    --app-color-muted-foreground: var(--color-muted-foreground);
+    --app-color-accent: var(--color-accent);
+    --app-color-accent-foreground: var(--color-accent-foreground);
+    --app-color-destructive: var(--color-destructive);
+    --app-color-destructive-foreground: var(--color-destructive-foreground);
+    --app-color-popover: var(--color-popover);
+    --app-color-popover-foreground: var(--color-popover-foreground);
+    --app-color-card: var(--color-card);
+    --app-color-card-foreground: var(--color-card-foreground);
+    --app-color-selection: var(--color-selection);
+    --app-color-selection-foreground: var(--color-selection-foreground);
+    --app-text-issue-grammar: var(--text-issue-grammar);
+    --app-text-issue-style: var(--text-issue-style);
+    --app-text-issue-other: var(--text-issue-other);
+  }
+  [data-composer-writing][data-light-paper] {
+    color-scheme: light;
+    --color-border: #e2e8f0;
+    --color-input: #e2e8f0;
+    --color-ring: #2563eb;
+    --color-background: #ffffff;
+    --color-foreground: #0f172a;
+    --color-primary: var(--brand-primary, #185aea);
+    --color-primary-foreground: var(--brand-primary-foreground, #ffffff);
+    --color-secondary: #f8fafc;
+    --color-secondary-foreground: #0f172a;
+    --color-muted: #f1f5f9;
+    --color-muted-foreground: #59687c;
+    --color-accent: var(--brand-accent, #dbeafe);
+    --color-accent-foreground: var(--brand-accent-foreground, #1e40af);
+    --color-destructive: #dc2626;
+    --color-destructive-foreground: #ffffff;
+    --color-popover: #ffffff;
+    --color-popover-foreground: #0f172a;
+    --color-card: #ffffff;
+    --color-card-foreground: #0f172a;
+    --color-selection: var(--brand-accent, #dbeafe);
+    --color-selection-foreground: var(--brand-accent-foreground, #1e40af);
+    --text-issue-grammar: #2563eb;
+    --text-issue-style: #b45309;
+    --text-issue-other: #6b7280;
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+  }
+  [data-composer-writing][data-light-paper] [data-editor-toolbar] {
+    color-scheme: dark;
+    --color-border: var(--app-color-border);
+    --color-input: var(--app-color-input);
+    --color-ring: var(--app-color-ring);
+    --color-background: var(--app-color-background);
+    --color-foreground: var(--app-color-foreground);
+    --color-primary: var(--app-color-primary);
+    --color-primary-foreground: var(--app-color-primary-foreground);
+    --color-secondary: var(--app-color-secondary);
+    --color-secondary-foreground: var(--app-color-secondary-foreground);
+    --color-muted: var(--app-color-muted);
+    --color-muted-foreground: var(--app-color-muted-foreground);
+    --color-accent: var(--app-color-accent);
+    --color-accent-foreground: var(--app-color-accent-foreground);
+    --color-destructive: var(--app-color-destructive);
+    --color-destructive-foreground: var(--app-color-destructive-foreground);
+    --color-popover: var(--app-color-popover);
+    --color-popover-foreground: var(--app-color-popover-foreground);
+    --color-card: var(--app-color-card);
+    --color-card-foreground: var(--app-color-card-foreground);
+    --color-selection: var(--app-color-selection);
+    --color-selection-foreground: var(--app-color-selection-foreground);
+    --text-issue-grammar: var(--app-text-issue-grammar);
+    --text-issue-style: var(--app-text-issue-style);
+    --text-issue-other: var(--app-text-issue-other);
+    color: var(--color-foreground);
+  }
+}
+
 /* TipTap Rich Text Editor */
 .tiptap {
   outline: none;

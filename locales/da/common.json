@@ -2274,7 +2274,7 @@
       },
       "always_light_mode": {
         "label": "Vis altid e-mails i lys tilstand",
-        "description": "Vis e-mail-indhold i lys tilstand, selv når appen er i mørk tilstand, for at undgå problemer med mørk tilstand-konvertering"
+        "description": "Vis e-mails og den tekst, du skriver, på lys baggrund, selv når appen er i mørk tilstand"
       },
       "external_content": {
         "label": "Eksternt indhold",

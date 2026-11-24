@@ -2274,7 +2274,7 @@
       },
       "always_light_mode": {
         "label": "Always show emails in light mode",
-        "description": "Render email content in light mode even when the app is in dark mode, avoiding dark mode conversion issues"
+        "description": "Show emails, and the text you write, on a light background even when the app is in dark mode"
       },
       "external_content": {
         "label": "External content",

@@ -108,6 +108,7 @@ import { useIdentityStore } from "@/stores/identity-store";
 import { useProMultiAccountIdentities, stripCrossAccountIdentityPrefix } from "@/hooks/use-pro-multi-account-identities";
 import { useAccountStore } from "@/stores/account-store";
 import { useSettingsStore } from "@/stores/settings-store";
+import { useThemeStore } from "@/stores/theme-store";
 import { ComposerPanelButton, ComposerPanelHead, ComposerPanelToggle, ComposerPluginSidebar, isPanelOpen, useComposerSidebars } from "./composer-plugin-sidebars";
 import { dragKindFromTypes } from "@/components/pro/pro-shell-drop";
 import { useIsPaneScoped } from "@/hooks/use-pane-context";
@@ -738,6 +739,11 @@ export function EmailComposer({
   const router = useRouter();
   const showAdvancedSettings = useSettingsStore((state) => state.showAdvancedSettings);
   const timeFormat = useSettingsStore((state) => state.timeFormat);
+  // "Always show emails in light mode" covers the writing area too: in a dark
+  // theme the message is written on a light page, as most recipients see it.
+  const emailAlwaysLightMode = useSettingsStore((state) => state.emailAlwaysLightMode);
+  const resolvedTheme = useThemeStore((state) => state.resolvedTheme);
+  const lightPaper = emailAlwaysLightMode && resolvedTheme === 'dark';
   const plainTextModeDefault = useSettingsStore((state) => state.plainTextMode);
   // Per-message format (#1022). Seeded from the "plain text only" setting -
   // or the format a re-opened / stashed draft was written in - and switchable
@@ -6303,7 +6309,7 @@ export function EmailComposer({
       </div>
 
       {/* The writing area: text, signature and quote read as one page, with the focus shown on it (app/accessibility.css). */}
-      <div className={cn("flex-1", pinFields && "min-h-0 overflow-auto")} onMouseDown={focusBodyFromEmptySpace} data-composer-writing="">
+      <div className={cn("flex-1", pinFields && "min-h-0 overflow-auto")} onMouseDown={focusBodyFromEmptySpace} data-composer-writing="" data-light-paper={lightPaper ? "" : undefined}>
         {wantsPluginDraft && (
           <PluginSlot name="composer-above-body" className="w-full" extraProps={pluginDraftProps} />
         )}
