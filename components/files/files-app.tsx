@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback, useMemo, useId } from "react";
 import { useFocusTrap } from "@/hooks/use-focus-trap";
+import { canPickFolder, isPickerCancelled, pickFolder, type FolderHandle } from "@/lib/attachments/save-to-folder";
 import { useTranslations } from "next-intl";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useConfirmDialog } from "@/hooks/use-confirm-dialog";
@@ -126,6 +127,7 @@ export function FilesApp({ linkSegments: routeSegments }: FilesAppProps = {}) {
     duplicateResource,
     downloadResources,
     downloadZip,
+    downloadToFolder,
     moveToFolderId,
     moveNode,
     cutResources,
@@ -621,6 +623,49 @@ export function FilesApp({ linkSegments: routeSegments }: FilesAppProps = {}) {
     }
   }, [downloadZip, t, tPc, failureReason]);
 
+  // #1810: a folder saved into a folder on this computer, a file at a time,
+  // where the browser can ask for one: no zip to build first, which took
+  // long and held everything in memory. Same progress toast as the zip.
+  const handleDownloadToFolder = useCallback(async (ids: string[]) => {
+    let target: FolderHandle;
+    try {
+      // First, before any await: the browser asks only from the click.
+      target = await pickFolder();
+    } catch (err) {
+      if (!isPickerCancelled(err)) toast.error(t("download_error"), failureReason(err));
+      return;
+    }
+    const controller = new AbortController();
+    const toastId = toast.progress(t("downloading_to_folder", { folder: target.name }), {
+      progress: 0,
+      action: { label: t("cancel"), onClick: () => controller.abort() },
+    });
+    try {
+      const result = await downloadToFolder(ids, target, {
+        signal: controller.signal,
+        onProgress: ({ progress, current }) => toast.update(toastId, { progress, message: current }),
+      });
+      toast.dismiss(toastId);
+      // Downloads off: the policy said so itself.
+      if (!result) return;
+      if (result.saved === result.total) {
+        toast.success(t("downloaded_to_folder", { count: result.saved, folder: result.folder }));
+      } else if (result.saved > 0) {
+        toast.warning(t("downloaded_to_folder_partial", { saved: result.saved, total: result.total, folder: result.folder }));
+      } else if (result.stopped !== "policy") {
+        toast.error(t("download_to_folder_failed", { folder: result.folder }));
+      }
+    } catch (err) {
+      toast.dismiss(toastId);
+      if (err instanceof DOMException && err.name === "AbortError") {
+        toast.info(tPc("download_cancelled"));
+        return;
+      }
+      console.error("Failed to download to a folder:", err);
+      toast.error(t("download_to_folder_failed", { folder: target.name }), failureReason(err));
+    }
+  }, [downloadToFolder, t, tPc, failureReason]);
+
   // A document format the editor can create starts from a blank template
   // and opens in the editor (#1393); any other name is an empty text file.
   const handleCreateFile = useCallback(async (name: string) => {
@@ -1075,6 +1120,7 @@ export function FilesApp({ linkSegments: routeSegments }: FilesAppProps = {}) {
                   onDownload={handleDownload}
                   onBatchDownload={handleBatchDownload}
                   onDownloadZip={handleDownloadZip}
+                  onDownloadToFolder={canPickFolder() ? (ids) => void handleDownloadToFolder(ids) : undefined}
                   onRefresh={refresh}
                   onToggleSelect={toggleSelect}
                   onClearSelection={clearSelection}

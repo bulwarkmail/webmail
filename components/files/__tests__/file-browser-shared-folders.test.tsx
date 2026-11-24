@@ -500,6 +500,23 @@ describe('FileBrowser', () => {
     expect(onDownloadZip).toHaveBeenCalledWith(['f-docs'], 'Documents.zip');
   });
 
+  // #1810: where the browser can pick a folder, a folder can be saved as
+  // its folders and files, without a zip.
+  it("downloads a folder into a folder on the computer", () => {
+    const onDownloadToFolder = vi.fn();
+    renderBrowser({ props: { onDownloadZip: vi.fn(async () => {}), onDownloadToFolder } });
+    fireEvent.contextMenu(within(list()).getByText('Documents'));
+    fireEvent.click(screen.getByText('download_to_folder'));
+    expect(onDownloadToFolder).toHaveBeenCalledWith(['f-docs']);
+  });
+
+  it("offers no folder download where the browser can't pick a folder", () => {
+    renderBrowser({ props: { onDownloadZip: vi.fn(async () => {}) } });
+    fireEvent.contextMenu(within(list()).getByText('Documents'));
+    expect(screen.getByText('download_zip')).toBeTruthy();
+    expect(screen.queryByText('download_to_folder')).toBeNull();
+  });
+
   it("adds Upload, New folder and Trash to the command palette, and focuses search with /", () => {
     renderBrowser();
     let groups: CommandGroup[] = [];

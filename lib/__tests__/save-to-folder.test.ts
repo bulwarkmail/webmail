@@ -4,6 +4,7 @@ import { canPickFolder, createUniqueNamer, isPickerCancelled, saveFilesToFolder,
 class FakeFolder implements FolderHandle {
   name = 'Downloads';
   files = new Map<string, string>();
+  dirs = new Map<string, FakeFolder>();
   failWriteOf: string | null = null;
   removed: string[] = [];
   refused = new Set<string>();
@@ -18,6 +19,7 @@ class FakeFolder implements FolderHandle {
       || this.refused.has(name)) {
       throw new TypeError(`Name is not allowed: ${name}`);
     }
+    if (this.dirs.has(name)) throw Object.assign(new Error('a folder'), { name: 'TypeMismatchError' });
     if (!this.files.has(name)) {
       if (!options?.create) throw Object.assign(new Error('missing'), { name: 'NotFoundError' });
       this.files.set(name, '');
@@ -32,6 +34,18 @@ class FakeFolder implements FolderHandle {
         abort: async () => {},
       }),
     };
+  }
+
+  async getDirectoryHandle(name: string, options?: { create?: boolean }): Promise<FakeFolder> {
+    if (this.files.has(name)) throw Object.assign(new Error('a file'), { name: 'TypeMismatchError' });
+    let dir = this.dirs.get(name);
+    if (!dir) {
+      if (!options?.create) throw Object.assign(new Error('missing'), { name: 'NotFoundError' });
+      dir = new FakeFolder();
+      dir.name = name;
+      this.dirs.set(name, dir);
+    }
+    return dir;
   }
 
   async removeEntry(name: string) {
@@ -167,5 +181,58 @@ describe('the helpers', () => {
   it('numbers zip entries like before', () => {
     const name = createUniqueNamer();
     expect(['a.txt', 'a.txt', 'a.txt', '', ''].map(name)).toEqual(['a.txt', 'a (1).txt', 'a (2).txt', 'attachment', 'attachment (1)']);
+  });
+});
+
+// #1810: a folder from Files, saved as folders and files instead of a zip.
+describe('saving folders', () => {
+  const inDir = (name: string, dir: string[], content = name, size?: number) => ({ ...item(name, content), dir, size });
+
+  it('writes the files into their folders', async () => {
+    const root = new FakeFolder();
+    const result = await saveFilesToFolder(root, [
+      inDir('a.jpg', ['Photos']),
+      inDir('b.jpg', ['Photos', '2025']),
+      inDir('a.jpg', ['Photos', '2025'], 'other a'),
+    ], always);
+    expect(result).toMatchObject({ saved: 3, total: 3, stopped: null });
+    const photos = root.dirs.get('Photos')!;
+    expect([...photos.files.entries()]).toEqual([['a.jpg', 'a.jpg']]);
+    expect([...photos.dirs.get('2025')!.files.entries()]).toEqual([['b.jpg', 'b.jpg'], ['a.jpg', 'other a']]);
+    expect(root.files.size).toBe(0);
+  });
+
+  it('never mixes into a folder already there: the top folder gets a free name', async () => {
+    const root = new FakeFolder();
+    const before = await root.getDirectoryHandle('Photos', { create: true });
+    before.files.set('a.jpg', 'precious');
+    root.files.set('Photos (1)', 'a file');
+    await saveFilesToFolder(root, [inDir('a.jpg', ['Photos']), inDir('b.jpg', ['Photos', 'Trip'])], always);
+    expect([...before.files.entries()]).toEqual([['a.jpg', 'precious']]);
+    const saved = root.dirs.get('Photos (2)')!;
+    expect(saved.files.get('a.jpg')).toBe('a.jpg');
+    expect(saved.dirs.get('Trip')!.files.get('b.jpg')).toBe('b.jpg');
+  });
+
+  it('makes the empty folders too', async () => {
+    const root = new FakeFolder();
+    await saveFilesToFolder(root, [], always, { emptyFolders: [['Photos', 'Empty']] });
+    expect(root.dirs.get('Photos')!.dirs.get('Empty')).toBeDefined();
+  });
+
+  it('reports the progress by size, file by file', async () => {
+    const root = new FakeFolder();
+    const seen: { progress: number; current?: string }[] = [];
+    await saveFilesToFolder(root, [inDir('a', ['F'], 'a', 30), inDir('b', ['F'], 'b', 10)], always, { onProgress: (p) => seen.push(p) });
+    expect(seen).toEqual([{ progress: 0, current: 'F/a' }, { progress: 0.75, current: 'F/b' }]);
+  });
+
+  it('stops before the next file once canceled', async () => {
+    const root = new FakeFolder();
+    const controller = new AbortController();
+    const first = { ...inDir('a', ['F']), read: async () => { controller.abort(); return 'a' as unknown as BufferSource; } };
+    await expect(saveFilesToFolder(root, [first, inDir('b', ['F'])], always, { signal: controller.signal }))
+      .rejects.toMatchObject({ name: 'AbortError' });
+    expect([...root.dirs.get('F')!.files.keys()]).toEqual(['a']);
   });
 });

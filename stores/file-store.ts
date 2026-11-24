@@ -15,6 +15,7 @@ import {
   trashSubtreeIds, trashedItems,
 } from '@/lib/files-trash';
 import { buildZip, planZip, saveBlob, type ZipProgress } from '@/lib/files-zip';
+import { saveFilesToFolder, type FolderHandle, type FolderSaveResult } from '@/lib/attachments/save-to-folder';
 import { downloadAllowed } from '@/lib/download-guard';
 import {
   findUploadConflicts, type UploadConflict, type UploadConflictChoice, type UploadConflictResolver,
@@ -175,6 +176,13 @@ interface FileState {
    * folders with everything in them. Rejects with an AbortError when canceled.
    */
   downloadZip: (ids: string[], zipName: string, options?: { signal?: AbortSignal; onProgress?: (p: ZipProgress) => void }) => Promise<void>;
+  /**
+   * Download items by id into a folder on this computer (#1810), one file
+   * at a time with the folders as they are: no zip to build in memory.
+   * Null when the device policy turned downloads off. Rejects with an
+   * AbortError when canceled.
+   */
+  downloadToFolder: (ids: string[], folder: FolderHandle, options?: { signal?: AbortSignal; onProgress?: (p: ZipProgress) => void }) => Promise<FolderSaveResult | null>;
   getImageUrl: (name: string) => Promise<string>;
   getFileContent: (name: string) => Promise<{ blob: Blob; contentType: string }>;
   /**
@@ -1500,6 +1508,34 @@ export const useFileStore = create<FileState>((set, get) => ({
     // A node of a drive shared with the user is fetched from its owner's account.
     const blob = await buildZip(plan, (node) => client.fetchBlob(node.blobId!, node.name, node.type, node.accountId), options);
     saveBlob(blob, zipName, { subject: { client } });
+  },
+
+  downloadToFolder: async (ids, folder, options = {}) => {
+    const { client } = get();
+    if (!client) return null;
+    if (!downloadAllowed('file', { client })) return null;
+    const nodes = ids.some(isCrossAccountId)
+      ? await client.listAllFileNodesAcrossAccounts()
+      : await client.listAllFileNodes();
+    // The zip's plan: its paths are the folders to make here.
+    const plan = planZip(nodes, ids);
+    const split = (path: string) => path.split('/');
+    return saveFilesToFolder(
+      folder,
+      plan.files.map(({ path, node }) => {
+        const parts = split(path);
+        return {
+          name: parts[parts.length - 1],
+          dir: parts.slice(0, -1),
+          size: node.size || 0,
+          // A node of a drive shared with the user is fetched from its owner's account.
+          read: () => client.fetchBlob(node.blobId!, node.name, node.type, node.accountId),
+        };
+      }),
+      // A policy that turns on while the files are written stops the rest.
+      () => downloadAllowed('file', { client }),
+      { ...options, emptyFolders: plan.emptyFolders.map(split) },
+    );
   },
 
   getImageUrl: async (name: string) => {

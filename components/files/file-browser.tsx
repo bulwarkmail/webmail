@@ -97,6 +97,12 @@ interface FileBrowserProps {
   onBatchDownload: (names: string[]) => Promise<void>;
   /** Download items by id as one zip, e.g. a folder. */
   onDownloadZip?: (ids: string[], zipName: string) => Promise<void>;
+  /**
+   * Folders saved into a folder on this computer instead of a zip (#1810),
+   * where the browser can ask for one. Called straight from the click: the
+   * folder picker needs the user's action.
+   */
+  onDownloadToFolder?: (ids: string[]) => void;
   onRefresh: () => Promise<void>;
   onToggleSelect: (name: string) => void;
   onClearSelection: () => void;
@@ -202,6 +208,7 @@ export function FileBrowser({
   onDownload,
   onBatchDownload,
   onDownloadZip,
+  onDownloadToFolder,
   onRefresh,
   onToggleSelect,
   onClearSelection,
@@ -1001,6 +1008,13 @@ export function FileBrowser({
               onClick={() => { closeMenu(); downloadNames(names); }}
             />
           )}
+          {withFolders && onDownloadToFolder && !downloadsOff && (
+            <ContextMenuItem
+              icon={Download}
+              label={t("download_to_folder")}
+              onClick={() => { closeMenu(); onDownloadToFolder(menuSelection.filter((r) => !r.isSymlink).map((r) => r.id)); }}
+            />
+          )}
           {canMove && (
             <ContextMenuItem icon={FolderInput} label={t("move_to")} onClick={() => { closeMenu(); setMoveTarget({ names }); }} />
           )}
@@ -1081,6 +1095,9 @@ export function FileBrowser({
         )}
         {resource.isDirectory && onDownloadZip && !downloadsOff && (
           <ContextMenuItem icon={Download} label={t("download_zip")} onClick={() => { closeMenu(); downloadNames([resource.name]); }} />
+        )}
+        {resource.isDirectory && onDownloadToFolder && !downloadsOff && (
+          <ContextMenuItem icon={Download} label={t("download_to_folder")} onClick={() => { closeMenu(); onDownloadToFolder([resource.id]); }} />
         )}
         {!resource.isDirectory && !resource.isSymlink && !downloadsOff && (
           <ContextMenuItem icon={Download} label={t("download")} onClick={() => { closeMenu(); void onDownload(resource.name); }} />

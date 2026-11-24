@@ -22,6 +22,8 @@ export interface FolderFile {
 export interface FolderHandle {
   name: string;
   getFileHandle(name: string, options?: { create?: boolean }): Promise<FolderFile>;
+  /** A folder inside this one; needed for items saved into sub-folders (`dir`). */
+  getDirectoryHandle?(name: string, options?: { create?: boolean }): Promise<FolderHandle>;
   removeEntry?(name: string): Promise<void>;
 }
 
@@ -139,6 +141,14 @@ async function freeFileName(folder: FolderHandle, base: string, claimed: Readonl
 
 export interface FolderSaveItem {
   name: string;
+  /**
+   * Sub-folders to save it in, outermost first (a folder downloaded from
+   * Files). They are made as needed; a top folder whose name is taken in the
+   * chosen folder gets a free name, " (1)", so nothing is mixed into it.
+   */
+  dir?: readonly string[];
+  /** Its size, for the progress. */
+  size?: number;
   /** The file's content, or null when it has none to save. Fetched only when its turn comes. */
   read: () => Promise<Blob | BufferSource | null>;
 }
@@ -153,6 +163,60 @@ export interface FolderSaveResult {
   stopped: 'policy' | 'write' | null;
 }
 
+export interface FolderSaveOptions {
+  /** Stops before the next file; the run then rejects with an AbortError. */
+  signal?: AbortSignal;
+  /** 0..1 by size (by count without sizes), and the file being saved. */
+  onProgress?: (progress: { progress: number; current?: string }) => void;
+  /** Folders to make even when no file goes in them, as `dir` paths. */
+  emptyFolders?: readonly (readonly string[])[];
+}
+
+/** Whether the name is taken in the folder, by a file or a folder. */
+async function folderNameTaken(folder: FolderHandle, name: string): Promise<boolean> {
+  if (await existsInFolder(folder, name)) return true;
+  try {
+    await folder.getDirectoryHandle!(name);
+    return true;
+  } catch (error) {
+    // Anything but "not there" (a refused name among them): not this one.
+    return (error as { name?: unknown } | null)?.name !== 'NotFoundError';
+  }
+}
+
+/**
+ * Finds or makes the sub-folders of one item. Top folders get a name not yet
+ * taken in the chosen folder, once per run; those inside are new with them.
+ */
+function folderMaker(root: FolderHandle) {
+  const made = new Map<string, Promise<FolderHandle>>();
+  const topNames = new Set<string>();
+  const get = (dir: readonly string[]): Promise<FolderHandle> => {
+    if (dir.length === 0) return Promise.resolve(root);
+    const key = dir.join('/');
+    let pending = made.get(key);
+    if (!pending) {
+      pending = (async () => {
+        const parent = await get(dir.slice(0, -1));
+        if (!parent.getDirectoryHandle) throw new TypeError('This folder takes no sub-folders');
+        let name = safeFileName(dir[dir.length - 1], 'folder');
+        if (dir.length === 1) {
+          let n = 0;
+          while (topNames.has(numberedName(name, n)) || await folderNameTaken(root, numberedName(name, n))) n++;
+          name = numberedName(name, n);
+          topNames.add(name);
+        }
+        return parent.getDirectoryHandle(name, { create: true });
+      })();
+      made.set(key, pending);
+      // A folder that failed is tried again by the next file that needs it.
+      pending.catch(() => made.delete(key));
+    }
+    return pending;
+  };
+  return get;
+}
+
 /**
  * Writes the files one at a time. A file that can't be fetched or whose name is
  * refused is skipped, like in the zip. A write that fails stops the run, because
@@ -160,14 +224,37 @@ export interface FolderSaveResult {
  * result says how many made it. A file already in the folder is never overwritten.
  */
 export async function saveFilesToFolder(
-  folder: FolderHandle,
+  root: FolderHandle,
   items: readonly FolderSaveItem[],
   allowed: () => boolean,
+  options: FolderSaveOptions = {},
 ): Promise<FolderSaveResult> {
-  const result: FolderSaveResult = { folder: folder.name, total: items.length, saved: 0, skipped: 0, stopped: null };
-  const claimed = new Set<string>();
+  const { signal, onProgress } = options;
+  const result: FolderSaveResult = { folder: root.name, total: items.length, saved: 0, skipped: 0, stopped: null };
+  // Names this run took, per sub-folder.
+  const claimedIn = new Map<string, Set<string>>();
+  const folderFor = folderMaker(root);
+  const abortIfAsked = () => {
+    if (signal?.aborted) throw new DOMException('The download was canceled', 'AbortError');
+  };
+  const totalBytes = items.reduce((sum, item) => sum + (item.size ?? 0), 0);
+  let done = 0;
+  let doneBytes = 0;
+  const report = (current?: string) => onProgress?.({
+    progress: totalBytes > 0 ? doneBytes / totalBytes : items.length > 0 ? done / items.length : 1,
+    current,
+  });
+
+  for (const dir of options.emptyFolders ?? []) {
+    abortIfAsked();
+    // Nothing is lost when an empty folder can't be made.
+    await folderFor(dir).catch(() => {});
+  }
 
   for (const item of items) {
+    abortIfAsked();
+    report(item.dir?.length ? `${item.dir.join('/')}/${item.name}` : item.name);
+    const advance = () => { done += 1; doneBytes += item.size ?? 0; };
     if (!allowed()) {
       result.stopped = 'policy';
       return result;
@@ -181,6 +268,7 @@ export async function saveFilesToFolder(
     }
     if (data === null) {
       result.skipped += 1;
+      advance();
       continue;
     }
     // The policy may have changed during the fetch, and nothing is on disk yet.
@@ -191,7 +279,12 @@ export async function saveFilesToFolder(
 
     let name: string | null = null;
     let writable: WritableFile | null = null;
+    let folder: FolderHandle | null = null;
     try {
+      folder = await folderFor(item.dir ?? []);
+      const dirKey = (item.dir ?? []).join('/');
+      const claimed = claimedIn.get(dirKey) ?? new Set<string>();
+      claimedIn.set(dirKey, claimed);
       name = await freeFileName(folder, safeFileName(item.name, 'attachment'), claimed);
       claimed.add(name);
       const file = await folder.getFileHandle(name, { create: true });
@@ -199,12 +292,14 @@ export async function saveFilesToFolder(
       await writable.write(data);
       await writable.close();
       result.saved += 1;
+      advance();
     } catch (error) {
       await writable?.abort?.().catch(() => {});
       // getFileHandle created an empty file; don't leave it looking saved.
-      if (name) await folder.removeEntry?.(name).catch(() => {});
+      if (name && folder) await folder.removeEntry?.(name).catch(() => {});
       if (isNameRefused(error)) {
         result.skipped += 1;
+        advance();
         continue;
       }
       result.stopped = 'write';
