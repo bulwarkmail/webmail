@@ -12,6 +12,9 @@ const EDGE_ROOM = 12;
 const MIN_STEP = 36;
 const TAP_SLOP = 8;
 const CLICK_AFTER_UP_MS = 600;
+const DROP_DISTANCE = 56;
+const DROP_MIN = 16;
+const FLICK_SPEED = 0.5;
 
 export function deckPeeks(depth: number | undefined): { offset: number; scale: number }[] {
   const n = Math.max(0, depth ?? 0);
@@ -195,7 +198,7 @@ export function UndoDeck({
 }: {
   toast: Toast;
   expanded: boolean;
-  children: (onExit: () => void, holding: boolean) => React.ReactNode;
+  children: (onExit: () => void, holding: boolean, dismissRef: { current: (() => void) | null }) => React.ReactNode;
 }) {
   const behind = toast.behind ?? [];
   const frontRef = useRef<HTMLDivElement>(null);
@@ -205,6 +208,11 @@ export function UndoDeck({
   const pointerAtRef = useRef(-Infinity);
   const tapRef = useRef<{ x: number; y: number; mouse: boolean; moved: boolean } | null>(null);
   const [tapped, setTapped] = useState(false);
+  const dragRef = useRef<{ id: number; x: number; y: number; at: number; down: boolean | null } | null>(null);
+  const [dragY, setDragY] = useState(0);
+  const [dragging, setDragging] = useState(false);
+  const [dropped, setDropped] = useState(false);
+  const dismissRef = useRef<(() => void) | null>(null);
   const [exiting, setExiting] = useState(false);
   const [leaving, setLeaving] = useState<Leaving[]>([]);
   const open = (expanded || keyboardIn || tapped) && !exiting && behind.length > 0;
@@ -343,16 +351,67 @@ export function UndoDeck({
     <div
       ref={wrapRef}
       className="relative isolate"
-      style={{ pointerEvents: "auto", marginTop: peeks.at(-1)?.offset ?? 0, transition: `margin ${TOAST_MOVE_MS}ms ${EASE}` }}
+      style={{
+        pointerEvents: dropped ? "none" : "auto",
+        touchAction: "none",
+        marginTop: peeks.at(-1)?.offset ?? 0,
+        transform: dragY > 0 ? `translateY(${dragY}px)` : undefined,
+        transition: dragging || dropped
+          ? `margin ${TOAST_MOVE_MS}ms ${EASE}`
+          : `margin ${TOAST_MOVE_MS}ms ${EASE}, transform ${TOAST_MOVE_MS}ms ${EASE}`,
+      }}
       onPointerDown={(e) => {
         pointerAtRef.current = Date.now();
         tapRef.current = { x: e.clientX, y: e.clientY, mouse: e.pointerType === "mouse", moved: false };
+        if (e.pointerType !== "mouse" && e.button === 0 && !exiting) {
+          dragRef.current = { id: e.pointerId, x: e.clientX, y: e.clientY, at: Date.now(), down: null };
+        }
       }}
       onPointerMove={(e) => {
         const tap = tapRef.current;
         if (tap && Math.hypot(e.clientX - tap.x, e.clientY - tap.y) > TAP_SLOP) tap.moved = true;
+        const drag = dragRef.current;
+        if (!drag || drag.id !== e.pointerId) return;
+        const dx = e.clientX - drag.x;
+        const dy = e.clientY - drag.y;
+        if (drag.down === null) {
+          if (Math.hypot(dx, dy) < TAP_SLOP) return;
+          drag.down = dy > Math.abs(dx);
+          if (drag.down) setDragging(true);
+        }
+        if (drag.down) setDragY(Math.max(0, dy));
       }}
-      onPointerUp={() => { pointerAtRef.current = Date.now(); }}
+      onPointerUp={(e) => {
+        pointerAtRef.current = Date.now();
+        const drag = dragRef.current;
+        if (!drag || drag.id !== e.pointerId) return;
+        dragRef.current = null;
+        if (!drag.down) return;
+        setDragging(false);
+        const dy = e.clientY - drag.y;
+        const flick = dy >= DROP_MIN && dy / Math.max(1, Date.now() - drag.at) >= FLICK_SPEED;
+        if ((dy < DROP_DISTANCE && !flick) || open) {
+          setDragY(0);
+          if (dy >= DROP_DISTANCE || flick) setTapped(false);
+          return;
+        }
+        const wrap = wrapRef.current;
+        if (typeof wrap?.animate === "function") {
+          const from = `translateY(${Math.max(0, dy)}px)`;
+          wrap.animate(
+            [{ transform: from, opacity: 1 }, { opacity: 1, offset: 0.4 }, { transform: "translateY(calc(100% + 4rem))", opacity: 0 }],
+            { duration: motionAllowed(wrap) ? TOAST_LEAVE_MS : 0, easing: EASE, fill: "forwards" },
+          );
+        }
+        setDropped(true);
+        dismissRef.current?.();
+      }}
+      onPointerCancel={(e) => {
+        if (dragRef.current?.id !== e.pointerId) return;
+        dragRef.current = null;
+        setDragging(false);
+        setDragY(0);
+      }}
       onClick={(e) => {
         const tap = tapRef.current;
         tapRef.current = null;
@@ -374,7 +433,7 @@ export function UndoDeck({
           delay={delays[i]}
           height={cardHeight}
           laid={!!prev && card.id === prev.cardId}
-          leaving={exiting}
+          leaving={exiting && !dropped}
           keyboard={keyboardIn}
         />
       ))}
@@ -382,7 +441,7 @@ export function UndoDeck({
         <LeavingCard key={`leaving-${card.key}`} card={card} height={cardHeight} onGone={gone} />
       ))}
       <div ref={frontRef} data-deck-front="">
-        {children(() => setExiting(true), keyboardIn || tapped)}
+        {children(() => setExiting(true), keyboardIn || tapped || dragging, dismissRef)}
       </div>
     </div>
   );

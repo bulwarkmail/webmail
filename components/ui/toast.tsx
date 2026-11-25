@@ -98,6 +98,7 @@ interface ToastProps {
   /** The toast goes away with the keyboard focus in it: put the focus back. */
   onFocusLost?: () => void;
   onExit?: () => void;
+  dismissRef?: { current: (() => void) | null };
 }
 
 /**
@@ -139,7 +140,7 @@ const progressBarStyles = {
 // A sideways swipe this far (px) on a touch screen dismisses the toast.
 const SWIPE_DISMISS_DISTANCE = 72;
 
-export function ToastItem({ toast, onClose, held = false, stackHovered = false, onFocusLost, onExit }: ToastProps) {
+export function ToastItem({ toast, onClose, held = false, stackHovered = false, onFocusLost, onExit, dismissRef }: ToastProps) {
   const tCommon = useTranslations("common");
   const tPlugin = useTranslations("plugins.dialog");
   const Icon = icons[toast.type];
@@ -167,6 +168,7 @@ export function ToastItem({ toast, onClose, held = false, stackHovered = false, 
   if (lastDurationRef.current !== toast.duration) {
     lastDurationRef.current = toast.duration;
     remainingRef.current = toast.duration ?? 5000;
+    startRef.current = Date.now();
   }
   const lastRevisionRef = useRef(toast.revision);
   if (lastRevisionRef.current !== toast.revision) {
@@ -177,7 +179,10 @@ export function ToastItem({ toast, onClose, held = false, stackHovered = false, 
 
   const onLeaveRef = useRef(toast.onLeave);
   onLeaveRef.current = toast.onLeave;
+  const goneRef = useRef(false);
   const dismiss = useCallback(() => {
+    if (goneRef.current) return;
+    goneRef.current = true;
     setExiting(true);
     onLeaveRef.current?.();
     onExit?.();
@@ -186,7 +191,27 @@ export function ToastItem({ toast, onClose, held = false, stackHovered = false, 
     setTimeout(() => onClose(toast.id), TOAST_LEAVE_MS);
   }, [onClose, toast.id, onFocusLost, onExit]);
 
+  const leaveQuietly = useCallback(() => {
+    if (goneRef.current) return;
+    goneRef.current = true;
+    try {
+      toast.onDismiss?.();
+    } catch {
+      // A failing listener must not keep the toast on screen.
+    }
+    onLeaveRef.current?.();
+    onExit?.();
+    if (rootRef.current?.contains(document.activeElement)) onFocusLost?.();
+    setTimeout(() => onClose(toast.id), TOAST_LEAVE_MS);
+  }, [toast, onExit, onFocusLost, onClose]);
+  useEffect(() => {
+    if (!dismissRef) return;
+    dismissRef.current = leaveQuietly;
+    return () => { dismissRef.current = null; };
+  }, [dismissRef, leaveQuietly]);
+
   const dismissByUser = useCallback(() => {
+    if (goneRef.current) return;
     try {
       toast.onDismiss?.();
     } catch {
@@ -198,18 +223,14 @@ export function ToastItem({ toast, onClose, held = false, stackHovered = false, 
   const canPause = toast.pauseOnHover !== false;
   const waiting = paused || held || (canPause && (hovered || focused || stackHovered));
   useEffect(() => {
-    if (!toast.duration || toast.duration <= 0 || isProgress) return;
-
-    if (waiting) {
-      if (timerRef.current) clearTimeout(timerRef.current);
-      remainingRef.current = remainingRef.current - (Date.now() - startRef.current);
-      return;
-    }
-
+    if (!toast.duration || toast.duration <= 0 || isProgress || waiting || goneRef.current) return;
     startRef.current = Date.now();
     timerRef.current = setTimeout(dismiss, remainingRef.current);
     return () => {
-      if (timerRef.current) clearTimeout(timerRef.current);
+      if (!timerRef.current) return;
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+      remainingRef.current -= Date.now() - startRef.current;
     };
   }, [toast.duration, toast.revision, waiting, dismiss, isProgress]);
 
@@ -239,14 +260,7 @@ export function ToastItem({ toast, onClose, held = false, stackHovered = false, 
     const dx = e.clientX - swipe.x;
     if (Math.abs(dx) >= SWIPE_DISMISS_DISTANCE) {
       setFlungTo(Math.sign(dx) * window.innerWidth);
-      toast.onLeave?.();
-      onExit?.();
-      try {
-        toast.onDismiss?.();
-      } catch {
-        // A failing listener must not keep the toast on screen.
-      }
-      setTimeout(() => onClose(toast.id), TOAST_LEAVE_MS);
+      leaveQuietly();
     } else {
       setDragX(0);
       setPaused(false);
@@ -758,7 +772,7 @@ export function ToastContainer({ toasts, onClose }: { toasts: Toast[]; onClose: 
       {toasts.map((toast) =>
         toast.behind !== undefined ? (
           <UndoDeck key={toast.id} toast={toast} expanded={stackHovered}>
-            {(onExit, holding) => <ToastItem toast={toast} onClose={onClose} held={held || holding} stackHovered={stackHovered} onFocusLost={returnFocus} onExit={onExit} />}
+            {(onExit, holding, dismissRef) => <ToastItem toast={toast} onClose={onClose} held={held || holding} stackHovered={stackHovered} onFocusLost={returnFocus} onExit={onExit} dismissRef={dismissRef} />}
           </UndoDeck>
         ) : (
           <div key={toast.id} style={{ pointerEvents: "auto" }}>

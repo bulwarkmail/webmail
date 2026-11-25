@@ -517,6 +517,88 @@ describe('the undo deck', () => {
       row.remove();
     });
 
+    describe('swiping down', () => {
+      const wrap = () => front().parentElement as HTMLElement;
+      const drag = (el: Element, dy: number, ms = 200) => {
+        fireEvent.pointerDown(el, { pointerType: 'touch', pointerId: 7, button: 0, clientX: 100, clientY: 100 });
+        fireEvent.pointerMove(el, { pointerType: 'touch', pointerId: 7, clientX: 102, clientY: 100 + dy / 2 });
+        vi.advanceTimersByTime(ms);
+        fireEvent.pointerMove(el, { pointerType: 'touch', pointerId: 7, clientX: 102, clientY: 100 + dy });
+        fireEvent.pointerUp(el, { pointerType: 'touch', pointerId: 7, clientX: 102, clientY: 100 + dy });
+      };
+      beforeEach(() => { vi.useFakeTimers(); });
+      afterEach(() => { vi.useRealTimers(); });
+
+      it('keeps the drag for itself instead of letting the page scroll', () => {
+        render(<ToastContainer toasts={[deck(3, [2, 1])]} onClose={vi.fn()} />);
+        expect(wrap().style.touchAction).toBe('none');
+      });
+
+      it('follows the finger down', () => {
+        render(<ToastContainer toasts={[deck(3, [2, 1])]} onClose={vi.fn()} />);
+        act(() => {
+          fireEvent.pointerDown(body(), { pointerType: 'touch', pointerId: 7, button: 0, clientX: 100, clientY: 100 });
+          fireEvent.pointerMove(body(), { pointerType: 'touch', pointerId: 7, clientX: 100, clientY: 140 });
+        });
+        expect(wrap().style.transform).toContain('translateY(40px)');
+      });
+
+      it('drops the whole deck off the bottom', () => {
+        const onClose = vi.fn();
+        render(<ToastContainer toasts={[deck(3, [2, 1])]} onClose={onClose} />);
+        act(() => { drag(body(), 80); });
+        const drop = motions.find((m) => m.el === wrap())!;
+        expect(drop.keyframes[0].transform).toBe('translateY(80px)');
+        expect(drop.keyframes.at(-1)).toMatchObject({ opacity: 0 });
+        expect(drop.keyframes.at(-1)!.transform).toMatch(/^translateY\(/);
+        expect(cardsBehind().every((el) => el.dataset.expanded !== 'true')).toBe(true);
+        act(() => { vi.advanceTimersByTime(400); });
+        expect(onClose).toHaveBeenCalledWith('d');
+      });
+
+      it('drops it on a quick flick too', () => {
+        const onClose = vi.fn();
+        render(<ToastContainer toasts={[deck(3, [2, 1])]} onClose={onClose} />);
+        act(() => { drag(body(), 30, 40); });
+        act(() => { vi.advanceTimersByTime(400); });
+        expect(onClose).toHaveBeenCalledWith('d');
+      });
+
+      it('springs back from a short, slow drag', () => {
+        const onClose = vi.fn();
+        render(<ToastContainer toasts={[deck(3, [2, 1])]} onClose={onClose} />);
+        act(() => { drag(body(), 30, 400); });
+        act(() => { vi.advanceTimersByTime(400); });
+        expect(onClose).not.toHaveBeenCalled();
+        expect(wrap().style.transform).not.toContain('translateY');
+      });
+
+      it('folds a fanned-out deck first, then drops it', () => {
+        const onClose = vi.fn();
+        render(<ToastContainer toasts={[deck(3, [2, 1])]} onClose={onClose} />);
+        act(() => { tap(body()); });
+        expect(expanded()).toBe(true);
+
+        act(() => { drag(cardsBehind()[1], 80); });
+        expect(expanded()).toBe(false);
+        act(() => { vi.advanceTimersByTime(400); });
+        expect(onClose).not.toHaveBeenCalled();
+        expect(wrap().style.transform).not.toContain('translateY');
+
+        act(() => { drag(body(), 80); });
+        act(() => { vi.advanceTimersByTime(400); });
+        expect(onClose).toHaveBeenCalledWith('d');
+      });
+
+      it('leaves a swipe up alone', () => {
+        const onClose = vi.fn();
+        render(<ToastContainer toasts={[deck(3, [2, 1])]} onClose={onClose} />);
+        act(() => { drag(body(), -80); });
+        act(() => { vi.advanceTimersByTime(400); });
+        expect(onClose).not.toHaveBeenCalled();
+      });
+    });
+
     it('does not fan out when the front Undo is tapped', () => {
       const undo = vi.fn();
       render(<ToastContainer toasts={[deck(3, [2, 1], { action: { label: 'Undo', onClick: undo, keepOpen: true } })]} onClose={vi.fn()} />);
@@ -627,6 +709,57 @@ describe('the front card of the deck', () => {
     });
     expect(document.activeElement).toBe(undo);
     act(() => { vi.advanceTimersByTime(8400); });
+    expect(onClose).toHaveBeenCalled();
+    vi.useRealTimers();
+  });
+
+  it('keeps the time it had left through a pause, however often it redraws meanwhile', () => {
+    vi.useFakeTimers();
+    const onClose = vi.fn();
+    const item = (n: number) => <ToastItem key="t" onClose={onClose} toast={deck(2, [1])} onExit={() => n} />;
+    const { rerender, container } = render(item(0));
+    act(() => { vi.advanceTimersByTime(2000); });
+    const el = container.querySelector<HTMLElement>('.toast-item')!;
+    act(() => { el.focus(); });
+    for (let n = 1; n <= 4; n++) {
+      act(() => { vi.advanceTimersByTime(3000); });
+      rerender(item(n));
+    }
+    act(() => { el.blur(); });
+    act(() => { vi.advanceTimersByTime(5000); });
+    expect(onClose).not.toHaveBeenCalled();
+    act(() => { vi.advanceTimersByTime(1500); });
+    expect(onClose).toHaveBeenCalled();
+    vi.useRealTimers();
+  });
+
+  it('leaves only once, however it redraws on the way out', () => {
+    vi.useFakeTimers();
+    const onClose = vi.fn();
+    const onLeave = vi.fn();
+    const item = (n: number) => <ToastItem key="t" onClose={onClose} toast={deck(2, [1], { onLeave })} onExit={() => n} />;
+    const { rerender } = render(item(0));
+    act(() => { vi.advanceTimersByTime(8000); });
+    for (let n = 1; n <= 3; n++) {
+      rerender(item(n));
+      act(() => { vi.advanceTimersByTime(100); });
+    }
+    act(() => { vi.advanceTimersByTime(1000); });
+    expect(onLeave).toHaveBeenCalledTimes(1);
+    expect(onClose).toHaveBeenCalledTimes(1);
+    vi.useRealTimers();
+  });
+
+  it('keeps counting through redraws while it runs', () => {
+    vi.useFakeTimers();
+    const onClose = vi.fn();
+    const item = (n: number) => <ToastItem key="t" onClose={onClose} toast={deck(2, [1])} onExit={() => n} />;
+    const { rerender } = render(item(0));
+    for (let n = 1; n <= 6; n++) {
+      act(() => { vi.advanceTimersByTime(1000); });
+      rerender(item(n));
+    }
+    act(() => { vi.advanceTimersByTime(2500); });
     expect(onClose).toHaveBeenCalled();
     vi.useRealTimers();
   });
