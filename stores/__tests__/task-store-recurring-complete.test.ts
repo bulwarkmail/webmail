@@ -51,135 +51,89 @@ describe('task-store recurring toggleTaskComplete', () => {
     };
   });
 
-  it('advances due date to next occurrence and keeps progress as needs-action for recurring tasks', async () => {
-    const task = makeTask({
-      id: 't-walk',
-      title: 'Lauf 🚶',
-      due: '2026-09-20',
-      showWithoutTime: true,
-      progress: 'needs-action',
-      recurrenceRules: [createRecurrenceRule('daily')],
-    });
-    useTaskStore.setState({ tasks: [task] });
+  const calls = () => (mockClient.updateCalendarTask as ReturnType<typeof vi.fn>).mock.calls;
+  const tickSeries = async (id: string) => {
+    const series = useTaskStore.getState().tasks.find((t) => t.id === id)!;
+    await useTaskStore.getState().toggleTaskComplete(mockClient as IJMAPClient, series);
+  };
 
-    await useTaskStore.getState().toggleTaskComplete(mockClient as IJMAPClient, task);
+  // Ticking off a series completes one occurrence, the first still open,
+  // and leaves the series where it is: the done date stays done in the
+  // calendar, and the rule keeps its start.
+  it('completes the first open occurrence of a series, not the series, and leaves its dates alone', async () => {
+    useTaskStore.setState({ tasks: [makeTask({ id: 't-walk', due: '2026-09-20', recurrenceRules: [createRecurrenceRule('daily')] })] });
 
-    expect(mockClient.updateCalendarTask).toHaveBeenCalledTimes(1);
-    const [calledId, calledUpdates] = (mockClient.updateCalendarTask as ReturnType<typeof vi.fn>).mock.calls[0];
-    expect(calledId).toBe('t-walk');
-    expect(calledUpdates).toMatchObject({
-      due: '2026-09-21T00:00:00',
-      progress: 'needs-action',
-    });
+    await tickSeries('t-walk');
 
-    const updatedTask = useTaskStore.getState().tasks.find((t) => t.id === 't-walk');
-    expect(updatedTask?.due).toBe('2026-09-21T00:00:00');
-    expect(updatedTask?.progress).toBe('needs-action');
+    expect(calls()).toEqual([['t-walk', { recurrenceOverrides: { '2026-09-20T00:00:00': { progress: 'completed' } } }]]);
+    expect(useTaskStore.getState().tasks[0]).toMatchObject({ due: '2026-09-20', progress: 'needs-action' });
   });
 
-  it('preserves due time when advancing timed recurring tasks', async () => {
-    const task = makeTask({
-      id: 't-timed',
-      title: 'Weekly Standup',
-      due: '2026-09-21T09:30:00',
-      showWithoutTime: false,
-      progress: 'needs-action',
-      recurrenceRules: [createRecurrenceRule('weekly')],
-    });
-    useTaskStore.setState({ tasks: [task] });
+  it('completes the next occurrence on the next tick', async () => {
+    useTaskStore.setState({ tasks: [makeTask({ id: 't-timed', due: '2026-09-21T09:30:00', showWithoutTime: false, recurrenceRules: [createRecurrenceRule('weekly')] })] });
 
-    await useTaskStore.getState().toggleTaskComplete(mockClient as IJMAPClient, task);
+    await tickSeries('t-timed');
+    await tickSeries('t-timed');
 
-    const [calledId, calledUpdates] = (mockClient.updateCalendarTask as ReturnType<typeof vi.fn>).mock.calls[0];
-    expect(calledId).toBe('t-timed');
-    expect(calledUpdates).toMatchObject({
-      due: '2026-09-28T09:30:00',
-      progress: 'needs-action',
-    });
+    expect(calls()[1]).toEqual(['t-timed', { 'recurrenceOverrides/2026-09-28T09:30:00': { progress: 'completed' } }]);
   });
 
-  it('moves the start of a series without a due date to its next occurrence', async () => {
-    const task = makeTask({
-      id: 't-start',
-      due: null,
-      start: '2026-09-20T08:00:00',
-      showWithoutTime: false,
-      recurrenceRules: [createRecurrenceRule('weekly')],
-    });
-    useTaskStore.setState({ tasks: [task] });
+  it('completes an occurrence of a series that has a start but no due date', async () => {
+    useTaskStore.setState({ tasks: [makeTask({ id: 't-start', due: null, start: '2026-09-20T08:00:00', showWithoutTime: false, recurrenceRules: [createRecurrenceRule('weekly')] })] });
 
-    await useTaskStore.getState().toggleTaskComplete(mockClient as IJMAPClient, task);
+    await tickSeries('t-start');
 
-    expect(mockClient.updateCalendarTask).toHaveBeenCalledWith('t-start', { progress: 'needs-action', start: '2026-09-27T08:00:00' });
-    expect(useTaskStore.getState().tasks[0].start).toBe('2026-09-27T08:00:00');
+    expect(calls()).toEqual([['t-start', { recurrenceOverrides: { '2026-09-20T08:00:00': { progress: 'completed' } } }]]);
   });
 
-  it('moves a series with a start to its next start, due as long after it as before, as the calendar shows it', async () => {
-    // Starts Wednesday 2026-09-16, due Friday the 18th, repeats on Wednesdays.
-    const task = makeTask({
+  it('completes the occurrence keyed by start when a series has both start and due', async () => {
+    useTaskStore.setState({ tasks: [makeTask({
       id: 't-span',
       start: '2026-09-16T00:00:00',
       due: '2026-09-18T00:00:00',
       recurrenceRules: [{ ...createRecurrenceRule('weekly'), byDay: [{ day: 'we' }] }],
-    });
-    useTaskStore.setState({ tasks: [task] });
-    const [shown] = groupTasksByDueDay([task], { start: new Date(2026, 8, 21), end: new Date(2026, 8, 27) }).get('2026-09-25')!;
+    })] });
 
-    await useTaskStore.getState().toggleTaskComplete(mockClient as IJMAPClient, task);
+    await tickSeries('t-span');
 
-    expect(mockClient.updateCalendarTask).toHaveBeenCalledWith('t-span', {
-      progress: 'needs-action', start: '2026-09-23T00:00:00', due: '2026-09-25T00:00:00',
-    });
-    expect(shown.recurrenceId).toBe('2026-09-23T00:00:00');
+    expect(calls()).toEqual([['t-span', { recurrenceOverrides: { '2026-09-16T00:00:00': { progress: 'completed' } } }]]);
+    expect(useTaskStore.getState().tasks[0]).toMatchObject({ start: '2026-09-16T00:00:00', due: '2026-09-18T00:00:00', progress: 'needs-action' });
   });
 
   it('completes a series that has neither a due date nor a start', async () => {
-    const task = makeTask({ id: 't-undated', due: null, start: null, recurrenceRules: [createRecurrenceRule('daily')] });
-    useTaskStore.setState({ tasks: [task] });
+    useTaskStore.setState({ tasks: [makeTask({ id: 't-undated', due: null, start: null, recurrenceRules: [createRecurrenceRule('daily')] })] });
 
-    await useTaskStore.getState().toggleTaskComplete(mockClient as IJMAPClient, task);
+    await tickSeries('t-undated');
 
-    expect(mockClient.updateCalendarTask).toHaveBeenCalledWith('t-undated', { progress: 'completed' });
+    expect(calls()).toEqual([['t-undated', { progress: 'completed' }]]);
   });
 
-  it('uses up one occurrence of a counted series per completion, so the series still ends', async () => {
-    const task = makeTask({
-      id: 't-count',
-      due: '2026-09-20T00:00:00',
-      recurrenceRules: [createRecurrenceRule('daily', { count: 3 })],
-    });
-    useTaskStore.setState({ tasks: [task] });
+  it('completes the series with its last occurrence, keeping the count', async () => {
+    useTaskStore.setState({ tasks: [makeTask({ id: 't-count', due: '2026-09-20T00:00:00', recurrenceRules: [createRecurrenceRule('daily', { count: 3 })] })] });
 
-    for (let i = 0; i < 3; i++) {
-      const current = useTaskStore.getState().tasks[0];
-      await useTaskStore.getState().toggleTaskComplete(mockClient as IJMAPClient, current);
-    }
+    for (let i = 0; i < 3; i++) await tickSeries('t-count');
 
-    const calls = (mockClient.updateCalendarTask as ReturnType<typeof vi.fn>).mock.calls.map((c) => c[1]);
-    expect(calls[0]).toMatchObject({ due: '2026-09-21T00:00:00', recurrenceRules: [expect.objectContaining({ count: 2 })] });
-    expect(calls[1]).toMatchObject({ due: '2026-09-22T00:00:00', recurrenceRules: [expect.objectContaining({ count: 1 })] });
-    expect(calls[2]).toEqual({ progress: 'completed' });
-    expect(useTaskStore.getState().tasks[0]).toMatchObject({ due: '2026-09-22T00:00:00', progress: 'completed' });
+    expect(calls().map((c) => c[1])).toEqual([
+      { recurrenceOverrides: { '2026-09-20T00:00:00': { progress: 'completed' } } },
+      { 'recurrenceOverrides/2026-09-21T00:00:00': { progress: 'completed' } },
+      { 'recurrenceOverrides/2026-09-22T00:00:00': { progress: 'completed' }, progress: 'completed' },
+    ]);
+    expect(useTaskStore.getState().tasks[0]).toMatchObject({ due: '2026-09-20T00:00:00', progress: 'completed', recurrenceRules: [expect.objectContaining({ count: 3 })] });
   });
 
-  it('sets progress to completed when the final recurrence occurrence is completed', async () => {
-    const task = makeTask({
-      id: 't-final',
-      title: 'Final task',
-      due: '2026-09-20',
-      showWithoutTime: true,
-      progress: 'needs-action',
+  it('reopens a completed series when one of its occurrences is reopened', async () => {
+    const done = { progress: 'completed' as const };
+    useTaskStore.setState({ tasks: [makeTask({
+      id: 't-done', due: '2026-09-20T00:00:00', progress: 'completed',
       recurrenceRules: [createRecurrenceRule('daily', { count: 1 })],
-    });
-    useTaskStore.setState({ tasks: [task] });
+      recurrenceOverrides: { '2026-09-20T00:00:00': done },
+    })] });
+    const [occurrence] = groupTasksByDueDay(useTaskStore.getState().tasks, { start: new Date(2026, 8, 20), end: new Date(2026, 8, 20) }).get('2026-09-20')!;
 
-    await useTaskStore.getState().toggleTaskComplete(mockClient as IJMAPClient, task);
+    await useTaskStore.getState().toggleTaskComplete(mockClient as IJMAPClient, occurrence);
 
-    const [calledId, calledUpdates] = (mockClient.updateCalendarTask as ReturnType<typeof vi.fn>).mock.calls[0];
-    expect(calledId).toBe('t-final');
-    expect(calledUpdates).toEqual({
-      progress: 'completed',
-    });
+    expect(calls()).toEqual([['t-done', { 'recurrenceOverrides/2026-09-20T00:00:00': { progress: 'needs-action' }, progress: 'needs-action' }]]);
+    expect(useTaskStore.getState().tasks[0].progress).toBe('needs-action');
   });
 
   it('completes an individual occurrence with recurrenceOverrides without mutating master series interval', async () => {

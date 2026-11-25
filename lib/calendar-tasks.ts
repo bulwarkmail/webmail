@@ -107,6 +107,41 @@ export function occurrenceRecurrenceId(task: CalendarTask): string | null {
   return Number.isNaN(due.getTime()) ? null : taskRecurrenceId(task, due);
 }
 
+const OPEN_SEARCH_YEARS = 25;
+
+/**
+ * The first occurrence of a series that is neither done, cancelled nor left
+ * out, as the calendar grid shows it; null when none is left or the task
+ * does not repeat.
+ */
+export function nextOpenOccurrence(series: CalendarTask): CalendarTask | null {
+  if (!series.recurrenceRules?.length || series.recurrenceId) return null;
+  if (series.progress === "completed" || series.progress === "cancelled") return null;
+  const anchor = parseISO(series.start || series.due || "");
+  if (Number.isNaN(anchor.getTime())) return null;
+  // The grid expands by due date; a series without one repeats by its start.
+  const expandable = series.due ? series : { ...series, due: series.start };
+  for (let year = 0; year < OPEN_SEARCH_YEARS; year++) {
+    const start = addDays(anchor, year * 366);
+    const occurrences = [...groupTasksByDueDay([expandable], { start, end: addDays(start, 365) }).values()]
+      .flat()
+      .sort((a, b) => (a.recurrenceId ?? "").localeCompare(b.recurrenceId ?? ""));
+    const open = occurrences.find((o) => o.progress !== "completed" && o.progress !== "cancelled");
+    if (open) return series.due ? open : { ...open, due: null };
+  }
+  return null;
+}
+
+/**
+ * A series as the task list shows it: the occurrence a tick completes, its
+ * first open one, under the series' id, so selecting and deleting it still
+ * mean the series. Other tasks, and series with nothing open, as they are.
+ */
+export function asListedTask(task: CalendarTask): CalendarTask {
+  const open = nextOpenOccurrence(task);
+  return open ? { ...open, id: task.id } : task;
+}
+
 /**
  * JMAP patch setting one override on the master: a patch path into an existing
  * recurrenceOverrides map, the whole map when there is none yet.

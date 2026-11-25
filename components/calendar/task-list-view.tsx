@@ -14,6 +14,7 @@ import { useDisplayDateFormatter } from "@/hooks/use-display-date-formatter";
 import { useCvdColor } from "@/hooks/use-cvd-color";
 import { useCollectionNames } from "@/hooks/use-collection-names";
 import { parseTaskDue } from "@/lib/task-due-parser";
+import { asListedTask } from "@/lib/calendar-tasks";
 import { useContextMenu } from "@/hooks/use-context-menu";
 import { TaskContextMenu, type TaskDueChoice } from "./task-context-menu";
 import { nestTasks } from "@/lib/task-subtasks";
@@ -201,7 +202,8 @@ export function filterTasksForList(
   filter: TaskViewFilter,
 ): CalendarTask[] {
   const hidden = new Set(hiddenTaskListIds);
-  let result = tasks.filter(task => {
+  // A series is listed as its first open occurrence.
+  let result = tasks.map(asListedTask).filter(task => {
     const calIds = Object.keys(task.calendarIds ?? {});
     return calIds.length === 0 || calIds.some(id => !hidden.has(id));
   });

@@ -21,6 +21,7 @@ import { useContactStore, getContactDisplayName, getContactPrimaryEmail } from "
 import { usePolicyStore } from "@/stores/policy-store";
 import { useSettingsStore } from "@/stores/settings-store";
 import { useTaskStore } from "@/stores/task-store";
+import { asListedTask } from "@/lib/calendar-tasks";
 import { getTimedEventBoundsForDay } from "@/lib/calendar-utils";
 import { requestInternalMailto } from "@/lib/protocol-handlers/mailto";
 import { formatDateTime, cn } from "@/lib/utils";
@@ -335,7 +336,8 @@ function TasksPanel({ onClose }: { onClose: () => void }) {
     void fetchTasks(client);
   }, [client, calendars.length, fetchCalendars, fetchTasks]);
 
-  const pending = tasks.filter((task) => task.progress !== "completed" && task.progress !== "cancelled");
+  // A series is listed as its first open occurrence.
+  const pending = tasks.map(asListedTask).filter((task) => task.progress !== "completed" && task.progress !== "cancelled");
   const taskCalendar = calendars.find((c) => c.isTasksOnly) ?? calendars[0];
 
   return (
