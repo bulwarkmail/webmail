@@ -1,5 +1,121 @@
 # Changelog
 
+## 1.22.0 (2026-11-25)
+
+1.22.0 has team mailboxes: members of a group mailbox write notes beside a message, mention each other and assign mail. The composer gets a format painter, calendar events can carry files and be created from a message, and invitations can be forwarded. Admins can load remote pictures through the server, give Bulwark's server an internal URL to the mail server, and keep a server for extra accounts only. Bulwark is now available in Swedish.
+
+Thank you for your donations:
+
+- _You? [Become a sponsor!](https://github.com/sponsors/bulwarkmail)_
+
+**One-time**
+
+- [@svenblum](https://github.com/svenblum)
+- [@systemflair](https://github.com/systemflair)
+- Anonymous
+
+**Monthly**
+
+- [@jnk0](https://github.com/jnk0)
+- [@Balestrino](https://github.com/Balestrino)
+- [@comexos](https://github.com/comexos)
+- [@Monarobase](https://github.com/Monarobase)
+- [@Focus-On-Agency](https://github.com/Focus-On-Agency)
+- Anonymous
+- [@superspacehosting](https://github.com/superspacehosting)
+- [@naokton](https://github.com/naokton)
+- [@yerTools](https://github.com/yerTools)
+- [@jsaathof](https://github.com/jsaathof)
+- [@berkersal](https://github.com/berkersal)
+- [@NABarnes](https://github.com/NABarnes)
+- [@felixzieger](https://github.com/felixzieger)
+- [@pr0ton11](https://github.com/pr0ton11)
+- [@fpauser](https://github.com/fpauser)
+- [@proxforge](https://github.com/proxforge)
+- [@spss20](https://github.com/spss20)
+- [@elgringoYan](https://github.com/elgringoYan)
+- [@pauladams8](https://github.com/pauladams8)
+- [@djpriest](https://github.com/djpriest)
+- [@umakers](https://github.com/umakers)
+- [@zplizzi](https://github.com/zplizzi)
+- [@jeremiah](https://github.com/jeremiah)
+- [@Theoretisch1337](https://github.com/Theoretisch1337)
+- [@svandive](https://github.com/svandive)
+- [@HiltMundell](https://github.com/HiltMundell)
+
+### Security
+
+- **Server**: Next.js is updated to 16.4.6, which fixes seven moderate advisories, among them GHSA-pc58-hwjq-p385 (#1835, thanks @dealerweb)
+
+### Features
+
+- **Team mailboxes**: Members of a shared group mailbox can write notes for the team beside a message, mention each other with @, assign messages and mark them done, with Open, Assigned to me, Mentions me and With notes filters. A message can be assigned to several people; who has it shows under the subject with Assign and Done, a note line sits above the reply box, and mentioning someone in a note assigns the message to them. A mention reaches the member as a notification, also as a push. Admins turn it on under Admin > Team mailboxes, for everyone or per domain or group. Notes are kept in a "Team notes" folder of the group mailbox that Bulwark doesn't list. The Team inbox plugin steps back once it is on
+- **Mail**: "Archive after replying" in Settings > Composing archives a message in the Inbox once your reply or forward is sent. It is off by default (#1514, thanks @robertdoneill)
+- **Mail**: "Create event…" in the message menu opens a new calendar event with the message's subject and a link back to the mail (#1579, thanks @sandrobraendli)
+- **Mail**: With "Remote pictures through this server" in Admin > Features and settings, the server fetches the remote pictures of a mail and passes them on, so senders see the server instead of the reader's IP address (#1021, thanks @loxK)
+- **Mail**: The composer shows the account a message is sent from, and asks before a reply goes out from another account than the one the message came to (#1666, thanks @chodid)
+- **Mail**: "Regular without avatars" is a new list density in Settings > Appearance (#1840)
+- **Mail**: Message rows can be swiped on a touch screen at any width, such as a tablet in landscape (#1831, thanks @skug67)
+- **Mail**: An attachment can be saved to Files from the conversation view too (#1852, thanks @amas01)
+- **Mail**: Under "Include group inboxes" in the unified mailbox settings, single shared mailboxes can be left out of the unified mailbox. They stay in the sidebar (#962, thanks @compuvidy)
+- **Folders**: "Hide unsubscribed folders" in Settings > Folders & tags takes folders you unsubscribed from, here or in another app such as Thunderbird, out of the sidebar. Each folder can be shown or hidden there, and "Hide from sidebar" is in the folder menu (#1398, thanks @schickel007)
+- **Compose**: The format painter in the toolbar copies the formatting at the selection (bold, italic, underline, strikethrough, colour, background colour and font size) and applies it to the next selection. A double click keeps it on for every selection after that, until Escape (#1592, thanks @ibayue)
+- **Compose**: With "Always show emails in light mode" on, the composer is a light page in dark mode too (#1521, thanks @TheBigS1981)
+- **Compose**: The link dialog accepts addresses with spaces and sends them as %20 (#1856, thanks @chlw)
+- **Identities**: An address with "Offer for new mail" off is used only to reply to mail sent to it and stays out of From for new messages (#1673, thanks @chodid)
+- **Identities**: An address can use the signature of another address instead of its own (#1190, thanks @mmomjian)
+- **Identities**: A new masked address can be created on a domain you choose (#1703, thanks @passibe15)
+- **Filters**: Rules a mail host manages outside Bulwark keep running next to your filters, and the filters page lists them read-only as "Server rules" (#1276, thanks @shukiv)
+- **Calendar**: Events show their attached files, and files can be added and removed in the event editor (#1597, thanks @phaudenschild-sketch)
+- **Calendar**: "Forward…" sends a meeting invitation on to someone else. The organizer sees that the reply comes from someone who wasn't invited and can add them to the meeting (#1797, thanks @chutescarabee7)
+- **Calendar**: The sidebar lists the invitations you haven't answered yet (#1669, thanks @bentuna)
+- **Calendar**: "Default event length" in Settings > Calendar sets how long a new event is (#1318, thanks @kdanielm)
+- **Tasks**: Subtasks show under their parent task, and "Add subtask…" adds a new one (#1048, thanks @Noneangel)
+- **Files**: "Download to a folder…" saves a folder from Files into a folder on your computer, without a zip. Zipping a folder is faster, as photos, videos and archives are stored as they are (#1810, thanks @madsmh)
+- **Sharing**: "What you share" lists every folder, calendar and file you share with who has it, and you can stop sharing one from there (#1171, thanks @PoltoS)
+- **Directory**: The directory can show only people or only groups (#1600, thanks @diegonix)
+- **Notifications**: Push notifications show a cut-out mark in the Android status bar instead of a solid blob. Admins can set their own with "Notification badge" in Admin > Branding, or `NOTIFICATION_BADGE_URL` (#915, thanks @bitfactory-dk)
+- **Admin**: A JMAP server can have an "Internal URL" in Admin > Server > JMAP servers. Bulwark's server uses it for its own requests to the mail server, while browsers keep the public one (#1294, thanks @camerony)
+- **Admin**: A JMAP server marked "Only as an extra account" isn't offered on the sign-in page. Users add it next to their main account, for example a legacy-proxy for their external mailboxes. With `LOGIN_GRANT_SECRET` set in Bulwark and in the legacy-proxy, the proxy takes new addresses only from signed-in Bulwark users (#1687, thanks @chodid)
+- **Admin**: The proofreading notice can be worded per language in Admin > Proofreading (#1836, thanks @TheKusja1)
+- **Admin**: Addresses and networks in `LOGIN_RATE_LIMIT_ALLOWLIST` skip the cap on failed sign-ins, for offices and proxies where many users share one address (#1295, thanks @dealerweb)
+- **Lite**: A Lite deployment can add its own themes as files: `themes.json` next to `policy.json`, and `themes/<id>/theme.css` for each theme (#1582, thanks @beja19)
+- **Translations**: Swedish (#1875, thanks @niklasohrmer)
+- **Plugins**: A credential with `appPassword` lets the server make an app password on the mail server when the user connects the plugin. It is limited to the permissions the manifest lists, the connect dialog shows what it can do, and the plugin never sees it (#1525, thanks @HOLOEYE-JZ)
+- **Plugins**: `api.http.eventSource` subscribes to Server-Sent Events from one of the plugin's allowed origins and reconnects by itself. It needs `http:fetch` (#1825, thanks @HOLOEYE-JZ)
+- **Plugins**: `api.search.showMessages` shows up to 200 messages the plugin found as the mail list, under a chip with the plugin's label (#954, thanks @aspuru)
+- **Plugins**: The `onSenderResolve` hook shows another sender than From in the list and the reader (#633, thanks @tstreule)
+- **Plugins**: Inline sidebar apps stay loaded when you move between pages, and the unread count an app reports with a `bulwark:app-badge` message shows on its rail icon (#1546, thanks @HOLOEYE-JZ)
+- **Plugins**: With settings sync on, whether a plugin is on, its settings and what it stores with `{ sync: true }` are the same in every browser of the account (#1327, thanks @ovizii)
+- **Plugins**: Plugins can archive and move mail of shared and team accounts (bulwarkmail/plugins#39)
+
+### Fixes
+
+- **Accounts**: An extra account whose session can't be restored stays in the account list with "Sign in again" and keeps its offline mail. A mail server outage no longer signs it out (#1444, thanks @yontani)
+- **Sign-in**: Automatic SSO keeps working in a tab that signed in or out before (#1819, thanks @musu)
+- **Security settings**: App passwords can be created on Stalwart 1.2 when the sign-in token holds less than the account (#1853, thanks @tvaril)
+- **Filters**: On Stalwart 1.2, which keeps the auto-reply in a script named "managed", filters and the auto-reply work together. A reply set before the update moves over with the next save (#1849, thanks @dealerweb)
+- **Sender check**: The result of a trusted server that writes it above its own Received line, such as GMX, is shown (#1841, thanks @chodid)
+- **Mail**: Mail text stays light in dark mode with Reduce motion on (#1832, thanks @mmomjian)
+- **Mail**: Each message of a conversation has View source in its menu (#1842, thanks @VasilisNtovolos)
+- **Mail**: Long attachment names keep their end visible in the reader and use the whole tile until it is hovered
+- **Mail**: A message's style block no longer shows as text when its remote pictures are blocked
+- **Pro**: `in:trash` and `in:junk` in global search show only mail from that folder, and skip accounts without one (#1855, thanks @VasilisNtovolos)
+- **Mountain View**: The cursor moves to a ticked row at once instead of after the message loads (#1847, thanks @mmomjian)
+- **Themes**: A selected unread row keeps its colour under Aurora Glass, and read and unread rows are easier to tell apart there (#1574, thanks @JGJ52)
+- **Themes**: The admin's default or forced theme shows on the sign-in page of a new browser (#1846, thanks @kloud-ai)
+- **Calendar**: Hidden calendars stay hidden after signing out and in other browsers (#1845, thanks @jothoma1)
+- **Calendar**: Calendar subscriptions refresh on schedule on every page, not only while the calendar is open (#716, thanks @madsmh)
+- **Calendar**: Answering an invitation that names one of your own addresses as organizer no longer sends it on to its guests (#1797, thanks @chutescarabee7)
+- **Calendar**: Saving a series from one occurrence no longer says it is no longer available, and dragging an occurrence with "This and all following" starts the rest of the series at the new time
+- **Calendar**: Event colours that other calendar apps write as colour names show, calendar notices show their whole text in the bell list and toasts (#1834, thanks @madsmh), "Tomorrow" follows the display time zone (#1851, thanks @VasilisNtovolos), and a week that fits the pane has no empty scrollbar under it
+- **Tasks**: A task reminder counts from the due date, so it fires on phones and moves with the task (#1828, thanks @sanitz). A repeating task with a start date repeats from its start, as on phones and in CalDAV clients, and ticking it off moves it to its next start (#1850, thanks @sanitz)
+- **Contacts**: Blank categories written by iOS are hidden (#1826, thanks @njayasathya)
+- **Admin**: List settings in the policy defaults, such as the attachment reminder's keywords, apply to users who never changed them (#1672, thanks @chodid)
+- **Settings sync**: The mail list keeps working when synced settings carry a list density this version doesn't know
+- **Offline**: The browser starts offline without a visit to the start page first (#1626, thanks @chodid)
+- **Plugins**: Row badges stay with their own message when messages of different accounts share an id (#1838, thanks @alyyousuf7)
+
 ## 1.21.3 (2026-11-20)
 
 1.21.3 has a new rule dialog that shows what a rule catches and can apply it to existing mail, dark mode for HTML mail that follows the theme, and an availability grid for meetings. Compose floats over the message list, replying marks a message as read, and settings sync with the mobile app. The sender check now trusts only the receiving Stalwart; admins with a filtering gateway can list it under Admin > Server > Sender check.
