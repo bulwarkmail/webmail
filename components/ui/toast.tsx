@@ -11,6 +11,7 @@ import { useContextMenuOpen } from "@/components/ui/context-menu";
 import { useMediaQuery, narrowerThan } from "@/hooks/use-media-query";
 import { UndoDeck } from "@/components/ui/toast-deck";
 import { computeToastPlacement, stackWouldCoverFocus, TOAST_AVOID_BOTTOM, TOAST_AVOID_END, TOAST_EDGE, TOAST_REPLY_BOX } from "@/lib/toast-placement";
+import { prefersReducedMotion } from "@/lib/reduced-motion";
 import { POINTER_FOCUS_MS, TOAST_EASE, TOAST_LEAVE_MS, TOAST_MOVE_MS, toastMotionVars } from "@/lib/toast-motion";
 
 export type ToastType = "success" | "error" | "info" | "warning";
@@ -498,7 +499,7 @@ function useToastPlacement(
     let glide: Animation | null = null;
     let placed = false;
     const canGlide = () =>
-      typeof stack.animate === "function" && !window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+      typeof stack.animate === "function" && !prefersReducedMotion();
     const near = () => {
       if (!pointer || phone) return false;
       const r = stack.getBoundingClientRect();

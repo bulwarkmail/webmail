@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { CheckCircle } from "@/components/icons";
 import { cn } from "@/lib/utils";
+import { prefersReducedMotion } from "@/lib/reduced-motion";
 import { TOUCH_HIT_AREA } from "@/components/ui/button";
 import type { DeckCard, Toast } from "@/components/ui/toast";
 import { POINTER_FOCUS_MS, TOAST_EASE as EASE, TOAST_FADE_MS, TOAST_LEAVE_MS, TOAST_MOVE_MS, TOAST_STAGGER_MS } from "@/lib/toast-motion";
@@ -31,7 +32,7 @@ const FOLD_WAIT = TOAST_STAGGER_MS * 2;
 
 function motionAllowed(el: Element | null): el is HTMLElement {
   if (!el || typeof (el as HTMLElement).animate !== "function") return false;
-  return !window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+  return !prefersReducedMotion();
 }
 
 function slideOut(el: HTMLElement): string {
@@ -212,14 +213,24 @@ export function UndoDeck({
   const [dragY, setDragY] = useState(0);
   const [dragging, setDragging] = useState(false);
   const [dropped, setDropped] = useState(false);
+  const [shut, setShut] = useState(false);
+  const draggedRef = useRef(false);
   const dismissRef = useRef<(() => void) | null>(null);
+  const letGo = () => {
+    dragRef.current = null;
+    setDragging(false);
+    setDragY(0);
+  };
   const [exiting, setExiting] = useState(false);
   const [leaving, setLeaving] = useState<Leaving[]>([]);
-  const open = (expanded || keyboardIn || tapped) && !exiting && behind.length > 0;
+  const open = (expanded || keyboardIn || tapped) && !shut && !exiting && behind.length > 0;
   const deckGone = exiting || behind.length === 0;
   useEffect(() => {
     if (deckGone) setTapped(false);
   }, [deckGone]);
+  useEffect(() => {
+    if (!expanded && !keyboardIn && !tapped) setShut(false);
+  }, [expanded, keyboardIn, tapped]);
   useEffect(() => {
     if (!tapped) return;
     const away = (e: PointerEvent) => {
@@ -353,7 +364,7 @@ export function UndoDeck({
       className="relative isolate"
       style={{
         pointerEvents: dropped ? "none" : "auto",
-        touchAction: "none",
+        touchAction: "pinch-zoom",
         marginTop: peeks.at(-1)?.offset ?? 0,
         transform: dragY > 0 ? `translateY(${dragY}px)` : undefined,
         transition: dragging || dropped
@@ -363,9 +374,14 @@ export function UndoDeck({
       onPointerDown={(e) => {
         pointerAtRef.current = Date.now();
         tapRef.current = { x: e.clientX, y: e.clientY, mouse: e.pointerType === "mouse", moved: false };
-        if (e.pointerType !== "mouse" && e.button === 0 && !exiting) {
-          dragRef.current = { id: e.pointerId, x: e.clientX, y: e.clientY, at: Date.now(), down: null };
+        if (e.isPrimary === false) {
+          letGo();
+          return;
         }
+        draggedRef.current = false;
+        dragRef.current = e.pointerType !== "mouse" && e.button === 0 && !exiting
+          ? { id: e.pointerId, x: e.clientX, y: e.clientY, at: Date.now(), down: null }
+          : null;
       }}
       onPointerMove={(e) => {
         const tap = tapRef.current;
@@ -375,9 +391,12 @@ export function UndoDeck({
         const dx = e.clientX - drag.x;
         const dy = e.clientY - drag.y;
         if (drag.down === null) {
-          if (Math.hypot(dx, dy) < TAP_SLOP) return;
+          if (Math.abs(dx) < TAP_SLOP && Math.abs(dy) < TAP_SLOP) return;
           drag.down = dy > Math.abs(dx);
-          if (drag.down) setDragging(true);
+          if (!drag.down) return;
+          draggedRef.current = true;
+          setDragging(true);
+          e.currentTarget.setPointerCapture?.(e.pointerId);
         }
         if (drag.down) setDragY(Math.max(0, dy));
       }}
@@ -392,7 +411,10 @@ export function UndoDeck({
         const flick = dy >= DROP_MIN && dy / Math.max(1, Date.now() - drag.at) >= FLICK_SPEED;
         if ((dy < DROP_DISTANCE && !flick) || open) {
           setDragY(0);
-          if (dy >= DROP_DISTANCE || flick) setTapped(false);
+          if (open && (dy >= DROP_DISTANCE || flick)) {
+            setTapped(false);
+            setShut(true);
+          }
           return;
         }
         const wrap = wrapRef.current;
@@ -406,20 +428,30 @@ export function UndoDeck({
         setDropped(true);
         dismissRef.current?.();
       }}
-      onPointerCancel={(e) => {
-        if (dragRef.current?.id !== e.pointerId) return;
-        dragRef.current = null;
-        setDragging(false);
-        setDragY(0);
+      onPointerCancel={(e) => { if (dragRef.current?.id === e.pointerId) letGo(); }}
+      onLostPointerCapture={(e) => { if (e.target === e.currentTarget && dragRef.current?.id === e.pointerId) letGo(); }}
+      onClickCapture={(e) => {
+        if (!draggedRef.current) return;
+        draggedRef.current = false;
+        e.preventDefault();
+        e.stopPropagation();
       }}
       onClick={(e) => {
         const tap = tapRef.current;
         tapRef.current = null;
         if (!tap || tap.mouse || tap.moved) return;
         if ((e.target as Element).closest("button, a, input, textarea, select")) return;
-        if (behind.length > 0 && !exiting) setTapped((was) => !was);
+        if (behind.length === 0 || exiting) return;
+        if (shut) {
+          setShut(false);
+          setTapped(true);
+        } else setTapped((was) => !was);
       }}
-      onFocus={() => { if (Date.now() - pointerAtRef.current > POINTER_FOCUS_MS) setKeyboardIn(true); }}
+      onFocus={() => {
+        if (Date.now() - pointerAtRef.current <= POINTER_FOCUS_MS) return;
+        setKeyboardIn(true);
+        setShut(false);
+      }}
       onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setKeyboardIn(false); }}
     >
       {behind.map((card, i) => (

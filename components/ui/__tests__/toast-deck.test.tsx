@@ -377,7 +377,7 @@ describe('the undo deck', () => {
   describe('on a touch screen', () => {
     const expanded = () => cardsBehind().length > 0 && cardsBehind().every((el) => el.dataset.expanded === 'true');
     const tap = (el: Element, x = 100, y = 100) => {
-      fireEvent.pointerDown(el, { pointerType: 'touch', pointerId: 1, clientX: x, clientY: y });
+      fireEvent.pointerDown(el, { pointerType: 'touch', isPrimary: true, pointerId: 1, clientX: x, clientY: y });
       fireEvent.pointerUp(el, { pointerType: 'touch', pointerId: 1, clientX: x, clientY: y });
       fireEvent.mouseOver(el, { clientX: x, clientY: y });
       fireEvent.mouseDown(el, { clientX: x, clientY: y });
@@ -445,7 +445,7 @@ describe('the undo deck', () => {
       act(() => { tap(body()); });
 
       act(() => {
-        fireEvent.pointerDown(row, { pointerType: 'touch', pointerId: 1, clientX: 50, clientY: 50 });
+        fireEvent.pointerDown(row, { pointerType: 'touch', isPrimary: true, pointerId: 1, clientX: 50, clientY: 50 });
         fireEvent.pointerCancel(row, { pointerType: 'touch', pointerId: 1, clientX: 50, clientY: 300 });
       });
       expect(expanded()).toBe(false);
@@ -489,7 +489,7 @@ describe('the undo deck', () => {
       render(<ToastContainer toasts={[deck(3, [2, 1])]} onClose={vi.fn()} />);
       act(() => { tap(body()); });
       act(() => {
-        fireEvent.pointerDown(row, { pointerType: 'touch', pointerId: 2, button: 0 });
+        fireEvent.pointerDown(row, { pointerType: 'touch', isPrimary: true, pointerId: 2, button: 0 });
         vi.advanceTimersByTime(1500);
         fireEvent.pointerUp(row, { pointerType: 'touch', pointerId: 2, button: 0 });
         fireEvent.click(row);
@@ -520,7 +520,7 @@ describe('the undo deck', () => {
     describe('swiping down', () => {
       const wrap = () => front().parentElement as HTMLElement;
       const drag = (el: Element, dy: number, ms = 200) => {
-        fireEvent.pointerDown(el, { pointerType: 'touch', pointerId: 7, button: 0, clientX: 100, clientY: 100 });
+        fireEvent.pointerDown(el, { pointerType: 'touch', isPrimary: true, pointerId: 7, button: 0, clientX: 100, clientY: 100 });
         fireEvent.pointerMove(el, { pointerType: 'touch', pointerId: 7, clientX: 102, clientY: 100 + dy / 2 });
         vi.advanceTimersByTime(ms);
         fireEvent.pointerMove(el, { pointerType: 'touch', pointerId: 7, clientX: 102, clientY: 100 + dy });
@@ -529,15 +529,100 @@ describe('the undo deck', () => {
       beforeEach(() => { vi.useFakeTimers(); });
       afterEach(() => { vi.useRealTimers(); });
 
-      it('keeps the drag for itself instead of letting the page scroll', () => {
+      it('keeps the drag for itself but still lets the page be pinched', () => {
         render(<ToastContainer toasts={[deck(3, [2, 1])]} onClose={vi.fn()} />);
-        expect(wrap().style.touchAction).toBe('none');
+        expect(wrap().style.touchAction).toBe('pinch-zoom');
+      });
+
+      it('lets go when a second finger lands, and counts down again', () => {
+        const onClose = vi.fn();
+        render(<ToastContainer toasts={[deck(3, [2, 1])]} onClose={onClose} />);
+        act(() => {
+          fireEvent.pointerDown(body(), { pointerType: 'touch', isPrimary: true, pointerId: 7, button: 0, clientX: 100, clientY: 100 });
+          fireEvent.pointerMove(body(), { pointerType: 'touch', pointerId: 7, clientX: 100, clientY: 140 });
+          fireEvent.pointerDown(body(), { pointerType: 'touch', pointerId: 8, button: 0, isPrimary: false, clientX: 200, clientY: 100 });
+          fireEvent.pointerUp(body(), { pointerType: 'touch', pointerId: 8, clientX: 200, clientY: 100 });
+          fireEvent.pointerUp(body(), { pointerType: 'touch', pointerId: 7, clientX: 100, clientY: 140 });
+        });
+        expect(wrap().style.transform).not.toContain('translateY');
+        act(() => { vi.advanceTimersByTime(9000); });
+        expect(onClose).toHaveBeenCalled();
+      });
+
+      it('lets go when it loses the pointer', () => {
+        const onClose = vi.fn();
+        render(<ToastContainer toasts={[deck(3, [2, 1])]} onClose={onClose} />);
+        act(() => {
+          fireEvent.pointerDown(body(), { pointerType: 'pen', isPrimary: true, pointerId: 7, button: 0, clientX: 100, clientY: 100 });
+          fireEvent.pointerMove(body(), { pointerType: 'pen', pointerId: 7, clientX: 100, clientY: 140 });
+          fireEvent.lostPointerCapture(wrap(), { pointerType: 'pen', pointerId: 7 });
+        });
+        expect(wrap().style.transform).not.toContain('translateY');
+        act(() => { vi.advanceTimersByTime(9000); });
+        expect(onClose).toHaveBeenCalled();
+      });
+
+      it('keeps the drag when it takes the pointer over from the text under the finger', () => {
+        render(<ToastContainer toasts={[deck(3, [2, 1])]} onClose={vi.fn()} />);
+        act(() => {
+          fireEvent.pointerDown(body(), { pointerType: 'touch', isPrimary: true, pointerId: 7, button: 0, clientX: 100, clientY: 100 });
+          fireEvent.pointerMove(body(), { pointerType: 'touch', pointerId: 7, clientX: 100, clientY: 120 });
+          fireEvent.lostPointerCapture(body(), { pointerType: 'touch', pointerId: 7 });
+          fireEvent.pointerMove(wrap(), { pointerType: 'touch', pointerId: 7, clientX: 100, clientY: 160 });
+        });
+        expect(wrap().style.transform).toContain('translateY(60px)');
+      });
+
+      it('leaves a sideways swipe to the card, even when it starts a little downward', () => {
+        render(<ToastContainer toasts={[deck(3, [2, 1])]} onClose={vi.fn()} />);
+        act(() => {
+          fireEvent.pointerDown(body(), { pointerType: 'touch', isPrimary: true, pointerId: 7, button: 0, clientX: 100, clientY: 100 });
+          fireEvent.pointerMove(body(), { pointerType: 'touch', pointerId: 7, clientX: 105, clientY: 107 });
+          fireEvent.pointerMove(body(), { pointerType: 'touch', pointerId: 7, clientX: 180, clientY: 160 });
+        });
+        expect(wrap().style.transform).not.toContain('translateY');
+        expect(front().querySelector<HTMLElement>('.toast-item')!.style.transform).toContain('translateX');
+      });
+
+      it('does not undo when a drag starts on Undo', () => {
+        const undo = vi.fn();
+        render(<ToastContainer toasts={[deck(3, [2, 1], { action: { label: 'Undo', onClick: undo, keepOpen: true } })]} onClose={vi.fn()} />);
+        const button = front().querySelector('button')!;
+        act(() => {
+          fireEvent.pointerDown(button, { pointerType: 'touch', isPrimary: true, pointerId: 7, button: 0, clientX: 100, clientY: 100 });
+          fireEvent.pointerMove(button, { pointerType: 'touch', pointerId: 7, clientX: 100, clientY: 112 });
+          fireEvent.pointerUp(button, { pointerType: 'touch', pointerId: 7, clientX: 100, clientY: 112 });
+          fireEvent.click(button);
+        });
+        expect(undo).not.toHaveBeenCalled();
+        act(() => { tap(button); });
+        expect(undo).toHaveBeenCalledTimes(1);
+      });
+
+      it('folds when the mouse opened it too', () => {
+        render(<ToastContainer toasts={[deck(3, [2, 1])]} onClose={vi.fn()} />);
+        act(() => { fireEvent.pointerOver(front(), { pointerType: 'mouse' }); });
+        expect(expanded()).toBe(true);
+        act(() => { drag(body(), 80); });
+        expect(expanded()).toBe(false);
+      });
+
+      it('drops without motion when the app is set to reduce motion', () => {
+        document.documentElement.setAttribute('data-motion', 'reduce');
+        try {
+          render(<ToastContainer toasts={[deck(3, [2, 1])]} onClose={vi.fn()} />);
+          act(() => { drag(body(), 80); });
+          const drop = motions.find((m) => m.el === wrap()) as (Motion & { options?: KeyframeAnimationOptions }) | undefined;
+          expect(drop?.options?.duration ?? 0).toBe(0);
+        } finally {
+          document.documentElement.removeAttribute('data-motion');
+        }
       });
 
       it('follows the finger down', () => {
         render(<ToastContainer toasts={[deck(3, [2, 1])]} onClose={vi.fn()} />);
         act(() => {
-          fireEvent.pointerDown(body(), { pointerType: 'touch', pointerId: 7, button: 0, clientX: 100, clientY: 100 });
+          fireEvent.pointerDown(body(), { pointerType: 'touch', isPrimary: true, pointerId: 7, button: 0, clientX: 100, clientY: 100 });
           fireEvent.pointerMove(body(), { pointerType: 'touch', pointerId: 7, clientX: 100, clientY: 140 });
         });
         expect(wrap().style.transform).toContain('translateY(40px)');
@@ -610,7 +695,7 @@ describe('the undo deck', () => {
     it('does not fan out at the end of a drag', () => {
       render(<ToastContainer toasts={[deck(3, [2, 1])]} onClose={vi.fn()} />);
       act(() => {
-        fireEvent.pointerDown(body(), { pointerType: 'touch', pointerId: 1, clientX: 100, clientY: 100 });
+        fireEvent.pointerDown(body(), { pointerType: 'touch', isPrimary: true, pointerId: 1, clientX: 100, clientY: 100 });
         fireEvent.pointerMove(body(), { pointerType: 'touch', pointerId: 1, clientX: 100, clientY: 140 });
         fireEvent.pointerUp(body(), { pointerType: 'touch', pointerId: 1, clientX: 100, clientY: 140 });
         fireEvent.click(body(), { clientX: 100, clientY: 140 });
@@ -701,7 +786,7 @@ describe('the front card of the deck', () => {
     const { getByRole } = render(<ToastItem onClose={onClose} toast={deck(2, [1])} />);
     const undo = getByRole('button', { name: 'Undo' });
     act(() => {
-      fireEvent.pointerDown(undo, { pointerType: 'touch', pointerId: 1 });
+      fireEvent.pointerDown(undo, { pointerType: 'touch', isPrimary: true, pointerId: 1 });
       fireEvent.pointerUp(undo, { pointerType: 'touch', pointerId: 1 });
       fireEvent.mouseDown(undo);
       undo.focus();
