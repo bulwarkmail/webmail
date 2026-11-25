@@ -913,9 +913,9 @@ export function CalendarApp({ linkSegments: routeSegments, surface = "calendar" 
 
   const openEditTaskModal = useCallback((task: CalendarTask) => whenEditorsDiscarded(() => {
     closeEventPanelForTask();
-    // An occurrence on the grid opens the task it repeats.
+    // An occurrence or listed series opens the raw task it repeats.
     const seriesId = taskSeriesId(task);
-    const master = seriesId === task.id ? task : useTaskStore.getState().tasks.find((t) => t.id === seriesId) ?? task;
+    const master = useTaskStore.getState().tasks.find((t) => t.id === seriesId) ?? task;
     setEditTask(master);
     setShowTaskModal(true);
   }), [closeEventPanelForTask, whenEditorsDiscarded]);
@@ -984,13 +984,14 @@ export function CalendarApp({ linkSegments: routeSegments, surface = "calendar" 
   // question, as Mail does. Undo makes the task again from what it held.
   const handleDeleteTaskWithUndo = useCallback(async (task: CalendarTask) => {
     if (!client) return;
+    const raw = useTaskStore.getState().tasks.find((t) => t.id === task.id) ?? task;
     try {
-      if (!(await taskStore.deleteTask(client, task.id))) return;
+      if (!(await taskStore.deleteTask(client, raw.id))) return;
     } catch (error) {
       toast.error(describeError(error, t("notifications.task_delete_error")));
       return;
     }
-    const { id: _id, created: _c, updated: _u, localAccountId: _l, originalId: _o, accountId: _a, isShared: _s, progressUpdated: _p, ...kept } = task;
+    const { id: _id, created: _c, updated: _u, localAccountId: _l, originalId: _o, accountId: _a, isShared: _s, progressUpdated: _p, seriesId: _sid, recurrenceId: _rid, ...kept } = raw;
     toast.success(t("notifications.task_deleted"), {
       action: {
         label: t("notifications.undo"),

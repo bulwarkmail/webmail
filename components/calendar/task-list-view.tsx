@@ -276,15 +276,17 @@ export function TaskListView({
     onToggleComplete(task);
   }, [onToggleComplete]);
 
+  const rawTask = useCallback((task: CalendarTask) => tasks.find((x) => x.id === task.id) ?? task, [tasks]);
+
   const { contextMenu, openContextMenu, closeContextMenu, menuRef } = useContextMenu<CalendarTask>();
-  const menuTask = contextMenu.data ? tasks.find((x) => x.id === contextMenu.data!.id) ?? contextMenu.data : null;
+  const menuTask = contextMenu.data ? rawTask(contextMenu.data) : null;
 
   // Del on a task (its row has the focus) deletes it, as in Mail and Contacts.
   const handleRowKeyDown = (e: React.KeyboardEvent, task: CalendarTask) => {
     if (e.key !== "Delete" || e.altKey || e.ctrlKey || e.metaKey || e.shiftKey || !onDeleteTask) return;
     e.preventDefault();
     e.stopPropagation();
-    onDeleteTask(task);
+    onDeleteTask(rawTask(task));
   };
 
   if (filteredTasks.length === 0) {
@@ -315,7 +317,7 @@ export function TaskListView({
               data-menu-row=""
               data-task-id={task.id}
               data-task-depth={depth}
-              onClick={() => onSelectTask(task)}
+              onClick={() => onSelectTask(rawTask(task))}
               onContextMenu={(e) => openContextMenu(e, task)}
               onKeyDown={(e) => handleRowKeyDown(e, task)}
               className={cn(
@@ -341,7 +343,7 @@ export function TaskListView({
               {/* Content: a button, so Tab reaches the task and Enter opens it. */}
               <button
                 type="button"
-                onClick={(e) => { e.stopPropagation(); onSelectTask(task); }}
+                onClick={(e) => { e.stopPropagation(); onSelectTask(rawTask(task)); }}
                 className="flex-1 min-w-0 text-start rounded-sm focus-visible:outline-hidden"
               >
                 {parent && <span className="sr-only">{t("tasks.subtask_of", { title: parent.title || t("tasks.no_title") })}</span>}
