@@ -5,7 +5,7 @@ import { Email } from "@/lib/jmap/types";
 import { IJMAPClient } from "@/lib/jmap/client-interface";
 import { emailLinkSource, listRowSource, resolveEmailBlobContext, resolveSelectedEmails, useEmailStore } from "@/stores/email-store";
 import { emailKeyFor } from "@/lib/thread-utils";
-import { EMAIL_SOURCES_DRAG_MIME, type EmailDragSource } from "@/lib/email-drag-payload";
+import { EMAIL_IDS_DRAG_MIME, EMAIL_SOURCES_DRAG_MIME, type EmailDragSource } from "@/lib/email-drag-payload";
 import { useAuthStore } from "@/stores/auth-store";
 import { useDragDropContext } from "@/contexts/drag-drop-context";
 import { useUIStore } from "@/stores/ui-store";
@@ -275,7 +275,7 @@ export function useEmailDrag({ email, sourceMailboxId, threadEmails }: UseEmailD
 
     e.dataTransfer.effectAllowed = "copyMove";
     e.dataTransfer.setData(
-      "application/x-email-ids",
+      EMAIL_IDS_DRAG_MIME,
       JSON.stringify(emailsToDrag.map(em => em.id))
     );
     const sourceOf = listRowSource(state);

@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createEvent, fireEvent, render, screen } from '@testing-library/react';
 import { ProTabBar, revealInStrip } from '@/components/pro/pro-tab-bar';
 import { PRO_TAB_DRAG_MIME } from '@/components/pro/pro-shell-drop';
-import { EMAIL_SOURCES_DRAG_MIME } from '@/lib/email-drag-payload';
+import { EMAIL_IDS_DRAG_MIME, EMAIL_SOURCES_DRAG_MIME } from '@/lib/email-drag-payload';
 import { useProTabStore, type ProTab } from '@/stores/pro-tab-store';
 
 /** jsdom's built-in DataTransfer doesn't fully support setData/getData in synthetic drag events. */
@@ -150,9 +150,12 @@ describe('ProTabBar (per-pane strip)', () => {
       { emailId: 'm1', clientAccountId: 'login-a', accountId: 'primary' },
       { emailId: 'm1', clientAccountId: 'login-b', accountId: 'primary' },
     ];
-    dt.setData('application/x-email-ids', JSON.stringify(['m1', 'm1']));
+    dt.setData(EMAIL_IDS_DRAG_MIME, JSON.stringify(['m1', 'm1']));
+    const tab = screen.getAllByRole('tab')[0];
+    expect(fireEvent.drop(tab, { dataTransfer: dt })).toBe(false);
+    expect(onEmailDrop).not.toHaveBeenCalled();
     dt.setData(EMAIL_SOURCES_DRAG_MIME, JSON.stringify(sources));
-    fireEvent.drop(screen.getAllByRole('tab')[0], { dataTransfer: dt });
+    fireEvent.drop(tab, { dataTransfer: dt });
     expect(onEmailDrop).toHaveBeenCalledWith(sources);
   });
 

@@ -1,5 +1,5 @@
 import type { ProPaneId, ProSplitSide } from "@/stores/pro-tab-store";
-import { EMAIL_SOURCES_DRAG_MIME } from "@/lib/email-drag-payload";
+import { EMAIL_IDS_DRAG_MIME, EMAIL_SOURCES_DRAG_MIME } from "@/lib/email-drag-payload";
 
 /** Custom MIME type used to carry the dragged Pro tab id between handlers. */
 export const PRO_TAB_DRAG_MIME = "application/x-pro-tab-id";
@@ -33,7 +33,9 @@ export type BodyDropTarget =
 export function dragKindFromTypes(types: readonly string[]): ShellDragKind | null {
   if (types.includes(PRO_TAB_DRAG_MIME)) return "tab";
   if (types.includes(MAILBOX_DRAG_MIME)) return "folder";
-  if (types.includes(EMAIL_SOURCES_DRAG_MIME)) return "email";
+  // An ID-only message drag still belongs to the shell, not a composer
+  // field. Opening a tab separately requires the scoped message payload.
+  if (types.includes(EMAIL_IDS_DRAG_MIME) || types.includes(EMAIL_SOURCES_DRAG_MIME)) return "email";
   return null;
 }
 

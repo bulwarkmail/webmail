@@ -1,3 +1,6 @@
+/** The message IDs shared with drop targets such as the folder list. */
+export const EMAIL_IDS_DRAG_MIME = "application/x-email-ids";
+
 /** Pro tabs need the message's source as well as its JMAP id. */
 export const EMAIL_SOURCES_DRAG_MIME = "application/x-bulwark-email-sources";
 

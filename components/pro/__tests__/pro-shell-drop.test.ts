@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { EMAIL_SOURCES_DRAG_MIME, parseEmailSourcesPayload } from '@/lib/email-drag-payload';
+import { EMAIL_IDS_DRAG_MIME, EMAIL_SOURCES_DRAG_MIME, parseEmailSourcesPayload } from '@/lib/email-drag-payload';
 import {
   dragKindFromTypes,
   paneOnSide,
@@ -18,7 +18,7 @@ describe('dragKindFromTypes', () => {
     expect(dragKindFromTypes([EMAIL_SOURCES_DRAG_MIME, PRO_TAB_DRAG_MIME])).toBe('tab');
     expect(dragKindFromTypes([MAILBOX_DRAG_MIME, PRO_TAB_DRAG_MIME])).toBe('tab');
     expect(dragKindFromTypes(['text/plain', 'Files'])).toBeNull();
-    expect(dragKindFromTypes(['application/x-email-ids'])).toBeNull();
+    expect(dragKindFromTypes([EMAIL_IDS_DRAG_MIME])).toBe('email');
   });
 });
 

@@ -1,6 +1,6 @@
 import { act, fireEvent, render } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { EMAIL_SOURCES_DRAG_MIME } from '@/lib/email-drag-payload';
+import { EMAIL_IDS_DRAG_MIME, EMAIL_SOURCES_DRAG_MIME } from '@/lib/email-drag-payload';
 import type { Email } from '@/lib/jmap/types';
 
 // Until the session is up the Pro page draws the same skeleton the server
@@ -219,7 +219,7 @@ describe('Pro page gate', () => {
     expect(useProTabStore.getState().tabs).toHaveLength(1);
   });
 
-  it('opens the dragged source in the target pane when another login has the same message id', async () => {
+  it('requires the dragged source to open a tab in the target pane', async () => {
     auth.state.isAuthenticated = true;
     auth.state.client = {};
     const main = { id: 'home-mail', kind: 'mail' as const, labelKey: 'mail', closeable: false, paneId: 'main' as const };
@@ -230,19 +230,28 @@ describe('Pro page gate', () => {
     });
     const { emails } = useEmailStore.getState();
     const source = { emailId: 'm1', clientAccountId: 'login-b', accountId: 'primary' };
-    useEmailStore.setState({ emails: [
-      { id: 'm1', sourceClientAccountId: 'login-a', sourceAccountId: 'primary', subject: 'Not dragged' } as Email,
-      { id: 'm1', sourceClientAccountId: 'login-b', sourceAccountId: 'primary', subject: 'Dragged' } as Email,
-    ] });
+    const other = { id: 'm1', sourceClientAccountId: 'login-a', sourceAccountId: 'primary', subject: 'Not dragged' } as Email;
+    useEmailStore.setState({ emails: [other] });
     try {
       const { getByTestId } = render(<ProHome />);
       await act(async () => {});
-      const dataTransfer = {
-        types: [EMAIL_SOURCES_DRAG_MIME, 'application/x-email-ids'],
-        getData: (type: string) => type === EMAIL_SOURCES_DRAG_MIME ? JSON.stringify([source]) : '["m1"]',
-      };
+      const surface = getByTestId('mail-app');
       // No layout in jsdom: the midpoint targets the right-hand (split) pane.
-      fireEvent.drop(getByTestId('mail-app'), { dataTransfer });
+      expect(fireEvent.drop(surface, {
+        dataTransfer: { types: [EMAIL_IDS_DRAG_MIME], getData: () => '["m1"]' },
+      })).toBe(false);
+      expect(useProTabStore.getState().tabs.some((tab) => tab.kind === 'email')).toBe(false);
+
+      act(() => useEmailStore.setState({ emails: [
+        other,
+        { id: 'm1', sourceClientAccountId: 'login-b', sourceAccountId: 'primary', subject: 'Dragged' } as Email,
+      ] }));
+      fireEvent.drop(surface, {
+        dataTransfer: {
+          types: [EMAIL_SOURCES_DRAG_MIME, EMAIL_IDS_DRAG_MIME],
+          getData: (type: string) => type === EMAIL_SOURCES_DRAG_MIME ? JSON.stringify([source]) : '["m1"]',
+        },
+      });
       expect(useProTabStore.getState().tabs.filter((tab) => tab.kind === 'email'))
         .toMatchObject([{ paneId: 'split', emailData: { ...source, title: 'Dragged' } }]);
     } finally {
