@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo, useRef } from "react";
 import { useTranslations } from "next-intl";
 import { ExternalLink, Printer } from "@/components/icons";
 import { Spinner } from "@/components/ui/spinner";
-import { PreviewShell, useBackdropClose, type PreviewNeighbours } from "@/components/files/preview-shell";
+import { PreviewShell, useBackdropClose, type PreviewLayer, type PreviewNeighbours } from "@/components/files/preview-shell";
 import { IconButton } from "@/components/ui/icon-button";
 import { ZoomableImage } from "@/components/files/zoomable-image";
 import { getFilePreviewKind, imageBlobUrl, imageDataUrl, isInlineSafeBlob, previewBlobType, toInertBlob } from "@/lib/file-preview";
@@ -107,6 +107,8 @@ interface FilePreviewModalProps {
    * ("Opened by the plugin X", for a file a plugin opened or printed).
    */
   source?: string;
+  /** Over plugin dialogs, for a file a plugin opened (PreviewShell's `layer`). */
+  layer?: PreviewLayer;
 }
 
 function SimpleMarkdown({ content, containerRef }: { content: string; containerRef?: React.Ref<HTMLDivElement> }) {
@@ -200,7 +202,7 @@ function processInline(text: string): React.ReactNode {
   return parts.length === 1 ? parts[0] : <>{parts}</>;
 }
 
-export function FilePreviewModal({ name, onClose, onDownload, getFileContent, file, neighbours, linksOff, policyAccount, extraAction, autoPrint, source }: FilePreviewModalProps) {
+export function FilePreviewModal({ name, onClose, onDownload, getFileContent, file, neighbours, linksOff, policyAccount, extraAction, autoPrint, source, layer }: FilePreviewModalProps) {
   const t = useTranslations("files");
   const tCommon = useTranslations("common");
   const tViewer = useTranslations("email_viewer");
@@ -469,6 +471,7 @@ export function FilePreviewModal({ name, onClose, onDownload, getFileContent, fi
       onDownload={downloadsOff ? undefined : download}
       neighbours={neighbours}
       source={source}
+      layer={layer}
       // An installed app hands the new window to the system browser, which
       // cannot load our blob: URL (#865): no dead button there.
       actions={(
