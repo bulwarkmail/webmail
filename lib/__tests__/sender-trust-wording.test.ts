@@ -37,6 +37,7 @@ const EARLIER: Record<string, string> = {
   "ro": "Serverul de e-mail a confirmat că acest mesaj vine de la {domain}.",
   "ru": "Почтовый сервер подтвердил, что это сообщение пришло с {domain}.",
   "sk": "Poštový server overil, že táto správa pochádza z {domain}.",
+  "sv": "E-postservern bekräftade att det här meddelandet kommer från {domain}.",
   "th": "เซิร์ฟเวอร์อีเมลยืนยันแล้วว่าข้อความนี้มาจาก {domain}",
   "tr": "E-posta sunucusu bu iletinin {domain} alan adından geldiğini doğruladı.",
   "uk": "Поштовий сервер підтвердив, що це повідомлення надійшло з {domain}.",
@@ -63,7 +64,7 @@ describe('the tooltip of the sender domain on a booking card', () => {
   });
 
   it('covers every locale', () => {
-    expect(langs.length).toBe(32);
+    expect(langs.length).toBe(33);
     expect(Object.keys(EARLIER).sort()).toEqual([...langs].sort());
   });
 });

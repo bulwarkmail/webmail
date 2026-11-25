@@ -67,10 +67,11 @@ describe('LanguageSwitcher', () => {
     openMenu();
     const names = screen.getAllByRole('option').map((o) => o.querySelector('[dir="auto"]')?.textContent);
     expect(names.slice(0, 6)).toEqual(['Auto', 'Català', 'Česky', 'Dansk', 'Deutsch', 'Eesti']);
-    // Slovenčina sorts with S, between Română and Tiếng Việt.
+    // Slovenčina sorts with S, between Română and Svenska; Tiếng Việt follows.
     const sk = names.indexOf('Slovenčina');
     expect(names[sk - 1]).toBe('Română');
-    expect(names[sk + 1]).toBe('Tiếng Việt');
+    expect(names[sk + 1]).toBe('Svenska');
+    expect(names[sk + 2]).toBe('Tiếng Việt');
     // Every Latin-script name comes before the first non-Latin one.
     const firstOther = names.findIndex((n) => !/^[\p{Script=Latin}\s]+$/u.test(n ?? ''));
     expect(names.slice(firstOther).every((n) => !/^\p{Script=Latin}/u.test(n ?? ''))).toBe(true);

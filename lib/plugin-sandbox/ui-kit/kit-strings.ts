@@ -32,6 +32,7 @@ export const KIT_STRINGS: Record<string, Record<KitKey, string>> = {
   ro: { remove: 'Elimină', remove_named: 'Elimină {name}', clear: 'Golește', clear_search: 'Golește căutarea', open: 'Deschide lista', close: 'Închide lista' },
   ru: { remove: 'Удалить', remove_named: 'Удалить {name}', clear: 'Очистить', clear_search: 'Очистить поиск', open: 'Открыть список', close: 'Закрыть список' },
   sk: { remove: 'Odstrániť', remove_named: 'Odstrániť {name}', clear: 'Vymazať', clear_search: 'Vymazať hľadanie', open: 'Otvoriť zoznam', close: 'Zavrieť zoznam' },
+  sv: { remove: 'Ta bort', remove_named: 'Ta bort {name}', clear: 'Rensa', clear_search: 'Rensa sökning', open: 'Öppna lista', close: 'Stäng lista' },
   th: { remove: 'นำออก', remove_named: 'นำ {name} ออก', clear: 'ล้าง', clear_search: 'ล้างการค้นหา', open: 'เปิดรายการ', close: 'ปิดรายการ' },
   tr: { remove: 'Kaldır', remove_named: '{name} öğesini kaldır', clear: 'Temizle', clear_search: 'Aramayı temizle', open: 'Listeyi aç', close: 'Listeyi kapat' },
   uk: { remove: 'Вилучити', remove_named: 'Вилучити {name}', clear: 'Очистити', clear_search: 'Очистити пошук', open: 'Відкрити список', close: 'Закрити список' },
