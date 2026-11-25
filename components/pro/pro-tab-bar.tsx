@@ -6,12 +6,11 @@ import { Mail, Calendar, ListTodo, BookUser, HardDrive, Settings, PenSquare, Mai
 import { cn } from "@/lib/utils";
 import { useRestoredTabTitles } from "@/hooks/use-restored-tab-titles";
 import { useProTabStore, type ProTab, type ProTabKind, type ProPaneId } from "@/stores/pro-tab-store";
+import { EMAIL_SOURCES_DRAG_MIME, parseEmailSourcesPayload, type EmailDragSource } from "@/lib/email-drag-payload";
 import {
   PRO_TAB_DRAG_MIME,
-  EMAIL_IDS_DRAG_MIME,
   MAILBOX_DRAG_MIME,
   dragKindFromTypes,
-  parseEmailIdsPayload,
   parseMailboxDragPayload,
   type MailboxDragPayload,
 } from "@/components/pro/pro-shell-drop";
@@ -30,7 +29,7 @@ interface ProTabBarProps {
   /** Fires on tab drag start/end so the shell can show body drop zones. */
   onDragStateChange?: (dragging: boolean, tabId: string | null) => void;
   /** Emails dragged from a message list and dropped on this strip. */
-  onEmailDrop?: (emailIds: string[]) => void;
+  onEmailDrop?: (sources: EmailDragSource[]) => void;
   /** A sidebar folder dragged onto this strip - opens it as a folder tab. */
   onFolderDrop?: (payload: MailboxDragPayload) => void;
   className?: string;
@@ -164,9 +163,9 @@ export function ProTabBar({
       if (payload) onFolderDrop?.(payload);
       return true;
     }
-    if (!e.dataTransfer.types.includes(EMAIL_IDS_DRAG_MIME)) return false;
-    const ids = parseEmailIdsPayload(e.dataTransfer.getData(EMAIL_IDS_DRAG_MIME));
-    if (ids.length > 0) onEmailDrop?.(ids);
+    if (!e.dataTransfer.types.includes(EMAIL_SOURCES_DRAG_MIME)) return false;
+    const sources = parseEmailSourcesPayload(e.dataTransfer.getData(EMAIL_SOURCES_DRAG_MIME));
+    if (sources.length > 0) onEmailDrop?.(sources);
     return true;
   };
 

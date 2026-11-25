@@ -1,12 +1,11 @@
 import { describe, expect, it } from 'vitest';
+import { EMAIL_SOURCES_DRAG_MIME, parseEmailSourcesPayload } from '@/lib/email-drag-payload';
 import {
   dragKindFromTypes,
   paneOnSide,
-  parseEmailIdsPayload,
   parseMailboxDragPayload,
   resolveBodyDropTarget,
   PRO_TAB_DRAG_MIME,
-  EMAIL_IDS_DRAG_MIME,
   MAILBOX_DRAG_MIME,
   SPLIT_EDGE_FRACTION,
 } from '@/components/pro/pro-shell-drop';
@@ -14,21 +13,22 @@ import {
 describe('dragKindFromTypes', () => {
   it('recognises tab, folder and email drags, tab winning when several are present', () => {
     expect(dragKindFromTypes([PRO_TAB_DRAG_MIME])).toBe('tab');
-    expect(dragKindFromTypes([EMAIL_IDS_DRAG_MIME, 'text/plain'])).toBe('email');
+    expect(dragKindFromTypes([EMAIL_SOURCES_DRAG_MIME, 'text/plain'])).toBe('email');
     expect(dragKindFromTypes([MAILBOX_DRAG_MIME, 'text/plain'])).toBe('folder');
-    expect(dragKindFromTypes([EMAIL_IDS_DRAG_MIME, PRO_TAB_DRAG_MIME])).toBe('tab');
+    expect(dragKindFromTypes([EMAIL_SOURCES_DRAG_MIME, PRO_TAB_DRAG_MIME])).toBe('tab');
     expect(dragKindFromTypes([MAILBOX_DRAG_MIME, PRO_TAB_DRAG_MIME])).toBe('tab');
     expect(dragKindFromTypes(['text/plain', 'Files'])).toBeNull();
+    expect(dragKindFromTypes(['application/x-email-ids'])).toBeNull();
   });
 });
 
-describe('parseEmailIdsPayload', () => {
-  it('parses id arrays and rejects malformed payloads', () => {
-    expect(parseEmailIdsPayload('["a","b"]')).toEqual(['a', 'b']);
-    expect(parseEmailIdsPayload('["a", 42, "", "b"]')).toEqual(['a', 'b']);
-    expect(parseEmailIdsPayload('{"not":"an array"}')).toEqual([]);
-    expect(parseEmailIdsPayload('not json')).toEqual([]);
-    expect(parseEmailIdsPayload('')).toEqual([]);
+describe('parseEmailSourcesPayload', () => {
+  it('requires a message id, login and owning account for each source', () => {
+    const source = { emailId: 'a', clientAccountId: 'login-a', accountId: 'shared' };
+    expect(parseEmailSourcesPayload(JSON.stringify([source, 'a', 42, null, { ...source, accountId: '' }])))
+      .toEqual([source]);
+    expect(parseEmailSourcesPayload('{"not":"an array"}')).toEqual([]);
+    expect(parseEmailSourcesPayload('not json')).toEqual([]);
   });
 });
 

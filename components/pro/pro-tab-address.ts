@@ -1,11 +1,10 @@
 import { buildMailPath } from "@/lib/deep-links";
-import { listRowSource } from "@/lib/draft-source";
-import { isFilterEmpty } from "@/lib/jmap/search-utils";
+import type { EmailDragSource } from "@/lib/email-drag-payload";
 import type { Email, Mailbox } from "@/lib/jmap/types";
 import { useAuthStore } from "@/stores/auth-store";
-import { emailLinkSource, resolveUnstampedEmailAccountId, useEmailStore } from "@/stores/email-store";
+import { emailLinkSource, listRowSource, useEmailStore } from "@/stores/email-store";
 import type { ProEmailTabData, ProFolderTabData } from "@/stores/pro-tab-store";
-import { tabLogin } from "./pro-tab-login";
+import { tabLogin, tabLoginClient } from "./pro-tab-login";
 
 // The Pro shell's address names a message by its id, its login and the JMAP
 // account it is in when that is not the login's own: ids repeat across
@@ -46,40 +45,31 @@ export function mailTabPath(mailboxId: string | null, open: Email | null, mailbo
 }
 
 /**
- * The message tabs for messages dragged onto the Pro shell, by the ids the
- * drag carries: each the one row of the Mail list with that id, with the
- * login and account it was listed from, as a double-click on it opens it.
- * An id that names no listed row, or several (a list that mixes accounts),
- * opens nothing.
+ * The message tabs for a drop onto the Pro shell. Require a still-listed row
+ * from the exact source captured at drag start, even after the list refreshes.
  */
-export function droppedEmailTabs(emailIds: string[], fallbackTitle: string): ProEmailTabData[] {
+export function droppedEmailTabs(sources: EmailDragSource[], fallbackTitle: string): ProEmailTabData[] {
   const state = useEmailStore.getState();
-  const viewMailboxes = state.viewingAccountId
-    ? state.accountMailboxes[state.viewingAccountId] ?? state.mailboxes
-    : state.mailboxes;
-  const list = {
-    isScheduledView: state.isScheduledView,
-    viewingAccountId: state.viewingAccountId,
-    activeAccountId: useAuthStore.getState().activeAccountId,
-    accountId: resolveUnstampedEmailAccountId({
-      mailboxes: viewMailboxes,
-      selectedMailbox: state.selectedMailbox,
-      searchActive: !!state.searchQuery || !isFilterEmpty(state.searchFilters),
-      searchMailboxId: state.searchMailboxId,
-    }),
-  };
+  const sourceOf = listRowSource(state);
   const tabs: ProEmailTabData[] = [];
-  for (const id of emailIds) {
-    const rows = state.emails.filter((email) => email.id === id);
+  for (const source of sources) {
+    const rows = state.emails.filter((email) => {
+      if (email.id !== source.emailId) return false;
+      if (state.isScheduledView && !(email.sourceClientAccountId && email.sourceAccountId)) return false;
+      const { login, account } = sourceOf(email);
+      return login === source.clientAccountId && account === source.accountId;
+    });
     if (rows.length !== 1) continue;
-    const source = listRowSource(rows[0], list);
-    if (!source.localAccountId) continue;
+    const row = rows[0];
+    const stamped = row.sourceClientAccountId && row.sourceAccountId;
+    // Keep the same tab data as double-clicking an unstamped personal row.
+    const own = !stamped && tabLoginClient(source.clientAccountId)?.getAccountId() === source.accountId;
     tabs.push({
-      accountId: source.accountId ?? '',
-      clientAccountId: source.localAccountId,
-      emailId: id,
+      accountId: own ? '' : source.accountId,
+      clientAccountId: source.clientAccountId,
+      emailId: source.emailId,
       mailboxId: null,
-      title: rows[0].subject?.trim() || fallbackTitle,
+      title: row.subject?.trim() || fallbackTitle,
     });
   }
   return tabs;

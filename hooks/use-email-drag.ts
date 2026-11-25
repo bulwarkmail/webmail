@@ -3,8 +3,9 @@
 import { useCallback, useEffect, useMemo, useRef, DragEvent } from "react";
 import { Email } from "@/lib/jmap/types";
 import { IJMAPClient } from "@/lib/jmap/client-interface";
-import { emailLinkSource, resolveEmailBlobContext, resolveSelectedEmails, useEmailStore } from "@/stores/email-store";
+import { emailLinkSource, listRowSource, resolveEmailBlobContext, resolveSelectedEmails, useEmailStore } from "@/stores/email-store";
 import { emailKeyFor } from "@/lib/thread-utils";
+import { EMAIL_SOURCES_DRAG_MIME, type EmailDragSource } from "@/lib/email-drag-payload";
 import { useAuthStore } from "@/stores/auth-store";
 import { useDragDropContext } from "@/contexts/drag-drop-context";
 import { useUIStore } from "@/stores/ui-store";
@@ -277,6 +278,14 @@ export function useEmailDrag({ email, sourceMailboxId, threadEmails }: UseEmailD
       "application/x-email-ids",
       JSON.stringify(emailsToDrag.map(em => em.id))
     );
+    const sourceOf = listRowSource(state);
+    const sources = emailsToDrag.flatMap((em): EmailDragSource[] => {
+      // Unstamped Scheduled rows don't have an openable Pro tab source.
+      if (state.isScheduledView && !(em.sourceClientAccountId && em.sourceAccountId)) return [];
+      const { login, account } = sourceOf(em);
+      return login && account ? [{ emailId: em.id, clientAccountId: login, accountId: account }] : [];
+    });
+    e.dataTransfer.setData(EMAIL_SOURCES_DRAG_MIME, JSON.stringify(sources));
     e.dataTransfer.setData(
       "text/plain",
       emailsToDrag.map(em => em.subject || "(no subject)").join(", ")
@@ -284,8 +293,8 @@ export function useEmailDrag({ email, sourceMailboxId, threadEmails }: UseEmailD
     // Dropped on the browser's tab strip or address bar, text/uri-list wins
     // over text/plain - the message permalink opens instead of a search for
     // the subject text. One URL per message (RFC 2483 CRLF-separated);
-    // browsers open the first on a tab-strip drop. In-app drop targets key on
-    // application/x-email-ids and ignore this entry. `view=fullscreen` opens
+    // browsers open the first on a tab-strip drop. In-app drop targets use
+    // their own payloads and ignore this entry. `view=fullscreen` opens
     // the message alone, without the folder sidebar and list.
     e.dataTransfer.setData(
       "text/uri-list",

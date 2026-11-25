@@ -25,12 +25,11 @@ import { useGlobalSearchStore } from "@/stores/global-search-store";
 import { ProTabBar } from "@/components/pro/pro-tab-bar";
 import { droppedEmailTabs, droppedFolderTab, emailTabPath, mailTabPath } from "@/components/pro/pro-tab-address";
 import { tabLogin } from "@/components/pro/pro-tab-login";
+import { EMAIL_SOURCES_DRAG_MIME, parseEmailSourcesPayload, type EmailDragSource } from "@/lib/email-drag-payload";
 import {
   PRO_TAB_DRAG_MIME,
-  EMAIL_IDS_DRAG_MIME,
   MAILBOX_DRAG_MIME,
   dragKindFromTypes,
-  parseEmailIdsPayload,
   parseMailboxDragPayload,
   resolveBodyDropTarget,
   type BodyDropTarget,
@@ -97,14 +96,13 @@ function renderTabBody(tab: ProTab): React.ReactNode {
  * select-all drag can't explode the tab strip.
  */
 function openDroppedEmails(
-  emailIds: string[],
+  sources: EmailDragSource[],
   pane: ProPaneId,
   side: ProSplitSide | undefined,
   fallbackTitle: string,
 ) {
   const { setSplitSide, openEmailTab } = useProTabStore.getState();
-  // Each with the login and account its row was listed from (droppedEmailTabs).
-  const targets = droppedEmailTabs(emailIds, fallbackTitle).slice(0, 10);
+  const targets = droppedEmailTabs(sources, fallbackTitle).slice(0, 10);
   if (targets.length === 0) return;
   if (side) setSplitSide(side);
   const reuseReader = targets.length === 1;
@@ -463,12 +461,12 @@ export default function ProHome() {
       return;
     }
 
-    const ids = parseEmailIdsPayload(e.dataTransfer.getData(EMAIL_IDS_DRAG_MIME));
-    if (ids.length === 0) return;
+    const sources = parseEmailSourcesPayload(e.dataTransfer.getData(EMAIL_SOURCES_DRAG_MIME));
+    if (sources.length === 0) return;
     if (target.type === 'create-split') {
-      openDroppedEmails(ids, 'split', target.side, emailFallbackTitle);
+      openDroppedEmails(sources, 'split', target.side, emailFallbackTitle);
     } else {
-      openDroppedEmails(ids, target.pane, undefined, emailFallbackTitle);
+      openDroppedEmails(sources, target.pane, undefined, emailFallbackTitle);
     }
   };
 
@@ -521,7 +519,7 @@ export default function ProHome() {
         onActivate={setActiveTab}
         onClose={requestCloseTab}
         onDragStateChange={(dragging, tabId) => setDraggedTabId(dragging ? tabId : null)}
-        onEmailDrop={(ids) => openDroppedEmails(ids, paneId, undefined, emailFallbackTitle)}
+        onEmailDrop={(sources) => openDroppedEmails(sources, paneId, undefined, emailFallbackTitle)}
         onFolderDrop={(payload) => openDroppedFolder(payload, paneId, undefined)}
       />
       <Pane
