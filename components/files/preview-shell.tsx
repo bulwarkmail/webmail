@@ -49,15 +49,30 @@ interface PreviewShellProps {
    * can't push it out of view.
    */
   source?: string;
+  /**
+   * `over-dialogs`: a file a plugin opened from its own dialog (api.ui.openFile)
+   * shows over that dialog, which stays open under it. Left out: the page's
+   * previews (attachments, Files), at `z-50`.
+   */
+  layer?: PreviewLayer;
   children: ReactNode;
 }
+
+export type PreviewLayer = "page" | "over-dialogs";
+
+// Over plugin dialogs: the z-index of a plugin dialog and its popover
+// (plugin-dialog-host.tsx). PluginFileViewerHost comes after PluginDialogHost
+// in the layout, so at the same z-index the preview is painted over them. Not
+// higher: what sits at z-[100001] stays over the preview, the lock screen, the
+// session timeout dialog and a confirm or prompt the plugin opens on top.
+const LAYER_CLASS: Record<PreviewLayer, string> = { page: "z-50", "over-dialogs": "z-[100000]" };
 
 /**
  * The one frame both file previews use (images and everything else): the
  * same dim backdrop, a header with the name, Download and Close, ←/→ to the
  * previous and next file of the folder, Escape to close.
  */
-export function PreviewShell({ name, onClose, onDownload, actions, neighbours, closeOnBackdrop = true, source, children }: PreviewShellProps) {
+export function PreviewShell({ name, onClose, onDownload, actions, neighbours, closeOnBackdrop = true, source, layer = "page", children }: PreviewShellProps) {
   const t = useTranslations("files");
   const sourceId = useId();
   const closeFromBackdrop = useBackdropClose(onClose);
@@ -118,7 +133,7 @@ export function PreviewShell({ name, onClose, onDownload, actions, neighbours, c
       aria-modal="true"
       aria-label={name}
       aria-describedby={source ? sourceId : undefined}
-      className="fixed inset-0 z-50 flex flex-col bg-black/80"
+      className={`fixed inset-0 ${LAYER_CLASS[layer]} flex flex-col bg-black/80`}
       onClick={closeOnBackdrop ? closeFromBackdrop : undefined}
     >
       {/* Full-screen under `viewport-fit=cover`: the bar pads itself out of

@@ -5,6 +5,7 @@
 // the file has the app's Download and Print and nothing of the plugin's own.
 // Under the file name the preview says which plugin opened it, in a line the
 // plugin's file name can't reach. See lib/plugin-sandbox/host-api-file-viewer.ts.
+// It shows over the plugin's own dialogs, which stay open under it.
 
 import dynamic from 'next/dynamic';
 import { useCallback, useEffect, useMemo, useSyncExternalStore } from 'react';
@@ -40,6 +41,10 @@ export function PluginFileViewerHost() {
       getFileContent={getFileContent}
       autoPrint={view.print}
       source={t('opened_by_plugin', { name: pluginName })}
+      // Over the plugin's own dialog (a file picker's preview button), which
+      // stays open under it. This host comes after PluginDialogHost in the
+      // layout: keep it there, the two share a z-index (preview-shell.tsx).
+      layer="over-dialogs"
     />
   );
 }

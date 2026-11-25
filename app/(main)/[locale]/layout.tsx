@@ -133,6 +133,8 @@ export default async function LocaleLayout({
                   <DeferredFileDropHost />
                   <PluginDialogHost />
                   <PluginNoticeHost />
+                  {/* After PluginDialogHost: a file a plugin opens from its dialog has the
+                      dialog's z-index and is painted over it by coming later. */}
                   {!IS_LITE && <PluginFileViewerHost />}
                   <ExternalRecipientConfirmHost />
                   <PhishingReportHost />
