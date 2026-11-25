@@ -15,7 +15,7 @@ import { inlineContactMedia, writeContactWithNewPhoto, type ContactSaveOptions }
 import { contactToView } from '@/lib/plugin-projection';
 import { PrincipalsRequestError } from '@/lib/jmap/principals-error';
 import { PartialAccountsError, partialAccounts, withFailedAccountsKept } from '@/lib/jmap/partial-accounts';
-import type { Principal } from '@/lib/jmap/types';
+import type { Email, Principal } from '@/lib/jmap/types';
 import { currentStoreEpoch } from '@/lib/store-epoch';
 import { planGroupMoves, type MergePlan } from '@/lib/contacts/merge';
 import { planRelatedToCleanup } from '@/lib/contact-related';
@@ -410,6 +410,45 @@ let trustedSendersLoadPromise: Promise<void> | null = null;
 let sentMailboxOwner: IJMAPClient | null = null;
 const sentMailboxByClient = new WeakMap<IJMAPClient, Promise<string | null>>();
 
+// A shared account's Sent folder, for a message sent from that account's
+// address: the raw JMAP id, or null when it has none or can't be read.
+const sharedSentMailboxByClient = new WeakMap<IJMAPClient, Map<string, Promise<string | null>>>();
+
+function sharedSentMailboxOf(client: IJMAPClient, accountId: string): Promise<string | null> {
+  let byAccount = sharedSentMailboxByClient.get(client);
+  if (!byAccount) {
+    byAccount = new Map();
+    sharedSentMailboxByClient.set(client, byAccount);
+  }
+  let pending = byAccount.get(accountId);
+  if (!pending) {
+    pending = client.getMailboxes(accountId).then((mailboxes) => {
+      const sent = mailboxes.find((m) => m.role === 'sent' && m.isShared && m.accountId === accountId);
+      return sent ? sent.originalId || sent.id : null;
+    });
+    const cache = byAccount;
+    pending.catch(() => cache.delete(accountId));
+    byAccount.set(accountId, pending);
+  }
+  return pending;
+}
+
+/** The people written to in these messages (To and Cc), newest first, one per address. */
+function recipientsOf(emails: Array<Pick<Email, 'to' | 'cc'>>) {
+  // getEmails sorts receivedAt desc, so keeping the first occurrence per
+  // address yields the most recent one plus its display name.
+  const byEmail = new Map<string, { name: string; email: string }>();
+  for (const email of emails) {
+    for (const r of [...(email.to || []), ...(email.cc || [])]) {
+      if (!r.email) continue;
+      const key = r.email.toLowerCase().trim();
+      if (!key || byEmail.has(key)) continue;
+      byEmail.set(key, { name: (r.name || '').trim(), email: r.email });
+    }
+  }
+  return Array.from(byEmail.values());
+}
+
 function sentMailboxOf(client: IJMAPClient): Promise<string | null> {
   let pending = sentMailboxByClient.get(client);
   if (!pending) {
@@ -577,6 +616,11 @@ interface ContactStore {
   recentRecipients: Array<{ name: string; email: string }>;
   recentRecipientsLoaded: boolean;
   sentMailboxId: string | null;
+  /**
+   * Recent recipients of each shared account's Sent folder, by JMAP account
+   * id (the setting sharedSentRecipientSuggestions). Runtime only.
+   */
+  sharedRecentRecipients: Record<string, Array<{ name: string; email: string }>>;
 
   selectedContactIds: Set<string>;
   lastSelectedContactId: string | null;
@@ -619,7 +663,11 @@ interface ContactStore {
   setActiveTab: (tab: 'all' | 'groups') => void;
   clearContacts: () => void;
 
-  getAutocomplete: (query: string) => Array<{ name: string; email: string; group?: { id: string; memberCount: number } }>;
+  /**
+   * `sendingAccountId`: the shared account the message is sent from; its
+   * Sent folder's recipients are suggested too.
+   */
+  getAutocomplete: (query: string, options?: { sendingAccountId?: string }) => Array<{ name: string; email: string; group?: { id: string; memberCount: number } }>;
 
   getGroups: () => ContactCard[];
   getIndividuals: () => ContactCard[];
@@ -670,8 +718,11 @@ interface ContactStore {
 
   // Recent recipients (compose autocomplete, derived from the Sent folder)
   loadRecentRecipients: (client: IJMAPClient, sentMailboxId: string) => Promise<void>;
-  // On-demand "search the server" for recipients not in the recent cache
-  searchRecipients: (client: IJMAPClient, query: string) => Promise<Array<{ name: string; email: string }>>;
+  /** Reads each shared Sent folder once per session, one after the other. */
+  loadSharedRecentRecipients: (client: IJMAPClient, folders: Array<{ accountId: string; mailboxId: string }>) => Promise<void>;
+  // On-demand "search the server" for recipients not in the recent cache;
+  // `sendingAccountId`: a shared account whose Sent folder is searched too.
+  searchRecipients: (client: IJMAPClient, query: string, sendingAccountId?: string) => Promise<Array<{ name: string; email: string }>>;
 }
 
 /** One entry of the company directory: a principal that has an address. */
@@ -713,6 +764,8 @@ export function principalsToDirectory(principals: Principal[]): DirectoryEntry[]
 
 /** The Sent-folder read loadRecentRecipients has in flight, if any. */
 let recentRecipientsLoading: Promise<void> | null = null;
+/** Shared Sent folders (`accountId:mailboxId`) read or being read this session. */
+const sharedRecentRecipientsRead = new Set<string>();
 
 export const useContactStore = create<ContactStore>()(
   persist(
@@ -798,6 +851,7 @@ export const useContactStore = create<ContactStore>()(
       recentRecipients: [],
       recentRecipientsLoaded: false,
       sentMailboxId: null,
+      sharedRecentRecipients: {},
       selectedContactIds: new Set<string>(),
       lastSelectedContactId: null,
       activeTab: 'all' as const,
@@ -1133,21 +1187,25 @@ export const useContactStore = create<ContactStore>()(
       setSupportsSync: (supports) => set({ supportsSync: supports }),
       setActiveTab: (tab) => set({ activeTab: tab }),
 
-      clearContacts: () => set({
-        contacts: [],
-        contactsLoaded: false,
-        addressBooks: [],
-        selectedContactId: null,
-        searchQuery: '',
-        error: null,
-        selectedContactIds: new Set<string>(),
-        activeTab: 'all',
-        directoryPrincipals: [],
-        directoryLoaded: false,
-        directoryStatus: 'idle',
-      }),
+      clearContacts: () => {
+        sharedRecentRecipientsRead.clear();
+        set({
+          contacts: [],
+          contactsLoaded: false,
+          addressBooks: [],
+          selectedContactId: null,
+          searchQuery: '',
+          error: null,
+          selectedContactIds: new Set<string>(),
+          activeTab: 'all',
+          directoryPrincipals: [],
+          directoryLoaded: false,
+          directoryStatus: 'idle',
+          sharedRecentRecipients: {},
+        });
+      },
 
-      getAutocomplete: (query) => {
+      getAutocomplete: (query, options) => {
         const { contacts } = get();
         if (!query || query.length < 1) return [];
 
@@ -1220,10 +1278,16 @@ export const useContactStore = create<ContactStore>()(
         // principals take precedence, so skip any address already suggested (no
         // duplicates). These carry the display name from the message, so match
         // on name or address.
-        const { recentRecipients } = get();
-        if (recentRecipients.length > 0) {
+        // Sending from a shared mailbox's address, the people that mailbox
+        // wrote to follow the user's own.
+        const { recentRecipients, sharedRecentRecipients } = get();
+        const sendingAccountId = options?.sendingAccountId;
+        const shared = sendingAccountId && useSettingsStore.getState().sharedSentRecipientSuggestions
+          ? sharedRecentRecipients[sendingAccountId] ?? []
+          : [];
+        if (recentRecipients.length > 0 || shared.length > 0) {
           const seenRecent = new Set(results.map(r => r.email.toLowerCase()));
-          for (const rec of recentRecipients) {
+          for (const rec of [...recentRecipients, ...shared]) {
             const addr = rec.email.toLowerCase();
             if (seenRecent.has(addr)) continue;
             const rank = matchRank(lower, addr, rec.name);
@@ -1754,17 +1818,9 @@ export const useContactStore = create<ContactStore>()(
             // receivedAt desc, so keeping the first occurrence per address yields
             // the most recent one plus its display name.
             const { emails } = await client.getEmails(sentMailboxId, undefined, 300, 0);
-            const byEmail = new Map<string, { name: string; email: string }>();
-            for (const email of emails) {
-              for (const r of [...(email.to || []), ...(email.cc || [])]) {
-                if (!r.email) continue;
-                const key = r.email.toLowerCase().trim();
-                if (!key || byEmail.has(key)) continue;
-                byEmail.set(key, { name: (r.name || '').trim(), email: r.email });
-              }
-            }
-            set({ recentRecipients: Array.from(byEmail.values()), recentRecipientsLoaded: true });
-            debug.log('contacts', 'Loaded', byEmail.size, 'recent recipients from Sent');
+            const recipients = recipientsOf(emails);
+            set({ recentRecipients: recipients, recentRecipientsLoaded: true });
+            debug.log('contacts', 'Loaded', recipients.length, 'recent recipients from Sent');
           } catch (error) {
             debug.error('Failed to load recent recipients:', error);
             set({ recentRecipientsLoaded: true });
@@ -1773,20 +1829,66 @@ export const useContactStore = create<ContactStore>()(
         return recentRecipientsLoading;
       },
 
-      searchRecipients: async (client, query) => {
+      loadSharedRecentRecipients: async (client, folders) => {
+        const epoch = currentStoreEpoch();
+        // One folder at a time: each read is up to 300 messages.
+        for (const { accountId, mailboxId } of folders) {
+          const key = `${accountId}:${mailboxId}`;
+          if (!accountId || !mailboxId || sharedRecentRecipientsRead.has(key)) continue;
+          sharedRecentRecipientsRead.add(key);
+          try {
+            const { emails } = await client.getEmails(mailboxId, accountId, 300, 0);
+            if (currentStoreEpoch() !== epoch) return;
+            const recipients = recipientsOf(emails);
+            set((state) => ({ sharedRecentRecipients: { ...state.sharedRecentRecipients, [accountId]: recipients } }));
+            debug.log('contacts', 'Loaded', recipients.length, 'recent recipients from the Sent folder of', accountId);
+          } catch (error) {
+            debug.error(`Failed to load recent recipients of shared account ${accountId}:`, error);
+          }
+        }
+      },
+
+      searchRecipients: async (client, query, sendingAccountId) => {
         const q = query.trim();
         if (q.length < 1) return [];
-        try {
-          // The account in view searches at once: no lookup before the request.
-          const sentMailboxId = !sentMailboxOwner || client === sentMailboxOwner
-            ? get().sentMailboxId
-            : await sentMailboxOf(client);
-          if (!sentMailboxId) return [];
-          return await client.searchSentRecipients(q, sentMailboxId);
-        } catch (error) {
-          debug.error('Recipient server search failed:', error);
-          return [];
+        const own = (async () => {
+          try {
+            // The account in view searches at once: no lookup before the request.
+            const sentMailboxId = !sentMailboxOwner || client === sentMailboxOwner
+              ? get().sentMailboxId
+              : await sentMailboxOf(client);
+            if (!sentMailboxId) return [];
+            return await client.searchSentRecipients(q, sentMailboxId);
+          } catch (error) {
+            debug.error('Recipient server search failed:', error);
+            return [];
+          }
+        })();
+        // Sent from a shared mailbox's address: its Sent folder too, when it
+        // has one the user can read.
+        const shared = sendingAccountId && sendingAccountId !== client.getAccountId()
+          ? (async () => {
+            try {
+              const mailboxId = await sharedSentMailboxOf(client, sendingAccountId);
+              if (!mailboxId) return [];
+              return await client.searchSentRecipients(q, mailboxId, sendingAccountId);
+            } catch (error) {
+              debug.error('Shared mailbox recipient search failed:', error);
+              return [];
+            }
+          })()
+          : Promise.resolve([]);
+        const [ownResults, sharedResults] = await Promise.all([own, shared]);
+        if (sharedResults.length === 0) return ownResults;
+        const seen = new Set(ownResults.map((r) => r.email.toLowerCase()));
+        const merged = [...ownResults];
+        for (const r of sharedResults) {
+          const key = r.email.toLowerCase();
+          if (seen.has(key)) continue;
+          seen.add(key);
+          merged.push(r);
         }
+        return merged;
       },
 
       loadTrustedSendersBook: async (client) => {

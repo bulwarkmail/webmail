@@ -257,6 +257,7 @@ import { useProInterfaceActive } from "@/components/pro/pro-interface-redirect";
 import type { QuoteHeader } from "@/lib/plugin-types";
 import { initialLinkSearch, useLiteLinkSegments } from "@/hooks/use-lite-link-segments";
 import { useMinimisedComposerFlush } from "@/hooks/use-minimised-composer-flush";
+import { useSharedSentRecipients } from "@/hooks/use-shared-sent-recipients";
 import { quickReplyEnvelope, saveQuickReplyDraft } from "@/lib/outgoing/quick-reply-envelope";
 import { MailConversationSkeleton, MailSkeleton } from "@/components/boot-skeleton/mail-skeleton";
 import { useSkeletonLabels } from "@/components/boot-skeleton/use-skeleton-labels";
@@ -875,6 +876,9 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     const timer = window.setTimeout(run, 1000);
     return () => window.clearTimeout(timer);
   }, [client, sentMailboxId, loadRecentRecipients]);
+
+  // And the shared accounts' Sent folders, with the setting on.
+  useSharedSentRecipients(client, mailboxes, sentMailboxId);
 
   // Pro shell: populate per-account mailbox cache so the sidebar can render
   // every connected account Thunderbird-style.
