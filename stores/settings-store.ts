@@ -1111,6 +1111,9 @@ interface SettingsState extends AccessibilitySettings {
   // Where an "@" puts a picked contact who isn't a recipient yet; 'off'
   // offers the recipients only
   mentionAddsRecipientTo: MentionAddsRecipientTo;
+  // Sending from a shared mailbox's address also suggests the people that
+  // mailbox has written to (read from its Sent folder at sign-in)
+  sharedSentRecipientSuggestions: boolean;
 
   // Hide inline images (images referenced by cid in the HTML body) from the
   // attachment list shown above the message body.
@@ -1472,6 +1475,7 @@ const DEFAULT_SETTINGS = {
   placeholderWarningEnabled: true,
   recipientMentionsEnabled: true,
   mentionAddsRecipientTo: 'to' as MentionAddsRecipientTo,
+  sharedSentRecipientSuggestions: false,
 
   hideInlineImageAttachments: true,
   attachmentImagePreviewsEnabled: true,
@@ -2044,6 +2048,7 @@ export const useSettingsStore = create<SettingsState>()(
           placeholderWarningEnabled: state.placeholderWarningEnabled,
           recipientMentionsEnabled: state.recipientMentionsEnabled,
           mentionAddsRecipientTo: state.mentionAddsRecipientTo,
+          sharedSentRecipientSuggestions: state.sharedSentRecipientSuggestions,
           hideInlineImageAttachments: state.hideInlineImageAttachments,
           attachmentImagePreviewsEnabled: state.attachmentImagePreviewsEnabled,
           sidebarApps: state.sidebarApps,

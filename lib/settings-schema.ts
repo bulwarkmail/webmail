@@ -282,6 +282,7 @@ const ENTRIES: SettingSchemaEntry[] = [
   bool('recipientMentionsEnabled', 'composing', `${EB}recipient_mentions.label`),
   choice('mentionAddsRecipientTo', 'composing', `${EB}mention_adds_recipient.label`,
     opts(`${EB}mention_adds_recipient.`, ['to', 'cc', 'off'])),
+  bool('sharedSentRecipientSuggestions', 'composing', `${EB}shared_sent_recipients.label`),
   bool('rtlEditingSupport', 'composing', `${EB}rtl_editing.label`),
   bool('replyUnderMessage', 'composing', `${EB}reply_under_message.label`),
   bool('quickReplyEnabled', 'composing', `${EB}quick_reply.label`),

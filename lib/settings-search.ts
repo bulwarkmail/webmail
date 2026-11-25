@@ -291,6 +291,7 @@ export const tabSearchEntries: Record<Tab, SettingsSearchEntry[]> = {
     { label: 'settings.email_behavior.plain_text_mode.label' },
     { label: 'settings.email_behavior.recipient_mentions.label' },
     { label: 'settings.email_behavior.mention_adds_recipient.label' },
+    { label: 'settings.email_behavior.shared_sent_recipients.label' },
     { label: 'settings.email_behavior.rtl_editing.label', advanced: true },
     { label: 'proofreading.settings.title' },
     { label: 'proofreading.settings.enable' },
