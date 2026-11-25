@@ -291,6 +291,22 @@ describe('the undo deck', () => {
     vi.useRealTimers();
   });
 
+  it('fans out for the keyboard after a mouse press that was dragged off the deck', () => {
+    vi.useFakeTimers();
+    render(<ToastContainer toasts={[deck(3, [2, 1])]} onClose={vi.fn()} />);
+    const toastEl = front().querySelector<HTMLElement>('.toast-item')!;
+    act(() => {
+      fireEvent.pointerDown(toastEl, { pointerType: 'mouse', pointerId: 1, button: 0 });
+      toastEl.focus();
+      fireEvent.pointerUp(document.body, { pointerType: 'mouse', pointerId: 1, button: 0 });
+      toastEl.blur();
+    });
+    act(() => { vi.advanceTimersByTime(3000); });
+    act(() => { front().querySelector('button')!.focus(); });
+    expect(cardsBehind().every((el) => el.dataset.expanded === 'true')).toBe(true);
+    vi.useRealTimers();
+  });
+
   it('keeps the keyboard in the deck when Ctrl+Z brings the focused card to the front', () => {
     const { rerender } = render(<ToastContainer toasts={[deck(3, [2, 1])]} onClose={vi.fn()} />);
     act(() => { front().querySelector('button')!.focus(); });
@@ -358,6 +374,183 @@ describe('the undo deck', () => {
     });
   });
 
+  describe('on a touch screen', () => {
+    const expanded = () => cardsBehind().length > 0 && cardsBehind().every((el) => el.dataset.expanded === 'true');
+    const tap = (el: Element, x = 100, y = 100) => {
+      fireEvent.pointerDown(el, { pointerType: 'touch', pointerId: 1, clientX: x, clientY: y });
+      fireEvent.pointerUp(el, { pointerType: 'touch', pointerId: 1, clientX: x, clientY: y });
+      fireEvent.mouseOver(el, { clientX: x, clientY: y });
+      fireEvent.mouseDown(el, { clientX: x, clientY: y });
+      const target = el.closest<HTMLElement>('button, [tabindex]');
+      if (target) target.focus();
+      else (document.activeElement as HTMLElement | null)?.blur();
+      fireEvent.click(el, { clientX: x, clientY: y });
+    };
+    const body = () => front().querySelector<HTMLElement>('.toast-item p')!;
+
+    it('fans out on a tap, so an older card can be undone, and stays fanned out after that', () => {
+      const undoSecond = vi.fn();
+      const { rerender } = render(<ToastContainer toasts={[deck(3, [2, 1], { behind: [card(2, undoSecond), card(1)] })]} onClose={vi.fn()} />);
+      expect(expanded()).toBe(false);
+
+      act(() => { tap(body()); });
+      expect(expanded()).toBe(true);
+      expect(cardsBehind()[0].hasAttribute('inert')).toBe(false);
+
+      act(() => { tap(cardsBehind()[0].querySelector('button')!); });
+      expect(undoSecond).toHaveBeenCalledTimes(1);
+      rerender(<ToastContainer toasts={[deck(3, [1])]} onClose={vi.fn()} />);
+      expect(expanded()).toBe(true);
+    });
+
+    it('folds on a second tap, or a tap anywhere else', () => {
+      render(<ToastContainer toasts={[deck(3, [2, 1])]} onClose={vi.fn()} />);
+      act(() => { tap(body()); });
+      act(() => { tap(body()); });
+      expect(expanded()).toBe(false);
+
+      act(() => { tap(body()); });
+      expect(expanded()).toBe(true);
+      act(() => { tap(document.body, 50, 50); });
+      expect(expanded()).toBe(false);
+    });
+
+    it('keeps the tap that folds it from opening what lies underneath, and lets the next one through', () => {
+      vi.useFakeTimers();
+      const opened = vi.fn();
+      const row = document.createElement('button');
+      row.addEventListener('click', opened);
+      document.body.appendChild(row);
+      render(<ToastContainer toasts={[deck(3, [2, 1])]} onClose={vi.fn()} />);
+      act(() => { tap(body()); });
+
+      act(() => { tap(row, 50, 50); });
+      expect(expanded()).toBe(false);
+      expect(opened).not.toHaveBeenCalled();
+
+      act(() => { vi.advanceTimersByTime(100); });
+      act(() => { tap(row, 50, 50); });
+      expect(opened).toHaveBeenCalledTimes(1);
+      row.remove();
+      vi.useRealTimers();
+    });
+
+    it('lets a scroll that starts outside fold it and then leaves the next tap alone', () => {
+      vi.useFakeTimers();
+      const opened = vi.fn();
+      const row = document.createElement('button');
+      row.addEventListener('click', opened);
+      document.body.appendChild(row);
+      render(<ToastContainer toasts={[deck(3, [2, 1])]} onClose={vi.fn()} />);
+      act(() => { tap(body()); });
+
+      act(() => {
+        fireEvent.pointerDown(row, { pointerType: 'touch', pointerId: 1, clientX: 50, clientY: 50 });
+        fireEvent.pointerCancel(row, { pointerType: 'touch', pointerId: 1, clientX: 50, clientY: 300 });
+      });
+      expect(expanded()).toBe(false);
+      act(() => { vi.advanceTimersByTime(2000); });
+      act(() => { fireEvent.click(row); });
+      expect(opened).toHaveBeenCalledTimes(1);
+      row.remove();
+      vi.useRealTimers();
+    });
+
+    it('counts down again once a second tap folds it', () => {
+      vi.useFakeTimers();
+      const onClose = vi.fn();
+      render(<ToastContainer toasts={[deck(3, [2, 1])]} onClose={onClose} />);
+      act(() => { tap(body()); });
+      act(() => { tap(body()); });
+      expect(expanded()).toBe(false);
+      act(() => { vi.advanceTimersByTime(9000); });
+      expect(onClose).toHaveBeenCalled();
+      vi.useRealTimers();
+    });
+
+    it('lets the next tap elsewhere through after a tap on a lone card', () => {
+      const opened = vi.fn();
+      const row = document.createElement('button');
+      row.addEventListener('click', opened);
+      document.body.appendChild(row);
+      render(<ToastContainer toasts={[deck(1, [])]} onClose={vi.fn()} />);
+      act(() => { tap(body()); });
+      act(() => { tap(row, 50, 50); });
+      expect(opened).toHaveBeenCalledTimes(1);
+      row.remove();
+    });
+
+    it('keeps the tap that folds it from opening what lies underneath, however long the press', () => {
+      vi.useFakeTimers();
+      const opened = vi.fn();
+      const row = document.createElement('button');
+      row.addEventListener('click', opened);
+      document.body.appendChild(row);
+      render(<ToastContainer toasts={[deck(3, [2, 1])]} onClose={vi.fn()} />);
+      act(() => { tap(body()); });
+      act(() => {
+        fireEvent.pointerDown(row, { pointerType: 'touch', pointerId: 2, button: 0 });
+        vi.advanceTimersByTime(1500);
+        fireEvent.pointerUp(row, { pointerType: 'touch', pointerId: 2, button: 0 });
+        fireEvent.click(row);
+      });
+      expect(expanded()).toBe(false);
+      expect(opened).not.toHaveBeenCalled();
+      row.remove();
+      vi.useRealTimers();
+    });
+
+    it('lets a key press through after a tap folds it', () => {
+      const opened = vi.fn();
+      const row = document.createElement('button');
+      row.addEventListener('click', opened);
+      document.body.appendChild(row);
+      render(<ToastContainer toasts={[deck(3, [2, 1])]} onClose={vi.fn()} />);
+      act(() => { tap(body()); });
+      act(() => {
+        fireEvent.pointerDown(row, { pointerType: 'mouse', pointerId: 3, button: 2 });
+        fireEvent.pointerUp(row, { pointerType: 'mouse', pointerId: 3, button: 2 });
+        fireEvent.keyDown(row, { key: 'Enter' });
+        fireEvent.click(row);
+      });
+      expect(opened).toHaveBeenCalledTimes(1);
+      row.remove();
+    });
+
+    it('does not fan out when the front Undo is tapped', () => {
+      const undo = vi.fn();
+      render(<ToastContainer toasts={[deck(3, [2, 1], { action: { label: 'Undo', onClick: undo, keepOpen: true } })]} onClose={vi.fn()} />);
+      act(() => { tap(front().querySelector('button')!); });
+      expect(undo).toHaveBeenCalledTimes(1);
+      expect(expanded()).toBe(false);
+    });
+
+    it('does not fan out at the end of a drag', () => {
+      render(<ToastContainer toasts={[deck(3, [2, 1])]} onClose={vi.fn()} />);
+      act(() => {
+        fireEvent.pointerDown(body(), { pointerType: 'touch', pointerId: 1, clientX: 100, clientY: 100 });
+        fireEvent.pointerMove(body(), { pointerType: 'touch', pointerId: 1, clientX: 100, clientY: 140 });
+        fireEvent.pointerUp(body(), { pointerType: 'touch', pointerId: 1, clientX: 100, clientY: 140 });
+        fireEvent.click(body(), { clientX: 100, clientY: 140 });
+      });
+      expect(expanded()).toBe(false);
+    });
+
+    it('waits while fanned out, and counts down again once folded', () => {
+      vi.useFakeTimers();
+      const onClose = vi.fn();
+      render(<ToastContainer toasts={[deck(3, [2, 1])]} onClose={onClose} />);
+      act(() => { tap(body()); });
+      act(() => { vi.advanceTimersByTime(20000); });
+      expect(onClose).not.toHaveBeenCalled();
+
+      act(() => { tap(document.body, 50, 50); });
+      act(() => { vi.advanceTimersByTime(9000); });
+      expect(onClose).toHaveBeenCalled();
+      vi.useRealTimers();
+    });
+  });
+
   it('takes the whole deck away together when it closes', async () => {
     render(<ToastContainer toasts={[deck(3, [2, 1])]} onClose={vi.fn()} />);
     await act(async () => {});
@@ -412,6 +605,24 @@ describe('the front card of the deck', () => {
       fireEvent.pointerDown(undo, { pointerType: 'mouse' });
       undo.focus();
       fireEvent.pointerUp(undo, { pointerType: 'mouse' });
+      fireEvent.click(undo);
+    });
+    expect(document.activeElement).toBe(undo);
+    act(() => { vi.advanceTimersByTime(8400); });
+    expect(onClose).toHaveBeenCalled();
+    vi.useRealTimers();
+  });
+
+  it('keeps counting down after Undo is tapped', () => {
+    vi.useFakeTimers();
+    const onClose = vi.fn();
+    const { getByRole } = render(<ToastItem onClose={onClose} toast={deck(2, [1])} />);
+    const undo = getByRole('button', { name: 'Undo' });
+    act(() => {
+      fireEvent.pointerDown(undo, { pointerType: 'touch', pointerId: 1 });
+      fireEvent.pointerUp(undo, { pointerType: 'touch', pointerId: 1 });
+      fireEvent.mouseDown(undo);
+      undo.focus();
       fireEvent.click(undo);
     });
     expect(document.activeElement).toBe(undo);

@@ -11,7 +11,7 @@ import { useContextMenuOpen } from "@/components/ui/context-menu";
 import { useMediaQuery, narrowerThan } from "@/hooks/use-media-query";
 import { UndoDeck } from "@/components/ui/toast-deck";
 import { computeToastPlacement, stackWouldCoverFocus, TOAST_AVOID_BOTTOM, TOAST_AVOID_END, TOAST_EDGE, TOAST_REPLY_BOX } from "@/lib/toast-placement";
-import { TOAST_EASE, TOAST_LEAVE_MS, TOAST_MOVE_MS, toastMotionVars } from "@/lib/toast-motion";
+import { POINTER_FOCUS_MS, TOAST_EASE, TOAST_LEAVE_MS, TOAST_MOVE_MS, toastMotionVars } from "@/lib/toast-motion";
 
 export type ToastType = "success" | "error" | "info" | "warning";
 
@@ -154,7 +154,7 @@ export function ToastItem({ toast, onClose, held = false, stackHovered = false, 
   const [paused, setPaused] = useState(false);
   const [hovered, setHovered] = useState(false);
   const [focused, setFocused] = useState(false);
-  const pointerFocusRef = useRef(false);
+  const pointerAtRef = useRef(-Infinity);
   const rootRef = useRef<HTMLDivElement>(null);
   const titleId = useId();
   const remainingRef = useRef(toast.duration ?? 5000);
@@ -214,7 +214,7 @@ export function ToastItem({ toast, onClose, held = false, stackHovered = false, 
   }, [toast.duration, toast.revision, waiting, dismiss, isProgress]);
 
   const onPointerDown = (e: React.PointerEvent) => {
-    pointerFocusRef.current = true;
+    pointerAtRef.current = Date.now();
     if (e.pointerType !== "touch" || exiting) return;
     swipeRef.current = { id: e.pointerId, x: e.clientX, y: e.clientY, horizontal: null };
   };
@@ -231,7 +231,7 @@ export function ToastItem({ toast, onClose, held = false, stackHovered = false, 
     if (swipe.horizontal) setDragX(dx);
   };
   const endSwipe = (e: React.PointerEvent) => {
-    pointerFocusRef.current = false;
+    pointerAtRef.current = Date.now();
     const swipe = swipeRef.current;
     if (!swipe || swipe.id !== e.pointerId) return;
     swipeRef.current = null;
@@ -330,10 +330,10 @@ export function ToastItem({ toast, onClose, held = false, stackHovered = false, 
       role="group"
       aria-labelledby={titleId}
       tabIndex={-1}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
+      onPointerEnter={(e) => { if (e.pointerType === "mouse") setHovered(true); }}
+      onPointerLeave={() => setHovered(false)}
       onFocus={() => {
-        if (!pointerFocusRef.current) setFocused(true);
+        if (Date.now() - pointerAtRef.current > POINTER_FOCUS_MS) setFocused(true);
       }}
       onBlur={(e) => {
         if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setFocused(false);

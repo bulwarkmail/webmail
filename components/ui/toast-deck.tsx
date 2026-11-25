@@ -1,15 +1,17 @@
 "use client";
 
-import { useCallback, useLayoutEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { CheckCircle } from "@/components/icons";
 import { cn } from "@/lib/utils";
 import { TOUCH_HIT_AREA } from "@/components/ui/button";
 import type { DeckCard, Toast } from "@/components/ui/toast";
-import { TOAST_EASE as EASE, TOAST_FADE_MS, TOAST_LEAVE_MS, TOAST_MOVE_MS, TOAST_STAGGER_MS } from "@/lib/toast-motion";
+import { POINTER_FOCUS_MS, TOAST_EASE as EASE, TOAST_FADE_MS, TOAST_LEAVE_MS, TOAST_MOVE_MS, TOAST_STAGGER_MS } from "@/lib/toast-motion";
 
 const GAP = 8;
 const EDGE_ROOM = 12;
 const MIN_STEP = 36;
+const TAP_SLOP = 8;
+const CLICK_AFTER_UP_MS = 600;
 
 export function deckPeeks(depth: number | undefined): { offset: number; scale: number }[] {
   const n = Math.max(0, depth ?? 0);
@@ -34,6 +36,34 @@ function slideOut(el: HTMLElement): string {
   return `translateX(calc((100% + 1.25rem) * ${dir}))`;
 }
 
+function swallowClickOf(down: PointerEvent) {
+  if (down.button !== 0) return;
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const stop = (e: Event) => {
+    e.preventDefault();
+    e.stopPropagation();
+    done();
+  };
+  const up = (e: PointerEvent) => {
+    if (e.pointerId !== down.pointerId) return;
+    clearTimeout(timer);
+    timer = setTimeout(done, CLICK_AFTER_UP_MS);
+  };
+  const done = () => {
+    clearTimeout(timer);
+    document.removeEventListener("click", stop, true);
+    document.removeEventListener("pointerup", up, true);
+    document.removeEventListener("pointerdown", done, true);
+    document.removeEventListener("pointercancel", done, true);
+    document.removeEventListener("keydown", done, true);
+  };
+  document.addEventListener("click", stop, true);
+  document.addEventListener("pointerup", up, true);
+  document.addEventListener("pointerdown", done, true);
+  document.addEventListener("pointercancel", done, true);
+  document.addEventListener("keydown", done, true);
+}
+
 const cardFace = cn(
   "rounded-md bg-popover text-popover-foreground border border-border",
   "shadow-[0_6px_16px_rgb(0,0,0,0.1)] dark:shadow-[0_6px_16px_rgb(0,0,0,0.4)]",
@@ -55,7 +85,7 @@ function Face({ card, onUndo }: { card: Pick<DeckCard, "title" | "message"> & { 
             onUndo?.();
           }}
           className={cn(
-            "flex-shrink-0 text-[0.8125rem] font-semibold text-foreground px-1.5 py-0.5 me-8 rounded-md transition-colors",
+            "flex-shrink-0 text-[0.8125rem] font-semibold text-foreground px-1.5 py-0.5 me-8 max-sm:me-0 rounded-md transition-colors",
             TOUCH_HIT_AREA,
             "underline underline-offset-[3px] hover:bg-foreground/5",
           )}
@@ -172,10 +202,26 @@ export function UndoDeck({
   const [height, setHeight] = useState(0);
   const [frontTop, setFrontTop] = useState(Infinity);
   const [keyboardIn, setKeyboardIn] = useState(false);
-  const pointerDownRef = useRef(false);
+  const pointerAtRef = useRef(-Infinity);
+  const tapRef = useRef<{ x: number; y: number; mouse: boolean; moved: boolean } | null>(null);
+  const [tapped, setTapped] = useState(false);
   const [exiting, setExiting] = useState(false);
   const [leaving, setLeaving] = useState<Leaving[]>([]);
-  const open = (expanded || keyboardIn) && !exiting && behind.length > 0;
+  const open = (expanded || keyboardIn || tapped) && !exiting && behind.length > 0;
+  const deckGone = exiting || behind.length === 0;
+  useEffect(() => {
+    if (deckGone) setTapped(false);
+  }, [deckGone]);
+  useEffect(() => {
+    if (!tapped) return;
+    const away = (e: PointerEvent) => {
+      if (wrapRef.current?.contains(e.target as Node | null)) return;
+      setTapped(false);
+      swallowClickOf(e);
+    };
+    document.addEventListener("pointerdown", away, true);
+    return () => document.removeEventListener("pointerdown", away, true);
+  }, [tapped]);
   const [folding, setFolding] = useState(false);
   const wasOpenRef = useRef(open);
   useLayoutEffect(() => {
@@ -298,9 +344,23 @@ export function UndoDeck({
       ref={wrapRef}
       className="relative isolate"
       style={{ pointerEvents: "auto", marginTop: peeks.at(-1)?.offset ?? 0, transition: `margin ${TOAST_MOVE_MS}ms ${EASE}` }}
-      onPointerDown={() => { pointerDownRef.current = true; }}
-      onPointerUp={() => { pointerDownRef.current = false; }}
-      onFocus={() => { if (!pointerDownRef.current) setKeyboardIn(true); }}
+      onPointerDown={(e) => {
+        pointerAtRef.current = Date.now();
+        tapRef.current = { x: e.clientX, y: e.clientY, mouse: e.pointerType === "mouse", moved: false };
+      }}
+      onPointerMove={(e) => {
+        const tap = tapRef.current;
+        if (tap && Math.hypot(e.clientX - tap.x, e.clientY - tap.y) > TAP_SLOP) tap.moved = true;
+      }}
+      onPointerUp={() => { pointerAtRef.current = Date.now(); }}
+      onClick={(e) => {
+        const tap = tapRef.current;
+        tapRef.current = null;
+        if (!tap || tap.mouse || tap.moved) return;
+        if ((e.target as Element).closest("button, a, input, textarea, select")) return;
+        if (behind.length > 0 && !exiting) setTapped((was) => !was);
+      }}
+      onFocus={() => { if (Date.now() - pointerAtRef.current > POINTER_FOCUS_MS) setKeyboardIn(true); }}
       onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setKeyboardIn(false); }}
     >
       {behind.map((card, i) => (
@@ -322,7 +382,7 @@ export function UndoDeck({
         <LeavingCard key={`leaving-${card.key}`} card={card} height={cardHeight} onGone={gone} />
       ))}
       <div ref={frontRef} data-deck-front="">
-        {children(() => setExiting(true), keyboardIn)}
+        {children(() => setExiting(true), keyboardIn || tapped)}
       </div>
     </div>
   );
