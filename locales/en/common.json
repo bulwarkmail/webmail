@@ -3532,9 +3532,9 @@
       },
       "reading_width": {
         "label": "Reading width",
-        "description": "Keeps lines in messages to about 80 characters, so your eyes don't have to travel as far.",
+        "description": "Shows messages in a centred column, so your eyes don't have to travel as far.",
         "full": "Full width",
-        "comfortable": "About 80 characters"
+        "comfortable": "Comfortable"
       },
       "reading_mask": {
         "label": "Reading mask",

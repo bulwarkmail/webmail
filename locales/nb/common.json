@@ -3532,9 +3532,9 @@
       },
       "reading_width": {
         "label": "Lesebredde",
-        "description": "Holder linjene i meldinger på rundt 80 tegn, slik at øynene slipper å bevege seg så langt.",
+        "description": "Viser meldinger i en midtstilt kolonne, slik at øynene slipper å bevege seg så langt.",
         "full": "Full bredde",
-        "comfortable": "Rundt 80 tegn"
+        "comfortable": "Behagelig"
       },
       "reading_mask": {
         "label": "Lesemaske",

@@ -118,7 +118,7 @@ export const ACCESSIBILITY_POLICY_SETTINGS: readonly PresettableSetting[] = [
     },
     {
       key: 'readingWidth', label: 'Reading width', type: 'enum', labelKey: `${A}.reading_width.label`,
-      options: [{ value: 'full', label: 'Full width' }, { value: 'comfortable', label: 'About 80 characters' }],
+      options: [{ value: 'full', label: 'Full width' }, { value: 'comfortable', label: 'Comfortable' }],
     },
     { key: 'readingMask', label: 'Reading mask', type: 'boolean', labelKey: `${A}.reading_mask.label` },
   ]),

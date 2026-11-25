@@ -3544,9 +3544,9 @@
       },
       "reading_width": {
         "label": "Chiều rộng đọc",
-        "description": "Giữ các dòng trong thư có khoảng 80 ký tự để mắt bạn không phải di chuyển quá xa.",
+        "description": "Hiển thị thư trong một cột ở giữa để mắt bạn không phải di chuyển quá xa.",
         "full": "Toàn bộ chiều rộng",
-        "comfortable": "Khoảng 80 ký tự"
+        "comfortable": "Dễ đọc"
       },
       "reading_mask": {
         "label": "Vùng tập trung khi đọc",

@@ -3532,9 +3532,9 @@
       },
       "reading_width": {
         "label": "Lesebreite",
-        "description": "Begrenzt Zeilen in Nachrichten auf etwa 80 Zeichen, damit die Augen keine weiten Wege gehen müssen.",
+        "description": "Zeigt Nachrichten in einer zentrierten Spalte, damit die Augen keine weiten Wege gehen müssen.",
         "full": "Volle Breite",
-        "comfortable": "Etwa 80 Zeichen"
+        "comfortable": "Angenehm"
       },
       "reading_mask": {
         "label": "Lesemaske",

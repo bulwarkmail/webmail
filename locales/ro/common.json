@@ -3532,9 +3532,9 @@
       },
       "reading_width": {
         "label": "Lățimea de citire",
-        "description": "Limitează rândurile din mesaje la aproximativ 80 de caractere, ca privirea să nu aibă de parcurs distanțe mari.",
+        "description": "Afișează mesajele într-o coloană centrată, ca privirea să nu aibă de parcurs distanțe mari.",
         "full": "Lățime completă",
-        "comfortable": "Aproximativ 80 de caractere"
+        "comfortable": "Confortabilă"
       },
       "reading_mask": {
         "label": "Mască de citire",

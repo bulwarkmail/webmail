@@ -3532,9 +3532,9 @@
       },
       "reading_width": {
         "label": "Szerokość czytania",
-        "description": "Utrzymuje wiersze w wiadomościach na poziomie około 80 znaków, żeby wzrok nie musiał wędrować tak daleko.",
+        "description": "Pokazuje wiadomości w wyśrodkowanej kolumnie, żeby wzrok nie musiał wędrować tak daleko.",
         "full": "Pełna szerokość",
-        "comfortable": "Około 80 znaków"
+        "comfortable": "Wygodna"
       },
       "reading_mask": {
         "label": "Maska czytania",

@@ -3532,9 +3532,9 @@
       },
       "reading_width": {
         "label": "閲覧幅",
-        "description": "メッセージの行を約80文字に収め、視線の移動を少なくします。",
+        "description": "メッセージを中央の列に表示し、視線の移動を少なくします。",
         "full": "全幅",
-        "comfortable": "約80文字"
+        "comfortable": "読みやすい幅"
       },
       "reading_mask": {
         "label": "閲覧マスク",

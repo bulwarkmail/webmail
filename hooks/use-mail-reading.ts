@@ -12,7 +12,6 @@ import {
   mailOverrideActive,
   mailTextFactor,
   plainBodyFontSize,
-  readingCardWidth,
   resolveSystemToggle,
   type MailOverride,
 } from "@/lib/mail-reading";
@@ -36,12 +35,10 @@ export interface MailReading {
   pauseImages: boolean;
   /** The sender's fonts, sizes and colours give way to the app's. */
   overrideStyles: boolean;
-  /** Reading width "comfortable": lines of about 80 characters. */
+  /** Reading width "comfortable": the message in a centred column up to 882px wide. */
   comfortableWidth: boolean;
   /** The message reads as a card on the pane: comfortable width on a wide screen. */
   card: boolean;
-  /** Widest the message card gets (CSS length). */
-  cardWidth: string;
   /** Scale mail wider than the pane down to fit, on any screen. */
   fitWidth: boolean;
   /** Font size for a plain-text body of `basePx` at 100 %. */
@@ -124,14 +121,13 @@ export function useMailReading({ wide = false }: { wide?: boolean } = {}): MailR
       minFontSize,
       comfortableWidth,
       card,
-      cardWidth: readingCardWidth(s.mailTextScale, s.fontSize, minFontSize),
       fitWidth: s.mailFitWidth,
       forcedColors,
       reduceMotion,
       pauseImages,
       overrideStyles,
       plainFontSize: (basePx: number) => plainBodyFontSize(basePx, s.mailTextScale, s.fontSize, minFontSize),
-      frameCss: mailFrameCss({ reduceMotion, underlineLinks: s.underlineLinks, comfortableWidth, override, fontFaceCss: fontFaces.css }),
+      frameCss: mailFrameCss({ reduceMotion, underlineLinks: s.underlineLinks, override, fontFaceCss: fontFaces.css }),
       fontSources: fontFaces.sources,
       frameKey: `${textFactor}/${minFontSize}${overrideStyles ? '/o' : ''}${s.mailFitWidth ? '/f' : ''}${pauseImages ? '/p' : ''}`,
     };

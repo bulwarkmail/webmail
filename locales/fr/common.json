@@ -3532,9 +3532,9 @@
       },
       "reading_width": {
         "label": "Largeur de lecture",
-        "description": "Limite les lignes des messages à environ 80 caractères pour que vos yeux aient moins de chemin à faire.",
+        "description": "Affiche les messages dans une colonne centrée pour que vos yeux aient moins de chemin à faire.",
         "full": "Pleine largeur",
-        "comfortable": "Environ 80 caractères"
+        "comfortable": "Confortable"
       },
       "reading_mask": {
         "label": "Masque de lecture",

@@ -3532,9 +3532,9 @@
       },
       "reading_width": {
         "label": "Lasīšanas platums",
-        "description": "Ierobežo rindas ziņās līdz aptuveni 80 rakstzīmēm, lai acīm nebūtu tālu jāpārvietojas.",
+        "description": "Rāda ziņas centrētā kolonnā, lai acīm nebūtu tālu jāpārvietojas.",
         "full": "Pilns platums",
-        "comfortable": "Aptuveni 80 rakstzīmes"
+        "comfortable": "Ērts"
       },
       "reading_mask": {
         "label": "Lasīšanas maska",

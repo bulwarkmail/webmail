@@ -3532,9 +3532,9 @@
       },
       "reading_width": {
         "label": "Olvasási szélesség",
-        "description": "Az üzenetek sorait körülbelül 80 karakterre korlátozza, hogy a szemnek ne kelljen messzire követnie a sort.",
+        "description": "Az üzeneteket középre igazított oszlopban mutatja, hogy a szemnek ne kelljen messzire követnie a sort.",
         "full": "Teljes szélesség",
-        "comfortable": "Körülbelül 80 karakter"
+        "comfortable": "Kényelmes"
       },
       "reading_mask": {
         "label": "Olvasómaszk",
