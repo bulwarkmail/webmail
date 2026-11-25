@@ -51,6 +51,7 @@ export const LOCALE_LOADERS: Record<string, () => Promise<Messages>> = {
   ro: () => import('@/locales/ro/common.json').then((m) => withEnglishFallback(m.default)),
   ru: () => import('@/locales/ru/common.json').then((m) => withEnglishFallback(m.default)),
   sk: () => import('@/locales/sk/common.json').then((m) => withEnglishFallback(m.default)),
+  sv: () => import('@/locales/sv/common.json').then((m) => withEnglishFallback(m.default)),
   th: () => import('@/locales/th/common.json').then((m) => withEnglishFallback(m.default)),
   tr: () => import('@/locales/tr/common.json').then((m) => withEnglishFallback(m.default)),
   uk: () => import('@/locales/uk/common.json').then((m) => withEnglishFallback(m.default)),

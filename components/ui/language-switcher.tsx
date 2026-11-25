@@ -13,6 +13,7 @@ const LANGUAGES = [
   { value: 'ca', label: 'Català' },
   { value: 'cs', label: 'Česky' },
   { value: 'sk', label: 'Slovenčina' },
+  { value: 'sv', label: 'Svenska' },
   { value: 'da', label: 'Dansk' },
   { value: 'de', label: 'Deutsch' },
   { value: 'el', label: 'Ελληνικά' },

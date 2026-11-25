@@ -25,7 +25,7 @@ const LANGUAGE_NAMES: Record<string, string> = {
   ar: 'Arabic', ca: 'Catalan', cs: 'Czech', da: 'Danish', de: 'German', el: 'Greek', en: 'English', es: 'Spanish',
   et: 'Estonian', fa: 'Persian', fr: 'French', he: 'Hebrew', hu: 'Hungarian', it: 'Italian', ja: 'Japanese',
   ko: 'Korean', lv: 'Latvian', mn: 'Mongolian', nb: 'Norwegian', nn: 'Norwegian Nynorsk', nl: 'Dutch', pl: 'Polish', pt: 'Portuguese',
-  ro: 'Romanian', ru: 'Russian', sk: 'Slovak', th: 'Thai', tr: 'Turkish', uk: 'Ukrainian', vi: 'Vietnamese',
+  ro: 'Romanian', ru: 'Russian', sk: 'Slovak', sv: 'Swedish', th: 'Thai', tr: 'Turkish', uk: 'Ukrainian', vi: 'Vietnamese',
   zh: 'Chinese (Simplified)', 'zh-TW': 'Chinese (Traditional)',
 };
 const languageName = (code: string) => LANGUAGE_NAMES[code] ?? code;
