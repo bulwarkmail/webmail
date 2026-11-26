@@ -60,15 +60,19 @@ const ALL_SELECTORS = [...CONTAINER_SELECTORS, ...SEPARATOR_SELECTORS].join(',')
 export const QUOTE_TOGGLE_ATTR = 'data-quote-toggle';
 /** Marks the elements the toggle folds; hidden while its checkbox is unchecked. */
 export const QUOTE_COLLAPSED_ATTR = 'data-quote-collapsed';
+/** Marks the toggle's two labels; value is the state it names ("show" or "hide"). */
+export const QUOTE_LABEL_ATTR = 'data-quote-label';
 
 /**
- * Hides the folded elements while the toggle's checkbox is unchecked.
- * !important beats the mail's own inline display, which stays untouched and
+ * Hides the folded elements while the toggle's checkbox is unchecked, and
+ * shows the label that matches its state. !important beats the mail's own inline display, which stays untouched and
  * comes back as it was on expand. Without :has() support the quote just stays
  * visible.
  */
 const QUOTE_COLLAPSE_CSS =
   `html:has([${QUOTE_TOGGLE_ATTR}] > input:not(:checked)) [${QUOTE_COLLAPSED_ATTR}]{display:none !important}` +
+  `[${QUOTE_TOGGLE_ATTR}]>input:checked~[${QUOTE_LABEL_ATTR}="show"],` +
+  `[${QUOTE_TOGGLE_ATTR}]>input:not(:checked)~[${QUOTE_LABEL_ATTR}="hide"]{display:none !important}` +
   `[${QUOTE_TOGGLE_ATTR}]:hover{background:#d4d8dd !important}` +
   `[${QUOTE_TOGGLE_ATTR}]:has(> input:focus-visible){outline:2px solid #1a73e8;outline-offset:2px}`;
 
@@ -221,18 +225,29 @@ export function setupQuoteCollapse(doc: Document, labels: QuoteCollapseLabels, o
   // Visually hidden but still focusable, so the pill works from the keyboard.
   checkbox.style.cssText =
     'position:absolute;width:1px;height:1px;margin:0;padding:0;opacity:0;pointer-events:none;';
-  const setLabels = (expanded: boolean) => {
-    const label = expanded ? labels.hide : labels.show;
-    checkbox.setAttribute('aria-expanded', String(expanded));
-    checkbox.setAttribute('aria-label', label);
-    toggle.title = label;
+  // Both labels are in the markup and the stylesheet shows the one matching
+  // the checkbox, so the tooltip and the checkbox's accessible name follow the
+  // state without a listener.
+  const stateLabel = (state: 'show' | 'hide') => {
+    const span = doc.createElement('span');
+    span.setAttribute(QUOTE_LABEL_ATTR, state);
+    span.title = labels[state];
+    span.style.cssText = 'display:inline-block;padding:3px 12px;';
+    const dots = doc.createElement('span');
+    dots.setAttribute('aria-hidden', 'true');
+    dots.textContent = '•••';
+    const text = doc.createElement('span');
+    text.textContent = labels[state];
+    text.style.cssText =
+      'position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;';
+    span.append(dots, text);
+    return span;
   };
-  setLabels(initiallyExpanded);
-  toggle.append(checkbox, '•••');
+  toggle.append(checkbox, stateLabel('show'), stateLabel('hide'));
   // Inline styles only: the iframe has no app CSS, and style-src allows
   // inline. Neutral grays read fine after the dark-mode invert filter too.
   toggle.style.cssText =
-    'position:relative;display:inline-block;margin:12px 0 4px;padding:3px 12px;border:none;' +
+    'position:relative;display:inline-block;margin:12px 0 4px;padding:0;border:none;' +
     'border-radius:999px;background:#e3e6ea;color:#3c4043;font-size:11px;' +
     'line-height:1;letter-spacing:2px;cursor:pointer;font-family:inherit;user-select:none;';
 
@@ -243,13 +258,9 @@ export function setupQuoteCollapse(doc: Document, labels: QuoteCollapseLabels, o
   marker.parentNode?.insertBefore(toggle, marker);
   hidden.forEach((el) => el.setAttribute(QUOTE_COLLAPSED_ATTR, ''));
 
-  // Only where the frame runs parent listeners (not in Safari): keeps the
-  // labels current and lets the reader resize right away. The fold itself
-  // never depends on this.
-  checkbox.addEventListener('change', () => {
-    setLabels(checkbox.checked);
-    onToggle?.();
-  });
+  // Only where the frame runs parent listeners (not in Safari): lets the
+  // reader resize right away. The fold and the labels never depend on this.
+  checkbox.addEventListener('change', () => onToggle?.());
 
   return true;
 }

@@ -350,7 +350,7 @@ describe('reader-above-quote', () => {
     const button = doc.querySelector<HTMLLabelElement>('[data-quote-toggle]')!;
     const display = (el: Element) => doc.defaultView!.getComputedStyle(el).display;
     const quote = doc.querySelector<HTMLElement>('[data-quoted-html]')!;
-    expect(button.querySelector('input')!.getAttribute('aria-expanded')).toBe('true');
+    expect(button.querySelector('input')!.checked).toBe(true);
     expect(display(quote)).toBe('flex');
 
     const { unmount } = render(

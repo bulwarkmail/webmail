@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 
-import { setupQuoteCollapse, collapsePlainTextQuotes, QUOTE_TOGGLE_ATTR, QUOTE_COLLAPSED_ATTR } from '@/lib/quote-collapse';
+import { setupQuoteCollapse, collapsePlainTextQuotes, QUOTE_TOGGLE_ATTR, QUOTE_COLLAPSED_ATTR, QUOTE_LABEL_ATTR } from '@/lib/quote-collapse';
 import { plainTextToSafeHtml, sanitizeEmailHtml, sanitizePlainTextRenderedHtml } from '@/lib/email-sanitization';
 
 const labels = { show: 'Show quoted text', hide: 'Hide quoted text' };
@@ -10,6 +10,9 @@ const toggle = () => document.body.querySelector<HTMLLabelElement>(`[${QUOTE_TOG
 const checkbox = () => toggle()!.querySelector<HTMLInputElement>('input[type="checkbox"]')!;
 /** Computed display: the fold is a stylesheet rule, not an inline style. */
 const display = (el: Element) => getComputedStyle(el).display;
+/** The label the toggle shows for its state (tooltip and accessible name). */
+const shownLabel = () => [...toggle()!.querySelectorAll<HTMLElement>(`[${QUOTE_LABEL_ATTR}]`)]
+  .filter((el) => display(el) !== 'none').map((el) => el.title).join('|');
 
 describe('setupQuoteCollapse', () => {
   beforeEach(() => {
@@ -29,8 +32,8 @@ describe('setupQuoteCollapse', () => {
     expect(display(quote)).toBe('none');
     const btn = toggle()!;
     expect(btn).toBeTruthy();
-    expect(checkbox().getAttribute('aria-expanded')).toBe('false');
-    expect(btn.title).toBe(labels.show);
+    expect(checkbox().checked).toBe(false);
+    expect(shownLabel()).toBe(labels.show);
     // Button sits directly before the quote it controls.
     expect(btn.nextElementSibling).toBe(quote);
   });
@@ -45,13 +48,13 @@ describe('setupQuoteCollapse', () => {
     const btn = toggle()!;
     btn.click();
     expect(display(quote)).toBe('flex');
-    expect(checkbox().getAttribute('aria-expanded')).toBe('true');
-    expect(btn.title).toBe(labels.hide);
+    expect(checkbox().checked).toBe(true);
+    expect(shownLabel()).toBe(labels.hide);
 
     btn.click();
     expect(display(quote)).toBe('none');
-    expect(checkbox().getAttribute('aria-expanded')).toBe('false');
-    expect(btn.title).toBe(labels.show);
+    expect(checkbox().checked).toBe(false);
+    expect(shownLabel()).toBe(labels.show);
   });
 
   it('folds by stylesheet alone, for frames where no listener runs (Safari)', () => {
@@ -70,8 +73,10 @@ describe('setupQuoteCollapse', () => {
     // allow-scripts; only the checkbox's native state changes on a click.
     checkbox().checked = true;
     expect(display(quoted)).toBe('flex');
+    expect(shownLabel()).toBe(labels.hide);
     checkbox().checked = false;
     expect(quoted).not.toBeVisible();
+    expect(shownLabel()).toBe(labels.show);
     expect(onToggle).not.toHaveBeenCalled();
   });
 
@@ -160,9 +165,9 @@ describe('setupQuoteCollapse', () => {
     expect(setupQuoteCollapse(document, labels)).toBe(true);
     expect(document.querySelector('blockquote')).toBeVisible();
     expect(document.body.lastElementChild).toBeVisible();
-    expect(checkbox().getAttribute('aria-expanded')).toBe('true');
-    expect(checkbox().getAttribute('aria-label')).toBe(labels.hide);
-    expect(toggle()!.title).toBe(labels.hide);
+    expect(checkbox().checked).toBe(true);
+    expect(shownLabel()).toBe(labels.hide);
+    expect(shownLabel()).toBe(labels.hide);
   });
 
   it.each([
@@ -181,23 +186,23 @@ describe('setupQuoteCollapse', () => {
     expect(setupQuoteCollapse(document, labels)).toBe(true);
     const button = toggle()!;
     expect(quote).toBeVisible();
-    expect(checkbox().getAttribute('aria-expanded')).toBe('true');
-    expect(checkbox().getAttribute('aria-label')).toBe(labels.hide);
+    expect(checkbox().checked).toBe(true);
+    expect(shownLabel()).toBe(labels.hide);
 
     button.click();
     expect(quote).not.toBeVisible();
     expect(document.getElementById('reply')).toBeVisible();
     expect(document.getElementById('after')).toBeVisible();
-    expect(checkbox().getAttribute('aria-expanded')).toBe('false');
-    expect(checkbox().getAttribute('aria-label')).toBe(labels.show);
-    expect(button.title).toBe(labels.show);
+    expect(checkbox().checked).toBe(false);
+    expect(shownLabel()).toBe(labels.show);
+    expect(shownLabel()).toBe(labels.show);
     expect(quote.innerHTML).toBe(content);
 
     button.click();
     expect(quote).toBeVisible();
-    expect(checkbox().getAttribute('aria-expanded')).toBe('true');
-    expect(checkbox().getAttribute('aria-label')).toBe(labels.hide);
-    expect(button.title).toBe(labels.hide);
+    expect(checkbox().checked).toBe(true);
+    expect(shownLabel()).toBe(labels.hide);
+    expect(shownLabel()).toBe(labels.hide);
     expect(quote.innerHTML).toBe(content);
   });
 
@@ -277,13 +282,13 @@ describe('setupQuoteCollapse', () => {
     expect(setupQuoteCollapse(document, labels)).toBe(true);
     const button = toggle()!;
     expect(setupQuoteCollapse(document, labels)).toBe(false);
-    expect(checkbox().getAttribute('aria-expanded')).toBe('true');
+    expect(checkbox().checked).toBe(true);
     button.click();
     expect(setupQuoteCollapse(document, labels)).toBe(false);
     expect(document.querySelectorAll(`[${QUOTE_TOGGLE_ATTR}]`)).toHaveLength(1);
-    expect(checkbox().getAttribute('aria-expanded')).toBe('false');
+    expect(checkbox().checked).toBe(false);
     button.click();
-    expect(checkbox().getAttribute('aria-expanded')).toBe('true');
+    expect(checkbox().checked).toBe(true);
     expect(document.querySelector('[data-quoted-html]')).toBeVisible();
   });
 
@@ -293,7 +298,7 @@ describe('setupQuoteCollapse', () => {
     const quote = document.querySelector<HTMLElement>('[data-quoted-html]')!;
     const states: Array<{ expanded: string | null; display: string }> = [];
     const onToggle = vi.fn(() => {
-      states.push({ expanded: checkbox().getAttribute('aria-expanded'), display: display(quote) });
+      states.push({ expanded: String(checkbox().checked), display: display(quote) });
     });
 
     expect(setupQuoteCollapse(document, labels, onToggle)).toBe(true);
@@ -311,7 +316,7 @@ describe('setupQuoteCollapse', () => {
       + '<style>html,body{height:auto!important;min-height:0!important}body{overflow-y:hidden!important}</style>';
     expect(setupQuoteCollapse(document, labels)).toBe(true);
     expect(document.querySelector('.gmail_quote')).not.toBeVisible();
-    expect(checkbox().getAttribute('aria-expanded')).toBe('false');
+    expect(checkbox().checked).toBe(false);
   });
 
   it('still folds the full run of adjacent cite quotes when a stylesheet follows it', () => {
@@ -321,7 +326,7 @@ describe('setupQuoteCollapse', () => {
     const quotes = document.querySelectorAll('blockquote');
     expect(quotes[0]).not.toBeVisible();
     expect(quotes[1]).not.toBeVisible();
-    expect(checkbox().getAttribute('aria-expanded')).toBe('false');
+    expect(checkbox().checked).toBe(false);
   });
 
   it('does not treat a stylesheet as a reply preceding a quote-only message', () => {
@@ -336,7 +341,7 @@ describe('setupQuoteCollapse', () => {
       + '<style>body{height:auto}</style>';
     expect(setupQuoteCollapse(document, labels)).toBe(true);
     expect(document.querySelector('blockquote')).not.toBeVisible();
-    expect(checkbox().getAttribute('aria-expanded')).toBe('false');
+    expect(checkbox().checked).toBe(false);
   });
 
   it('ignores whitespace-only trailing content after the quote container', () => {
