@@ -179,6 +179,8 @@ describe("useTimeGridInteractions slot clicks (#435)", () => {
 describe.each<["0.16" | "1.0"]>([["0.16"], ["1.0"]])("useTimeGridInteractions moves on Stalwart %s", (version) => {
   const client = { id: "client" };
   const original = useCalendarStore.getState().updateEvent;
+  const originalTimeZone = useSettingsStore.getState().timeZone;
+  const timeZone = "Europe/Berlin";
   let updateEvent: ReturnType<typeof vi.fn>;
 
   // isOrigin as the server says it: whether the organizer is an address of
@@ -186,7 +188,7 @@ describe.each<["0.16" | "1.0"]>([["0.16"], ["1.0"]])("useTimeGridInteractions mo
   function meeting(organizer: string, extra: Partial<CalendarEvent> = {}): CalendarEvent {
     return {
       id: "e1", uid: "u1", title: "Planning", start: "2026-09-03T10:00:00", duration: "PT1H",
-      timeZone: "Europe/Berlin", showWithoutTime: false, calendarIds: { cal: true },
+      timeZone, showWithoutTime: false, calendarIds: { cal: true },
       organizerCalendarAddress: `mailto:${organizer}`, isOrigin: organizer === "me@example.com",
       ...extra,
       participants: {
@@ -214,11 +216,15 @@ describe.each<["0.16" | "1.0"]>([["0.16"], ["1.0"]])("useTimeGridInteractions mo
   }) as unknown as DragEvent<HTMLDivElement>;
 
   beforeEach(() => {
+    // The drop coordinates use the grid's display zone. Keep them in the
+    // event's zone so 11:00 moves the 10:00 meeting in every host zone.
+    useSettingsStore.setState({ timeZone });
     updateEvent = vi.fn().mockResolvedValue(undefined);
     useCalendarStore.setState({ updateEvent: updateEvent as never });
     useAuthStore.setState({ client: client as never });
   });
   afterEach(() => {
+    useSettingsStore.setState({ timeZone: originalTimeZone });
     useCalendarStore.setState({ events: [], updateEvent: original });
     useAuthStore.setState({ client: null });
   });
@@ -231,7 +237,7 @@ describe.each<["0.16" | "1.0"]>([["0.16"], ["1.0"]])("useTimeGridInteractions mo
 
     const [, id, updates, send] = updateEvent.mock.calls[0];
     expect(id).toBe("e1");
-    expect(updates.start).toMatch(/^2026-09-03T/);
+    expect(updates.start).toBe("2026-09-03T11:00:00");
     expect(updates.participants.org.participationStatus).toBe("accepted");
     expect(updates.participants.bob.participationStatus).toBe("needs-action");
     expect(send).toBe(true);
@@ -244,6 +250,7 @@ describe.each<["0.16" | "1.0"]>([["0.16"], ["1.0"]])("useTimeGridInteractions mo
     await act(() => result.current.handleColumnDrop(drop("e1"), new Date(2026, 8, 3)));
 
     const [, , updates, send] = updateEvent.mock.calls[0];
+    expect(updates.start).toBe("2026-09-03T11:00:00");
     expect(updates).not.toHaveProperty("participants");
     expect(send).toBeUndefined();
   });
@@ -259,6 +266,7 @@ describe.each<["0.16" | "1.0"]>([["0.16"], ["1.0"]])("useTimeGridInteractions mo
 
     const [, id, updates, send] = updateEvent.mock.calls[0];
     expect(id).toBe("f:e1");
+    expect(updates.start).toBe("2026-09-03T11:00:00");
     expect(updates.participants.org.participationStatus).toBe("accepted");
     expect(updates.participants.bob.participationStatus).toBe("needs-action");
     expect(send).toBe(true);
