@@ -1,8 +1,9 @@
-import { fireEvent, render, screen } from '@testing-library/react';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { act, fireEvent, render, screen } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { MessageListTabs, useMessageListPanelProps } from '../message-list-tabs';
 import { useMessageListTabsStore } from '@/stores/message-list-tabs-store';
 import { useEmailStore } from '@/stores/email-store';
+import { useAuthStore } from '@/stores/auth-store';
 import { DEFAULT_SEARCH_FILTERS } from '@/lib/jmap/search-utils';
 import type { Mailbox } from '@/lib/jmap/types';
 
@@ -38,7 +39,12 @@ describe('MessageListTabs', () => {
       searchQuery: '',
       searchFilters: { ...DEFAULT_SEARCH_FILTERS },
       isUnifiedView: false,
+      emails: [],
     } as never);
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   it('names the strip from the translations and makes the list its panel', () => {
@@ -88,5 +94,29 @@ describe('MessageListTabs', () => {
     useEmailStore.setState({ searchFilters: { ...DEFAULT_SEARCH_FILTERS, from: 'bob' } } as never);
     render(<Harness />);
     expect(screen.queryByRole('tablist')).toBeNull();
+  });
+
+  it('refreshes unread chips after the message list mutates', async () => {
+    vi.useFakeTimers();
+    const getCategoryUnreadCounts = vi.fn().mockResolvedValue({ primary: 2, promotions: 0, social: 0 });
+    useAuthStore.setState({ client: { getCategoryUnreadCounts } } as never);
+    useEmailStore.setState({ emails: [{ id: 'a' }, { id: 'b' }] } as never);
+
+    render(<Harness />);
+    await act(async () => {
+      await Promise.resolve();
+    });
+    expect(getCategoryUnreadCounts).toHaveBeenCalledTimes(1);
+
+    act(() => {
+      useEmailStore.setState({ emails: [{ id: 'a' }] } as never);
+    });
+    expect(getCategoryUnreadCounts).toHaveBeenCalledTimes(1);
+
+    await act(async () => {
+      vi.advanceTimersByTime(200);
+      await Promise.resolve();
+    });
+    expect(getCategoryUnreadCounts).toHaveBeenCalledTimes(2);
   });
 });

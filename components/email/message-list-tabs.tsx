@@ -73,11 +73,30 @@ export function MessageListTabs({ panelId }: { panelId: string }) {
   const mailbox = mailboxes.find((mb) => mb.id === selectedMailbox);
   const visible = useMessageListTabsVisible();
 
+  // Unread chips are Email/query totals (notKeyword $seen ∧ tab filter). The
+  // strip used to refresh only when this effect's deps changed, so delete /
+  // archive / mark-read left badges stale until a remount or folder switch.
+  // Optimistic list updates change `emails` identity — debounce a recount.
   useEffect(() => {
     if (!visible || !client || !mailbox) return;
     const jmapMailboxId = mailbox.originalId || mailbox.id;
     const accountId = mailbox.isShared ? mailbox.accountId : undefined;
-    void useMessageListTabsStore.getState().refreshCounts(client, jmapMailboxId, accountId);
+    const refresh = () => {
+      void useMessageListTabsStore.getState().refreshCounts(client, jmapMailboxId, accountId);
+    };
+    refresh();
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    const schedule = () => {
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(refresh, 200);
+    };
+    const unsub = useEmailStore.subscribe((state, prev) => {
+      if (state.emails !== prev.emails) schedule();
+    });
+    return () => {
+      if (timer) clearTimeout(timer);
+      unsub();
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visible, client, selectedMailbox, tabs]);
 
