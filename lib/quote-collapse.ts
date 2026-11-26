@@ -6,8 +6,12 @@
  * quote container followed by other content starts expanded, with a manual
  * toggle, so interleaved replies stay visible on open. Runs against
  * the live iframe DOM from the parent frame AFTER sanitization, so the
- * injected button and its click listener are not subject to the sanitizer or
- * the iframe's script-blocking CSP (parent-attached DOM listeners still fire).
+ * injected toggle is not subject to the sanitizer.
+ *
+ * The toggle works without any script: a checkbox inside a <label> holds the
+ * state and an injected stylesheet hides the quote while it is unchecked.
+ * WebKit does not run parent-attached listeners on nodes of a frame that is
+ * sandboxed without allow-scripts, so a click handler never fired in Safari.
  *
  * Two kinds of markers:
  *  - container: an element that wraps the entire quoted original. Hiding the
@@ -52,10 +56,21 @@ const SEPARATOR_SELECTORS = [
 
 const ALL_SELECTORS = [...CONTAINER_SELECTORS, ...SEPARATOR_SELECTORS].join(',');
 
-/** Marks the injected toggle button (also the idempotence guard). */
+/** Marks the injected toggle label (also the idempotence guard). */
 export const QUOTE_TOGGLE_ATTR = 'data-quote-toggle';
-/** Marks elements hidden by the collapse; value stores the original inline display. */
+/** Marks the elements the toggle folds; hidden while its checkbox is unchecked. */
 export const QUOTE_COLLAPSED_ATTR = 'data-quote-collapsed';
+
+/**
+ * Hides the folded elements while the toggle's checkbox is unchecked.
+ * !important beats the mail's own inline display, which stays untouched and
+ * comes back as it was on expand. Without :has() support the quote just stays
+ * visible.
+ */
+const QUOTE_COLLAPSE_CSS =
+  `html:has([${QUOTE_TOGGLE_ATTR}] > input:not(:checked)) [${QUOTE_COLLAPSED_ATTR}]{display:none !important}` +
+  `[${QUOTE_TOGGLE_ATTR}]:hover{background:#d4d8dd !important}` +
+  `[${QUOTE_TOGGLE_ATTR}]:has(> input:focus-visible){outline:2px solid #1a73e8;outline-offset:2px}`;
 
 export interface QuoteCollapseLabels {
   /** Accessible label/tooltip while collapsed, e.g. "Show quoted text". */
@@ -140,12 +155,6 @@ function findAttributedBlockquote(body: HTMLElement): Element | null {
   return null;
 }
 
-/** Hide an element, remembering its original inline display for restore. */
-function hideElement(el: HTMLElement): void {
-  el.setAttribute(QUOTE_COLLAPSED_ATTR, el.style.display || '');
-  el.style.display = 'none';
-}
-
 /**
  * The elements to hide for a separator marker: the marker itself plus
  * everything after it in document order (climbing to body handles markers
@@ -172,6 +181,7 @@ function collectSeparatorRange(body: HTMLElement, marker: Element): HTMLElement[
  *
  * `onToggle` runs after each user toggle so the reader can resize its frame,
  * even when the document's scroll height is still pinned to the old viewport.
+ * It does not run in Safari (see above), so the reader must not rely on it.
  * Idempotent per document. Returns true when a quote toggle was initialized.
  */
 export function setupQuoteCollapse(doc: Document, labels: QuoteCollapseLabels, onToggle?: () => void): boolean {
@@ -203,40 +213,41 @@ export function setupQuoteCollapse(doc: Document, labels: QuoteCollapseLabels, o
     ? collectSeparatorRange(body, marker)
     : [marker as HTMLElement];
 
-  const button = doc.createElement('button');
-  button.type = 'button';
-  button.setAttribute(QUOTE_TOGGLE_ATTR, '');
-  button.setAttribute('aria-expanded', String(initiallyExpanded));
-  const initialLabel = initiallyExpanded ? labels.hide : labels.show;
-  button.setAttribute('aria-label', initialLabel);
-  button.title = initialLabel;
-  button.textContent = '•••';
+  const toggle = doc.createElement('label');
+  toggle.setAttribute(QUOTE_TOGGLE_ATTR, '');
+  const checkbox = doc.createElement('input');
+  checkbox.type = 'checkbox';
+  checkbox.checked = initiallyExpanded;
+  // Visually hidden but still focusable, so the pill works from the keyboard.
+  checkbox.style.cssText =
+    'position:absolute;width:1px;height:1px;margin:0;padding:0;opacity:0;pointer-events:none;';
+  const setLabels = (expanded: boolean) => {
+    const label = expanded ? labels.hide : labels.show;
+    checkbox.setAttribute('aria-expanded', String(expanded));
+    checkbox.setAttribute('aria-label', label);
+    toggle.title = label;
+  };
+  setLabels(initiallyExpanded);
+  toggle.append(checkbox, '•••');
   // Inline styles only: the iframe has no app CSS, and style-src allows
   // inline. Neutral grays read fine after the dark-mode invert filter too.
-  button.style.cssText =
-    'display:inline-block;margin:12px 0 4px;padding:3px 12px;border:none;' +
+  toggle.style.cssText =
+    'position:relative;display:inline-block;margin:12px 0 4px;padding:3px 12px;border:none;' +
     'border-radius:999px;background:#e3e6ea;color:#3c4043;font-size:11px;' +
-    'line-height:1;letter-spacing:2px;cursor:pointer;font-family:inherit;';
-  button.addEventListener('mouseenter', () => { button.style.background = '#d4d8dd'; });
-  button.addEventListener('mouseleave', () => { button.style.background = '#e3e6ea'; });
+    'line-height:1;letter-spacing:2px;cursor:pointer;font-family:inherit;user-select:none;';
 
-  marker.parentNode?.insertBefore(button, marker);
-  if (!initiallyExpanded) hidden.forEach(hideElement);
+  const style = doc.createElement('style');
+  style.textContent = QUOTE_COLLAPSE_CSS;
+  (doc.head ?? body).appendChild(style);
 
-  button.addEventListener('click', () => {
-    const expanded = button.getAttribute('aria-expanded') === 'true';
-    hidden.forEach((el) => {
-      if (expanded) {
-        hideElement(el);
-      } else {
-        el.style.display = el.getAttribute(QUOTE_COLLAPSED_ATTR) || '';
-        el.removeAttribute(QUOTE_COLLAPSED_ATTR);
-      }
-    });
-    button.setAttribute('aria-expanded', String(!expanded));
-    const label = expanded ? labels.show : labels.hide;
-    button.setAttribute('aria-label', label);
-    button.title = label;
+  marker.parentNode?.insertBefore(toggle, marker);
+  hidden.forEach((el) => el.setAttribute(QUOTE_COLLAPSED_ATTR, ''));
+
+  // Only where the frame runs parent listeners (not in Safari): keeps the
+  // labels current and lets the reader resize right away. The fold itself
+  // never depends on this.
+  checkbox.addEventListener('change', () => {
+    setLabels(checkbox.checked);
     onToggle?.();
   });
 
