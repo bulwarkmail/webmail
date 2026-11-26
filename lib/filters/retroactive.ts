@@ -176,21 +176,14 @@ function conditionMatches(condition: FilterCondition, message: RetroMessage): bo
 }
 
 /** Move/copy rules skip mail the server called spam unless they opt in (see the generator's spam guard). */
-function skipsSpam(rule: FilterRule): boolean {
+export function skipsSpam(rule: Pick<FilterRule, 'actions' | 'includeSpam'>): boolean {
   return !rule.includeSpam && rule.actions.some(a => a.type === 'move' || a.type === 'copy');
 }
 
-/**
- * Whether the rule's Sieve would act on `message`. The spam guard reads the
- * server's spam verdict, which a delivered message only carries as the
- * `$junk` keyword, so that is what stands in for it here.
- */
 export function ruleMatches(rule: FilterRule, message: RetroMessage): boolean {
   if (rule.conditions.length === 0) return false;
   const results = rule.conditions.map(c => conditionMatches(c, message));
-  const matched = rule.matchType === 'any' ? results.some(Boolean) : results.every(Boolean);
-  if (!matched) return false;
-  return !(skipsSpam(rule) && message.keywords?.$junk);
+  return rule.matchType === 'any' ? results.some(Boolean) : results.every(Boolean);
 }
 
 /**

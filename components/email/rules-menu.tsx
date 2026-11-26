@@ -216,7 +216,9 @@ function useRulesModel(anchor: Email, senderEmails: Email[], target: QuickRuleTa
     useQuickRuleStore.getState().openEditor({
       mode: "prefill",
       target,
-      rule: buildPrefillRule(subject, text.filters, generateUUID()),
+      rule: buildPrefillRule(subject, text.filters, generateUUID(), {
+        fromSpam: target.mailboxes.find((m) => m.id === sourceMailboxId)?.role === "junk",
+      }),
       suggestions: buildSuggestions(source, subject, own, addresses.main, text.filters),
       sourceMailboxId,
     });

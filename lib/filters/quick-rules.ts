@@ -268,7 +268,12 @@ export function buildPresetRule(
  * The rule "Create rule…" opens with: From = the senders, one Move with no
  * folder chosen yet, stop after it.
  */
-export function buildPrefillRule(subject: QuickRuleSubject, t: Translate, id: string): FilterRule {
+export function buildPrefillRule(
+  subject: QuickRuleSubject,
+  t: Translate,
+  id: string,
+  options: { fromSpam?: boolean } = {},
+): FilterRule {
   const hasSenders = subject.senders.length > 0;
   return {
     id,
@@ -280,6 +285,7 @@ export function buildPrefillRule(subject: QuickRuleSubject, t: Translate, id: st
     conditions: hasSenders ? [senderCondition(subject.senders)] : [],
     actions: [{ type: 'move', value: '' }],
     stopProcessing: true,
+    ...(options.fromSpam ? { includeSpam: true } : {}),
   };
 }
 

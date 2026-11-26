@@ -125,6 +125,21 @@ describe('applying a rule to mail already received', () => {
     expect(await applyRuleToScope(target, deleting, 'folder', 'inbox')).toBe(0);
   });
 
+  it('files mail moved out of Spam, and mail still in Spam only for a rule that also moves spam', async () => {
+    const from = { from: [{ name: '', email: 'abuse@seznam.cz' }] };
+    const records = [
+      { id: 'rescued', mailboxIds: { inbox: true }, keywords: { $junk: true }, ...from },
+      { id: 'spam', mailboxIds: { junk: true }, keywords: { $junk: true }, ...from },
+    ];
+    const queryEmailFields = vi.fn(async (_filter: unknown) => records);
+    const target = { client: { queryEmailFields }, accountId: 'acc', mailboxes } as unknown as QuickRuleTarget;
+    const conditions: FilterRule['conditions'] = [{ field: 'from', comparator: 'address_is', value: 'abuse@seznam.cz' }];
+    const actions: FilterRule['actions'] = [{ type: 'move', value: 'News', mailboxId: 'news' }];
+    expect(await applyRuleToScope(target, rule({ conditions, actions }), 'all', null)).toBe(1);
+    expect(executePlan.mock.calls[0]).toContainEqual({ ids: ['rescued'], steps: [{ kind: 'move', ids: ['rescued'], mailboxId: 'news' }] });
+    expect(await applyRuleToScope(target, rule({ conditions, actions, includeSpam: true }), 'all', null)).toBe(2);
+  });
+
   it('runs on all received mail when asked to', async () => {
     const queryEmailFields = vi.fn(async (_filter: unknown) => []);
     const target = { client: { queryEmailFields }, accountId: 'acc', mailboxes } as unknown as QuickRuleTarget;

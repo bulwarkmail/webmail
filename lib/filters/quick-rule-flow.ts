@@ -39,6 +39,7 @@ import {
   retroactiveSupport,
   retroProperties,
   retroQueryFilter,
+  skipsSpam,
   toRetroMessage,
   type RetroPlan,
 } from './retroactive';
@@ -114,6 +115,7 @@ export async function planOnServer(
 ): Promise<RetroPlan> {
   if (!sourceMailboxId || !retroactiveSupport(rule).ok) return EMPTY_PLAN;
   const mailbox = target.mailboxes.find(m => m.id === sourceMailboxId);
+  if (mailbox?.role === 'junk' && skipsSpam(rule)) return EMPTY_PLAN;
   const records = await target.client.queryEmailFields(
     retroQueryFilter(rule, mailbox?.originalId || sourceMailboxId),
     retroProperties(rule),

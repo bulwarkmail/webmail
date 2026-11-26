@@ -105,11 +105,8 @@ describe('ruleMatches: header comparators, as Sieve reads them', () => {
     expect(ruleMatches(rule(conditions, undefined, { matchType: 'any' }), message())).toBe(true);
   });
 
-  it('skips spam for a folder rule unless it opts in, like the spam guard', () => {
-    const spam = message({ keywords: { $junk: true } });
-    expect(ruleMatches(sender('anna@acme.com'), spam)).toBe(false);
-    expect(ruleMatches(rule([{ field: 'from', comparator: 'address_is', value: 'anna@acme.com' }], undefined, { includeSpam: true }), spam)).toBe(true);
-    expect(ruleMatches(rule([{ field: 'from', comparator: 'address_is', value: 'anna@acme.com' }], [{ type: 'mark_read' }]), spam)).toBe(true);
+  it('matches a message moved out of Spam, which keeps its $junk keyword', () => {
+    expect(ruleMatches(sender('anna@acme.com'), message({ keywords: { $junk: true } }))).toBe(true);
   });
 });
 

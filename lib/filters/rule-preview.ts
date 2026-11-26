@@ -27,7 +27,7 @@ export interface RulePreviewTarget {
 
 export interface MatchOptions {
   folderId?: string;
-  skipJunk?: boolean;
+  includeJunk?: boolean;
 }
 
 type Verify = { matchType: 'all' | 'any'; conditions: FilterCondition[] } | null;
@@ -128,31 +128,36 @@ function attachmentMatches(condition: FilterCondition, record: Record<string, un
   return parts.some((p) => types.some((t) => (p.name ?? '').toLowerCase().includes(`.${t}`)));
 }
 
-function excludedMailboxes(mailboxes: Mailbox[]): string[] {
-  return mailboxes.filter((m) => m.role && NOT_RECEIVED.has(m.role)).map((m) => m.originalId || m.id);
+function excludedMailboxes(mailboxes: Mailbox[], includeJunk = false): string[] {
+  return mailboxes
+    .filter((m) => m.role && NOT_RECEIVED.has(m.role) && !(includeJunk && m.role === 'junk'))
+    .map((m) => m.originalId || m.id);
 }
 
 function utcSeconds(time: number): string {
   return new Date(time).toISOString().replace(/\.\d{3}Z$/, 'Z');
 }
 
-function scopeFilters(rule: FilterRule, mailboxes: Mailbox[], folderId?: string): Record<string, unknown>[] {
+function scopeFilters(rule: FilterRule, mailboxes: Mailbox[], folderId?: string, includeJunk = false): Record<string, unknown>[] {
   const serverId = (m: Mailbox) => m.originalId || m.id;
   const parts: Record<string, unknown>[] = [];
   if (folderId) {
     const folder = mailboxes.find((m) => m.id === folderId);
     parts.push({ inMailbox: folder ? serverId(folder) : folderId });
   }
-  // Mail in Sent, Drafts, Trash or Spam is left out, also when it is in the
-  // chosen folder too, or the chosen folder is one of them.
-  const excluded = excludedMailboxes(mailboxes);
+  const excluded = excludedMailboxes(mailboxes, includeJunk);
   if (excluded.length > 0) parts.push({ operator: 'NOT', conditions: excluded.map((id) => ({ inMailbox: id })) });
   if (isPeriodBoundary(rule.activeFrom)) parts.push({ after: utcSeconds(Date.parse(rule.activeFrom)) });
   if (isPeriodBoundary(rule.activeUntil)) parts.push({ before: utcSeconds(Date.parse(rule.activeUntil) + 1000) });
   return parts;
 }
 
-export function previewPlan(rule: FilterRule, mailboxes: Mailbox[], folderId?: string): PreviewPlan | null {
+export function previewPlan(
+  rule: FilterRule,
+  mailboxes: Mailbox[],
+  folderId?: string,
+  options: { includeJunk?: boolean } = {},
+): PreviewPlan | null {
   if (rule.conditions.length === 0) return null;
   const planned: Planned[] = [];
   for (const condition of rule.conditions) {
@@ -160,7 +165,7 @@ export function previewPlan(rule: FilterRule, mailboxes: Mailbox[], folderId?: s
     if (!plan) return null;
     planned.push(plan);
   }
-  const scope = scopeFilters(rule, mailboxes, folderId);
+  const scope = scopeFilters(rule, mailboxes, folderId, options.includeJunk);
   const within = (parts: Record<string, unknown>[]) => allOf([...scope, ...parts].length > 0 ? [...scope, ...parts] : [{}]);
   const server = planned.filter((p): p is ServerCondition => p.kind === 'server');
   const client = planned.filter((p): p is ClientCondition => p.kind === 'client');
@@ -198,11 +203,10 @@ export function previewPlan(rule: FilterRule, mailboxes: Mailbox[], folderId?: s
   const properties = new Set(['from', 'subject', 'receivedAt', 'mailboxIds', 'keywords']);
   for (const p of retroProperties({ ...rule, conditions: clientConditions.filter((c) => c.field !== 'attachment') })) properties.add(p);
   if (clientConditions.some((c) => c.field === 'attachment')) properties.add('attachments');
-  return { probes, properties: [...properties], excluded: excludedMailboxes(mailboxes) };
+  return { probes, properties: [...properties], excluded: excludedMailboxes(mailboxes, options.includeJunk) };
 }
 
-function verifies(rule: FilterRule, plan: PreviewPlan, verify: Verify, record: Record<string, unknown>, skipJunk: boolean): boolean {
-  if (skipJunk && (record.keywords as Record<string, boolean> | undefined)?.$junk) return false;
+function verifies(rule: FilterRule, plan: PreviewPlan, verify: Verify, record: Record<string, unknown>): boolean {
   const boxes = (record.mailboxIds as Record<string, boolean> | undefined) ?? {};
   if (plan.excluded.some((id) => boxes[id])) return false;
   if (!verify) return true;
@@ -219,7 +223,7 @@ export async function findRuleMatches(
   rule: FilterRule,
   options: MatchOptions & { limit: number },
 ): Promise<RuleMatches | null> {
-  const plan = previewPlan(rule, target.mailboxes, options.folderId);
+  const plan = previewPlan(rule, target.mailboxes, options.folderId, { includeJunk: options.includeJunk });
   if (!plan) return null;
   const answers = await Promise.all(plan.probes.map((probe) =>
     target.client.queryEmailFields(probe.filter, plan.properties, target.accountId, options.limit)
@@ -230,7 +234,7 @@ export async function findRuleMatches(
     if (records.length >= options.limit && !probe.covered) complete = false;
     for (const record of records) {
       const id = String(record.id);
-      if (!found.has(id) && verifies(rule, plan, probe.verify, record, !!options.skipJunk)) found.set(id, record);
+      if (!found.has(id) && verifies(rule, plan, probe.verify, record)) found.set(id, record);
     }
   }
   const time = (r: Record<string, unknown>) => (typeof r.receivedAt === 'string' ? Date.parse(r.receivedAt) : 0);
@@ -243,7 +247,7 @@ function senderLabel(from: unknown): string {
 }
 
 export async function previewRule(target: RulePreviewTarget, rule: FilterRule, options: MatchOptions = {}): Promise<RulePreview | null> {
-  const matches = await findRuleMatches(target, rule, { skipJunk: options.skipJunk, limit: PREVIEW_SCAN });
+  const matches = await findRuleMatches(target, rule, { includeJunk: options.includeJunk, limit: PREVIEW_SCAN });
   if (!matches) return null;
   const folder = options.folderId ? target.mailboxes.find((m) => m.id === options.folderId) : undefined;
   const folderServerId = folder ? folder.originalId || folder.id : options.folderId;

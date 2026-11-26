@@ -187,6 +187,21 @@ describe('quick rules from a message', () => {
     expect(batchMoveToMailbox).toHaveBeenCalledWith(accountA.client, 'news', { emailIds: ['e1', 'e3'], client: accountB.client, accountId: 'b' });
   });
 
+  it('offers to file mail moved out of Spam, but not mail still in Spam', async () => {
+    accountB.client.queryEmailFields.mockResolvedValue([
+      { id: 'e1', mailboxIds: { inbox: true, junk: false }, keywords: { $junk: true }, from: [{ email: 'abuse@seznam.cz' }] },
+    ]);
+    await runPresetRule({ target: targetFor(accountB, 'b'), preset: { kind: 'move_sender', mailbox: news }, subject: subject('abuse@seznam.cz'), sourceMailboxId: 'inbox', text });
+    expect(lastToast().tertiaryAction?.label).toBe('rule_apply_existing(1)');
+
+    accountB.client.queryEmailFields.mockResolvedValue([
+      { id: 'e2', mailboxIds: { junk: true }, keywords: { $junk: true }, from: [{ email: 'reports@seznam.cz' }] },
+    ]);
+    await runPresetRule({ target: targetFor(accountB, 'b'), preset: { kind: 'move_sender', mailbox: news }, subject: subject('reports@seznam.cz'), sourceMailboxId: 'junk', text });
+    expect(lastToast().title).toMatch(/^rule_(created|merged)/);
+    expect(lastToast().tertiaryAction).toBeUndefined();
+  });
+
   it('offers no apply action when nothing in the folder matches', async () => {
     await runPresetRule({ target: targetFor(accountB, 'b'), preset: { kind: 'move_sender', mailbox: news }, subject: subject('anna@acme.com'), sourceMailboxId: 'inbox', text });
     expect(lastToast().tertiaryAction).toBeUndefined();

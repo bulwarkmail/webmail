@@ -45,8 +45,8 @@ export function canApplyToExisting(rule: FilterRule, mailboxes: Mailbox[]): bool
   return appliesToExisting(rule) && previewPlan(rule, mailboxes) !== null;
 }
 
-export function skipsJunk(rule: Pick<FilterRule, 'actions' | 'includeSpam'>): boolean {
-  return !rule.includeSpam && rule.actions.some((a) => a.type === 'move' || a.type === 'copy');
+export function includesJunk(rule: Pick<FilterRule, 'actions' | 'includeSpam'>): boolean {
+  return !!rule.includeSpam && rule.actions.some((a) => a.type === 'move' || a.type === 'copy');
 }
 
 export function planMatched(rule: FilterRule, records: Matched[], mailboxes: Mailbox[]): RetroPlan {
@@ -107,7 +107,7 @@ export async function planRuleForScope(
   if (scope === 'folder' && !folderId) return nothing;
   const matches = await findRuleMatches(target, rule, {
     folderId: scope === 'folder' ? folderId! : undefined,
-    skipJunk: skipsJunk(rule),
+    includeJunk: includesJunk(rule),
     limit: APPLY_LIMIT,
   });
   return matches ? planMatched(rule, matches.records, target.mailboxes) : nothing;

@@ -269,6 +269,11 @@ describe('preset rules', () => {
     expect(r.matchType).toBe('all');
     expect(buildPrefillRule(subjectFor([]), t, 'id').conditions).toEqual([]);
   });
+
+  it('also moves mail marked as spam when it is made from a message in Spam', () => {
+    expect(buildPrefillRule(several, t, 'id', { fromSpam: true }).includeSpam).toBe(true);
+    expect(buildPrefillRule(several, t, 'id').includeSpam).toBeUndefined();
+  });
 });
 
 describe('applyQuickRule', () => {
