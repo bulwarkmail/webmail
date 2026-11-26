@@ -13,7 +13,27 @@ import { useMessageListTabsStore } from '@/stores/message-list-tabs-store';
 import { useEmailStore } from '@/stores/email-store';
 import { useAuthStore } from '@/stores/auth-store';
 import { isFilterEmpty } from '@/lib/jmap/search-utils';
+import type { Email } from '@/lib/jmap/types';
 import { cn } from '@/lib/utils';
+
+/**
+ * Whether an optimistic list update can move category-tab unread totals.
+ * Scroll/load-more and star/tag toggles rebuild `emails` without changing
+ * unread membership — those must not trigger a recount (one Email/query per tab).
+ */
+export function listChangeMayAffectCategoryUnread(
+  previous: Email[],
+  next: Email[],
+): boolean {
+  if (previous === next) return false;
+  const nextById = new Map(next.map((email) => [email.id, email]));
+  for (const email of previous) {
+    const updated = nextById.get(email.id);
+    if (!updated) return true;
+    if (!!email.keywords?.$seen !== !!updated.keywords?.$seen) return true;
+  }
+  return false;
+}
 
 /**
  * The DOM id of a category tab, which labels the panel while it is active.
@@ -76,7 +96,8 @@ export function MessageListTabs({ panelId }: { panelId: string }) {
   // Unread chips are Email/query totals (notKeyword $seen ∧ tab filter). The
   // strip used to refresh only when this effect's deps changed, so delete /
   // archive / mark-read left badges stale until a remount or folder switch.
-  // Optimistic list updates change `emails` identity — debounce a recount.
+  // Debounce a recount when the list drops a row or flips $seen — not on
+  // every new `emails` array (scroll pages, star toggles, …).
   useEffect(() => {
     if (!visible || !client || !mailbox) return;
     const jmapMailboxId = mailbox.originalId || mailbox.id;
@@ -91,7 +112,7 @@ export function MessageListTabs({ panelId }: { panelId: string }) {
       timer = setTimeout(refresh, 200);
     };
     const unsub = useEmailStore.subscribe((state, prev) => {
-      if (state.emails !== prev.emails) schedule();
+      if (listChangeMayAffectCategoryUnread(prev.emails, state.emails)) schedule();
     });
     return () => {
       if (timer) clearTimeout(timer);
