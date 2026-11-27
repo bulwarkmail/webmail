@@ -168,12 +168,14 @@ describe('app badges', () => {
     expect(useSidebarAppFramesStore.getState().badges).toEqual({});
   });
 
-  it('clears the count when the app says it is signed out', () => {
+  it('keeps the app\'s word that it is signed out, and clears the count for a state it does not know', () => {
     open(apps[0]);
     render(<Page app={apps[0]} />);
     const frame = screen.getByTitle('App A') as HTMLIFrameElement;
     post(msg, 'https://a.example.com', frame.contentWindow);
     post({ type: 'bulwark:app-badge', version: 1, state: 'signed-out' }, 'https://a.example.com', frame.contentWindow);
+    expect(useSidebarAppFramesStore.getState().badges.a).toEqual({ count: 0, state: 'signed-out' });
+    post({ type: 'bulwark:app-badge', version: 1, state: 'later' }, 'https://a.example.com', frame.contentWindow);
     expect(useSidebarAppFramesStore.getState().badges.a).toBeUndefined();
   });
 });

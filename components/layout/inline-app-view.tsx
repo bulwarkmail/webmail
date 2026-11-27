@@ -8,6 +8,7 @@ import { cn } from '@/lib/utils';
 import type { InlineAppState } from '@/hooks/use-sidebar-apps';
 import { useCloseBesideControls } from '@/hooks/use-close-beside-controls';
 import { useSidebarAppFramesStore } from '@/stores/sidebar-app-frames-store';
+import { SidebarAppStateLine } from '@/components/layout/sidebar-app-badge';
 
 interface InlineAppViewProps {
   app: InlineAppState;
@@ -47,6 +48,7 @@ export function InlineAppView({ app, onClose, className }: InlineAppViewProps) {
         <h3 className="min-w-0 flex-1 text-sm font-medium truncate">{app.name}</h3>
         {!closeFirst && close}
       </div>
+      <SidebarAppStateLine app={app} />
       <div ref={setSlot} data-inline-app-slot={app.id} className="flex-1 relative" />
     </div>
   );

@@ -9,9 +9,17 @@ describe('parseAppBadgeMessage', () => {
     expect(parseAppBadgeMessage({ ...base, count: 7 })).toEqual({ count: 7 });
   });
 
-  it('clears the badge for any state but ok', () => {
-    expect(parseAppBadgeMessage({ ...base, state: 'signed-out' })).toBeNull();
-    expect(parseAppBadgeMessage({ ...base, state: 'offline', count: 3 })).toBeNull();
+  it('keeps a state that says the count cannot be trusted', () => {
+    expect(parseAppBadgeMessage({ ...base, state: 'signed-out' })).toEqual({ count: 0, state: 'signed-out' });
+    expect(parseAppBadgeMessage({ ...base, state: 'offline', count: 3, mentions: 1 }))
+      .toEqual({ count: 3, mentions: 1, state: 'offline' });
+    expect(parseAppBadgeMessage({ ...base, state: 'unknown', count: 0, mentions: 0 }))
+      .toEqual({ count: 0, mentions: 0, state: 'unknown' });
+  });
+
+  it('clears the badge for a state it does not know, never taking silence from the app', () => {
+    expect(parseAppBadgeMessage({ ...base, state: 'busy', count: 1 })).toBeNull();
+    expect(parseAppBadgeMessage({ ...base, state: 'silent', count: 1 })).toBeNull();
   });
 
   it('ignores anything that is not exactly this message', () => {
@@ -26,6 +34,7 @@ describe('parseAppBadgeMessage', () => {
       { ...base, count: '3' },
       { ...base, count: 1, mentions: -2 },
       { ...base, state: 1, count: 1 },
+      { ...base, state: 'offline', count: -1 },
     ]) {
       expect(parseAppBadgeMessage(data)).toBeUndefined();
     }
@@ -43,5 +52,13 @@ describe('appBadgeMark', () => {
     expect(appBadgeMark({ count: 4 })).toEqual({ number: 4 });
     expect(appBadgeMark({ count: 0 })).toBeNull();
     expect(appBadgeMark(undefined)).toBeNull();
+  });
+
+  it('marks a count that cannot be trusted: "!" signed out, "?" else, offline with its last number', () => {
+    expect(appBadgeMark({ count: 0, state: 'signed-out' })).toEqual({ state: 'signed-out', symbol: '!', last: null });
+    expect(appBadgeMark({ count: 9, mentions: 3, state: 'offline' })).toEqual({ state: 'offline', symbol: '?', last: 3 });
+    expect(appBadgeMark({ count: 9, mentions: 0, state: 'offline' })).toEqual({ state: 'offline', symbol: '?', last: null });
+    expect(appBadgeMark({ count: 4, state: 'unknown' })).toEqual({ state: 'unknown', symbol: '?', last: null });
+    expect(appBadgeMark({ count: 4, state: 'silent' })).toEqual({ state: 'silent', symbol: '?', last: null });
   });
 });

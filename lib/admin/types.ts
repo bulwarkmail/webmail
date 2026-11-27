@@ -198,6 +198,13 @@ export interface AdminSidebarApp {
   openMode: 'tab' | 'inline';
   showOnMobile: boolean;
   /**
+   * The app reports its unread count to its rail icon (`bulwark:app-badge`
+   * from its own frame), so an inline app that says nothing within SILENT_MS of
+   * its frame's load is marked "?" (stores/sidebar-app-frames-store.ts). Every
+   * inline app's report is drawn; this only says to expect one.
+   */
+  badge?: boolean;
+  /**
    * Browser features an inline app of the policy may use in its frame
    * (lib/sidebar-apps.ts, SIDEBAR_APP_FEATURES). Never honoured for a user's
    * own app.
