@@ -6107,12 +6107,15 @@ export class JMAPClient implements IJMAPClient {
     // When the submission fails it never moves to Sent, so it is removed
     // before the failure is reported; the user's draft is kept for the retry.
     const { failure, filing } = sendMethodErrors(response.methodResponses);
-    // A held send through a server that files the message in Sent only when it
-    // goes out, like the Gmail backend of legacy-proxy, has the filing of the
-    // copy refused for now (bulwarkmail/legacy-proxy#65). Nothing is left
-    // over: the copy leaves Drafts once the message is sent. Stalwart files a
-    // held send right away, so a refusal there stays a warning.
-    const filingDeferred = !!delayedUntil && !this.hasAccountCapability('urn:stalwart:jmap', submissionAccountId);
+    // A server that files the message in Sent only when it goes out, like the
+    // Gmail backend of legacy-proxy, refuses the filing of the copy with
+    // `forbidden` while the submission is still pending (bulwarkmail/legacy-proxy#65).
+    // Nothing is left over: the copy leaves Drafts once the message is sent.
+    // Stalwart files a held send right away, so a refusal there stays a
+    // warning, as does any other refusal.
+    const submitted = response.methodResponses?.find(([name]) => name === 'EmailSubmission/set')?.[1]?.created?.['1'];
+    const filingDeferred = !!delayedUntil && submitted?.undoStatus === 'pending'
+      && !this.hasAccountCapability('urn:stalwart:jmap', submissionAccountId);
     if (failure) {
       console.error('[sendEmail] JMAP method error:', failure);
       await this.discardUnsentCopy(draftCopyId, targetAccountId);
@@ -6177,7 +6180,7 @@ export class JMAPClient implements IJMAPClient {
         // to the caller.
         if (result.notUpdated && Object.keys(result.notUpdated).length) {
           const refused = Object.entries(result.notUpdated as Record<string, { type?: string; description?: string }>)
-            .filter(([id]) => !(filingDeferred && methodName === 'Email/set' && id === createdEmailId));
+            .filter(([id, err]) => !(filingDeferred && methodName === 'Email/set' && id === createdEmailId && err?.type === 'forbidden'));
           if (refused.length) {
             console.error(`[sendEmail] ${methodName} notUpdated:`, JSON.stringify(Object.fromEntries(refused), null, 2));
             const first = refused[0][1];
