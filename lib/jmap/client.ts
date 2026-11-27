@@ -6107,6 +6107,12 @@ export class JMAPClient implements IJMAPClient {
     // When the submission fails it never moves to Sent, so it is removed
     // before the failure is reported; the user's draft is kept for the retry.
     const { failure, filing } = sendMethodErrors(response.methodResponses);
+    // A held send through a server that files the message in Sent only when it
+    // goes out, like the Gmail backend of legacy-proxy, has the filing of the
+    // copy refused for now (bulwarkmail/legacy-proxy#65). Nothing is left
+    // over: the copy leaves Drafts once the message is sent. Stalwart files a
+    // held send right away, so a refusal there stays a warning.
+    const filingDeferred = !!delayedUntil && !this.hasAccountCapability('urn:stalwart:jmap', submissionAccountId);
     if (failure) {
       console.error('[sendEmail] JMAP method error:', failure);
       await this.discardUnsentCopy(draftCopyId, targetAccountId);
@@ -6170,9 +6176,13 @@ export class JMAPClient implements IJMAPClient {
         // sibling note in 4dc76bbb). Log the details and surface a warning
         // to the caller.
         if (result.notUpdated && Object.keys(result.notUpdated).length) {
-          console.error(`[sendEmail] ${methodName} notUpdated:`, JSON.stringify(result.notUpdated, null, 2));
-          const first = Object.values(result.notUpdated as Record<string, { type?: string; description?: string }>)[0];
-          filingError = filingError ?? (first?.description || first?.type || 'post-send filing failed');
+          const refused = Object.entries(result.notUpdated as Record<string, { type?: string; description?: string }>)
+            .filter(([id]) => !(filingDeferred && methodName === 'Email/set' && id === createdEmailId));
+          if (refused.length) {
+            console.error(`[sendEmail] ${methodName} notUpdated:`, JSON.stringify(Object.fromEntries(refused), null, 2));
+            const first = refused[0][1];
+            filingError = filingError ?? (first?.description || first?.type || 'post-send filing failed');
+          }
         }
         if (result.notDestroyed && Object.keys(result.notDestroyed).length) {
           console.error(`[sendEmail] ${methodName} notDestroyed (old draft):`, JSON.stringify(result.notDestroyed, null, 2));
