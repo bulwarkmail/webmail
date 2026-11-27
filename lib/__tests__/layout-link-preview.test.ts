@@ -120,3 +120,12 @@ describe('root layout generateMetadata - link preview', () => {
     expect(meta.openGraph?.images).toBeDefined();
   });
 });
+
+describe('root layout generateMetadata - apple-touch-icon', () => {
+  // iOS reads the home screen icon from this link, not from the manifest;
+  // without it Safari fetched the static Bulwark /apple-touch-icon.png.
+  it('links the branded /api/pwa-icon/180 render', async () => {
+    const meta = await generateMetadata();
+    expect((meta.icons as { apple?: string }).apple).toBe('/api/pwa-icon/180');
+  });
+});

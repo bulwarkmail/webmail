@@ -197,7 +197,10 @@ async function liteMetadata(): Promise<Metadata> {
     formatDetection: {
       telephone: false,
     },
-    icons: { icon: withBasePath("/branding/Bulwark_Favicon.svg") },
+    icons: {
+      icon: withBasePath("/branding/Bulwark_Favicon.svg"),
+      apple: withBasePath("/apple-touch-icon.png"),
+    },
   };
 }
 
@@ -262,7 +265,15 @@ export async function generateMetadata(): Promise<Metadata> {
     formatDetection: {
       telephone: false,
     },
-    icons: { icon: withBasePath(faviconUrl) },
+    icons: {
+      icon: withBasePath(faviconUrl),
+      // iOS ignores the manifest icons for "Add to Home Screen" and reads
+      // apple-touch-icon instead. Without this link it fetches the static
+      // /apple-touch-icon.png, the Bulwark default, whatever the branding.
+      // /api/pwa-icon/180 serves the branded icon for this host, or the
+      // default when none is configured.
+      apple: withBasePath("/api/pwa-icon/180"),
+    },
   };
 }
 

@@ -3,13 +3,17 @@ import sharp from 'sharp';
 import { configManager } from '@/lib/admin/config-manager';
 import { fetchBrandingAsset } from '@/lib/admin/branding-asset';
 import { renderCache } from '@/lib/admin/render-cache';
+import { parseHexColor } from '@/lib/tag-hex-color';
 import {
   matchDomainBranding,
   parseDomainBranding,
   pickRequestHost,
 } from '@/lib/admin/domain-branding';
 
-const VALID_SIZES = new Set([192, 512]);
+// 180 is the apple-touch-icon size: iOS takes the home screen icon from
+// <link rel="apple-touch-icon">, not from the manifest.
+const APPLE_TOUCH_SIZE = 180;
+const VALID_SIZES = new Set([APPLE_TOUCH_SIZE, 192, 512]);
 
 // Cache resized images keyed by (size, source URL) so admin re-uploads (the
 // URL carries the upload's version) or URL changes invalidate the prior
@@ -25,7 +29,7 @@ export async function GET(
   const size = parseInt(sizeParam, 10);
 
   if (!VALID_SIZES.has(size)) {
-    return new NextResponse('Invalid size. Allowed: 192, 512', { status: 400 });
+    return new NextResponse('Invalid size. Allowed: 180, 192, 512', { status: 400 });
   }
 
   await configManager.ensureLoaded();
@@ -44,7 +48,18 @@ export async function GET(
     // icon (custom if configured, else the bundled default). This lets callers
     // that can't run the custom-vs-default check themselves - notably the
     // service worker's notifications - use a single stable URL.
-    `/icon-${size}x${size}.png`;
+    (size === APPLE_TOUCH_SIZE ? '/apple-touch-icon.png' : `/icon-${size}x${size}.png`);
+
+  // iOS draws transparent pixels of a home screen icon as black, so the
+  // apple-touch-icon is flattened onto the PWA background colour. The admin
+  // inputs can save any string, and sharp throws on one it can't parse, so
+  // only a valid hex colour is used; anything else falls back to white.
+  const background =
+    size === APPLE_TOUCH_SIZE
+      ? parseHexColor(domainOverrides.pwaBackgroundColor ?? '') ??
+        parseHexColor(configManager.get<string>('pwaBackgroundColor', '') ?? '') ??
+        '#ffffff'
+      : '';
 
   const pngHeaders = {
     'Content-Type': 'image/png',
@@ -52,7 +67,7 @@ export async function GET(
     Vary: 'Host, X-Forwarded-Host',
   };
 
-  const cacheKey = `${size}|${iconUrl}`;
+  const cacheKey = `${size}|${iconUrl}|${background}`;
 
   try {
     if (cache.has(cacheKey)) {
@@ -60,10 +75,13 @@ export async function GET(
     }
 
     const sourceBuffer = await fetchBrandingAsset(iconUrl, 'PWA icon');
-    const resized = await sharp(sourceBuffer)
+    let resized = await sharp(sourceBuffer)
       .resize(size, size, { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 0 } })
       .png()
       .toBuffer();
+    // A second pass: in one pipeline sharp flattens before it resizes, which
+    // would leave the 'contain' padding transparent.
+    if (background) resized = await sharp(resized).flatten({ background }).png().toBuffer();
 
     const ab = new ArrayBuffer(resized.byteLength);
     new Uint8Array(ab).set(resized);
