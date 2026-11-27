@@ -6421,6 +6421,10 @@
     "menu": "Créer un événement…",
     "link_line": "E-mail : {link}"
   },
+  "save_as_template": {
+    "read_failed": "Impossible de lire le message. Réessayez.",
+    "images_dropped": "{count, plural, one {Une image n'a pas pu être chargée et a été laissée de côté.} other {# images n'ont pas pu être chargées et ont été laissées de côté.}}"
+  },
   "free_busy_share": {
     "button": "Partager mes disponibilités avec {group}",
     "already": "Vos disponibilités sont partagées avec {group}",

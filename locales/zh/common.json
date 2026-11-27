@@ -6421,6 +6421,10 @@
     "menu": "创建日程…",
     "link_line": "邮件：{link}"
   },
+  "save_as_template": {
+    "read_failed": "无法读取邮件。请重试。",
+    "images_dropped": "{count, plural, other {有 # 张图片无法加载，已略去。}}"
+  },
   "free_busy_share": {
     "button": "与 {group} 共享我的忙闲时间",
     "already": "你的忙闲时间已与 {group} 共享",

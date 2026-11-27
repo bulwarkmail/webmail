@@ -6421,6 +6421,10 @@
     "menu": "Afspraak maken…",
     "link_line": "E-mail: {link}"
   },
+  "save_as_template": {
+    "read_failed": "Kon het bericht niet lezen. Probeer het opnieuw.",
+    "images_dropped": "{count, plural, one {Eén afbeelding kon niet worden geladen en is weggelaten.} other {# afbeeldingen konden niet worden geladen en zijn weggelaten.}}"
+  },
   "free_busy_share": {
     "button": "Mijn vrij/bezet delen met {group}",
     "already": "Je vrij/bezet is gedeeld met {group}",

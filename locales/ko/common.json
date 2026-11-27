@@ -6421,6 +6421,10 @@
     "menu": "일정 만들기…",
     "link_line": "이메일: {link}"
   },
+  "save_as_template": {
+    "read_failed": "메시지를 읽지 못했어요. 다시 시도하세요.",
+    "images_dropped": "{count, plural, other {이미지 #개를 불러오지 못해 제외했어요.}}"
+  },
   "free_busy_share": {
     "button": "내 일정 가능 여부를 {group}과(와) 공유",
     "already": "일정 가능 여부가 {group}과(와) 공유되어 있습니다",

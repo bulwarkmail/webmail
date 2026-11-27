@@ -6233,6 +6233,10 @@
     "menu": "יצירת אירוע…",
     "link_line": "דוא״ל: {link}"
   },
+  "save_as_template": {
+    "read_failed": "לא ניתן היה לקרוא את ההודעה. נסו שוב.",
+    "images_dropped": "{count, plural, one {תמונה אחת לא נטענה והושמטה.} other {# תמונות לא נטענו והושמטו.}}"
+  },
   "free_busy_share": {
     "button": "שתף את הזמינות שלי עם {group}",
     "already": "הזמינות שלך משותפת עם {group}",

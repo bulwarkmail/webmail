@@ -6421,6 +6421,10 @@
     "menu": "Crear evento…",
     "link_line": "Correo: {link}"
   },
+  "save_as_template": {
+    "read_failed": "No se pudo leer el mensaje. Vuelve a intentarlo.",
+    "images_dropped": "{count, plural, one {No se pudo cargar una imagen y se ha omitido.} other {No se pudieron cargar # imágenes y se han omitido.}}"
+  },
   "free_busy_share": {
     "button": "Compartir mi disponibilidad con {group}",
     "already": "Tu disponibilidad está compartida con {group}",

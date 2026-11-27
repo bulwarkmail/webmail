@@ -30,6 +30,9 @@ const { usePrintRequestStore, requestPrint } = await import('@/hooks/use-message
 const { emailKeyFor } = await import('@/lib/thread-utils');
 const { useMessageActionList } = await import('../message-actions');
 const { useCalendarStore } = await import('@/stores/calendar-store');
+const { usePolicyStore } = await import('@/stores/policy-store');
+const { useSaveAsTemplateStore } = await import('@/stores/save-as-template-store');
+const { DEFAULT_POLICY } = await import('@/lib/admin/types');
 
 const email = {
   id: 'e1',
@@ -142,7 +145,7 @@ describe("the reader's ⋮ in groups", () => {
       'move_to', '|',
       'mark_unread', 'pin', 'tag', '|',
       'mark_as_spam', '|',
-      'copy_message', 'copy_conversation', '|',
+      'save_as_template', 'copy_message', 'copy_conversation', '|',
       'reader_view', '|',
       'export_email', 'print', 'view_source',
     ]);
@@ -398,5 +401,37 @@ describe('Delete conversation', () => {
     );
     expect(screen.getByTestId('ctx-delete')).toBeTruthy();
     expect(screen.queryByTestId('ctx-delete-conversation')).toBeNull();
+  });
+});
+
+// Save as template from a message: the menus ask; the host in the layout reads it.
+describe('Save as template', () => {
+  const entryOf = (message: Email) => {
+    const { result } = renderHook(() => useMessageActionList({ email: message, onReply: () => {} }));
+    return result.current.find((entry) => entry.kind === 'item' && entry.key === 'save_as_template');
+  };
+
+  afterEach(() => {
+    usePolicyStore.setState({ policy: DEFAULT_POLICY });
+    useSaveAsTemplateStore.getState().close();
+  });
+
+  it('asks the host to save the message as a template', () => {
+    const entry = entryOf(email);
+    expect(entry).toBeTruthy();
+    if (entry?.kind === 'item') entry.run();
+    expect(useSaveAsTemplateStore.getState().pending?.email).toBe(email);
+  });
+
+  it("is in the reader's ⋮ and in the row menu's More actions", () => {
+    renderViewer();
+    fireEvent.click(screen.getByRole('button', { name: 'more_actions' }));
+    fireEvent.click(within(screen.getByRole('menu', { name: 'more_actions' })).getByTestId('ctx-save-as-template'));
+    expect(useSaveAsTemplateStore.getState().pending?.email.id).toBe('e1');
+  });
+
+  it('is not offered where the admin hid personal templates', () => {
+    usePolicyStore.setState({ policy: { ...DEFAULT_POLICY, restrictions: { personalTemplates: { hidden: true } } } });
+    expect(entryOf(email)).toBeUndefined();
   });
 });

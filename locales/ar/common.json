@@ -5776,6 +5776,10 @@
     "menu": "إنشاء حدث…",
     "link_line": "البريد: {link}"
   },
+  "save_as_template": {
+    "read_failed": "تعذّرت قراءة الرسالة. حاول مرة أخرى.",
+    "images_dropped": "{count, plural, one {تعذّر تحميل صورة واحدة فتُركت.} other {تعذّر تحميل # من الصور فتُركت.}}"
+  },
   "free_busy_share": {
     "button": "مشاركة أوقات توفري مع {group}",
     "already": "أوقات توفرك مشتركة مع {group}",

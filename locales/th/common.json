@@ -3134,6 +3134,10 @@
     "menu": "สร้างกิจกรรม…",
     "link_line": "อีเมล: {link}"
   },
+  "save_as_template": {
+    "read_failed": "ไม่สามารถอ่านข้อความได้ ลองอีกครั้ง",
+    "images_dropped": "{count, plural, other {โหลดรูปภาพไม่ได้ # รูป จึงไม่ได้ใส่ไว้}}"
+  },
   "free_busy_share": {
     "button": "แชร์เวลาว่าง/ไม่ว่างของฉันกับ {group}",
     "already": "แชร์เวลาว่าง/ไม่ว่างของคุณกับ {group} แล้ว",

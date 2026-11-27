@@ -6421,6 +6421,10 @@
     "menu": "予定を作成…",
     "link_line": "メール: {link}"
   },
+  "save_as_template": {
+    "read_failed": "メッセージを読み込めませんでした。もう一度お試しください。",
+    "images_dropped": "{count, plural, other {# 件の画像を読み込めなかったため、含めませんでした。}}"
+  },
   "free_busy_share": {
     "button": "自分の空き時間を {group} と共有",
     "already": "空き時間は {group} と共有されています",

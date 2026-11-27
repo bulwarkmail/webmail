@@ -5788,6 +5788,10 @@
     "menu": "Tạo sự kiện…",
     "link_line": "Email: {link}"
   },
+  "save_as_template": {
+    "read_failed": "Không thể đọc thư. Hãy thử lại.",
+    "images_dropped": "{count, plural, other {Không tải được # hình ảnh nên đã bỏ qua.}}"
+  },
   "free_busy_share": {
     "button": "Chia sẻ lịch rảnh/bận của tôi với {group}",
     "already": "Lịch rảnh/bận của bạn đã được chia sẻ với {group}",

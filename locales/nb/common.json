@@ -5776,6 +5776,10 @@
     "menu": "Opprett hendelse…",
     "link_line": "E-post: {link}"
   },
+  "save_as_template": {
+    "read_failed": "Kunne ikke lese meldingen. Prøv igjen.",
+    "images_dropped": "{count, plural, one {Ett bilde kunne ikke lastes inn og ble utelatt.} other {# bilder kunne ikke lastes inn og ble utelatt.}}"
+  },
   "free_busy_share": {
     "button": "Del min ledig/opptatt med {group}",
     "already": "Din ledig/opptatt er delt med {group}",

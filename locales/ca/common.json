@@ -5776,6 +5776,10 @@
     "menu": "Crea un esdeveniment…",
     "link_line": "Correu: {link}"
   },
+  "save_as_template": {
+    "read_failed": "No s'ha pogut llegir el missatge. Torna-ho a provar.",
+    "images_dropped": "{count, plural, one {No s'ha pogut carregar una imatge i s'ha deixat fora.} other {No s'han pogut carregar # imatges i s'han deixat fora.}}"
+  },
   "free_busy_share": {
     "button": "Comparteix la meva disponibilitat amb {group}",
     "already": "La vostra disponibilitat està compartida amb {group}",

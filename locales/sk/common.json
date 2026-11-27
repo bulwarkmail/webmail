@@ -5776,6 +5776,10 @@
     "menu": "Vytvoriť udalosť…",
     "link_line": "E-mail: {link}"
   },
+  "save_as_template": {
+    "read_failed": "Správu sa nepodarilo prečítať. Skúste to znova.",
+    "images_dropped": "{count, plural, one {Jeden obrázok sa nepodarilo načítať a bol vynechaný.} few {# obrázky sa nepodarilo načítať a boli vynechané.} other {# obrázkov sa nepodarilo načítať a boli vynechané.}}"
+  },
   "free_busy_share": {
     "button": "Zdieľať môj voľný čas so skupinou {group}",
     "already": "Váš voľný čas je zdieľaný so skupinou {group}",

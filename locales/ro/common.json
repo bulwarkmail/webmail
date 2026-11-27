@@ -5776,6 +5776,10 @@
     "menu": "Creează eveniment…",
     "link_line": "E-mail: {link}"
   },
+  "save_as_template": {
+    "read_failed": "Mesajul nu a putut fi citit. Încearcă din nou.",
+    "images_dropped": "{count, plural, one {O imagine nu a putut fi încărcată și a fost omisă.} few {# imagini nu au putut fi încărcate și au fost omise.} other {# de imagini nu au putut fi încărcate și au fost omise.}}"
+  },
   "free_busy_share": {
     "button": "Partajează disponibilitatea mea cu {group}",
     "already": "Disponibilitatea dvs. este partajată cu {group}",

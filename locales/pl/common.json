@@ -6421,6 +6421,10 @@
     "menu": "Utwórz wydarzenie…",
     "link_line": "E-mail: {link}"
   },
+  "save_as_template": {
+    "read_failed": "Nie udało się odczytać wiadomości. Spróbuj ponownie.",
+    "images_dropped": "{count, plural, one {Nie udało się wczytać jednego obrazu i został pominięty.} few {Nie udało się wczytać # obrazów i zostały pominięte.} other {Nie udało się wczytać # obrazów i zostały pominięte.}}"
+  },
   "free_busy_share": {
     "button": "Udostępnij moją dostępność grupie {group}",
     "already": "Twoja dostępność jest udostępniona grupie {group}",

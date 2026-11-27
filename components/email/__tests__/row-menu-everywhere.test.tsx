@@ -107,7 +107,7 @@ describe("a message row's right-click menu", () => {
     renderMenu();
     fireEvent.click(screen.getByTestId('ctx-more'));
     expect(labels(screen.getByRole('menu', { name: 'more_actions' }))).toEqual([
-      'forward_as_attachment', 'copy_message', 'copy_conversation', 'rules.title', 'pin', 'export_email', 'print', 'view_source',
+      'forward_as_attachment', 'save_as_template', 'copy_message', 'copy_conversation', 'rules.title', 'pin', 'export_email', 'print', 'view_source',
     ]);
   });
 });

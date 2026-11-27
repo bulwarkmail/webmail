@@ -5784,6 +5784,10 @@
     "menu": "Opprett hending…",
     "link_line": "E-post: {link}"
   },
+  "save_as_template": {
+    "read_failed": "Klarte ikkje lese meldinga. Prøv igjen.",
+    "images_dropped": "{count, plural, one {Eitt bilete kunne ikkje lastast inn og vart utelate.} other {# bilete kunne ikkje lastast inn og vart utelatne.}}"
+  },
   "free_busy_share": {
     "button": "Del ledig/oppteken for meg med {group}",
     "already": "Ledig/oppteken for deg er delt med {group}",

@@ -6421,6 +6421,10 @@
     "menu": "Izveidot notikumu…",
     "link_line": "E-pasts: {link}"
   },
+  "save_as_template": {
+    "read_failed": "Neizdevās nolasīt vēstuli. Mēģiniet vēlreiz.",
+    "images_dropped": "{count, plural, one {# attēlu neizdevās ielādēt, un tas tika izlaists.} other {# attēlus neizdevās ielādēt, un tie tika izlaisti.}}"
+  },
   "free_busy_share": {
     "button": "Kopīgot manu brīvs/aizņemts ar {group}",
     "already": "Jūsu brīvs/aizņemts ir kopīgots ar {group}",
