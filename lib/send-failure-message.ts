@@ -1,4 +1,5 @@
 import { NoLongerScheduledError, RecipientsRejectedError, RequestTimeoutError, ScheduleTooLateError, SubmissionQuotaError, formatRejectedRecipients } from '@/lib/jmap/client';
+import { RescheduleRestoredError } from '@/lib/jmap/reschedule-error';
 import type { RejectedRecipient } from '@/lib/jmap/types';
 
 type Translate = (key: string, values?: Record<string, string>) => string;
@@ -77,6 +78,11 @@ export function rescheduleFailureToast(
       title: stillScheduled,
       message: tViewer('reschedule_recipients_refused', { recipients: formatRejectedRecipients(error.recipients) }),
     };
+  }
+  // The server refused the new time as too far ahead and the original was
+  // put back: it still goes at its old time.
+  if (error instanceof RescheduleRestoredError && error.reason instanceof ScheduleTooLateError) {
+    return { title: stillScheduled, message: sendFailureMessage(error.reason, tComposer) };
   }
   return { title: sendFailureMessage(error, tComposer) };
 }

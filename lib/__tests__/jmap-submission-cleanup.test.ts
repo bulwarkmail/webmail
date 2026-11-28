@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { JMAPClient, NoLongerScheduledError, RecipientsRejectedError, SubmissionQuotaError, prunableSubmissionIds } from '../jmap/client';
+import { JMAPClient, NoLongerScheduledError, RecipientsRejectedError, RescheduleRestoredError, ScheduleTooLateError, SubmissionQuotaError, prunableSubmissionIds } from '../jmap/client';
 import { jmapErrorType } from '../jmap/jmap-error';
 import { undoDelayUntil } from '../outgoing/undo-delay';
 
@@ -954,6 +954,59 @@ describe('cancelEmailSubmission', () => {
       .rejects.toBeInstanceOf(NoLongerScheduledError);
     expect(server.destroyedIds()).toEqual(['original']);
     expect([...server.submissions.keys()]).toEqual([result.emailSubmissionId]);
+  });
+});
+
+// Stalwart advertises 30 days whatever its `futureRelease` limit is, and
+// refuses a longer hold at MAIL FROM (live, 1.1.0, default limit 7 days).
+describe('a hold beyond the server limit (#1897)', () => {
+  const ADVERTISED = 30 * 24 * 60 * 60;
+  // A server whose futureRelease limit is below the 7 days Bulwark assumes.
+  const LIMIT = 2 * 24 * 60 * 60;
+  const holdRefusal = (_key: string, create: Record<string, unknown>): SetError | undefined => {
+    const holdFor = Number((create.envelope as { mailFrom?: { parameters?: { HOLDFOR?: string } } } | undefined)?.mailFrom?.parameters?.HOLDFOR ?? 0);
+    return holdFor > LIMIT
+      ? { type: 'forbiddenMailFrom', description: `Server rejected MAIL-FROM: 501 5.5.4 Requested hold time exceeds maximum of ${LIMIT} seconds.` }
+      : undefined;
+  };
+  const advertisingThirtyDays = () => {
+    const client = createClient();
+    const accounts = (client as unknown as { session: { accounts: Record<string, { accountCapabilities: Record<string, unknown> }> } }).session.accounts;
+    accounts['account-1'].accountCapabilities['urn:ietf:params:jmap:submission'] = { maxDelayedSend: ADVERTISED, submissionExtensions: { FUTURERELEASE: [] } };
+    return client;
+  };
+
+  it('learns the limit from a refused send, without trying another MAIL FROM', async () => {
+    const server = fakeStalwart({ version: '1.0', createAnswer: holdRefusal });
+    const client = advertisingThirtyDays();
+
+    const sending = client.sendEmail(
+      ['bob@example.net'], 'Subject', 'body',
+      undefined, undefined, 'identity-1', 'alias@example.com',
+      undefined, undefined, undefined, undefined, undefined, undefined,
+      new Date(Date.now() + 5 * DAY).toISOString(),
+      'alias@example.com',
+    );
+
+    await expect(sending).rejects.toBeInstanceOf(ScheduleTooLateError);
+    expect(client.getMaxDelayedSend()).toBe(LIMIT);
+    expect(server.requests.flat().filter(([name, args]) => name === 'EmailSubmission/set' && args.create)).toHaveLength(1);
+  });
+
+  it('puts a rescheduled message back at its old time, says why and learns the limit', async () => {
+    const server = fakeStalwart({ version: '1.0', createAnswer: holdRefusal });
+    const oldTime = utcDate(Date.now() + DAY);
+    server.add({ accountId: 'account-1', id: 'original', emailId: 'email-x', sendAt: oldTime, queued: true });
+    const client = advertisingThirtyDays();
+
+    const error = await client.rescheduleEmailSubmission('original', 'email-x', 'identity-1', new Date(Date.now() + 5 * DAY).toISOString(), 'account-1')
+      .catch((e: unknown) => e);
+
+    expect(error).toBeInstanceOf(RescheduleRestoredError);
+    expect((error as RescheduleRestoredError).reason).toBeInstanceOf(ScheduleTooLateError);
+    const restored = server.submissions.get((error as RescheduleRestoredError).restoredSubmissionId)!;
+    expect(Math.abs(Date.parse(restored.sendAt!) - Date.parse(oldTime))).toBeLessThan(2000);
+    expect(client.getMaxDelayedSend()).toBe(LIMIT);
   });
 });
 

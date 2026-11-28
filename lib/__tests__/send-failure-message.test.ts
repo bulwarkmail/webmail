@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { NoLongerScheduledError, RecipientsRejectedError, RequestTimeoutError, ScheduleTooLateError, SubmissionQuotaError, formatRejectedRecipients } from '../jmap/client';
+import { NoLongerScheduledError, RecipientsRejectedError, RequestTimeoutError, RescheduleRestoredError, ScheduleTooLateError, SubmissionQuotaError, formatRejectedRecipients } from '../jmap/client';
 import { SendCancelledCleanupError, cancelFailureToast, partlyRefusedWarning, rescheduleFailureToast, rescheduledToast, sendFailureMessage } from '../send-failure-message';
 
 // Keys of a namespace, returned with their values so the test sees which
@@ -86,6 +86,15 @@ describe('rescheduleFailureToast', () => {
       message: 'email_viewer.reschedule_recipients_refused {"recipients":"bob@example.org (452 4.4.5 Rate limit exceeded, try again later.)"}',
     });
     expect(rescheduleFailureToast(error, tViewer, t).title).toBe('email_viewer.still_scheduled');
+  });
+
+  it('leads with the kept schedule when the server refused the new time as too far ahead (#1897)', () => {
+    const error = new RescheduleRestoredError('too late', 'restored', '2026-09-26T08:00:00Z', new ScheduleTooLateError(604800));
+
+    expect(rescheduleFailureToast(error, tViewer, t, 'Sep 26, 10:00')).toEqual({
+      title: 'email_viewer.still_scheduled_at {"date":"Sep 26, 10:00"}',
+      message: 'email_composer.schedule_send_too_late',
+    });
   });
 
   it('falls back to the send failure message otherwise', () => {

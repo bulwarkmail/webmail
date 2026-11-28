@@ -6072,6 +6072,9 @@ export class JMAPClient implements IJMAPClient {
         await this.makeRoomForSubmission(submissionAccountId);
       } else if (
         (refusal.type === 'forbiddenMailFrom' || refusal.type === 'forbiddenFrom') &&
+        // Stalwart refuses a hold beyond its limit as forbiddenMailFrom too:
+        // another address doesn't change that.
+        parseHoldLimit(refusal.description) === null &&
         mailFrom.toLowerCase() !== identityMailFrom.toLowerCase()
       ) {
         debug.warn('email', `[sendEmail] server refused ${mailFrom} as MAIL FROM (${refusal.type}), sending with ${identityMailFrom}`);
@@ -13320,6 +13323,7 @@ export class JMAPClient implements IJMAPClient {
       const createError = result?.notCreated?.replacement;
       if (createError) {
         if (createError.type === 'overQuota') throw this.submissionQuotaError(createError.description, submissionAccountId);
+        this.throwIfHoldTooLong(createError);
         throw jmapError(createError.description || createError.type || 'Failed to reschedule email', createError);
       }
       const id = result?.created?.replacement?.id;
@@ -13376,7 +13380,7 @@ export class JMAPClient implements IJMAPClient {
         console.error('Failed to restore the original scheduled send after reschedule failure:', restoreError);
       }
       if (restored && !(await withdrawIfDead(restored).catch(() => null))) {
-        throw new RescheduleRestoredError(message, restored.id, restored.sendAt || original?.sendAt);
+        throw new RescheduleRestoredError(message, restored.id, restored.sendAt || original?.sendAt, error);
       }
       // Neither went through: the message is not scheduled any more. Make sure
       // it sits in Drafts rather than in Sent looking like it went out.
