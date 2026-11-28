@@ -4678,6 +4678,7 @@
       "languages": "语言",
       "categories": "类别",
       "related_contacts": "相关联系人",
+      "groups": "群组",
       "crypto_keys": "加密密钥",
       "cert_issuer": "颁发者",
       "cert_expires": "过期",

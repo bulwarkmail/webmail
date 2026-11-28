@@ -73,6 +73,36 @@ describe('ContactDetail', () => {
     expect(screen.getByText('form.context_work, x-hq')).toBeInTheDocument();
   });
 
+  // #1881: the groups the contact is in, between Categories and Related Contacts.
+  describe('groups', () => {
+    const alice: ContactCard = { ...contact, uid: 'urn:uuid:alice1' };
+    const team: ContactCard = { id: 'g1', kind: 'group', addressBookIds: {}, name: { full: 'Team' }, members: { 'urn:uuid:alice1': true } };
+    const board: ContactCard = { id: 'g2', kind: 'group', addressBookIds: {}, name: { full: 'Board' }, members: { alice1: true } };
+    const club: ContactCard = { id: 'g3', kind: 'group', addressBookIds: {}, name: { full: 'Club' }, members: { 'urn:uuid:bob1': true } };
+
+    afterEach(() => {
+      useContactStore.setState({ contacts: [] });
+    });
+
+    it('lists the groups the contact is in by name, and opens one', () => {
+      useContactStore.setState({ contacts: [alice, team, board, club] });
+      const onOpenGroup = vi.fn();
+      render(<ContactDetail contact={alice} onEdit={vi.fn()} onDelete={vi.fn()} onOpenGroup={onOpenGroup} />);
+
+      const section = screen.getByText('detail.groups').closest('section') as HTMLElement;
+      expect(Array.from(section.querySelectorAll('button')).map((b) => b.textContent)).toEqual(['Board', 'Team']);
+      expect(section.textContent).not.toContain('Club');
+      fireEvent.click(screen.getByRole('button', { name: 'Team' }));
+      expect(onOpenGroup).toHaveBeenCalledExactlyOnceWith('g1');
+    });
+
+    it('shows no Groups section for a contact in no group', () => {
+      useContactStore.setState({ contacts: [alice, club] });
+      render(<ContactDetail contact={alice} onEdit={vi.fn()} onDelete={vi.fn()} onOpenGroup={vi.fn()} />);
+      expect(screen.queryByText('detail.groups')).toBeNull();
+    });
+  });
+
   // #1578: relatedTo is keyed by the related card's uid, which is no name.
   describe('related contacts', () => {
     const jane: ContactCard = { id: '2', uid: 'urn:uuid:0C8B2B6E-1D0F-4F0E-9B1E-3D1A5C7E9F00', addressBookIds: {}, name: { full: 'Jane Doe' } };

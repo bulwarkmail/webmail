@@ -4063,6 +4063,7 @@
       "languages": "ภาษา",
       "categories": "หมวดหมู่",
       "related_contacts": "ผู้ติดต่อที่เกี่ยวข้อง",
+      "groups": "กลุ่มผู้ติดต่อ",
       "crypto_keys": "คีย์เข้ารหัส",
       "cert_issuer": "ผู้ออกใบรับรอง",
       "cert_expires": "หมดอายุ",

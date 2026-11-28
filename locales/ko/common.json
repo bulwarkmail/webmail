@@ -4678,6 +4678,7 @@
       "languages": "언어",
       "categories": "카테고리",
       "related_contacts": "관련 연락처",
+      "groups": "그룹",
       "crypto_keys": "암호화 키",
       "cert_issuer": "발급자",
       "cert_expires": "만료일",

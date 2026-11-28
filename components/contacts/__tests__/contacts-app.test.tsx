@@ -425,6 +425,15 @@ describe('ContactsApp', () => {
     });
   });
 
+  it("opens a group from the Groups on a contact's page (#1881)", () => {
+    const team: ContactCard = { id: 'g-team', addressBookIds: {}, kind: 'group', name: { full: 'Team' }, members: { 'c-alice': true, 'c-bob': true } };
+    renderContacts([alice, bob, team]);
+    fireEvent.click(screen.getByText('Alice Smith'));
+    const groups = screen.getByText('detail.groups').closest('section') as HTMLElement;
+    fireEvent.click(within(groups).getByRole('button', { name: 'Team' }));
+    expect(screen.getByText('groups.members_label')).toBeInTheDocument();
+  });
+
   it("marks no member in the list on a group's page, even with a contact open before", () => {
     const team: ContactCard = { id: 'g-team', addressBookIds: {}, kind: 'group', name: { full: 'Team' }, members: { 'c-alice': true, 'c-bob': true } };
     renderContacts([alice, bob, team]);

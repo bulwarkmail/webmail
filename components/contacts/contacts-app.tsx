@@ -1303,6 +1303,7 @@ function ContactsAppContent({ linkSegments: routeSegments }: ContactsAppProps = 
             onMoveTo={selectedContact && canMoveContacts ? () => handleMoveContacts([selectedContact.id]) : undefined}
             onPrint={selectedContact && !printOff ? () => { void printContact(selectedContact); } : undefined}
             onOpenContact={handleSelectContact}
+            onOpenGroup={(groupId) => handleSelectCategory({ groupId })}
             onRemoveRelated={selectedContact ? (key) => { void handleRemoveRelated(selectedContact, key); } : undefined}
             isMobile={isMobile}
             readOnly={selectedContact ? isContactReadOnly(selectedContact) : false}

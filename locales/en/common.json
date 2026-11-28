@@ -4680,6 +4680,7 @@
       "languages": "Languages",
       "categories": "Categories",
       "related_contacts": "Related Contacts",
+      "groups": "Groups",
       "crypto_keys": "Crypto keys",
       "cert_issuer": "Issuer",
       "cert_expires": "Expires",

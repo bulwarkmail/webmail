@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { ContactCard } from '@/lib/jmap/types';
-import { findDuplicateGroups, memberKeys, planGroupMoves, planMerge } from '../merge';
+import { findDuplicateGroups, groupsOfContact, memberKeys, planGroupMoves, planMerge } from '../merge';
 
 const card = (id: string, extra: Partial<ContactCard>): ContactCard => ({ id, addressBookIds: { b1: true }, ...extra });
 const named = (given: string, surname: string) => ({
@@ -139,5 +139,26 @@ describe('planGroupMoves', () => {
 
   it('knows a card under its uid with and without urn:uuid:', () => {
     expect(memberKeys(card('id1', { uid: 'urn:uuid:abc', originalId: 'raw' }))).toEqual(['urn:uuid:abc', 'abc', 'raw', 'id1']);
+  });
+});
+
+// #1881: the groups a contact's page lists.
+describe('groupsOfContact', () => {
+  const anna = card('c1', { uid: 'urn:uuid:anna1' });
+  const group = (id: string, members: Record<string, boolean>) => card(id, { kind: 'group', members });
+
+  it('finds the groups that list the card by uid, bare uid or id', () => {
+    const byUid = group('g1', { 'urn:uuid:anna1': true });
+    const byBareUid = group('g2', { anna1: true });
+    const byId = group('g3', { c1: true });
+    const byPrefixedId = group('g4', { 'urn:uuid:c1': true });
+    const other = group('g5', { 'urn:uuid:bob': true });
+    const removed = group('g6', { 'urn:uuid:anna1': false });
+    expect(groupsOfContact([byUid, byBareUid, byId, byPrefixedId, other, removed], anna).map((g) => g.id))
+      .toEqual(['g1', 'g2', 'g3', 'g4']);
+  });
+
+  it('finds none for a card in no group', () => {
+    expect(groupsOfContact([group('g1', { 'urn:uuid:bob': true }), card('g2', { kind: 'group' })], anna)).toEqual([]);
   });
 });

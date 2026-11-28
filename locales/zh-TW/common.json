@@ -4680,6 +4680,7 @@
       "languages": "語言",
       "categories": "類別",
       "related_contacts": "相關聯絡人",
+      "groups": "群組",
       "crypto_keys": "加密金鑰",
       "cert_issuer": "簽發者",
       "cert_expires": "到期日",

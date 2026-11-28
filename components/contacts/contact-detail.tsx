@@ -24,6 +24,7 @@ import { contactHooks } from "@/lib/plugin-hooks";
 import { contactToView } from "@/lib/plugin-projection";
 import { gateLinkClick } from "@/lib/plugin-hook-result";
 import { contactKeywordNames } from "@/lib/contacts/keywords";
+import { groupsOfContact } from "@/lib/contacts/merge";
 
 interface ContactDetailProps {
   contact: ContactCard | null;
@@ -40,6 +41,8 @@ interface ContactDetailProps {
   onPrint?: () => void;
   /** Show another contact: a related contact's name leads to its card. */
   onOpenContact?: (contactId: string) => void;
+  /** Show a group the contact is in, as its name in the sidebar does. */
+  onOpenGroup?: (groupId: string) => void;
   /** Take an entry out of Related Contacts; offered for one that names no card. */
   onRemoveRelated?: (key: string) => void;
   isMobile?: boolean;
@@ -86,7 +89,7 @@ function getCompletedYears(dateInput: AnniversaryDate): number | null {
 }
 
 
-export function ContactDetail({ contact, onEdit, onDelete, onAddToGroup, onMergeWith, onMoveTo, onCompose, onPrint, onOpenContact, onRemoveRelated, isMobile, className, readOnly = false }: ContactDetailProps) {
+export function ContactDetail({ contact, onEdit, onDelete, onAddToGroup, onMergeWith, onMoveTo, onCompose, onPrint, onOpenContact, onOpenGroup, onRemoveRelated, isMobile, className, readOnly = false }: ContactDetailProps) {
   // Related contacts are stored by uid and shown by name (#1578).
   const loadedContacts = useContactStore((s) => s.contacts);
   // Until the list is in, a uid no loaded card has may still be a contact.
@@ -142,6 +145,8 @@ export function ContactDetail({ contact, onEdit, onDelete, onAddToGroup, onMerge
   const onlineServices = contact.onlineServices ? Object.values(contact.onlineServices) : [];
   const anniversaries = contact.anniversaries ? Object.values(contact.anniversaries) : [];
   const keywords = contactKeywordNames(contact.keywords);
+  const memberOf = contact.kind === "group" ? [] : groupsOfContact(loadedContacts.filter((c) => c.kind === "group"), contact)
+    .sort((a, b) => getContactDisplayName(a).localeCompare(getContactDisplayName(b), locale));
 
   const relatedTo = contact.relatedTo ? Object.entries(contact.relatedTo) : [];
   const preferredLanguages = contact.preferredLanguages ? Object.values(contact.preferredLanguages) : [];
@@ -411,6 +416,33 @@ export function ContactDetail({ contact, onEdit, onDelete, onAddToGroup, onMerge
                   {kw}
                 </span>
               ))}
+            </div>
+          </Section>
+        )}
+
+        {/* The groups the contact is in; each opens the group (#1881). */}
+        {memberOf.length > 0 && (
+          <Section title={t("detail.groups")}>
+            <div className="flex flex-wrap gap-1.5">
+              {memberOf.map((group) => {
+                const groupName = getContactDisplayName(group);
+                return onOpenGroup ? (
+                  <button
+                    key={group.id}
+                    type="button"
+                    onClick={() => onOpenGroup(group.id)}
+                    className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-muted text-foreground hover:bg-muted/70 transition-colors touch-manipulation"
+                  >
+                    <Users className="w-3 h-3" />
+                    {groupName}
+                  </button>
+                ) : (
+                  <span key={group.id} className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-muted text-foreground">
+                    <Users className="w-3 h-3" />
+                    {groupName}
+                  </span>
+                );
+              })}
             </div>
           </Section>
         )}

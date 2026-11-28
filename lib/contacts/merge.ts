@@ -237,6 +237,18 @@ export function memberKeys(card: ContactCard): string[] {
   return [...keys];
 }
 
+const bareUid = (key: string) => (key.startsWith('urn:uuid:') ? key.slice(9) : key);
+
+/**
+ * The groups that list `card` as a member, by id or uid with or without
+ * `urn:uuid:`, as the group's member list matches it (#1881).
+ */
+export function groupsOfContact(groups: ContactCard[], card: ContactCard): ContactCard[] {
+  const keys = new Set(memberKeys(card).map(bareUid));
+  return groups.filter((group) => group.id !== card.id
+    && Object.entries(group.members ?? {}).some(([key, on]) => on && keys.has(bareUid(key))));
+}
+
 /**
  * The groups that list one of the merged cards, with their new members: the
  * merged cards out, the kept card in (under its uid, as "Add to group" does).
