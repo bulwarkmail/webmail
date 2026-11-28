@@ -4111,6 +4111,7 @@
     "move_to_dialog": "移動到…",
     "go_to_folder": "前往{folder}",
     "copy_to_account": "複製到帳戶",
+    "copy_to": "複製到",
     "remove_from_folder": "從此資料夾移除",
     "archive": "封存",
     "delete": "刪除",

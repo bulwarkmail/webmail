@@ -4111,6 +4111,7 @@
     "move_to_dialog": "移動…",
     "go_to_folder": "{folder} に移動",
     "copy_to_account": "アカウントにコピー",
+    "copy_to": "コピー",
     "remove_from_folder": "このフォルダから削除",
     "archive": "アーカイブ",
     "delete": "削除",

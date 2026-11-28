@@ -129,6 +129,12 @@ interface EmailContextMenuProps {
    * (or the single message) and keeps the originals. Hidden when empty.
    */
   copyTargets?: CopyTargetAccount[];
+  /**
+   * The message's own login: "Copy to" lists the folders Move offers, shared
+   * accounts' included, and copies there through onCopyToAccount with this
+   * login (#1888).
+   */
+  copyOwn?: { accountId: string; label: string } | null;
   onCopyToAccount?: (accountId: string, mailboxId: string) => void;
   onBatchForwardAsAttachment?: () => void;
   /** Opens the message in its own window (single message). */
@@ -220,6 +226,7 @@ export function EmailContextMenu({
   onCancelScheduledSend,
   onRescheduleScheduled,
   copyTargets,
+  copyOwn,
   onCopyToAccount,
   onOpenInWindow,
   onExport,
@@ -294,6 +301,9 @@ export function EmailContextMenu({
         : undefined}
     />
   );
+  // A copy into the message's own login: the folders Move offers.
+  const ownCopy = onCopyToAccount && copyOwn && canMoveAnywhere ? copyOwn : null;
+  const canCopy = !!onCopyToAccount && (!!ownCopy || copyTrees.length > 0);
   const renderCopyList = (target: { accountId: string; model: MoveMenuModel }) => (
     <MoveFolderList
       model={target.model}
@@ -326,7 +336,7 @@ export function EmailContextMenu({
     canMove: canMoveAnywhere,
     moveUnavailableHint,
     canRemoveFromFolder: canRemove,
-    canCopyToAccount: !!onCopyToAccount && copyTrees.length > 0,
+    canCopyToAccount: canCopy,
     onReply,
     onReplyAll,
     onForward,
@@ -386,15 +396,29 @@ export function EmailContextMenu({
     </>
   ) : null;
 
-  // Copy to another connected account, keeping the originals.
-  const copyTargetsContent = onCopyToAccount
-    ? copyTrees.map((target) => (
+  // Copy to another folder of the message's login, then to another
+  // connected account, keeping the originals.
+  const copyTargetsContent = onCopyToAccount ? (
+    <>
+      {ownCopy && (
+        <div>
+          {copyTrees.length > 0 && !moveHeading && <ContextMenuHeader>{ownCopy.label}</ContextMenuHeader>}
+          <MoveFolderList
+            model={moveModel}
+            noRecent
+            testIdPrefix="copy-to-folder:"
+            onPick={(mailboxId) => handleAction(() => onCopyToAccount(ownCopy.accountId, mailboxId))}
+          />
+        </div>
+      )}
+      {copyTrees.map((target) => (
         <div key={target.accountId}>
           <ContextMenuHeader>{target.label}</ContextMenuHeader>
           {renderCopyList(target)}
         </div>
-      ))
-    : null;
+      ))}
+    </>
+  ) : null;
 
   // A selection: the same structure as a row's menu, without what needs one
   // message (useSelectionActionList), shared with the reading pane's selection view.
@@ -404,7 +428,7 @@ export function EmailContextMenu({
     canMove: canMoveAnywhere,
     moveUnavailableHint,
     canRemoveFromFolder: canRemove,
-    canCopyToAccount: !!onCopyToAccount && copyTrees.length > 0,
+    canCopyToAccount: canCopy,
     canTag: !!onBatchToggleTag,
     onRestore: batchRestoreTo ? () => onBatchMoveToMailbox?.(batchRestoreTo) : undefined,
     onArchive: onBatchArchive,

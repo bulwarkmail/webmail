@@ -4111,6 +4111,7 @@
     "move_to_dialog": "انتقال به…",
     "go_to_folder": "رفتن به {folder}",
     "copy_to_account": "کپی به حساب",
+    "copy_to": "کپی به",
     "remove_from_folder": "حذف از این پوشه",
     "archive": "بایگانی",
     "delete": "حذف",

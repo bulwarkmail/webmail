@@ -137,8 +137,9 @@ export function requestPrint(key: string, subject?: DeviceSubject): boolean {
 // ── Copy to another account ─────────────────────────────────────────────
 
 /**
- * "Copy to" another connected account: the targets (only with more than one
- * account connected; the message's own login is left out) and the copy.
+ * "Copy to": the message's own login (`ownTarget`, whose folders are the ones
+ * Move offers, shared accounts included, #1888), the other connected
+ * accounts (`copyTargets`, only with more than one connected) and the copy.
  * The targets' folders load once `enabled` turns on (a menu opened).
  */
 export function useCopyToAccount(source: Pick<Email, "sourceClientAccountId"> | null, enabled: boolean) {
@@ -147,6 +148,7 @@ export function useCopyToAccount(source: Pick<Email, "sourceClientAccountId"> | 
   const accountMailboxes = useEmailStore((state) => state.accountMailboxes);
   const fetchAccountMailboxes = useEmailStore((state) => state.fetchAccountMailboxes);
   const copyEmailsToAccount = useEmailStore((state) => state.copyEmailsToAccount);
+  const copyToFolder = useEmailStore((state) => state.copyToFolder);
   const viewingAccountId = useEmailStore((state) => state.viewingAccountId);
   const activeAccountId = useAuthStore((state) => state.activeAccountId);
   const sourceLogin = source ? source.sourceClientAccountId ?? viewingAccountId ?? activeAccountId : null;
@@ -178,7 +180,21 @@ export function useCopyToAccount(source: Pick<Email, "sourceClientAccountId"> | 
     [copyAccounts, accountMailboxes],
   );
 
+  const ownTarget = useMemo(() => {
+    if (!enabled || !sourceLogin) return null;
+    const entry = accounts.find((account) => account.id === sourceLogin);
+    return { accountId: sourceLogin, label: entry?.label || entry?.email || sourceLogin };
+  }, [enabled, sourceLogin, accounts]);
+
   const copyToAccount = useCallback(async (emails: Email[], accountId: string, mailboxId: string) => {
+    // A folder of the messages' own login: a copy there, not to another account.
+    if (accountId === sourceLogin) {
+      await runBatchEmailAction(() => copyToFolder(emails, mailboxId), {
+        success: tNotifications("emails_copied", { count: emails.length }),
+        error: tNotifications("copy_failed"),
+      });
+      return;
+    }
     // Pass the emails, not their ids: an id alone cannot say which
     // account's namesake to copy.
     const target = useEmailStore.getState().accountMailboxes[accountId]?.find((mb) => mb.id === mailboxId);
@@ -192,7 +208,7 @@ export function useCopyToAccount(source: Pick<Email, "sourceClientAccountId"> | 
       success: tNotifications("emails_copied", { count: emails.length }),
       error: tNotifications("copy_failed"),
     });
-  }, [copyEmailsToAccount, tNotifications]);
+  }, [copyEmailsToAccount, copyToFolder, sourceLogin, tNotifications]);
 
-  return { copyTargets, copyToAccount };
+  return { ownTarget, copyTargets, copyToAccount };
 }

@@ -4111,6 +4111,7 @@
     "move_to_dialog": "Flyt til…",
     "go_to_folder": "Gå til {folder}",
     "copy_to_account": "Kopiér til konto",
+    "copy_to": "Kopiér til",
     "remove_from_folder": "Fjern fra denne mappe",
     "archive": "Arkivér",
     "delete": "Slet",

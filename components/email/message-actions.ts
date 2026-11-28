@@ -124,7 +124,7 @@ export interface MessageActionOptions {
   moveUnavailableHint?: string;
   /** The message is also in another folder and the list shows one folder. */
   canRemoveFromFolder?: boolean;
-  /** Another connected account can take a copy. */
+  /** A copy can go somewhere: a folder of the message's own login (#1888) or another connected account. */
   canCopyToAccount?: boolean;
   /** Offer the Rules submenu (the host decides whether it can show it). */
   rules?: boolean;
@@ -318,7 +318,7 @@ export function useMessageActionList(o: MessageActionOptions): MessageActionEntr
         : []),
     ];
     const copy: MessageActionEntry[] = o.canCopyToAccount
-      ? [{ kind: "submenu", key: "copy_to_account", icon: Copy, label: t("copy_to_account"), testId: "ctx-copy-to" }]
+      ? [{ kind: "submenu", key: "copy_to_account", icon: Copy, label: t("copy_to"), testId: "ctx-copy-to" }]
       : [];
     const rules: MessageActionEntry[] = o.rules !== false
       ? [{ kind: "submenu", key: "rules", icon: Filter, label: t("rules.title"), testId: "ctx-rules" }]
@@ -529,7 +529,7 @@ export function useSelectionActionList(o: SelectionActionOptions): { top: Messag
     : [...restore, ...archive, del, SEPARATOR, ...move, SEPARATOR, ...read, ...star, ...tag, SEPARATOR, ...spam]);
 
   const copy: MessageActionEntry[] = o.canCopyToAccount
-    ? [{ kind: "submenu", key: "copy_to_account", icon: Copy, label: t("copy_to_account"), testId: "ctx-copy-to" }]
+    ? [{ kind: "submenu", key: "copy_to_account", icon: Copy, label: t("copy_to"), testId: "ctx-copy-to" }]
     : [];
   const more = tidySeparators([
     item("forward_as_attachment", Paperclip, t("forward_as_attachments"), o.onForwardAsAttachment, { testId: "ctx-batch-forward-as-attachment" }),

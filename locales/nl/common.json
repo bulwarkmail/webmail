@@ -4111,6 +4111,7 @@
     "move_to_dialog": "Verplaatsen naar…",
     "go_to_folder": "Naar {folder}",
     "copy_to_account": "Kopiëren naar account",
+    "copy_to": "Kopiëren naar",
     "remove_from_folder": "Uit deze map verwijderen",
     "archive": "Archiveren",
     "delete": "Verwijderen",

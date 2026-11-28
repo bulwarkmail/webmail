@@ -55,7 +55,7 @@ export function ConversationHeaderActions({ email, actions }: { email: Email; ac
   const archiveEnabled = useArchiveActionEnabled();
   const moveMenu = useContextMenu<null>();
   const moreMenu = useContextMenu<null>();
-  const { copyTargets, copyToAccount } = useCopyToAccount(email, moreMenu.contextMenu.isOpen);
+  const { ownTarget, copyTargets, copyToAccount } = useCopyToAccount(email, moreMenu.contextMenu.isOpen);
   const exportEmail = useEmailExport();
   const [showSource, setShowSource] = useState(false);
   const { mailboxes, moveHeading, selectedMailbox, onArchive, onDelete, onMoveToMailbox } = actions;
@@ -142,6 +142,7 @@ export function ConversationHeaderActions({ email, actions }: { email: Email; ac
           onMarkAsSpam={actions.onMarkAsSpam}
           onUndoSpam={actions.onUndoSpam}
           copyTargets={copyTargets}
+          copyOwn={ownTarget}
           onCopyToAccount={(accountId, mailboxId) => void copyToAccount([email], accountId, mailboxId)}
           // Not under the device policy "No export" of the message's account.
           onExport={canExport(email) ? () => void exportEmail(email, exportFollowUp, source) : undefined}

@@ -4111,6 +4111,7 @@
     "move_to_dialog": "Переместить в…",
     "go_to_folder": "Перейти в {folder}",
     "copy_to_account": "Копировать в аккаунт",
+    "copy_to": "Копировать в",
     "remove_from_folder": "Убрать из этой папки",
     "archive": "В архив",
     "delete": "Удалить",

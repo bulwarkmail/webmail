@@ -4126,6 +4126,7 @@
     "move_to_dialog": "Flytta till…",
     "go_to_folder": "Gå till {folder}",
     "copy_to_account": "Kopiera till konto",
+    "copy_to": "Kopiera till",
     "remove_from_folder": "Ta bort från den här mappen",
     "archive": "Arkivera",
     "delete": "Ta bort",

@@ -595,6 +595,14 @@ interface EmailStore {
    */
   /** Pass emails rather than ids where you have them: an id alone can name another account's namesake. */
   copyEmailsToAccount: (emails: Array<string | Email>, destAccountId: string, destMailboxId: string) => Promise<void>;
+  /**
+   * Copy emails into another folder of their own login, keeping them where
+   * they are (#1888): one of the folders the Move picker offers
+   * (moveFoldersFor), the login's own or a shared account's. In the same
+   * JMAP account the message gets the folder too (one message in two
+   * folders); into another account, Email/copy makes a copy there.
+   */
+  copyToFolder: (emails: Email[], destinationMailboxId: string) => Promise<void>;
   searchEmails: (client: IJMAPClient, query: string) => Promise<void>;
   /**
    * Runs the search held in searchQuery/searchFilters. `transformed` is the
@@ -5888,6 +5896,65 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
         jmapAccountId,
         { keepOriginal: true },
       );
+    }
+  },
+
+  copyToFolder: async (emails, destinationMailboxId) => {
+    if (emails.length === 0) return;
+    const state = get();
+    const auth = useAuthStore.getState();
+    // Looked up among the folders of the messages' login only: the same id
+    // names another folder in any other login's list.
+    const offered = moveFoldersFor(emails, state);
+    if (offered.unavailable) throw new MoveFolderUnavailableError(offered.unavailable);
+    const dest = offered.mailboxes.find((mb) => mb.id === destinationMailboxId);
+    if (!dest) throw new MoveFolderUnavailableError('not_connected');
+    const viewLogin = state.viewingAccountId ?? auth.activeAccountId;
+    // An unstamped message lives in the open folder, which may be a shared one.
+    const openFolder = offered.mailboxes.find((mb) => mb.id === state.selectedMailbox);
+    const destJmapId = dest.originalId ?? dest.id;
+
+    const added: Email[] = [];
+    let addLogin: string | null = null;
+    for (const email of emails) {
+      const stamped = !!(email.sourceClientAccountId && email.sourceAccountId);
+      const login = stamped ? email.sourceClientAccountId! : viewLogin;
+      const client = login ? auth.getClientForAccount(login) ?? (login === auth.activeAccountId ? auth.client : null) : null;
+      if (!login || !client) throw new MoveFolderUnavailableError('not_connected');
+      const sourceJmap = stamped ? email.sourceAccountId : (openFolder?.isShared ? openFolder.accountId : undefined);
+      const sourceAccount = sourceJmap ?? client.getAccountId();
+      const destAccount = dest.accountId ?? client.getAccountId();
+      if (sourceAccount === destAccount) {
+        await client.addEmailToMailbox(email.id, destJmapId, sourceJmap);
+        added.push(email);
+        addLogin = login;
+        continue;
+      }
+      const destLogin = resolveDestLocalAccountId(dest, offered.login ?? login);
+      if (!destLogin) throw new MoveFolderUnavailableError('not_connected');
+      await get().crossAccountMoveEmails(
+        new Map([[login, [email.id]]]),
+        destLogin,
+        destJmapId,
+        dest.isShared ? dest.accountId : undefined,
+        sourceJmap,
+        { keepOriginal: true },
+      );
+    }
+
+    if (added.length === 0) return;
+    // The rows now also say they are in that folder (Remove from this folder
+    // goes by it), and its counters catch up in the background.
+    const keys = new Set(added.map(emailKeyFor));
+    const withFolder = (e: Email): Email => (keys.has(emailKeyFor(e)) ? { ...e, mailboxIds: { ...e.mailboxIds, [dest.id]: true } } : e);
+    set((s) => ({
+      emails: s.emails.map(withFolder),
+      selectedEmail: s.selectedEmail ? withFolder(s.selectedEmail) : s.selectedEmail,
+    }));
+    const refreshClient = addLogin ? auth.getClientForAccount(addLogin) : null;
+    if (refreshClient && addLogin) {
+      if (addLogin === auth.activeAccountId) void get().fetchMailboxes(refreshClient);
+      else void get().fetchAccountMailboxes(refreshClient, addLogin);
     }
   },
 

@@ -100,3 +100,52 @@ describe('Copy to entry of the message menu', () => {
     expect(onMoveToMailbox).toHaveBeenCalledWith('S:junk');
   });
 });
+
+// #1888: Copy to a folder of the message's own login, a shared (team)
+// mailbox's folders included, also with no other account connected.
+describe('Copy to a folder of the same login', () => {
+  const sharedBox = (id: string, name: string, role?: string) =>
+    mailbox(`S:${id}`, { name, role, originalId: id, accountId: 'S', accountName: 'team@example.org', isShared: true });
+  const mailboxes = [
+    mailbox('inbox', { role: 'inbox', name: 'Inbox', accountId: 'A', accountName: 'me@example.org' }),
+    mailbox('projects', { name: 'Projects', accountId: 'A', accountName: 'me@example.org' }),
+    sharedBox('inbox', 'Inbox', 'inbox'),
+    sharedBox('cases', 'Cases'),
+  ];
+  const copyOwn = { accountId: 'local-A', label: 'me@example.org' };
+
+  it("offers the login's own folders and the team mailbox's, and copies into the picked one", () => {
+    const onCopyToAccount = vi.fn();
+    renderMenu({ mailboxes, onCopyToAccount, copyOwn, copyTargets: [] });
+    const entry = screen.getByTestId('ctx-copy-to');
+    expect(entry).toHaveTextContent('copy_to');
+    fireEvent.mouseEnter(entry.parentElement!);
+    expect(screen.getByTestId('copy-to-folder:projects')).toBeTruthy();
+    // The open folder can't take a copy of what it holds.
+    expect(screen.getByTestId('copy-to-folder:inbox')).toBeDisabled();
+    fireEvent.click(screen.getByTestId('copy-to-folder:projects'));
+    expect(onCopyToAccount).toHaveBeenCalledWith('local-A', 'projects');
+  });
+
+  it("copies into a folder of the team mailbox", () => {
+    const onCopyToAccount = vi.fn();
+    renderMenu({ mailboxes, onCopyToAccount, copyOwn, copyTargets: [] });
+    fireEvent.mouseEnter(screen.getByTestId('ctx-copy-to').parentElement!);
+    fireEvent.mouseEnter(screen.getByTestId('move-account:S').parentElement!);
+    fireEvent.click(screen.getByTestId('copy-to-folder:S:cases'));
+    expect(onCopyToAccount).toHaveBeenCalledWith('local-A', 'S:cases');
+  });
+
+  it('lists them above the other accounts, under the login\'s name', () => {
+    renderMenu({
+      mailboxes,
+      onCopyToAccount: vi.fn(),
+      copyOwn,
+      copyTargets: [{ accountId: 'local-B', label: 'bob@example.org', mailboxes: otherMailboxes }],
+    });
+    fireEvent.mouseEnter(screen.getByTestId('ctx-copy-to').parentElement!);
+    const ids = screen.getAllByTestId(/^copy-to(-folder)?:/).map((el) => el.getAttribute('data-testid'));
+    expect(ids.indexOf('copy-to-folder:projects')).toBeLessThan(ids.indexOf('copy-to:local-B:b-work'));
+    expect(screen.getByText('me@example.org')).toBeTruthy();
+  });
+});

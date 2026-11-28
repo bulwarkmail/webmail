@@ -4111,6 +4111,7 @@
     "move_to_dialog": "Mou a…",
     "go_to_folder": "Ves a {folder}",
     "copy_to_account": "Copia a un compte",
+    "copy_to": "Copia a",
     "remove_from_folder": "Treu d'aquesta carpeta",
     "archive": "Arxiva",
     "delete": "Suprimeix",

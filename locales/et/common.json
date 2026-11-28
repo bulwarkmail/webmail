@@ -4111,6 +4111,7 @@
     "move_to_dialog": "Teisalda…",
     "go_to_folder": "Mine kausta {folder}",
     "copy_to_account": "Kopeeri kontole",
+    "copy_to": "Kopeeri kausta",
     "remove_from_folder": "Eemalda sellest kaustast",
     "archive": "Arhiveeri",
     "delete": "Kustuta",

@@ -1300,7 +1300,7 @@ interface ReaderMoreMenuProps {
 /** The reader's ⋮ on a desktop: the row's context menu, anchored to the button (R6). */
 function ReaderMoreMenu({ menu, options, label, mailboxes, moveHeading, selectedMailbox, onMoveToMailbox, onSetTag, pluginEntries }: ReaderMoreMenuProps) {
   const { email } = options;
-  const { copyTargets, copyToAccount } = useCopyToAccount(email, true);
+  const { ownTarget, copyTargets, copyToAccount } = useCopyToAccount(email, true);
   return (
     <EmailContextMenu
       email={email}
@@ -1333,6 +1333,7 @@ function ReaderMoreMenu({ menu, options, label, mailboxes, moveHeading, selected
       onMoveToMailbox={options.canMove ? onMoveToMailbox : undefined}
       onSetTag={onSetTag}
       copyTargets={copyTargets}
+      copyOwn={ownTarget}
       onCopyToAccount={(accountId, mailboxId) => void copyToAccount([email], accountId, mailboxId)}
       onExport={options.onExport}
       onPrint={options.onPrint}
@@ -1392,10 +1393,12 @@ function ReaderMorePanelBody({
   const { email } = options;
   const locale = useLocale();
   const { tagColor } = useKeywordFormat(tagScope);
-  const { copyTargets, copyToAccount } = useCopyToAccount(email, true);
+  const { ownTarget, copyTargets, copyToAccount } = useCopyToAccount(email, true);
+  // A copy into the message's own login: the folders Move offers (#1888).
+  const ownCopy = ownTarget && !moveMenuIsEmpty(moveModel) ? ownTarget : null;
   const entries = useMessageActionList({
     ...options,
-    canCopyToAccount: copyTargets.length > 0,
+    canCopyToAccount: !!ownCopy || copyTargets.length > 0,
     rules: !!rulesTarget,
   });
 
@@ -1411,6 +1414,20 @@ function ReaderMorePanelBody({
   if (sub === 'copy_to_account') {
     return (
       <>
+        {ownCopy && (
+          <div>
+            {copyTargets.length > 0 && (
+              <div className="px-4 pt-3 pb-1 text-xs font-medium text-muted-foreground truncate" title={ownCopy.label}>{ownCopy.label}</div>
+            )}
+            <MoveFolderList
+              variant="panel"
+              noRecent
+              model={moveModel}
+              testIdPrefix="copy-to-folder:"
+              onPick={(mailboxId) => { void copyToAccount([email], ownCopy.accountId, mailboxId); close(); }}
+            />
+          </div>
+        )}
         {copyTargets.map((target) => {
           const model = buildMoveMenu(target.mailboxes.filter((m) => !m.isShared), { locale });
           return (

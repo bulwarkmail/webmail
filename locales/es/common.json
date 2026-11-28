@@ -4111,6 +4111,7 @@
     "move_to_dialog": "Mover a…",
     "go_to_folder": "Ir a {folder}",
     "copy_to_account": "Copiar a cuenta",
+    "copy_to": "Copiar a",
     "remove_from_folder": "Quitar de esta carpeta",
     "archive": "Archivar",
     "delete": "Eliminar",

@@ -4111,6 +4111,7 @@
     "move_to_dialog": "이동…",
     "go_to_folder": "{folder}(으)로 이동",
     "copy_to_account": "계정으로 복사",
+    "copy_to": "복사",
     "remove_from_folder": "이 폴더에서 제거",
     "archive": "보관",
     "delete": "삭제",

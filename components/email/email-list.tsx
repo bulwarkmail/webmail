@@ -590,7 +590,7 @@ export function EmailList({
 
   // "Copy to" lists the folders of the other connected accounts. Only with
   // more than one account connected; the menu's own account is left out.
-  const { copyTargets, copyToAccount } = useCopyToAccount(contextMenuEmail, contextMenu.isOpen);
+  const { ownTarget, copyTargets, copyToAccount } = useCopyToAccount(contextMenuEmail, contextMenu.isOpen);
   // Export, Print and View source from the row (R6), as the reader has them.
   const exportEmail = useEmailExport();
   const [sourceEmail, setSourceEmail] = useState<Email | null>(null);
@@ -1913,6 +1913,7 @@ export function EmailList({
           onCancelScheduledSend={onCancelScheduledSend ? () => void onCancelScheduledSend(contextMenuEmail!) : undefined}
           onRescheduleScheduled={onRescheduleScheduled ? () => onRescheduleScheduled(contextMenuEmail!) : undefined}
           copyTargets={copyTargets}
+          copyOwn={ownTarget}
           onCopyToAccount={async (accountId, mailboxId) => {
             const emails = selectedEmailKeys.has(emailKeyFor(contextMenuEmail!)) && selectedEmailKeys.size > 1
               ? resolveSelectedEmails(useEmailStore.getState())

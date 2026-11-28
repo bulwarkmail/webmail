@@ -4111,6 +4111,7 @@
     "move_to_dialog": "移动到…",
     "go_to_folder": "转到{folder}",
     "copy_to_account": "复制到账户",
+    "copy_to": "复制到",
     "remove_from_folder": "从此文件夹中移除",
     "archive": "归档",
     "delete": "删除",

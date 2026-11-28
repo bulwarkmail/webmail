@@ -4123,6 +4123,7 @@
     "move_to_dialog": "Di chuyển đến…",
     "go_to_folder": "Đi đến {folder}",
     "copy_to_account": "Sao chép vào tài khoản",
+    "copy_to": "Sao chép đến",
     "remove_from_folder": "Xóa khỏi thư mục này",
     "archive": "Lưu trữ",
     "delete": "Xóa",

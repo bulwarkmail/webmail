@@ -4111,6 +4111,7 @@
     "move_to_dialog": "Áthelyezés ide…",
     "go_to_folder": "Ugrás ide: {folder}",
     "copy_to_account": "Másolás fiókba",
+    "copy_to": "Másolás ide",
     "remove_from_folder": "Eltávolítás ebből a mappából",
     "archive": "Archiválás",
     "delete": "Törlés",

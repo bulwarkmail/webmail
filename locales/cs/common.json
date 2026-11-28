@@ -4111,6 +4111,7 @@
     "move_to_dialog": "Přesunout do…",
     "go_to_folder": "Přejít do {folder}",
     "copy_to_account": "Kopírovat do účtu",
+    "copy_to": "Kopírovat do",
     "remove_from_folder": "Odebrat z této složky",
     "archive": "Archivovat",
     "delete": "Odstranit",

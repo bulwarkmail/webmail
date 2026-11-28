@@ -4056,6 +4056,7 @@
     "move_to_dialog": "העברה אל…",
     "go_to_folder": "מעבר אל {folder}",
     "copy_to_account": "העתק לחשבון",
+    "copy_to": "העתק ל",
     "remove_from_folder": "הסרה מתיקייה זו",
     "archive": "ארכיון",
     "delete": "לִמְחוֹק",
