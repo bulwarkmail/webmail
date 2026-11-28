@@ -21,7 +21,7 @@ beforeEach(() => {
   pathname = '/';
   usePluginStore.setState({ initialized: false, initializePlugins: vi.fn().mockResolvedValue(undefined) });
   useThemeStore.setState({ syncServerThemes: vi.fn().mockResolvedValue(undefined) });
-  useAuthStore.setState({ isAuthenticated: false });
+  useAuthStore.setState({ isAuthenticated: false, tokenExpiresAt: null });
 });
 afterEach(() => {
   vi.useRealTimers();
@@ -83,6 +83,23 @@ describe('app events for plugins', () => {
     act(() => { useAuthStore.setState({ isAuthenticated: true }); });
 
     expect(usePluginStore.getState().initializePlugins).toHaveBeenCalledTimes(1);
+  });
+
+  // A tab that slept past its token got a 401 from /api/plugins, and the
+  // start was never tried again (#1895).
+  it('starts the plugins again once the session is renewed, while they are not started', () => {
+    act(() => { useAuthStore.setState({ isAuthenticated: true, tokenExpiresAt: 1000 }); });
+    render(<PluginAppEvents />);
+    const initialize = usePluginStore.getState().initializePlugins as ReturnType<typeof vi.fn>;
+    initialize.mockClear();
+
+    act(() => { useAuthStore.setState({ tokenExpiresAt: 2000 }); });
+    expect(initialize).toHaveBeenCalledTimes(1);
+
+    act(() => { usePluginStore.setState({ initialized: true }); });
+    act(() => { useAuthStore.setState({ tokenExpiresAt: 3000 }); });
+    expect(initialize).toHaveBeenCalledTimes(1);
+    expect(useThemeStore.getState().syncServerThemes).toHaveBeenCalledTimes(1);
   });
 
   // A theme the admin installed used to arrive only once the mail view had

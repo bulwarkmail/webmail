@@ -135,6 +135,14 @@ export function PluginAppEvents() {
     void useThemeStore.getState().syncServerThemes();
   }, [signedIn]);
 
+  // A start that hit a 401 before the session was renewed (a tab that slept
+  // past its token) gave up; the renewed token starts it again (#1895).
+  const tokenExpiresAt = useAuthStore((s) => s.tokenExpiresAt);
+  useEffect(() => {
+    if (!signedIn || !tokenExpiresAt || usePluginStore.getState().initialized) return;
+    void usePluginStore.getState().initializePlugins();
+  }, [signedIn, tokenExpiresAt]);
+
   const readyFired = useRef(false);
   useEffect(() => {
     if (readyFired.current || !pluginsReady || !signedIn) return;

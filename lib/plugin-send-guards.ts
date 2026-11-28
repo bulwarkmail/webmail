@@ -40,6 +40,11 @@ export interface SendGuardSource {
     forcedIds?: readonly string[];
   };
   subscribe(listener: () => void): () => void;
+  /**
+   * Start the plugins again if their start gave up, e.g. on a 401 from a
+   * session that has been renewed since. A send asks before it waits.
+   */
+  start?(): void;
 }
 
 export type SendGuardState = 'loading' | 'failed';
@@ -166,8 +171,13 @@ export async function awaitSendGuards(waitMs: number = SEND_GUARD_WAIT_MS): Prom
       unsubscribe();
       resolve(downSendGuards());
     };
-    unsubscribe = current.subscribe(() => {
+    const check = () => {
       if (!downSendGuards().some((guard) => guard.state === 'loading')) finish();
-    });
+    };
+    unsubscribe = current.subscribe(check);
+    // Nothing may be starting at all: a start that gave up isn't tried again
+    // until something asks, and sends in this tab would wait in vain (#1895).
+    current.start?.();
+    check();
   });
 }

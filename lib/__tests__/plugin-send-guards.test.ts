@@ -98,6 +98,29 @@ describe('awaitSendGuards', () => {
     expect(await waiting).toEqual([{ id: 'send-checks', name: 'Send checks', state: 'loading' }]);
   });
 
+  // A start that got a 401 gave up and was never tried again, so every send
+  // in the tab waited for nothing until a reload (#1895).
+  it('starts the plugins again when their start gave up, and goes on once the guard runs', async () => {
+    const original = usePluginStore.getState().initializePlugins;
+    const initializePlugins = vi.fn(async () => {
+      usePluginStore.setState({ plugins: [guard({ status: 'running' })], initialized: true, serverPluginsSynced: true });
+    });
+    usePluginStore.setState({ plugins: [guard({ status: 'enabled' })], initialized: false, initializePlugins });
+    try {
+      expect(await awaitSendGuards(5000)).toEqual([]);
+      expect(initializePlugins).toHaveBeenCalledTimes(1);
+
+      // Started already: a guard still starting isn't started a second time.
+      usePluginStore.setState({ plugins: [guard({ status: 'enabled' })] });
+      const waiting = awaitSendGuards(5000);
+      usePluginStore.setState({ plugins: [guard({ status: 'running' })] });
+      await waiting;
+      expect(initializePlugins).toHaveBeenCalledTimes(1);
+    } finally {
+      usePluginStore.setState({ initializePlugins: original });
+    }
+  });
+
   it('sees nothing without a source (no plugin store, as in Lite)', async () => {
     const storeSource = getSendGuardSource();
     setSendGuardSource(null);

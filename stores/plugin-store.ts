@@ -996,6 +996,11 @@ if (!IS_LITE) {
       const offPolicy = usePolicyStore.subscribe(listener);
       return () => { offPlugins(); offPolicy(); };
     },
+    // A start that ended signed out (a 401 before the session was renewed)
+    // is not tried again by itself; joins one that is running.
+    start: () => {
+      if (!usePluginStore.getState().initialized) void usePluginStore.getState().initializePlugins();
+    },
   });
 }
 
