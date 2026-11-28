@@ -6036,6 +6036,18 @@
     "stopped_sharing": "{name} har ikke længere adgang til {item}",
     "stop_sharing_failed": "Kunne ikke stoppe deling af {item}"
   },
+  "saved_searches": {
+    "title": "Gemte søgninger",
+    "save": "Gem søgning",
+    "update": "Opdater gemt søgning",
+    "name": "Søgningens navn",
+    "rename": "Omdøb gemt søgning",
+    "delete": "Slet gemt søgning",
+    "confirm_delete": "Vil du slette den gemte søgning »{name}«?",
+    "actions": "Handlinger for {name}",
+    "plugin_filter": "Fjern pluginfilteret for at gemme denne søgning.",
+    "account_scope": "Åbn en mappe i den aktive mailkonto for at gemme en søgning."
+  },
   "advanced_search": {
     "title": "Avanceret søgning",
     "from": "Fra",

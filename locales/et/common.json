@@ -6036,6 +6036,18 @@
     "stopped_sharing": "Kasutajal {name} pole enam ligipääsu üksusele {item}",
     "stop_sharing_failed": "{item} jagamist ei õnnestunud lõpetada"
   },
+  "saved_searches": {
+    "title": "Salvestatud otsingud",
+    "save": "Salvesta otsing",
+    "update": "Uuenda salvestatud otsingut",
+    "name": "Otsingu nimi",
+    "rename": "Nimeta salvestatud otsing ümber",
+    "delete": "Kustuta salvestatud otsing",
+    "confirm_delete": "Kas kustutada salvestatud otsing „{name}“?",
+    "actions": "Toimingud: {name}",
+    "plugin_filter": "Selle otsingu salvestamiseks eemalda pistikprogrammi filter.",
+    "account_scope": "Otsingu salvestamiseks ava aktiivsel meilikontol mõni kaust."
+  },
   "advanced_search": {
     "title": "Täpsem otsing",
     "from": "Saatja",

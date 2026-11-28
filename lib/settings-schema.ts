@@ -453,6 +453,8 @@ export const DENIED_SETTINGS: readonly string[] = [
   // Maps and lists keyed by server ids.
   'allMailFolderIds', 'hiddenSharedMailAccounts', 'sharedMailAccountOrder', 'unifiedExcludedSharedAccounts', 'notificationMutes', 'hiddenCompanyCalendars', 'sharedCalendarColors', 'calendarVisibility',
   'folderIcons', 'folderCountModes', 'preferredIdentityIds', 'signatureSources', 'replyOnlyIdentities',
+  // Saved search criteria can contain private text and belong to their account.
+  'savedSearches',
   // App bookkeeping and UI state, not preferences.
   'onboardingCompleted', 'tourCompleted', 'emailKeywordsChoiceTracked', 'mvUnreadSectionCollapsed', 'mvEverythingElseCollapsed',
   'vacationCalendarBlocks', 'explicitSettings', 'proofreadingNoticeSeen',

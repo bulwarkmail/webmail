@@ -48,6 +48,7 @@ docker run --rm --network host \
   --user "$(id -u):$(id -g)" \
   -v "${REPO_ROOT}":/work -w /work \
   -e IT_NO_DOCKER=1 \
+  -e IT_SETTINGS_SYNC_ENABLED="${IT_SETTINGS_SYNC_ENABLED:-false}" \
   -e HOME=/tmp \
   -e IT_VIDEO="${IT_VIDEO:-}" \
   -e CI="${CI:-}" \

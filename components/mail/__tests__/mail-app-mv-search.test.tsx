@@ -131,6 +131,20 @@ describe('searching in Mountain View while a message is open', () => {
     expect(selectedId()).toBeNull();
   });
 
+  it('explains why a search with an active plugin filter cannot be saved', async () => {
+    useEmailStore.setState({
+      isAdvancedSearchOpen: true,
+      searchFilters: {
+        ...DEFAULT_SEARCH_FILTERS,
+        pluginFilter: { pluginId: 'test', label: 'Plugin results', filter: { subject: 'invoice' } },
+      },
+    });
+    render(<MailApp />);
+    const save = await screen.findByRole('button', { name: 'save' });
+    expect(save).toBeDisabled();
+    expect(save).toHaveAccessibleDescription('plugin_filter');
+  });
+
   it('leaves the message open for the / shortcut, whose field is in the top bar', async () => {
     render(<MailApp />);
     await screen.findByText('message viewer');

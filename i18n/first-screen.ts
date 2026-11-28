@@ -17,7 +17,7 @@ export const FIRST_SCREEN_MESSAGES: readonly string[] = [
   // Small namespaces whole.
   'accessibility_panel', 'advanced_search', 'app_update', 'command_palette', 'common', 'compose_ux',
   'confirm_dialog', 'context_menu', 'desktopReminders', 'email_list', 'fileDrop', 'login',
-  'mail_list_extra', 'mail_p2_list', 'notification_center', 'protocol_handlers', 'pwaNotify', 'shell',
+  'mail_list_extra', 'mail_p2_list', 'notification_center', 'protocol_handlers', 'pwaNotify', 'saved_searches', 'shell',
   'shortcuts', 'sidebar', 'sidebar_apps', 'threads', 'top_bar', 'totp_reauth', 'uxs_login', 'login_a11y', 'welcome',
   // The sign-in page's notices: why the session ended, a wipe, mail the outbox lost.
   'offlineWipe', 'session_limits',

@@ -5721,6 +5721,18 @@
     "week_days_short": "{count, plural, one {# den} few {# dny} many {# dne} other {# dní}}",
     "print": "Tisk…"
   },
+  "saved_searches": {
+    "title": "Uložená hledání",
+    "save": "Uložit hledání",
+    "update": "Aktualizovat uložené hledání",
+    "name": "Název hledání",
+    "rename": "Přejmenovat uložené hledání",
+    "delete": "Smazat uložené hledání",
+    "confirm_delete": "Smazat uložené hledání „{name}“?",
+    "actions": "Akce pro {name}",
+    "plugin_filter": "Chcete-li toto hledání uložit, odeberte filtr doplňku.",
+    "account_scope": "Chcete-li uložit hledání, otevřete složku v aktivním poštovním účtu."
+  },
   "advanced_search": {
     "title": "Pokročilé hledání",
     "from": "Od",

@@ -5721,6 +5721,18 @@
     "week_days_short": "{count, plural, other {#일}}",
     "print": "인쇄…"
   },
+  "saved_searches": {
+    "title": "저장된 검색",
+    "save": "검색 저장",
+    "update": "저장된 검색 업데이트",
+    "name": "검색 이름",
+    "rename": "저장된 검색 이름 바꾸기",
+    "delete": "저장된 검색 삭제",
+    "confirm_delete": "저장된 검색 ‘{name}’을 삭제하시겠습니까?",
+    "actions": "{name} 작업",
+    "plugin_filter": "이 검색을 저장하려면 플러그인 필터를 해제하세요.",
+    "account_scope": "검색을 저장하려면 활성 메일 계정에서 폴더를 여세요."
+  },
   "advanced_search": {
     "title": "상세 검색",
     "from": "보낸 사람",

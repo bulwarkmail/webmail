@@ -5721,6 +5721,18 @@
     "week_days_short": "{count, plural, one {# dzień} few {# dni} many {# dni} other {# dnia}}",
     "print": "Drukuj…"
   },
+  "saved_searches": {
+    "title": "Zapisane wyszukiwania",
+    "save": "Zapisz wyszukiwanie",
+    "update": "Zaktualizuj zapisane wyszukiwanie",
+    "name": "Nazwa wyszukiwania",
+    "rename": "Zmień nazwę zapisanego wyszukiwania",
+    "delete": "Usuń zapisane wyszukiwanie",
+    "confirm_delete": "Usunąć zapisane wyszukiwanie „{name}”?",
+    "actions": "Działania dla {name}",
+    "plugin_filter": "Usuń filtr wtyczki, aby zapisać to wyszukiwanie.",
+    "account_scope": "Otwórz folder na aktywnym koncie pocztowym, aby zapisać wyszukiwanie."
+  },
   "advanced_search": {
     "title": "Wyszukiwanie zaawansowane",
     "from": "Od",

@@ -6036,6 +6036,18 @@
     "stopped_sharing": "{name} no longer has access to {item}",
     "stop_sharing_failed": "Couldn't stop sharing {item}"
   },
+  "saved_searches": {
+    "title": "Saved searches",
+    "save": "Save search",
+    "update": "Update saved search",
+    "name": "Search name",
+    "rename": "Rename saved search",
+    "delete": "Delete saved search",
+    "confirm_delete": "Delete the saved search “{name}”?",
+    "actions": "Actions for {name}",
+    "plugin_filter": "Remove the plugin filter to save this search.",
+    "account_scope": "Open a folder in the active mail account to save a search."
+  },
   "advanced_search": {
     "title": "Advanced Search",
     "from": "From",

@@ -5721,6 +5721,18 @@
     "week_days_short": "{count, plural, one {# giorno} other {# giorni}}",
     "print": "Stampa…"
   },
+  "saved_searches": {
+    "title": "Ricerche salvate",
+    "save": "Salva ricerca",
+    "update": "Aggiorna ricerca salvata",
+    "name": "Nome della ricerca",
+    "rename": "Rinomina ricerca salvata",
+    "delete": "Elimina ricerca salvata",
+    "confirm_delete": "Eliminare la ricerca salvata «{name}»?",
+    "actions": "Azioni per {name}",
+    "plugin_filter": "Rimuovi il filtro del plugin per salvare questa ricerca.",
+    "account_scope": "Apri una cartella dell’account di posta attivo per salvare una ricerca."
+  },
   "advanced_search": {
     "title": "Ricerca avanzata",
     "from": "Da",

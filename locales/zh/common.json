@@ -5721,6 +5721,18 @@
     "week_days_short": "{count, plural, other {#天}}",
     "print": "打印…"
   },
+  "saved_searches": {
+    "title": "已保存的搜索",
+    "save": "保存搜索",
+    "update": "更新已保存的搜索",
+    "name": "搜索名称",
+    "rename": "重命名已保存的搜索",
+    "delete": "删除已保存的搜索",
+    "confirm_delete": "删除已保存的搜索“{name}”？",
+    "actions": "“{name}”的操作",
+    "plugin_filter": "移除插件筛选条件即可保存此搜索。",
+    "account_scope": "在当前邮件账户中打开一个文件夹，即可保存搜索。"
+  },
   "advanced_search": {
     "title": "高级搜索",
     "from": "发件人",

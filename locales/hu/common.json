@@ -6036,6 +6036,18 @@
     "stopped_sharing": "{name} már nem fér hozzá ehhez: {item}",
     "stop_sharing_failed": "Nem sikerült leállítani a(z) {item} megosztását"
   },
+  "saved_searches": {
+    "title": "Mentett keresések",
+    "save": "Keresés mentése",
+    "update": "Mentett keresés frissítése",
+    "name": "Keresés neve",
+    "rename": "Mentett keresés átnevezése",
+    "delete": "Mentett keresés törlése",
+    "confirm_delete": "Törli a(z) „{name}” mentett keresést?",
+    "actions": "Műveletek: {name}",
+    "plugin_filter": "A keresés mentéséhez távolítsa el a bővítmény szűrőjét.",
+    "account_scope": "Keresés mentéséhez nyisson meg egy mappát az aktív levelezési fiókban."
+  },
   "advanced_search": {
     "title": "Speciális keresés",
     "from": "Feladó",

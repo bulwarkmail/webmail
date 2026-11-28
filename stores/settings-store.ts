@@ -48,6 +48,7 @@ import {
 import { PLUGIN_SYNC_FIELD } from '@/lib/plugin-sync';
 import { exportPluginSync, importPluginSync, onPluginSyncChange, setPluginSyncAccount } from '@/lib/plugin-sandbox/synced-prefs';
 import { nextStamp } from '@/lib/settings-metadata-sync';
+import { sanitizeSavedSearches, type SavedSearch } from '@/lib/jmap/search-utils';
 import { getDesktopBridge } from '@/lib/desktop/bridge';
 import { forgetSignedOutChoices, signedOutChoices } from '@/lib/signed-out-choices';
 import { isValidKeywordDefinitionId, MAX_KEYWORD_LABEL_LENGTH } from '@/lib/keyword-nesting';
@@ -621,7 +622,7 @@ const DEVICE_LOCAL_SETTING_KEYS = new Set<string>(['proInterface']);
  * Maps keyed by account id. Every account's server copy carries one, and a
  * server load takes only the loading account's entry.
  */
-const PER_ACCOUNT_MAP_KEYS = new Set<string>(['preferredIdentityIds', 'signatureSources', 'replyOnlyIdentities', 'allMailFolderIds', 'hiddenSharedMailAccounts', 'sharedMailAccountOrder', 'unifiedExcludedSharedAccounts', 'calendarVisibility']);
+const PER_ACCOUNT_MAP_KEYS = new Set<string>(['preferredIdentityIds', 'signatureSources', 'replyOnlyIdentities', 'allMailFolderIds', 'hiddenSharedMailAccounts', 'sharedMailAccountOrder', 'unifiedExcludedSharedAccounts', 'calendarVisibility', 'savedSearches']);
 
 /** A map of plugin id → boolean, whatever came in (sync, import, storage). */
 function booleanRecord(value: unknown): Record<string, boolean> {
@@ -1091,6 +1092,7 @@ interface SettingsState extends AccessibilitySettings {
   // Folders
   folderIcons: Record<string, string>; // mailboxId -> icon name
   folderCountModes: Record<string, FolderCountMode>; // mailboxId -> counter override (#982)
+  savedSearches: Record<string, SavedSearch[]>; // AccountEntry.id -> saved searches
 
   // Keywords (labels/tags)
   emailKeywords: KeywordDefinition[];
@@ -1434,6 +1436,7 @@ const DEFAULT_SETTINGS = {
   compactSharedMailboxes: false,
   hiddenSharedMailAccounts: {} as Record<string, string[]>,
   sharedMailAccountOrder: {} as Record<string, string[]>,
+  savedSearches: {} as Record<string, SavedSearch[]>,
   unifiedExcludedSharedAccounts: {} as Record<string, string[]>,
 
   // Folders
@@ -1822,10 +1825,11 @@ export const useSettingsStore = create<SettingsState>()(
        * settings (device-only ones kept) and templates. Never pushed, since
        * sync may still point at the account the state came from.
        */
-      const resetSyncedState = (opts?: { keepCrossAccountViews?: boolean }) => {
+      const resetSyncedState = (opts?: { keepCrossAccountViews?: boolean; keepSavedSearches?: boolean }) => {
         const defaults: Record<string, unknown> = { ...DEFAULT_SETTINGS };
         for (const key of DEVICE_LOCAL_SETTING_KEYS) delete defaults[key];
         if (opts?.keepCrossAccountViews) for (const key of CROSS_ACCOUNT_VIEW_KEYS) delete defaults[key];
+        if (opts?.keepSavedSearches) delete defaults.savedSearches;
         // What the visitor set on the sign-in page stays, and counts as a
         // change made here, newer than the server copy (lib/signed-out-choices.ts).
         const keptChoices = signedOutChoices();
@@ -1902,9 +1906,8 @@ export const useSettingsStore = create<SettingsState>()(
 
       const buildExport = (opts?: { forSync?: boolean; subscriptionOwner?: string }): string => {
         const state = get();
-        const templateSync = templateSyncBridge?.getSyncedState({
-          accountId: opts?.forSync && syncUsername && syncServerUrl ? generateAccountId(syncUsername, syncServerUrl) : undefined,
-        });
+        const accountId = opts?.forSync && syncUsername && syncServerUrl ? generateAccountId(syncUsername, syncServerUrl) : undefined;
+        const templateSync = templateSyncBridge?.getSyncedState({ accountId });
         const subscriptionSync = calendarSubscriptionSyncBridge?.getSyncedState();
         const settings = {
           fontSize: state.fontSize,
@@ -2048,6 +2051,10 @@ export const useSettingsStore = create<SettingsState>()(
           unifiedExcludedSharedAccounts: state.unifiedExcludedSharedAccounts,
           folderIcons: state.folderIcons,
           folderCountModes: state.folderCountModes,
+          // Search text can be private. Only the sync target's entry goes to its server.
+          savedSearches: accountId
+            ? { [accountId]: state.savedSearches[accountId] ?? [] }
+            : state.savedSearches,
           emailKeywords: state.emailKeywords,
           nestedTags: state.nestedTags,
           emailKeywordsChoiceTracked: state.emailKeywordsChoiceTracked,
@@ -2154,7 +2161,8 @@ export const useSettingsStore = create<SettingsState>()(
         // The choice to keep settings in sync stays: the confirm says other
         // devices change only when sync is on (settings-p2-18), and a reset
         // turning sync back on would push these defaults to all of them.
-        set({ ...DEFAULT_SETTINGS, settingsSyncDisabled: get().settingsSyncDisabled });
+        const { savedSearches, settingsSyncDisabled } = get();
+        set({ ...DEFAULT_SETTINGS, savedSearches, settingsSyncDisabled });
         // The defaults of this instance are the operator's, then the build's.
         applyAdminPolicyPatch();
         applyVisualSettings();
@@ -2294,6 +2302,7 @@ export const useSettingsStore = create<SettingsState>()(
                 if (!isPlainRecord(settings[key])) return;
                 settings[key] = sanitizeVisibilityChoices(settings[key]);
               }
+              if (key === 'savedSearches') settings[key] = sanitizeSavedSearches(settings[key]);
               if (key === 'signatureDetails') {
                 put(key, { signatureDetails: sanitizeSignatureDetails(settings[key]) });
                 return;
@@ -2594,7 +2603,7 @@ export const useSettingsStore = create<SettingsState>()(
         // the other account's settings or pushing them under this name.
         const failWithoutForeignState = () => {
           if (heldByOther) {
-            resetSyncedState();
+            resetSyncedState({ keepSavedSearches: true });
             writeSettingsOwner(null);
             blockedSyncAccountId = accountId;
           }
@@ -2625,7 +2634,7 @@ export const useSettingsStore = create<SettingsState>()(
             syncLog('No server settings found yet');
             // A new account starts from defaults, not from whatever the
             // previous account left in this browser (#1185).
-            if (heldByOther) resetSyncedState({ keepCrossAccountViews });
+            if (heldByOther) resetSyncedState({ keepCrossAccountViews, keepSavedSearches: true });
             writeSettingsOwner(accountId);
             forgetSignedOutChoices();
             pushAfterLoad = localTemplatesAhead(null, accountId) || hasUnsyncedChanges();
@@ -2635,7 +2644,7 @@ export const useSettingsStore = create<SettingsState>()(
             // Importing merges templates and leaves keys the blob lacks as
             // they are, so another account's state would carry over into
             // this one and be pushed back to its server copy.
-            if (heldByOther) resetSyncedState({ keepCrossAccountViews });
+            if (heldByOther) resetSyncedState({ keepCrossAccountViews, keepSavedSearches: true });
             isLoadingFromServer = true;
             // Merge (not replace) per-account maps for the account being loaded,
             // so multi-account logins don't clobber each other by login order.
@@ -2746,6 +2755,7 @@ export const useSettingsStore = create<SettingsState>()(
               state.sharedMailAccountOrder = {};
             }
             state.calendarVisibility = sanitizeVisibilityChoices(state.calendarVisibility);
+            state.savedSearches = sanitizeSavedSearches(state.savedSearches);
             if (!isPlainRecord(state.unifiedExcludedSharedAccounts)) {
               state.unifiedExcludedSharedAccounts = {};
             }

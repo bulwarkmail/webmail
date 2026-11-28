@@ -129,7 +129,7 @@ import { useBrowserNavigation, type NavSnapshot } from "@/hooks/use-browser-navi
 import { debug } from "@/lib/debug";
 import { useNewMailAlerts } from "@/hooks/use-new-mail-alerts";
 import { useMailStatusAnnouncements } from "@/hooks/use-mail-status-announcements";
-import { cn, formatDateTime, getMailboxPath } from "@/lib/utils";
+import { cn, formatDateTime, generateUUID, getMailboxPath } from "@/lib/utils";
 import { localizeMailboxName } from "@/lib/mailbox-label";
 import { KEYWORD_PREFIX, KEYWORD_PREFIX_LEGACY, conversationInList, emailKeyFor, getThreadTagIds, groupEmailsByThread, threadKeyFor } from "@/lib/thread-utils";
 import { shownListEmails, stepListEmail } from "@/lib/list-step";
@@ -150,7 +150,7 @@ import { ContextMenuItem } from "@/components/ui/context-menu";
 import { PromptDialog } from "@/components/ui/prompt-dialog";
 import { DragDropProvider } from "@/contexts/drag-drop-context";
 import { jmapErrorType } from "@/lib/jmap/jmap-error";
-import { isFilterEmpty, isPluginMessageList, activeFilterCount, DEFAULT_SEARCH_FILTERS } from "@/lib/jmap/search-utils";
+import { isFilterEmpty, isPluginMessageList, activeFilterCount, DEFAULT_SEARCH_FILTERS, type SavedSearch } from "@/lib/jmap/search-utils";
 import { SearchBox, type ContactSearchField } from "@/components/search/search-box";
 import { FilterPanelHost } from "@/components/search/filter-panel-host";
 import { SearchFilterPanel, SELECT_CLASS } from "@/components/search/search-filter-panel";
@@ -354,6 +354,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   // Static Lite build: the route params are empty, read the link from the URL.
   const linkSegments = useLiteLinkSegments('mail', routeSegments);
   const t = useTranslations();
+  const tSaved = useTranslations("saved_searches");
   const locale = useLocale();
   // First-start notices wait until the welcome tips are closed: one thing at a time.
   // The page skeleton the gates below draw: the same one the server sent.
@@ -841,6 +842,11 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       : mailboxes),
     [viewingAccountId, accountMailboxes, mailboxes, activeAccountId],
   );
+  const savedSearches = useSettingsStore((state) => activeAccountId ? state.savedSearches?.[activeAccountId] : undefined);
+  const [openedSavedSearch, setOpenedSavedSearch] = useState<{ id: string; accountId: string; viewToken: number } | null>(null);
+  const isOpenedSavedSearchView = useEmailStore((state) =>
+    openedSavedSearch !== null && state.viewToken === openedSavedSearch.viewToken);
+  const savedSearchHelpId = useId();
   // "Move to" for the open message offers the folders of the login it is in
   // (moveFoldersFor); none, with the reason, while those can't be had.
   const readerMove = useMoveFolders(useMemo(() => (selectedEmail ? [selectedEmail] : []), [selectedEmail]));
@@ -5227,6 +5233,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   };
 
   const handleClearSearch = async () => {
+    setOpenedSavedSearch(null);
     setSearchQuery("");
     clearSearchFilters();
     if (!client) return;
@@ -5286,6 +5293,90 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       advancedSearchDebounceRef.current = null;
     }
     await handleAdvancedSearch();
+  };
+
+  const selectedSavedSearch = openedSavedSearch && openedSavedSearch.accountId === activeAccountId
+    && isOpenedSavedSearchView
+    ? savedSearches?.find((search) => search.id === openedSavedSearch.id)
+    : undefined;
+  const savedSearchScopeAvailable = !!activeAccountId && !viewingAccountId && !isUnifiedView && !selectedKeyword;
+  const savedSearchHelp = searchFilters.pluginFilter
+    ? tSaved("plugin_filter")
+    : !savedSearchScopeAvailable ? tSaved("account_scope") : undefined;
+  const canSaveSearch = !!client && !savedSearchHelp && (!!searchQuery.trim() || !isFilterEmpty(searchFilters));
+
+  const changeSavedSearches = (change: (searches: SavedSearch[]) => SavedSearch[]) => {
+    if (!activeAccountId || useAuthStore.getState().activeAccountId !== activeAccountId) return;
+    const { savedSearches, updateSetting } = useSettingsStore.getState();
+    const current = savedSearches[activeAccountId] ?? [];
+    updateSetting("savedSearches", { ...savedSearches, [activeAccountId]: change(current) }, { internal: true });
+  };
+
+  const saveSearch = async (existing?: SavedSearch) => {
+    if (!canSaveSearch || !activeAccountId) return;
+    const state = useEmailStore.getState();
+    const { pluginFilter, ...filters } = state.searchFilters;
+    if (pluginFilter || state.viewingAccountId || state.isUnifiedView || state.selectedKeyword
+      || (!state.searchQuery.trim() && isFilterEmpty(filters))) return;
+    const criteria = { query: state.searchQuery, mailboxId: state.searchMailboxId, filters };
+    const name = existing?.name ?? await promptDialog({
+      title: tSaved("save"),
+      placeholder: tSaved("name"),
+      confirmText: tSaved("save"),
+    });
+    const latest = useEmailStore.getState();
+    if (!name || latest.viewToken !== state.viewToken || latest.searchFilters.pluginFilter
+      || useAuthStore.getState().activeAccountId !== activeAccountId) return;
+    const id = existing?.id ?? generateUUID();
+    changeSavedSearches((searches) => existing
+      ? searches.map((search) => search.id === id ? { ...search, ...criteria } : search)
+      : [...searches, { id, name, ...criteria }]);
+    setOpenedSavedSearch({ id, accountId: activeAccountId, viewToken: state.viewToken });
+  };
+
+  const openSavedSearch = async (search: SavedSearch) => {
+    if (!client || !activeAccountId || viewingAccountId) return;
+    const folder = mailboxes.find((mailbox) => mailbox.id === selectedMailbox)
+      ?? mailboxes.find((mailbox) => mailbox.role === "inbox" && !mailbox.isShared);
+    if (!folder) return;
+    selectAccountMailbox(null, folder.id);
+    setScheduledView(false);
+    setSearchMailboxId(search.mailboxId);
+    setSearchQuery(search.query);
+    setSearchFilters({ ...DEFAULT_SEARCH_FILTERS, ...search.filters });
+    setOpenedSavedSearch({ id: search.id, accountId: activeAccountId, viewToken: useEmailStore.getState().viewToken });
+    if (isMobile) {
+      setSidebarOpen(false);
+      setActiveView("list");
+    }
+    if (isFilterEmpty(search.filters)) {
+      if (advancedSearchDebounceRef.current) clearTimeout(advancedSearchDebounceRef.current);
+      advancedSearchDebounceRef.current = null;
+      await searchEmails(client, search.query);
+    } else {
+      await runAdvancedSearchNow();
+    }
+  };
+
+  const manageSavedSearch = async (search: SavedSearch, action: "rename" | "delete") => {
+    if (action === "rename") {
+      const name = await promptDialog({
+        title: tSaved("rename"),
+        placeholder: tSaved("name"),
+        defaultValue: search.name,
+        confirmText: tSaved("rename"),
+      });
+      if (name && name !== search.name) {
+        changeSavedSearches((searches) => searches.map((item) => item.id === search.id ? { ...item, name } : item));
+      }
+    } else if (await confirmDialog({
+      title: tSaved("delete"),
+      message: tSaved("confirm_delete", { name: search.name }),
+      confirmText: tSaved("delete"),
+      variant: "destructive",
+    })) {
+      changeSavedSearches((searches) => searches.filter((item) => item.id !== search.id));
+    }
   };
 
   useEffect(() => {
@@ -5931,6 +6022,8 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   // update), which change nothing it shows.
   const sidebarHandlers = useStableHandlers({
     onOpenStarred: mvShell ? goToStarred : undefined,
+    onOpenSavedSearch: openSavedSearch,
+    onManageSavedSearch: manageSavedSearch,
     onMailboxSelect: handleMailboxSelect,
     onTagSelect: handleTagSelect,
     onMarkFolderRead: handleMarkFolderRead,
@@ -6709,6 +6802,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
           <ErrorBoundary fallback={SidebarErrorFallback}>
             <Sidebar
               mailboxes={heldSendView.mailboxes}
+              savedSearches={viewingAccountId ? undefined : savedSearches}
               selectedMailbox={selectedMailbox}
               selectedKeyword={selectedKeyword}
               scheduledTotal={heldSendView.scheduledTotal}
@@ -6973,6 +7067,22 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
                       }}
                       folderSelect={!isUnifiedView ? renderSearchFolderSelect(SELECT_CLASS, true) : undefined}
                     />
+                  )}
+                  {!isUnifiedView && (
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Button type="button" size="sm" variant="outline" disabled={!canSaveSearch}
+                        aria-describedby={savedSearchHelp ? savedSearchHelpId : undefined} onClick={() => void saveSearch()}>
+                        {tSaved("save")}
+                      </Button>
+                      {selectedSavedSearch && (
+                        <Button type="button" size="sm" variant="outline" disabled={!canSaveSearch}
+                          aria-describedby={savedSearchHelp ? savedSearchHelpId : undefined}
+                          onClick={() => void saveSearch(selectedSavedSearch)}>
+                          {tSaved("update")}
+                        </Button>
+                      )}
+                      {savedSearchHelp && <p id={savedSearchHelpId} className="text-xs text-muted-foreground">{savedSearchHelp}</p>}
+                    </div>
                   )}
                 </FilterPanelHost>
               )}
