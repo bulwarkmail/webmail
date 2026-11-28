@@ -146,29 +146,31 @@ export function shiftedEnd(oldStart: Date, oldEnd: Date, newStart: Date): Date |
   return new Date(newStart.getTime() + durationMs);
 }
 
-/** What the editor's Show as and Visibility fields hold. */
+/** What the editor's Status, Show as and Visibility fields hold. */
 export interface EventVisibilityChoice {
   freeBusyStatus: CalendarEvent["freeBusyStatus"];
   /** Undefined when the field isn't offered: only the calendar's owner sets privacy. */
   privacy?: CalendarEvent["privacy"];
+  /** Undefined when the field isn't offered: an invitation's status is the organizer's (#1909). */
+  status?: CalendarEvent["status"];
 }
 
 /**
- * Status, free/busy and privacy for a save. A new event is confirmed and
- * gets what the editor holds. An edit sends free/busy and privacy only when
- * the user changed them, and never the status, which the editor has no
- * field for: Stalwart 1.0 refuses an edit of one occurrence whose privacy
- * differs from its series', and an event without CLASS has no privacy at
- * all. Pure, for testing.
+ * Status, free/busy and privacy for a save. A new event gets what the
+ * editor holds, confirmed unless the user picked another status. An edit
+ * sends each only when the user changed it: Stalwart 1.0 refuses an edit of
+ * one occurrence whose privacy differs from its series', and an event
+ * without CLASS or STATUS has no privacy or status at all. Pure, for testing.
  */
 export function savedStatusFields(
   event: CalendarEvent | null | undefined,
   choice: EventVisibilityChoice = { freeBusyStatus: "busy", privacy: "public" },
 ): Partial<Pick<CalendarEvent, "status" | "freeBusyStatus" | "privacy">> {
   if (!event) {
-    return { status: "confirmed", freeBusyStatus: choice.freeBusyStatus, privacy: choice.privacy ?? "public" };
+    return { status: choice.status ?? "confirmed", freeBusyStatus: choice.freeBusyStatus, privacy: choice.privacy ?? "public" };
   }
-  const fields: Partial<Pick<CalendarEvent, "freeBusyStatus" | "privacy">> = {};
+  const fields: Partial<Pick<CalendarEvent, "status" | "freeBusyStatus" | "privacy">> = {};
+  if (choice.status && choice.status !== (event.status ?? "confirmed")) fields.status = choice.status;
   if (choice.freeBusyStatus !== (event.freeBusyStatus ?? "busy")) fields.freeBusyStatus = choice.freeBusyStatus;
   if (choice.privacy && choice.privacy !== (event.privacy ?? "public")) fields.privacy = choice.privacy;
   return fields;
@@ -471,6 +473,8 @@ export function EventModal({
     if (!seed && !showAsPickedRef.current) setFreeBusyStatus(defaultShowAs(next));
   };
   const [privacy, setPrivacy] = useState<CalendarEvent["privacy"]>(seed?.privacy ?? "public");
+  // Confirmed, tentative or cancelled (#1909). A copy starts confirmed.
+  const [status, setStatus] = useState<CalendarEvent["status"]>(event?.status ?? "confirmed");
   // The event's own colour; null paints it in its calendar's (#1668).
   const [color, setColor] = useState<string | null>(seed?.color || null);
   // The zone the fields are on: none for an all-day event.
@@ -715,10 +719,10 @@ export function EventModal({
   const formState = useMemo(() => ({
     title, description, location, virtualLocation, startDate, startTime, endDate, endTime, allDay, timeZone,
     calendarId, recurrence, customRule, useDefaultAlerts, alertRows, preservedAlerts, attendees, sendInvitations,
-    freeBusyStatus, privacy, color, removedAttachments, pendingAttachments: pendingAttachments.map((p) => p.id),
+    freeBusyStatus, privacy, status, color, removedAttachments, pendingAttachments: pendingAttachments.map((p) => p.id),
   }), [title, description, location, virtualLocation, startDate, startTime, endDate, endTime, allDay, timeZone,
     calendarId, recurrence, customRule, useDefaultAlerts, alertRows, preservedAlerts, attendees, sendInvitations,
-    freeBusyStatus, privacy, color, removedAttachments, pendingAttachments]);
+    freeBusyStatus, privacy, status, color, removedAttachments, pendingAttachments]);
   const [initialForm] = useState(formState);
   const isDirty = mode === "edit" && JSON.stringify(formState) !== JSON.stringify(initialForm);
   useEffect(() => { onDirtyChange?.(isDirty); }, [isDirty, onDirtyChange]);
@@ -733,7 +737,7 @@ export function EventModal({
     setCalendarId(f.calendarId); setRecurrence(f.recurrence); setCustomRule(f.customRule); setShowRecurrenceEditor(false);
     setUseDefaultAlerts(f.useDefaultAlerts); setAlertRows(f.alertRows); setPreservedAlerts(f.preservedAlerts); setRefreshDefaults(false);
     setAttendees(f.attendees); setSendInvitations(f.sendInvitations);
-    setFreeBusyStatus(f.freeBusyStatus); setPrivacy(f.privacy); setColor(f.color); showAsPickedRef.current = false;
+    setFreeBusyStatus(f.freeBusyStatus); setPrivacy(f.privacy); setStatus(f.status); setColor(f.color); showAsPickedRef.current = false;
   }, [initialForm]);
 
   const { dialogProps: discardDialogProps, confirm: confirmDiscard } = useConfirmDialog();
@@ -1058,7 +1062,11 @@ export function EventModal({
       timeZone: allDay ? null : timeZone,
       showWithoutTime: allDay,
       calendarIds: { [calendarId]: true },
-      ...savedStatusFields(event, { freeBusyStatus, privacy: privacyEditable ? privacy : undefined }),
+      ...savedStatusFields(event, {
+        freeBusyStatus,
+        privacy: privacyEditable ? privacy : undefined,
+        status: userIsOrganizer ? status : undefined,
+      }),
     };
     // Sent only when it changed; null goes back to the calendar's colour.
     if (event ? color !== (event.color || null) : !!color) data.color = color;
@@ -1232,7 +1240,7 @@ export function EventModal({
       savingRef.current = false;
       setIsSaving(false);
     }
-  }, [title, description, location, virtualLocation, startDate, startTime, endDate, endTime, allDay, timeZone, initialForm, calendarId, calendars, recurrence, customRule, useDefaultAlerts, defaultAlerts, alertRows, preservedAlerts, attendees, initialAttendees, sendInvitations, freeBusyStatus, privacy, privacyEditable, color, currentUserEmails, userIsOrganizer, organizerOnBehalf, resolveContactName, event, seed, eventDescription, onSave, isSaving, defaultEventLength, pendingAttachments, removedAttachments, attachTarget, t]);
+  }, [title, description, location, virtualLocation, startDate, startTime, endDate, endTime, allDay, timeZone, initialForm, calendarId, calendars, recurrence, customRule, useDefaultAlerts, defaultAlerts, alertRows, preservedAlerts, attendees, initialAttendees, sendInvitations, freeBusyStatus, privacy, privacyEditable, status, color, currentUserEmails, userIsOrganizer, organizerOnBehalf, resolveContactName, event, seed, eventDescription, onSave, isSaving, defaultEventLength, pendingAttachments, removedAttachments, attachTarget, t]);
 
   // The user's own answer, and the owner's in a calendar shared with them
   // (lib/calendar-delegate.ts).
@@ -1844,6 +1852,22 @@ export function EventModal({
                   : t("form.visibility_hint_public")}
                 {recurrence !== "none" && <> {t("form.visibility_series")}</>}
               </p>
+            )}
+            {/* Only the organizer sets an event's status: an invitation's is theirs (#1909). */}
+            {userIsOrganizer && (
+              <div>
+                <label htmlFor={labelFor("status")} className="text-sm font-medium mb-1 block">{t("form.status")}</label>
+                <select
+                  id={labelFor("status")}
+                  value={status}
+                  onChange={(e) => setStatus(e.target.value as CalendarEvent["status"])}
+                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-hidden"
+                >
+                  <option value="confirmed">{t("form.status_confirmed")}</option>
+                  <option value="tentative">{t("form.status_tentative")}</option>
+                  <option value="cancelled">{t("form.status_cancelled")}</option>
+                </select>
+              </div>
             )}
           </div>
 
