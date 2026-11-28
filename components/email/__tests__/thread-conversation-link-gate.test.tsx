@@ -23,6 +23,9 @@ vi.stubGlobal('ResizeObserver', NoopResizeObserver);
 
 const { ThreadConversationView } = await import('@/components/email/thread-conversation-view');
 const { clearAllHooks, uiHooks } = await import('@/lib/plugin-hooks');
+const { usePolicyStore } = await import('@/stores/policy-store');
+const { useSettingsStore } = await import('@/stores/settings-store');
+const { useSidebarAppFramesStore } = await import('@/stores/sidebar-app-frames-store');
 
 const BODY = '<p>hi</p><a id="web" href="https://site.example/a">web</a><a id="app" href="/settings/accounts">app</a>';
 
@@ -126,6 +129,101 @@ describe('conversation view link gate, more paths', () => {
     const ev = new MouseEvent('auxclick', { bubbles: true, cancelable: true, button: 1 });
     doc.getElementById('web')!.dispatchEvent(ev);
     expect(ev.defaultPrevented).toBe(false);
+    expect(open).not.toHaveBeenCalled();
+  }, 30_000);
+});
+
+// A link to an admin inline app's origin (a chat app's permalink) opens that
+// app in its pane, at that address; a modifier, another origin or a user's own
+// app keep the new tab.
+describe('conversation view, a link to a sidebar app', () => {
+  const POST = 'https://chat.example.com/team/pl/abc123';
+  const appBody = `<a id="post" href="${POST}">post</a><a id="other" href="https://other.example.com/x">other</a>`;
+  const chat = { id: 'chat', name: 'Chat', url: 'https://chat.example.com/', icon: 'Globe', openMode: 'inline' as const, showOnMobile: false };
+  let shownApp: { src?: string; name: string } | null = null;
+
+  function renderApp(apps: (typeof chat | { openMode: 'tab' })[]) {
+    usePolicyStore.setState({ policy: { ...usePolicyStore.getState().policy, defaultSidebarApps: apps as never } });
+    shownApp = null;
+    useSidebarAppFramesStore.setState({ frames: [], shown: null, hosts: [{ id: 7, show: (app) => { shownApp = app; } }] });
+    const doc = renderBody();
+    doc.body.innerHTML = appBody;
+    return doc;
+  }
+  const press = (el: Element, init: MouseEventInit = {}, type = 'click') => {
+    const ev = new MouseEvent(type, { bubbles: true, cancelable: true, ...init });
+    el.dispatchEvent(ev);
+    return ev.defaultPrevented;
+  };
+
+  afterEach(() => {
+    usePolicyStore.setState({ policy: { ...usePolicyStore.getState().policy, defaultSidebarApps: [] } });
+    useSidebarAppFramesStore.setState({ frames: [], shown: null, hosts: [] });
+    useSettingsStore.setState({ sidebarApps: [] });
+  });
+
+  it('opens the admin app at the post in its pane, no tab', async () => {
+    const open = vi.spyOn(window, 'open').mockReturnValue(null);
+    const doc = renderApp([chat]);
+    expect(press(doc.getElementById('post')!)).toBe(true);
+    await waitFor(() => expect(shownApp).toMatchObject({ src: POST, name: 'Chat' }));
+    expect(open).not.toHaveBeenCalled();
+  }, 30_000);
+
+  it('keeps a new tab for Ctrl / Cmd / Shift+click and another origin', async () => {
+    const open = vi.spyOn(window, 'open').mockReturnValue(null);
+    const doc = renderApp([chat]);
+    press(doc.getElementById('post')!, { ctrlKey: true });
+    press(doc.getElementById('post')!, { metaKey: true });
+    press(doc.getElementById('post')!, { shiftKey: true });
+    press(doc.getElementById('other')!);
+    await waitFor(() => expect(open).toHaveBeenCalledTimes(4));
+    expect(open).toHaveBeenNthCalledWith(1, POST, '_blank', 'noopener,noreferrer');
+    expect(open).toHaveBeenNthCalledWith(4, 'https://other.example.com/x', '_blank', 'noopener,noreferrer');
+    expect(shownApp).toBeNull();
+  }, 30_000);
+
+  it("keeps a new tab for a tab-mode admin app and a user's own inline app", async () => {
+    const open = vi.spyOn(window, 'open').mockReturnValue(null);
+    useSettingsStore.setState({ sidebarApps: [{ ...chat, id: 'mine' }] });
+    const doc = renderApp([{ ...chat, openMode: 'tab' }]);
+    press(doc.getElementById('post')!);
+    await waitFor(() => expect(open).toHaveBeenCalledWith(POST, '_blank', 'noopener,noreferrer'));
+    expect(shownApp).toBeNull();
+  }, 30_000);
+
+  // The app is decided on the address the link check hands back, in the
+  // HTML body and the plain-text one alike.
+  it("follows the link check's rewrite onto the app's origin, in both bodies", async () => {
+    const open = vi.spyOn(window, 'open').mockReturnValue(null);
+    uiHooks.onBeforeExternalLink.register('p1', (ctx: { href: string }) =>
+      (ctx.href.startsWith('https://other.example.com/') ? { href: POST } : { href: 'https://other.example.com/y' }));
+    const doc = renderApp([chat]);
+    press(doc.getElementById('other')!);
+    await waitFor(() => expect(shownApp).toMatchObject({ src: POST }));
+    // The app's own link rewritten elsewhere: a new tab.
+    press(doc.getElementById('post')!);
+    await waitFor(() => expect(open).toHaveBeenCalledWith('https://other.example.com/y', '_blank', 'noopener,noreferrer'));
+
+    shownApp = null;
+    open.mockClear();
+    const root = renderBody(`See https://other.example.com/x or ${POST}`);
+    const [other, post] = root.querySelectorAll('[data-plugin-source="email-body"] a');
+    expect(press(other)).toBe(true);
+    await waitFor(() => expect(shownApp).toMatchObject({ src: POST }));
+    expect(press(post)).toBe(true);
+    await waitFor(() => expect(open).toHaveBeenCalledWith('https://other.example.com/y', '_blank', 'noopener,noreferrer'));
+  }, 30_000);
+
+  it('asks the link check first, which may stop it', async () => {
+    const open = vi.spyOn(window, 'open').mockReturnValue(null);
+    const hook = vi.fn(() => false);
+    uiHooks.onBeforeExternalLink.register('p1', hook);
+    const doc = renderApp([chat]);
+    press(doc.getElementById('post')!);
+    await waitFor(() => expect(hook).toHaveBeenCalledWith(expect.objectContaining({ href: POST })));
+    await new Promise((r) => setTimeout(r, 20));
+    expect(shownApp).toBeNull();
     expect(open).not.toHaveBeenCalled();
   }, 30_000);
 });

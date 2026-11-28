@@ -79,6 +79,32 @@ describe('plain-text mail', () => {
   });
 });
 
+// A link to an admin inline app opens it in its pane, at that address.
+describe('plain-text mail, a link to a sidebar app', () => {
+  it('opens the admin app at the link, and a Ctrl+click as before', async () => {
+    const { usePolicyStore } = await import('@/stores/policy-store');
+    const { useSidebarAppFramesStore } = await import('@/stores/sidebar-app-frames-store');
+    const policy = usePolicyStore.getState().policy;
+    usePolicyStore.setState({ policy: { ...policy, defaultSidebarApps: [
+      { id: 'chat', name: 'Chat', url: 'https://chat.example.com/', icon: 'Globe', openMode: 'inline', showOnMobile: false },
+    ] } });
+    let shownApp: { src?: string } | null = null;
+    useSidebarAppFramesStore.setState({ frames: [], shown: null, hosts: [{ id: 3, show: (app) => { shownApp = app; } }] });
+    try {
+      const { container } = await open(message('text/plain', 'See https://chat.example.com/team/pl/abc'));
+      const link = container.querySelector('[data-plugin-source="email-body"] a') as HTMLAnchorElement;
+      expect(fireEvent.click(link, { ctrlKey: true })).toBe(true);
+      expect(shownApp).toBeNull();
+      expect(fireEvent.click(link)).toBe(false);
+      await waitFor(() => expect(shownApp?.src).toBe('https://chat.example.com/team/pl/abc'));
+      expect(open$).not.toHaveBeenCalled();
+    } finally {
+      usePolicyStore.setState({ policy });
+      useSidebarAppFramesStore.setState({ frames: [], shown: null, hosts: [] });
+    }
+  });
+});
+
 // The body iframe's middle-click (jsdom doesn't load srcdoc, so the viewer
 // never wires it here) is covered by the conversation view's test of the
 // same handler and by integration/tests/22-ent-plugins.spec.ts.

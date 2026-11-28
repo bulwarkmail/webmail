@@ -210,6 +210,7 @@ import { ResizeHandle } from "@/components/layout/resize-handle";
 import { emailHooks, renderHooks } from "@/lib/plugin-hooks";
 import { emitThreadExpand } from "@/lib/plugin-thread-expand";
 import { gateLinkClick, linkCheckActive, linkText, resolveExternalLink } from "@/lib/plugin-hook-result";
+import { gateAppLinkClick, isPlainLinkClick, openCheckedLink } from "@/lib/sidebar-app-links";
 import type { AttachmentInfo, AttachmentPreview } from "@/lib/plugin-types";
 import { useAttachmentDrag, isDragOutSupported, type AttachmentDragSource } from "@/hooks/use-attachment-drag";
 import type { IJMAPClient } from "@/lib/jmap/client-interface";
@@ -4191,9 +4192,12 @@ export function EmailViewer({
           };
           // A plugin returns false to stop the link or { href } to send it
           // somewhere else (a web address only).
+          const plain = isPlainLinkClick(ev);
           const target = await resolveExternalLink(ctx);
-          if (!target) return;
-          window.open(target, '_blank', 'noopener,noreferrer');
+          // A link to an admin inline app (a chat's permalink) opens that app
+          // in its pane, as its rail button does, at that address; with a
+          // modifier key, a new tab as before.
+          if (target) openCheckedLink(target, plain);
         };
         doc.addEventListener('click', onLinkClick, true);
         doc.addEventListener('auxclick', onLinkClick, true);
@@ -6174,7 +6178,7 @@ export function EmailViewer({
                 onContextMenu={(e) => selectionMenu.onElementContextMenu(e, email?.id)}
                 // A plain-text body renders in the page, not the iframe: its
                 // links go through the link check here.
-                onClick={(e) => gateLinkClick(e, { emailId: email?.id })}
+                onClick={(e) => gateAppLinkClick(e, { emailId: email?.id })}
                 onAuxClick={(e) => gateLinkClick(e, { emailId: email?.id })}
                 dangerouslySetInnerHTML={plainBodyHtml}
                 style={{
