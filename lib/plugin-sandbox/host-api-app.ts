@@ -136,6 +136,7 @@ export const SHARED_SETTINGS = [
   'sendDelaySeconds', 'sendConfirmation', 'defaultReplyMode', 'plainTextMode', 'signaturePosition', 'signatureSeparatorEnabled',
   'signatureNewMailEnabled', 'signatureReplyForwardEnabled',
   'requestReadReceiptDefault', 'requestDsnDefault', 'readReceiptResponse', 'autoSelectReplyIdentity', 'archiveAfterReply',
+  'sharedSentRecipientSuggestions',
   'showWeekNumbers', 'calendarWorkingDays', 'enableCalendarTasks', 'showBirthdayCalendar',
   'emailNotificationsEnabled', 'emailNotificationSound', 'calendarNotificationsEnabled',
   'enableUnifiedMailbox', 'sessionTimeout',
