@@ -6423,7 +6423,8 @@
   },
   "save_as_template": {
     "read_failed": "No se pudo leer el mensaje. Vuelve a intentarlo.",
-    "images_dropped": "{count, plural, one {No se pudo cargar una imagen y se ha omitido.} other {No se pudieron cargar # imágenes y se han omitido.}}"
+    "images_dropped": "{count, plural, one {No se pudo cargar una imagen y se ha omitido.} other {No se pudieron cargar # imágenes y se han omitido.}}",
+    "too_large_to_sync": "Esta plantilla supera los 8 KB que el servidor guarda por plantilla, así que solo se quedará en este navegador."
   },
   "free_busy_share": {
     "button": "Compartir mi disponibilidad con {group}",

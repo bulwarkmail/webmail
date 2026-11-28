@@ -5778,7 +5778,8 @@
   },
   "save_as_template": {
     "read_failed": "Meddelelsen kunne ikke læses. Prøv igen.",
-    "images_dropped": "{count, plural, one {Ét billede kunne ikke indlæses og blev udeladt.} other {# billeder kunne ikke indlæses og blev udeladt.}}"
+    "images_dropped": "{count, plural, one {Ét billede kunne ikke indlæses og blev udeladt.} other {# billeder kunne ikke indlæses og blev udeladt.}}",
+    "too_large_to_sync": "Skabelonen er større end de 8 KB, serveren gemmer pr. skabelon, så den bliver kun i denne browser."
   },
   "free_busy_share": {
     "button": "Del min ledig/optaget med {group}",

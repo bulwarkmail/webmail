@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import type { Attachment, Email } from '@/lib/jmap/types';
-import { embedCidImages, isOwnMail, templateDraftFromEmail } from '../template-from-email';
+import { embedCidImages, isOwnMail, isTooLargeToSync, templateDraftFromEmail } from '../template-from-email';
 
 const part = (cid: string, blobId: string): Attachment => ({ partId: blobId, blobId, size: 10, type: 'image/png', cid, disposition: 'inline' });
 
@@ -118,5 +118,14 @@ describe('isOwnMail', () => {
     expect(isOwnMail(from('someone@example.com'), ['drafts'], [])).toBe(true);
     expect(isOwnMail(from('Me@Example.com'), ['inbox'], ['me@example.com'])).toBe(true);
     expect(isOwnMail(from('someone@example.com'), ['inbox'], ['me@example.com'])).toBe(false);
+  });
+});
+
+describe('isTooLargeToSync', () => {
+  const data = (body: string) => ({ name: 'Logo', subject: 'Hello', body, isHTML: true, category: '', isFavorite: false });
+
+  it('measures the template as the account would store it', () => {
+    expect(isTooLargeToSync(data('<p>Hello</p>'))).toBe(false);
+    expect(isTooLargeToSync(data(`<img src="data:image/png;base64,${'A'.repeat(8192)}">`))).toBe(true);
   });
 });

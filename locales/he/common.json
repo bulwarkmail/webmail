@@ -6235,7 +6235,8 @@
   },
   "save_as_template": {
     "read_failed": "לא ניתן היה לקרוא את ההודעה. נסו שוב.",
-    "images_dropped": "{count, plural, one {תמונה אחת לא נטענה והושמטה.} other {# תמונות לא נטענו והושמטו.}}"
+    "images_dropped": "{count, plural, one {תמונה אחת לא נטענה והושמטה.} other {# תמונות לא נטענו והושמטו.}}",
+    "too_large_to_sync": "התבנית גדולה מ־8 KB שהשרת שומר לכל תבנית, ולכן היא תישאר רק בדפדפן הזה."
   },
   "free_busy_share": {
     "button": "שתף את הזמינות שלי עם {group}",

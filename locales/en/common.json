@@ -5778,7 +5778,8 @@
   },
   "save_as_template": {
     "read_failed": "Couldn't read the message. Try again.",
-    "images_dropped": "{count, plural, one {One image couldn't be loaded and was left out.} other {# images couldn't be loaded and were left out.}}"
+    "images_dropped": "{count, plural, one {One image couldn't be loaded and was left out.} other {# images couldn't be loaded and were left out.}}",
+    "too_large_to_sync": "This template is larger than the 8 KB the server keeps per template, so it will stay in this browser only."
   },
   "free_busy_share": {
     "button": "Share my free/busy with {group}",

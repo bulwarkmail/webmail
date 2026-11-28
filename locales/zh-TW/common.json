@@ -5778,7 +5778,8 @@
   },
   "save_as_template": {
     "read_failed": "無法讀取郵件。請再試一次。",
-    "images_dropped": "{count, plural, other {有 # 張圖片無法載入，已略過。}}"
+    "images_dropped": "{count, plural, other {有 # 張圖片無法載入，已略過。}}",
+    "too_large_to_sync": "此範本超過伺服器為每個範本保存的 8 KB 上限，因此只會保留在此瀏覽器中。"
   },
   "free_busy_share": {
     "button": "與 {group} 共用我的忙碌/空閒時間",

@@ -5,6 +5,8 @@ import { normalizeCid } from '@/lib/attachment-visibility';
 import { formatRecipient } from '@/lib/email-composer-utils';
 import { stripPlainTextQuotes, stripQuotedHtml } from '@/lib/quote-collapse';
 import { stripSubjectPrefixes } from '@/lib/subject-prefix';
+import { isTooLargeForMetadata } from '@/lib/templates/metadata-templates';
+import type { TemplateData } from '@/lib/templates/template-reducer';
 
 /** What "Save as template" on a message keeps of it. */
 export interface TemplateDraftFromEmail {
@@ -115,4 +117,14 @@ export async function templateDraftFromEmail(
   // Before sanitizing: the clients' quote markers (classes, ids) are found as they wrote them.
   const embedded = await embedCidImages(sanitizeEmailHtml(stripQuotedHtml(body)), email.attachments ?? [], options.loadImage);
   return { subject, body: embedded.html, isHTML: true, ...recipients, droppedImages: embedded.dropped };
+}
+
+/**
+ * Whether the template saved from `data` would be too large for the account
+ * to keep, and so would stay in this browser. The id and dates are not known
+ * before saving; placeholders of the same length stand in for them.
+ */
+export function isTooLargeToSync(data: TemplateData): boolean {
+  const at = new Date(0).toISOString();
+  return isTooLargeForMetadata({ ...data, id: '00000000-0000-0000-0000-000000000000', createdAt: at, updatedAt: at });
 }

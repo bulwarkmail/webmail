@@ -9,9 +9,9 @@ import { useDiscardChanges } from '@/components/settings/use-discard-changes';
 import { useTemplateSources } from '@/hooks/use-template-sources';
 import { inlineImageDataUrl } from '@/lib/email-composer-utils';
 import type { Email } from '@/lib/jmap/types';
-import { personalTemplatesFor } from '@/lib/templates/personal-templates';
+import { isStoredInAccount, personalTemplatesFor } from '@/lib/templates/personal-templates';
 import type { TemplateData } from '@/lib/templates/template-reducer';
-import { isOwnMail, templateDraftFromEmail, type TemplateDraftFromEmail } from '@/lib/template-from-email';
+import { isOwnMail, isTooLargeToSync, templateDraftFromEmail, type TemplateDraftFromEmail } from '@/lib/template-from-email';
 import { debug } from '@/lib/debug';
 import { stripSubjectPrefixes } from '@/lib/subject-prefix';
 import { useAuthStore } from '@/stores/auth-store';
@@ -24,6 +24,11 @@ function folderRolesOf(email: Email): string[] {
   return Object.keys(email.mailboxIds ?? {})
     .map((id) => mailboxes.find((box) => box.id === id || box.originalId === id)?.role)
     .filter((role): role is string => !!role);
+}
+
+/** What the quick dialog saves: no category, recipients or identity. */
+function quickData({ subject, body, isHTML }: TemplateDraftFromEmail, name: string): TemplateData {
+  return { name, subject, body, isHTML, category: '', isFavorite: false };
 }
 
 /**
@@ -109,16 +114,18 @@ export function SaveAsTemplateFlow({ email }: { email: Email }) {
   };
 
   if (details === null || !read) {
+    const defaultName = stripSubjectPrefixes(email.subject).trim();
+    // Measured with the suggested name: a renamed template differs by a few bytes only.
+    const staysInBrowser = !!read && isStoredInAccount(read.accountId) && isTooLargeToSync(quickData(read.draft, defaultName));
     return (
       <QuickSaveTemplateDialog
-        defaultName={stripSubjectPrefixes(email.subject).trim()}
+        defaultName={defaultName}
         busy={!read}
+        notice={staysInBrowser ? t('too_large_to_sync') : undefined}
         onClose={close}
         onEditDetails={(name) => setDetails(name)}
         onSave={(name) => {
-          if (!read) return;
-          const { subject, body, isHTML } = read.draft;
-          save({ name, subject, body, isHTML, category: '', isFavorite: false });
+          if (read) save(quickData(read.draft, name));
         }}
       />
     );

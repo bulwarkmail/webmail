@@ -6423,7 +6423,8 @@
   },
   "save_as_template": {
     "read_failed": "Impossible de lire le message. Réessayez.",
-    "images_dropped": "{count, plural, one {Une image n'a pas pu être chargée et a été laissée de côté.} other {# images n'ont pas pu être chargées et ont été laissées de côté.}}"
+    "images_dropped": "{count, plural, one {Une image n'a pas pu être chargée et a été laissée de côté.} other {# images n'ont pas pu être chargées et ont été laissées de côté.}}",
+    "too_large_to_sync": "Ce modèle dépasse les 8 Ko que le serveur conserve par modèle : il restera uniquement dans ce navigateur."
   },
   "free_busy_share": {
     "button": "Partager mes disponibilités avec {group}",

@@ -18,7 +18,7 @@ vi.mock('@/components/templates/template-form', () => ({
 const { SaveAsTemplateFlow } = await import('../save-as-template-flow');
 const { useSaveAsTemplateStore } = await import('@/stores/save-as-template-store');
 const { useTemplateStore } = await import('@/stores/template-store');
-const { useAccountTemplatesStore } = await import('@/stores/account-templates-store');
+const { useAccountTemplatesStore, emptyPartition } = await import('@/stores/account-templates-store');
 const { useAuthStore } = await import('@/stores/auth-store');
 const { useEmailStore } = await import('@/stores/email-store');
 const { toast } = await import('@/stores/toast-store');
@@ -110,6 +110,35 @@ describe('SaveAsTemplateFlow', () => {
     fireEvent.click(saveButton());
     expect(useTemplateStore.getState().templates[0].body).toBe('<p>Hello</p>');
     expect(warning).toHaveBeenCalledWith('template_saved', { message: 'images_dropped' });
+  });
+
+  it('warns that a template too large for the account stays in this browser', async () => {
+    const big = { ...full, bodyValues: { 1: { value: `<p>${'Hello '.repeat(2000)}</p>` } } } as unknown as Email;
+    client.getEmail.mockResolvedValue(big);
+    useAuthStore.setState({ activeAccountId: 'acc' } as never);
+    useAccountTemplatesStore.setState({ personal: { acc: emptyPartition() } });
+    render(<SaveAsTemplateFlow email={listRow} />);
+    await waitFor(() => expect(saveButton().disabled).toBe(false));
+    expect(screen.getByTestId('quick-save-template-notice').textContent).toBe('too_large_to_sync');
+
+    fireEvent.click(saveButton());
+    expect(useAccountTemplatesStore.getState().personal.acc.templates).toHaveLength(1);
+  });
+
+  it('does not warn about a template the account can keep, or one kept in the browser anyway', async () => {
+    useAuthStore.setState({ activeAccountId: 'acc' } as never);
+    useAccountTemplatesStore.setState({ personal: { acc: emptyPartition() } });
+    const { unmount } = render(<SaveAsTemplateFlow email={listRow} />);
+    await waitFor(() => expect(saveButton().disabled).toBe(false));
+    expect(screen.queryByTestId('quick-save-template-notice')).toBeNull();
+    unmount();
+
+    // Without account storage every template stays in the browser: nothing to warn about.
+    useAccountTemplatesStore.setState({ personal: {} });
+    client.getEmail.mockResolvedValue({ ...full, bodyValues: { 1: { value: `<p>${'Hello '.repeat(2000)}</p>` } } });
+    render(<SaveAsTemplateFlow email={listRow} />);
+    await waitFor(() => expect(saveButton().disabled).toBe(false));
+    expect(screen.queryByTestId('quick-save-template-notice')).toBeNull();
   });
 
   it('closes with an error when the message cannot be read', async () => {

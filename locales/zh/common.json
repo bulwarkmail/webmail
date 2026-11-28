@@ -6423,7 +6423,8 @@
   },
   "save_as_template": {
     "read_failed": "无法读取邮件。请重试。",
-    "images_dropped": "{count, plural, other {有 # 张图片无法加载，已略去。}}"
+    "images_dropped": "{count, plural, other {有 # 张图片无法加载，已略去。}}",
+    "too_large_to_sync": "此模板超过了服务器为每个模板保存的 8 KB 上限，因此只会保留在此浏览器中。"
   },
   "free_busy_share": {
     "button": "与 {group} 共享我的忙闲时间",

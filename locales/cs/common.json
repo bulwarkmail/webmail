@@ -6423,7 +6423,8 @@
   },
   "save_as_template": {
     "read_failed": "Zprávu se nepodařilo přečíst. Zkuste to znovu.",
-    "images_dropped": "{count, plural, one {Jeden obrázek se nepodařilo načíst a byl vynechán.} few {# obrázky se nepodařilo načíst a byly vynechány.} other {# obrázků se nepodařilo načíst a byly vynechány.}}"
+    "images_dropped": "{count, plural, one {Jeden obrázek se nepodařilo načíst a byl vynechán.} few {# obrázky se nepodařilo načíst a byly vynechány.} other {# obrázků se nepodařilo načíst a byly vynechány.}}",
+    "too_large_to_sync": "Tato šablona je větší než 8 KB, které server ukládá na jednu šablonu, takže zůstane jen v tomto prohlížeči."
   },
   "free_busy_share": {
     "button": "Sdílet můj volný čas se skupinou {group}",

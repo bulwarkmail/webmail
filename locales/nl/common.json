@@ -6423,7 +6423,8 @@
   },
   "save_as_template": {
     "read_failed": "Kon het bericht niet lezen. Probeer het opnieuw.",
-    "images_dropped": "{count, plural, one {Eén afbeelding kon niet worden geladen en is weggelaten.} other {# afbeeldingen konden niet worden geladen en zijn weggelaten.}}"
+    "images_dropped": "{count, plural, one {Eén afbeelding kon niet worden geladen en is weggelaten.} other {# afbeeldingen konden niet worden geladen en zijn weggelaten.}}",
+    "too_large_to_sync": "Dit sjabloon is groter dan de 8 KB die de server per sjabloon bewaart en blijft daarom alleen in deze browser."
   },
   "free_busy_share": {
     "button": "Mijn vrij/bezet delen met {group}",

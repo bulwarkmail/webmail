@@ -6423,7 +6423,8 @@
   },
   "save_as_template": {
     "read_failed": "Impossibile leggere il messaggio. Riprova.",
-    "images_dropped": "{count, plural, one {Un'immagine non è stata caricata ed è stata omessa.} other {# immagini non sono state caricate e sono state omesse.}}"
+    "images_dropped": "{count, plural, one {Un'immagine non è stata caricata ed è stata omessa.} other {# immagini non sono state caricate e sono state omesse.}}",
+    "too_large_to_sync": "Questo modello supera gli 8 KB che il server conserva per modello, quindi resterà solo in questo browser."
   },
   "free_busy_share": {
     "button": "Condividi la mia disponibilità con {group}",

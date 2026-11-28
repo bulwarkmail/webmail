@@ -6423,7 +6423,8 @@
   },
   "save_as_template": {
     "read_failed": "メッセージを読み込めませんでした。もう一度お試しください。",
-    "images_dropped": "{count, plural, other {# 件の画像を読み込めなかったため、含めませんでした。}}"
+    "images_dropped": "{count, plural, other {# 件の画像を読み込めなかったため、含めませんでした。}}",
+    "too_large_to_sync": "このテンプレートはサーバーがテンプレートごとに保存できる 8 KB を超えているため、このブラウザーにのみ保存されます。"
   },
   "free_busy_share": {
     "button": "自分の空き時間を {group} と共有",
