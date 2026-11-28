@@ -45,7 +45,9 @@ type Translate = (key: string, values?: Record<string, string | number>) => stri
  * own Inbox while other accounts have unread mail too, "Inbox (10, 30 in all
  * accounts)", the number the favicon and the rail show (usability test
  * 2026-11-04, mail-6). `otherUnread` is 0 when Notifications counts the open
- * account only.
+ * account only. Other folders get no count, as in Gmail. When the total
+ * already leads the title (Rambox, see lib/title-badge), the own Inbox
+ * shows only its own count, and only while other accounts add to the total.
  */
 export function mailboxTitleLine(
   { name, unread, otherUnread = 0, inbox = false, ownInbox = false, badgeInTitle = false }: { name: string; unread: number; otherUnread?: number; inbox?: boolean; ownInbox?: boolean; badgeInTitle?: boolean },
