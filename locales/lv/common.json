@@ -6941,6 +6941,10 @@
     "malformed_body": "Tā pieprasa {label}, bet tās parametrs {param} trūkst vai ir nepareizs. Nekas netika atvērts.",
     "open_app": "Atvērt {name}"
   },
+  "link_gate": {
+    "checking": "Saite tiek pārbaudīta…",
+    "not_opened": "Šī saite netika atvērta. Varat aizvērt šo cilni."
+  },
   "plugins": {
     "oauth_callback": {
       "completing": "Pabeidz autorizāciju…",

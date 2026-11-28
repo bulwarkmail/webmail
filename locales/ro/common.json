@@ -6941,6 +6941,10 @@
     "malformed_body": "Cere {label}, dar parametrul {param} lipsește sau este greșit. Nu s-a deschis nimic.",
     "open_app": "Deschide {name}"
   },
+  "link_gate": {
+    "checking": "Se verifică linkul…",
+    "not_opened": "Acest link nu a fost deschis. Puteți închide această filă."
+  },
   "plugins": {
     "oauth_callback": {
       "completing": "Se finalizează autorizarea…",

@@ -131,6 +131,19 @@ describe('proxy: nothing changes for anyone the redirect is not for', () => {
   });
 });
 
+describe('proxy: the open-link page', () => {
+  // Where a message link lands when the browser skips the reader frame's
+  // click listener. next-intl would send it to /en/open-link, which 404s.
+  it('stays outside the locale tree', async () => {
+    intlMode = 'redirect';
+    for (const url of ['https://mail.example.com/open-link', 'https://mail.example.com/open-link/']) {
+      const response = await load(url);
+      expect(response.headers.get('location'), url).toBeNull();
+      expect(response.headers.get('x-middleware-rewrite'), url).toBeNull();
+    }
+  });
+});
+
 describe('proxy: the desktop app', () => {
   it('always starts the mail view: the app restores its sign-ins its own way', async () => {
     vi.resetModules();

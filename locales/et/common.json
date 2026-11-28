@@ -6941,6 +6941,10 @@
     "malformed_body": "See küsib {label}, kuid selle parameeter {param} puudub või on vigane. Midagi ei avatud.",
     "open_app": "Ava {name}"
   },
+  "link_gate": {
+    "checking": "Linki kontrollitakse…",
+    "not_opened": "Seda linki ei avatud. Võite selle vahekaardi sulgeda."
+  },
   "plugins": {
     "oauth_callback": {
       "completing": "Autoriseerimise lõpetamine…",

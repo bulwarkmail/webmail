@@ -6941,6 +6941,10 @@
     "malformed_body": "它请求 {label}，但参数 {param} 缺失或格式错误。未打开任何内容。",
     "open_app": "打开 {name}"
   },
+  "link_gate": {
+    "checking": "正在检查链接…",
+    "not_opened": "此链接未打开。你可以关闭此标签页。"
+  },
   "plugins": {
     "oauth_callback": {
       "completing": "正在完成授权…",

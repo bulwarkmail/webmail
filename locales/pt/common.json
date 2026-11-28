@@ -6941,6 +6941,10 @@
     "malformed_body": "Pede {label}, mas o parâmetro {param} está ausente ou é inválido. Nada foi aberto.",
     "open_app": "Abrir {name}"
   },
+  "link_gate": {
+    "checking": "Verificando o link…",
+    "not_opened": "Este link não foi aberto. Você pode fechar esta aba."
+  },
   "plugins": {
     "oauth_callback": {
       "completing": "Concluindo a autorização…",

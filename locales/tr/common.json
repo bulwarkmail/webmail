@@ -6941,6 +6941,10 @@
     "malformed_body": "{label} istiyor, ancak {param} parametresi eksik veya hatalı. Hiçbir şey açılmadı.",
     "open_app": "{name} uygulamasını aç"
   },
+  "link_gate": {
+    "checking": "Bağlantı denetleniyor…",
+    "not_opened": "Bu bağlantı açılmadı. Bu sekmeyi kapatabilirsiniz."
+  },
   "plugins": {
     "oauth_callback": {
       "completing": "Yetkilendirme tamamlanıyor…",

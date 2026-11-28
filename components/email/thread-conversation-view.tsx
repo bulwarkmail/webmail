@@ -5,6 +5,8 @@ import DOMPurify from "dompurify";
 import { Email, ThreadGroup } from "@/lib/jmap/types";
 import { EMAIL_SANITIZE_CONFIG, TRANSPARENT_BLOCKED_PIXEL, blockExternalResourcesOnNode, collapseBlockedImageContainers, emailIframeCsp, isOpenableLinkHref, plainTextToSafeHtml, proxyExternalResourcesOnNode, restrictDataUriResourcesOnNode, sanitizeEmailBodyForIframe, sanitizePlainTextRenderedHtml } from "@/lib/email-sanitization";
 import { gateLinkClick, linkCheckActive, linkText, resolveExternalLink } from "@/lib/plugin-hook-result";
+import { HELD_LINK_CSS, holdFrameLinks, releaseFrameLinks } from "@/lib/email-frame-links";
+import { gateMessageLink } from "@/lib/link-gate-holder";
 import { stripBidiControls } from "@/lib/bidi";
 import { requestInternalMailto } from "@/lib/protocol-handlers/mailto";
 import { emailListDate } from "@/lib/email-date";
@@ -1032,7 +1034,7 @@ export function ConversationEmailBody({
   td, th { overflow-wrap: break-word; }
   pre { white-space: pre-wrap; word-wrap: break-word; }
   ${isDark ? emailDarkModeCss() : ''}
-</style>${devices.noPrint ? '<style>@media print{html,body{display:none!important}}</style>' : ''}${devices.noDownloads ? `<style>${NO_SAVE_MEDIA_CSS}</style>` : ''}</head><body dir="auto">${emailContent.html}${reading.frameCss ? `<style>${reading.frameCss}</style>` : ''}</body></html>`;
+</style><style>${HELD_LINK_CSS}</style>${devices.noPrint ? '<style>@media print{html,body{display:none!important}}</style>' : ''}${devices.noDownloads ? `<style>${NO_SAVE_MEDIA_CSS}</style>` : ''}</head><body dir="auto">${holdFrameLinks(emailContent.html)}${reading.frameCss ? `<style>${reading.frameCss}</style>` : ''}</body></html>`;
   }, [emailContent.isHtml, emailContent.html, allowExternal, isDark, activeThemeId, bodyLanguage, reading.frameKey, reading.frameCss, appFontSources, remoteProxyBase, devices.noPrint, devices.noDownloads]);
   useLayoutEffect(() => { setHtmlBodyEl(null); }, [emailIframeSrcDoc]);
   // One object per body: React writes innerHTML again whenever this object
@@ -1042,12 +1044,25 @@ export function ConversationEmailBody({
     [emailContent.html],
   );
 
-  const handleIframeLoad = useCallback(() => {
+  // The document handleIframeLoad last set up: it runs once per document,
+  // from the readiness poll below or the load event, whichever comes first.
+  const wiredDocRef = useRef<Document | null>(null);
+  const handleIframeLoad = useCallback((loaded = false) => {
     const iframe = iframeRef.current;
     if (!iframe) return;
     try {
       const doc = iframe.contentDocument;
       if (!doc?.body) return;
+      // The poll waits for the message's own document to finish parsing,
+      // not the initial about:blank; what fires load has loaded.
+      if (!loaded && (doc.URL !== 'about:srcdoc' || doc.readyState === 'loading')) return;
+      if (wiredDocRef.current === doc) return;
+      wiredDocRef.current = doc;
+      // The links first, before anything below looks at them: their hrefs
+      // are held until the link gate is in place, and where the browser
+      // won't run the click listener below (WebKit), web links go through
+      // the open-link page instead (lib/email-frame-links.ts).
+      releaseFrameLinks(doc, gateMessageLink(email.id));
       // Set up the quoted-text toggle before the first resize, and remeasure
       // after each user toggle.
       setupQuoteCollapse(doc, {
@@ -1121,6 +1136,20 @@ export function ConversationEmailBody({
       // contentDocument may be inaccessible under stricter sandboxes; ignore.
     }
   }, [t, isDark, allowExternal, email.id, selectionMenu.openRef, reading.textFactor, reading.minFontSize, reading.overrideStyles, reading.fitWidth, reading.pauseImages]);
+
+  // Set the frame up once its document has parsed, as the reader does:
+  // the load event also waits for every picture, and the links stay
+  // without an href until then. The load event stays as a backstop.
+  useEffect(() => {
+    if (!emailIframeSrcDoc) return;
+    const poll = window.setInterval(() => {
+      handleIframeLoad();
+      const doc = iframeRef.current?.contentDocument;
+      if (doc && wiredDocRef.current === doc) window.clearInterval(poll);
+    }, 50);
+    const stop = window.setTimeout(() => window.clearInterval(poll), 15000);
+    return () => { window.clearInterval(poll); window.clearTimeout(stop); };
+  }, [emailIframeSrcDoc, handleIframeLoad]);
 
   // Print in the message's ⋮, and Ctrl+P while it has the focus, print this
   // message alone, as it shows here, in the reader's single-message layout.
@@ -1314,7 +1343,7 @@ export function ConversationEmailBody({
             className="w-full border-0 block"
             scrolling="no"
             style={{ minHeight: '60px', colorScheme: 'light' }}
-            onLoad={handleIframeLoad}
+            onLoad={() => handleIframeLoad(true)}
           />
         ) : (
           <div

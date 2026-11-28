@@ -6941,6 +6941,10 @@
     "malformed_body": "它要求 {label}，但參數 {param} 遺失或格式錯誤。未開啟任何內容。",
     "open_app": "開啟 {name}"
   },
+  "link_gate": {
+    "checking": "正在檢查連結…",
+    "not_opened": "此連結未開啟。您可以關閉此分頁。"
+  },
   "plugins": {
     "oauth_callback": {
       "completing": "正在完成授權…",

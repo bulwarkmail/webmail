@@ -82,3 +82,15 @@ describe('plain-text mail', () => {
 // The body iframe's middle-click (jsdom doesn't load srcdoc, so the viewer
 // never wires it here) is covered by the conversation view's test of the
 // same handler and by integration/tests/22-ent-plugins.spec.ts.
+
+describe('HTML mail', () => {
+  // Safari never runs the frame's click listener; a link that reached the
+  // frame with its address opened it past the link check. The addresses
+  // come in only once the gate is wired (lib/email-frame-links.ts).
+  it('hands the body frame no link address before the gate is wired', async () => {
+    const { container } = await open(message('text/html', '<p>Hi</p><a id="web" href="https://site.example/a">web</a><a id="app" href="/settings">app</a>'));
+    const srcdoc = container.querySelector('iframe')?.getAttribute('srcdoc') ?? '';
+    expect(srcdoc).toContain('id="web"');
+    expect(srcdoc).not.toMatch(/<a\b[^>]*\shref=/);
+  });
+});

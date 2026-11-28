@@ -670,6 +670,10 @@
     "malformed_body": "ลิงก์ขอ {label} แต่พารามิเตอร์ {param} หายไปหรือไม่ถูกต้อง ไม่มีอะไรถูกเปิด",
     "open_app": "เปิด {name}"
   },
+  "link_gate": {
+    "checking": "กำลังตรวจสอบลิงก์…",
+    "not_opened": "ลิงก์นี้ไม่ได้เปิด คุณปิดแท็บนี้ได้"
+  },
   "threads": {
     "messages_tooltip": "{count, plural, other {# ข้อความในการสนทนานี้}}",
     "expand": "ขยายการสนทนา",

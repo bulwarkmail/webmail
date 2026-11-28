@@ -6949,6 +6949,10 @@
     "malformed_body": "Ho ber om {label}, men {param} manglar eller er feil forma. Ingenting vart opna.",
     "open_app": "Opne {name}"
   },
+  "link_gate": {
+    "checking": "Sjekkar lenkja…",
+    "not_opened": "Denne lenkja vart ikkje opna. Du kan lukke denne fana."
+  },
   "plugins": {
     "oauth_callback": {
       "completing": "Fullfører godkjenninga …",

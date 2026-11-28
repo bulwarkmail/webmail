@@ -6942,6 +6942,10 @@
     "malformed_body": "הוא מבקש {label}, אבל הפרמטר {param} חסר או שגוי. לא נפתח דבר.",
     "open_app": "פתיחת {name}"
   },
+  "link_gate": {
+    "checking": "בודקים את הקישור…",
+    "not_opened": "הקישור הזה לא נפתח. אפשר לסגור את הכרטיסייה."
+  },
   "plugins": {
     "oauth_callback": {
       "completing": "משלים אימות…",

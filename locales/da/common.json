@@ -6941,6 +6941,10 @@
     "malformed_body": "Det beder om {label}, men parameteren {param} mangler eller er ugyldig. Intet blev åbnet.",
     "open_app": "Åbn {name}"
   },
+  "link_gate": {
+    "checking": "Tjekker linket…",
+    "not_opened": "Linket blev ikke åbnet. Du kan lukke denne fane."
+  },
   "plugins": {
     "oauth_callback": {
       "completing": "Fuldfører godkendelse…",

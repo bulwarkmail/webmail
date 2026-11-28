@@ -6941,6 +6941,10 @@
     "malformed_body": "Žiada o {label}, ale jeho parameter {param} chýba alebo je neplatný. Nič sa neotvorilo.",
     "open_app": "Otvoriť {name}"
   },
+  "link_gate": {
+    "checking": "Kontroluje sa odkaz…",
+    "not_opened": "Tento odkaz sa neotvoril. Túto kartu môžete zavrieť."
+  },
   "plugins": {
     "oauth_callback": {
       "completing": "Dokončovanie autorizácie…",

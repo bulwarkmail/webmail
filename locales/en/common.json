@@ -6941,6 +6941,10 @@
     "malformed_body": "It asks for {label}, but its {param} is missing or malformed. Nothing was opened.",
     "open_app": "Open {name}"
   },
+  "link_gate": {
+    "checking": "Checking the link…",
+    "not_opened": "This link was not opened. You can close this tab."
+  },
   "plugins": {
     "oauth_callback": {
       "completing": "Completing authorization…",

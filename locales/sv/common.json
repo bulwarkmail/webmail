@@ -6956,6 +6956,10 @@
     "malformed_body": "Den begär {label}, men dess {param} saknas eller är felaktig. Inget öppnades.",
     "open_app": "Öppna {name}"
   },
+  "link_gate": {
+    "checking": "Kontrollerar länken…",
+    "not_opened": "Länken öppnades inte. Du kan stänga den här fliken."
+  },
   "plugins": {
     "oauth_callback": {
       "completing": "Slutför auktoriseringen…",

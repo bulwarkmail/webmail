@@ -6941,6 +6941,10 @@
     "malformed_body": "يطلب {label}، لكن المعامل {param} مفقود أو غير صالح. لم يُفتح أي شيء.",
     "open_app": "فتح {name}"
   },
+  "link_gate": {
+    "checking": "جارٍ التحقق من الرابط…",
+    "not_opened": "لم يُفتح هذا الرابط. يمكنك إغلاق علامة التبويب هذه."
+  },
   "plugins": {
     "oauth_callback": {
       "completing": "جارٍ إكمال التفويض…",

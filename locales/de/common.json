@@ -6941,6 +6941,10 @@
     "malformed_body": "Er verlangt {label}, aber sein Parameter {param} fehlt oder ist ungültig. Es wurde nichts geöffnet.",
     "open_app": "{name} öffnen"
   },
+  "link_gate": {
+    "checking": "Der Link wird geprüft…",
+    "not_opened": "Dieser Link wurde nicht geöffnet. Sie können diesen Tab schließen."
+  },
   "plugins": {
     "oauth_callback": {
       "completing": "Autorisierung wird abgeschlossen…",

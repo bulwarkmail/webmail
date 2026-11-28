@@ -4,6 +4,8 @@ import { Fragment, useState, useEffect, useLayoutEffect, useMemo, useRef, useCal
 import { spamApplicableIn } from "@/lib/spam-applicable";
 import { Email, ContactCard, Identity, Mailbox } from "@/lib/jmap/types";
 import { attachmentDownloadFilename, attachmentsBundleFilename, DEFAULT_ATTACHMENT_TEMPLATE, renamedAttachmentFilename } from "@/lib/download-filename";
+import { HELD_LINK_CSS, holdFrameLinks, releaseFrameLinks } from "@/lib/email-frame-links";
+import { gateMessageLink } from "@/lib/link-gate-holder";
 import { TRANSPARENT_BLOCKED_PIXEL, applyNewTabToAnchor, emailIframeCsp, isExternalResourceUrl, isOpenableLinkHref, plainTextToSafeHtml, sanitizeEmailBodyForIframe, sanitizePlainTextRenderedHtml } from "@/lib/email-sanitization";
 import { getRenderableHtmlBody } from "@/lib/email-body-selection";
 import { mailLanguage } from "@/lib/mail-language";
@@ -3834,7 +3836,7 @@ export function EmailViewer({
   pre { white-space: pre-wrap; word-wrap: break-word; }
   ${wordHtmlCSS}
   ${darkModeCSS}
-</style>${devices.noPrint ? '<style>@media print{html,body{display:none!important}}</style>' : ''}${devices.noDownloads ? `<style>${NO_SAVE_MEDIA_CSS}</style>` : ''}</head><body dir="auto">${resolveColorSchemeMedia(effectiveEmailContent.html, recolorDark)}<style>html,body{height:auto!important;min-height:0!important;max-height:none!important}body{overflow-y:hidden!important}</style>${reading.frameCss ? `<style>${reading.frameCss}</style>` : ''}</body></html>`;
+</style><style>${HELD_LINK_CSS}</style>${devices.noPrint ? '<style>@media print{html,body{display:none!important}}</style>' : ''}${devices.noDownloads ? `<style>${NO_SAVE_MEDIA_CSS}</style>` : ''}</head><body dir="auto">${holdFrameLinks(resolveColorSchemeMedia(effectiveEmailContent.html, recolorDark))}<style>html,body{height:auto!important;min-height:0!important;max-height:none!important}body{overflow-y:hidden!important}</style>${reading.frameCss ? `<style>${reading.frameCss}</style>` : ''}</body></html>`;
   }, [effectiveEmailContent.html, effectiveEmailContent.isHtml, effectiveEmailContent.hasStyleTag, effectiveEmailContent.externalBlocked, recolorDark, activeThemeId, emailHasNativeDarkMode, messageSpacing, bodyLanguage, reading.frameKey, reading.frameCss, appFontSources, remoteProxyBase, devices.noPrint, devices.noDownloads]);
 
   // Unblocking external content is handled by rebuilding the iframe srcDoc:
@@ -3989,6 +3991,12 @@ export function EmailViewer({
       if (initializedDocRef.current === doc) return;
       initializedDocRef.current = doc;
       {
+        // The links come alive first, before anything below looks at them:
+        // their hrefs are held until the link gate is in place, and where
+        // the browser won't run the click listener below (WebKit), web
+        // links go through the open-link page instead (lib/email-frame-links.ts).
+        releaseFrameLinks(doc, gateMessageLink(email?.id));
+
         // Set up the quoted-text toggle before the first height measurement.
         // Force a new measurement on clicks: folding can leave scrollHeight
         // pinned to the old viewport, which the size cache would skip.

@@ -6941,6 +6941,10 @@
     "malformed_body": "Hij vraagt om {label}, maar de parameter {param} ontbreekt of is ongeldig. Er is niets geopend.",
     "open_app": "{name} openen"
   },
+  "link_gate": {
+    "checking": "Link wordt gecontroleerd…",
+    "not_opened": "Deze link is niet geopend. U kunt dit tabblad sluiten."
+  },
   "plugins": {
     "oauth_callback": {
       "completing": "Autorisatie voltooien…",

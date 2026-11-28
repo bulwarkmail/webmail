@@ -6941,6 +6941,10 @@
     "malformed_body": "{label}을 요청하지만 {param} 값이 없거나 잘못되었습니다. 아무것도 열지 않았습니다.",
     "open_app": "{name} 열기"
   },
+  "link_gate": {
+    "checking": "링크를 확인하는 중…",
+    "not_opened": "이 링크는 열리지 않았습니다. 이 탭을 닫아도 됩니다."
+  },
   "plugins": {
     "oauth_callback": {
       "completing": "인증 완료 중…",

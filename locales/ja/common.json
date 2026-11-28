@@ -6941,6 +6941,10 @@
     "malformed_body": "{label} を開こうとしていますが、{param} がないか不正です。何も開いていません。",
     "open_app": "{name} を開く"
   },
+  "link_gate": {
+    "checking": "リンクを確認しています…",
+    "not_opened": "このリンクは開かれませんでした。このタブは閉じてかまいません。"
+  },
   "plugins": {
     "oauth_callback": {
       "completing": "認証を完了しています…",

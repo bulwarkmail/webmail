@@ -6941,6 +6941,10 @@
     "malformed_body": "{label} megnyitását kéri, de a(z) {param} paraméter hiányzik vagy hibás. Semmi sem nyílt meg.",
     "open_app": "{name} megnyitása"
   },
+  "link_gate": {
+    "checking": "A hivatkozás ellenőrzése…",
+    "not_opened": "Ez a hivatkozás nem nyílt meg. Bezárhatja ezt a lapot."
+  },
   "plugins": {
     "oauth_callback": {
       "completing": "Hitelesítés befejezése…",

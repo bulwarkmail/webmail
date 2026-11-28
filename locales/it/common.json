@@ -6941,6 +6941,10 @@
     "malformed_body": "Richiede {label}, ma il parametro {param} manca o non è valido. Non è stato aperto nulla.",
     "open_app": "Apri {name}"
   },
+  "link_gate": {
+    "checking": "Verifica del link…",
+    "not_opened": "Questo link non è stato aperto. Puoi chiudere questa scheda."
+  },
   "plugins": {
     "oauth_callback": {
       "completing": "Completamento dell'autorizzazione…",

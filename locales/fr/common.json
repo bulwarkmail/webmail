@@ -6941,6 +6941,10 @@
     "malformed_body": "Il demande {label}, mais son paramètre {param} est absent ou mal formé. Rien n'a été ouvert.",
     "open_app": "Ouvrir {name}"
   },
+  "link_gate": {
+    "checking": "Vérification du lien…",
+    "not_opened": "Ce lien n'a pas été ouvert. Vous pouvez fermer cet onglet."
+  },
   "plugins": {
     "oauth_callback": {
       "completing": "Finalisation de l'autorisation…",

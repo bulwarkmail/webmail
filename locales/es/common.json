@@ -6941,6 +6941,10 @@
     "malformed_body": "Pide {label}, pero su parámetro {param} falta o no es válido. No se ha abierto nada.",
     "open_app": "Abrir {name}"
   },
+  "link_gate": {
+    "checking": "Comprobando el enlace…",
+    "not_opened": "Este enlace no se ha abierto. Puedes cerrar esta pestaña."
+  },
   "plugins": {
     "oauth_callback": {
       "completing": "Completando la autorización…",

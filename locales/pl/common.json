@@ -6941,6 +6941,10 @@
     "malformed_body": "Prosi o {label}, ale brakuje parametru {param} lub jest on błędny. Nic nie zostało otwarte.",
     "open_app": "Otwórz {name}"
   },
+  "link_gate": {
+    "checking": "Sprawdzanie linku…",
+    "not_opened": "Ten link nie został otwarty. Możesz zamknąć tę kartę."
+  },
   "plugins": {
     "oauth_callback": {
       "completing": "Kończenie autoryzacji…",

@@ -6953,6 +6953,10 @@
     "malformed_body": "Nó yêu cầu {label}, nhưng {param} của nó bị thiếu hoặc không đúng định dạng. Không có gì được mở ra.",
     "open_app": "Mở {name}"
   },
+  "link_gate": {
+    "checking": "Đang kiểm tra liên kết…",
+    "not_opened": "Liên kết này chưa được mở. Bạn có thể đóng thẻ này."
+  },
   "plugins": {
     "oauth_callback": {
       "completing": "Đang hoàn tất ủy quyền…",

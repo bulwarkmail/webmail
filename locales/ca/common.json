@@ -6941,6 +6941,10 @@
     "malformed_body": "Demana {label}, però el paràmetre {param} falta o no és vàlid. No s'ha obert res.",
     "open_app": "Obre {name}"
   },
+  "link_gate": {
+    "checking": "S'està comprovant l'enllaç…",
+    "not_opened": "Aquest enllaç no s'ha obert. Podeu tancar aquesta pestanya."
+  },
   "plugins": {
     "oauth_callback": {
       "completing": "Completant l'autorització…",
