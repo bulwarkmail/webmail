@@ -63,6 +63,13 @@ describe('RichTextEditor spacing of a loaded message (#1416)', () => {
     expect(margins(attribution)).toEqual(['4px 0']);
   });
 
+  it('leaves the forward header to the composer', async () => {
+    const editor = await setup('<p></p><p data-forward-header="true">---------- Forwarded message ----------<br>From: Anna</p><div data-quoted-html=""><p>hi</p></div>');
+
+    const header = serialize(editor).match(/<p[^>]*data-forward-header[^>]*>/)![0];
+    expect(margins(header)).toEqual(['4px 0']);
+  });
+
   it('leaves the quoted original and an embedded signature alone', async () => {
     const editor = await setup(
       '<p>reply</p>'
