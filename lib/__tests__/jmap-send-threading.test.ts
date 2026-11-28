@@ -55,7 +55,7 @@ interface CapturedRequest {
  * Mailbox/get → Identity/get → Email/set + EmailSubmission/set.
  * Returns the captured request bodies for assertions.
  */
-function mockSendEmailFlow(draftsId = 'mb-drafts', sentId = 'mb-sent') {
+function mockSendEmailFlow(draftsId = 'mb-drafts', sentId = 'mb-sent', filing?: Record<string, unknown>, submission: Record<string, unknown> = {}) {
   const captured: CapturedRequest[] = [];
   const fetchSpy = vi.spyOn(globalThis, 'fetch');
 
@@ -90,7 +90,9 @@ function mockSendEmailFlow(draftsId = 'mb-drafts', sentId = 'mb-sent') {
       payload = {
         methodResponses: [
           ['Email/set', { created: { [Object.keys((captured[callIdx].methodCalls[0][1] as { create: Record<string, unknown> }).create)[0]]: { id: 'sent-id-1' } } }, '0'],
-          ['EmailSubmission/set', { created: { '1': { id: 'sub-1', sendAt: '2026-05-08T18:00:00Z' } } }, '1'],
+          ['EmailSubmission/set', { created: { '1': { id: 'sub-1', sendAt: '2026-05-08T18:00:00Z', ...submission } } }, '1'],
+          // The implicit Email/set of onSuccessUpdateEmail, when a test scripts one.
+          ...(filing ? [['Email/set', filing, '1']] : []),
         ],
       };
     }
@@ -424,6 +426,53 @@ describe('JMAPClient post-send mailbox filing', () => {
     const patch = sentFilingPatch(captured);
     expect(Object.keys(patch).some(key => key.startsWith('mailboxIds/'))).toBe(false);
     expect(patch.mailboxIds).toEqual({ e: true });
+  });
+
+  // bulwarkmail/legacy-proxy#65: its Gmail backend files a held send in Sent
+  // only when the message goes out, and refuses the filing until then.
+  it('does not warn about a leftover draft when a held send has its filing deferred', async () => {
+    const description = 'Gmail files the message in Sent when it is actually sent; it stays a draft until then';
+    const refused = { notUpdated: { 'sent-id-1': { type: 'forbidden', description } } };
+    const send = (client: JMAPClient, delayedUntil?: string) => client.sendEmail(
+      ['recipient@example.com'], 'subject', 'body',
+      undefined, undefined, 'identity-1', 'user@example.com',
+      undefined, undefined, undefined, undefined,
+      undefined,
+      undefined,
+      delayedUntil,
+    );
+    const later = () => new Date(Date.now() + 60_000).toISOString();
+    const pending = { undoStatus: 'pending' };
+    const heldClient = () => {
+      const client = createClient();
+      enableDelayedSend(client);
+      return client;
+    };
+
+    mockSendEmailFlow(undefined, undefined, refused, pending);
+    expect((await send(heldClient(), later())).filingError).toBeUndefined();
+
+    // A server that doesn't report the submission as pending, or refuses for
+    // another reason, still gets the warning.
+    vi.restoreAllMocks();
+    mockSendEmailFlow(undefined, undefined, refused, { undoStatus: 'final' });
+    expect((await send(heldClient(), later())).filingError).toBe(description);
+    vi.restoreAllMocks();
+    mockSendEmailFlow(undefined, undefined, { notUpdated: { 'sent-id-1': { type: 'invalidProperties', description } } }, pending);
+    expect((await send(heldClient(), later())).filingError).toBe(description);
+
+    // Sent right away, the same refusal leaves the copy in Drafts.
+    vi.restoreAllMocks();
+    mockSendEmailFlow(undefined, undefined, refused, pending);
+    expect((await send(createClient())).filingError).toBe(description);
+
+    // Stalwart files a held send at once, so a refusal there is a real one.
+    vi.restoreAllMocks();
+    const stalwart = heldClient();
+    (stalwart as unknown as { session: { accounts: Record<string, { accountCapabilities: Record<string, unknown> }> } })
+      .session.accounts['submission-account-1'].accountCapabilities['urn:stalwart:jmap'] = {};
+    mockSendEmailFlow(undefined, undefined, refused, pending);
+    expect((await send(stalwart, later())).filingError).toBe(description);
   });
 
   it('restoreEmailToDraft places the message in Drafts only via a full mailboxIds replacement', async () => {
