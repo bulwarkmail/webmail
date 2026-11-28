@@ -17,6 +17,7 @@ import { debug } from '@/lib/debug';
 import { setServerAuthIssue } from '@/lib/server-auth-status';
 import { generateAccountId, MAX_ACCOUNT_SLOTS } from '@/lib/account-utils';
 import { replaceWindowLocation, getPathPrefix, getLocaleFromPath, apiFetch } from '@/lib/browser-navigation';
+import { loginHintFrom } from '@/lib/auth/login-hint';
 import { IS_DESKTOP_BUILD } from '@/lib/desktop/flag';
 import { getDesktopBridge } from '@/lib/desktop/bridge';
 import { clearDesktopCertificateChoices, clearDesktopCrashFiles, clearKeystoreGrants, noteDesktopCertificateAccount } from '@/lib/desktop/keystore-grants';
@@ -1242,7 +1243,10 @@ function navigateToLogin(): void {
 
   const loginPath = getLocaleLoginPath();
   if (window.location.pathname === loginPath) return;
-  replaceWindowLocation(loginPath);
+  // A link that names the account (?login_hint=) on any page keeps it on the
+  // way to the login page, which is where the hint is read (#1860).
+  const hint = loginHintFrom(new URLSearchParams(window.location.search).get('login_hint'));
+  replaceWindowLocation(hint ? `${loginPath}?login_hint=${encodeURIComponent(hint)}` : loginPath);
 }
 
 /** How long an expired session waits for the open composers to save. */
