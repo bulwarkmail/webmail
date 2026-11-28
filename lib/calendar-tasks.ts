@@ -138,9 +138,18 @@ export function nextOpenOccurrence(series: CalendarTask): CalendarTask | null {
  * mean the series. Other tasks, and series with nothing open, as they are.
  */
 export function asListedTask(task: CalendarTask): CalendarTask {
+  // The store replaces a task to change it, so one task object always lists
+  // the same way. The list, its filter counts and the side panel ask for every
+  // task on each change; a daily series would expand years of days each time.
+  const cached = listedTasks.get(task);
+  if (cached) return cached;
   const open = nextOpenOccurrence(task);
-  return open ? { ...open, id: task.id } : task;
+  const listed = open ? { ...open, id: task.id } : task;
+  listedTasks.set(task, listed);
+  return listed;
 }
+
+const listedTasks = new WeakMap<CalendarTask, CalendarTask>();
 
 /**
  * JMAP patch setting one override on the master: a patch path into an existing

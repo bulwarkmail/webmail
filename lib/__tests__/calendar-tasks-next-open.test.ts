@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { addDays, format } from 'date-fns';
 import type { CalendarTask } from '@/lib/jmap/types';
 import { createRecurrenceRule } from '@/lib/recurrence-rule';
-import { nextOpenOccurrence } from '@/lib/calendar-tasks';
+import { asListedTask, nextOpenOccurrence } from '@/lib/calendar-tasks';
 
 // Ticking off a series completes one occurrence, the first one still open:
 // which one is that?
@@ -79,5 +79,18 @@ describe('nextOpenOccurrence', () => {
   it('is none for a series completed as a whole, and for a task that does not repeat', () => {
     expect(nextOpenOccurrence(series({ progress: 'completed' }))).toBeNull();
     expect(nextOpenOccurrence(series({ recurrenceRules: null }))).toBeNull();
+  });
+});
+
+describe('asListedTask', () => {
+  it('expands a series once per task object, and again once the store replaces it', () => {
+    const task = series();
+    const listed = asListedTask(task);
+    expect(listed).toMatchObject({ id: 's1', recurrenceId: '2026-09-20T00:00:00' });
+    // The list, its filter counts and the side panel all ask for it.
+    expect(asListedTask(task)).toBe(listed);
+
+    const ticked = { ...task, recurrenceOverrides: { '2026-09-20T00:00:00': { progress: 'completed' } } } as CalendarTask;
+    expect(asListedTask(ticked)).toMatchObject({ id: 's1', recurrenceId: '2026-09-21T00:00:00' });
   });
 });
