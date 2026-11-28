@@ -100,8 +100,8 @@ describe('MessageListTabs', () => {
     vi.useFakeTimers();
     const getCategoryUnreadCounts = vi.fn().mockResolvedValue({ primary: 2, promotions: 0, social: 0 });
     useAuthStore.setState({ client: { getCategoryUnreadCounts } } as never);
-    const unreadA = { id: 'a', keywords: {} } as Email;
-    const unreadB = { id: 'b', keywords: {} } as Email;
+    const unreadA = { id: 'a', keywords: {} } as unknown as Email;
+    const unreadB = { id: 'b', keywords: {} } as unknown as Email;
     useEmailStore.setState({ emails: [unreadA, unreadB] } as never);
 
     render(<Harness />);
@@ -113,7 +113,7 @@ describe('MessageListTabs', () => {
     // Scroll / load-more: same rows plus another page — no recount.
     act(() => {
       useEmailStore.setState({
-        emails: [unreadA, unreadB, { id: 'c', keywords: { $seen: true } } as Email],
+        emails: [unreadA, unreadB, { id: 'c', keywords: { $seen: true } } as unknown as Email],
       } as never);
     });
     await act(async () => {
@@ -126,9 +126,9 @@ describe('MessageListTabs', () => {
     act(() => {
       useEmailStore.setState({
         emails: [
-          { ...unreadA, keywords: { $flagged: true } } as Email,
+          { ...unreadA, keywords: { $flagged: true } } as unknown as Email,
           unreadB,
-          { id: 'c', keywords: { $seen: true } } as Email,
+          { id: 'c', keywords: { $seen: true } } as unknown as Email,
         ],
       } as never);
     });
@@ -142,8 +142,8 @@ describe('MessageListTabs', () => {
     act(() => {
       useEmailStore.setState({
         emails: [
-          { ...unreadA, keywords: { $flagged: true } } as Email,
-          { id: 'c', keywords: { $seen: true } } as Email,
+          { ...unreadA, keywords: { $flagged: true } } as unknown as Email,
+          { id: 'c', keywords: { $seen: true } } as unknown as Email,
         ],
       } as never);
     });
@@ -158,8 +158,8 @@ describe('MessageListTabs', () => {
     act(() => {
       useEmailStore.setState({
         emails: [
-          { id: 'a', keywords: { $flagged: true, $seen: true } } as Email,
-          { id: 'c', keywords: { $seen: true } } as Email,
+          { id: 'a', keywords: { $flagged: true, $seen: true } } as unknown as Email,
+          { id: 'c', keywords: { $seen: true } } as unknown as Email,
         ],
       } as never);
     });
@@ -171,26 +171,26 @@ describe('MessageListTabs', () => {
   });
 
   it('detects list changes that can move unread tab totals', () => {
-    const a = { id: 'a', keywords: {} } as Email;
-    const aRead = { id: 'a', keywords: { $seen: true } } as Email;
-    const b = { id: 'b', keywords: { $seen: true } } as Email;
+    const a = { id: 'a', keywords: {} } as unknown as Email;
+    const aRead = { id: 'a', keywords: { $seen: true } } as unknown as Email;
+    const b = { id: 'b', keywords: { $seen: true } } as unknown as Email;
     expect(listChangeMayAffectCategoryUnread([a, b], [a, b])).toBe(false);
-    expect(listChangeMayAffectCategoryUnread([a, b], [a, b, { id: 'c' } as Email])).toBe(false);
-    expect(listChangeMayAffectCategoryUnread([a, b], [{ ...a, keywords: { $flagged: true } } as Email, b])).toBe(false);
+    expect(listChangeMayAffectCategoryUnread([a, b], [a, b, { id: 'c' } as unknown as Email])).toBe(false);
+    expect(listChangeMayAffectCategoryUnread([a, b], [{ ...a, keywords: { $flagged: true } } as unknown as Email, b])).toBe(false);
     expect(listChangeMayAffectCategoryUnread([a, b], [a])).toBe(true);
     expect(listChangeMayAffectCategoryUnread([a, b], [aRead, b])).toBe(true);
   });
 
   it('recounts when an unread row comes back or arrives above the loaded rows', () => {
-    const a = { id: 'a', keywords: { $seen: true } } as Email;
-    const b = { id: 'b', keywords: { $seen: true } } as Email;
-    const restored = { id: 'r', keywords: {} } as Email;
+    const a = { id: 'a', keywords: { $seen: true } } as unknown as Email;
+    const b = { id: 'b', keywords: { $seen: true } } as unknown as Email;
+    const restored = { id: 'r', keywords: {} } as unknown as Email;
     // Undo after deleting an unread message puts it back between the rows.
     expect(listChangeMayAffectCategoryUnread([a, b], [a, restored, b])).toBe(true);
     // New unread mail on top of the list.
     expect(listChangeMayAffectCategoryUnread([a, b], [restored, a, b])).toBe(true);
     // A read row coming back can't move an unread total.
-    expect(listChangeMayAffectCategoryUnread([a, b], [{ ...restored, keywords: { $seen: true } } as Email, a, b])).toBe(false);
+    expect(listChangeMayAffectCategoryUnread([a, b], [{ ...restored, keywords: { $seen: true } } as unknown as Email, a, b])).toBe(false);
     // An unread row on a page loaded below the list is a scroll, not a change.
     expect(listChangeMayAffectCategoryUnread([a, b], [a, b, restored])).toBe(false);
   });
