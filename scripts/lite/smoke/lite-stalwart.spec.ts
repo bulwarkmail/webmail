@@ -13,7 +13,8 @@ import { stalwartClientId, stalwartOrigin, stalwartPrefixes } from "./playwright
  *   - the demo account signs in and surface switches stay client-side
  *     (no document load), although Stalwart labels RSC payloads
  *     application/octet-stream,
- *   - deep links and unknown paths survive a full reload,
+ *   - deep links, views named without a locale and unknown paths survive
+ *     a full reload,
  *   - nothing is requested outside the prefix, no chunk is answered with
  *     the index.html fallback, and the console stays clean.
  */
@@ -90,6 +91,10 @@ for (const prefix of stalwartPrefixes) {
       await page.goto(`${prefix}/en/calendar/week/2026-09-17`);
       await expect(page.locator("body")).toContainText(/September 2026/, { timeout: 30_000 });
       expect(new URL(page.url()).pathname).toMatch(new RegExp(`^${prefix}/en/calendar/\\w+/2026-09-17$`));
+
+      // A view named without a locale opens in the preferred one, not the inbox.
+      await page.goto(`${prefix}/contacts`);
+      await page.waitForURL(new RegExp(`${prefix}/en/contacts/?$`), { timeout: 30_000 });
 
       await page.goto(`${prefix}/nope/at/all`);
       await page.waitForURL(new RegExp(`${prefix}/en/(mail/.*)?$`), { timeout: 30_000 });
