@@ -361,6 +361,9 @@
       "mention_adds_recipient": {
         "description": "When you type @, you can also pick people from your contacts. If they are not a recipient yet, they are added to the message."
       },
+      "shared_sent_recipients": {
+        "description": "When you send from the address of a shared mailbox, you also get suggestions for people that mailbox has sent mail to. To find them, the app looks at the latest mail in the Sent folder of each shared mailbox when you sign in."
+      },
       "hide_inline_image_attachments": {
         "label": "Don't list pictures in the text as attachments",
         "description": "Pictures that are part of the message text are not shown again in the list of attachments"

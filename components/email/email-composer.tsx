@@ -2489,13 +2489,46 @@ export function EmailComposer({
   // unmount revoke that ownership even if a plugin is already awaiting I/O.
   const autocompleteRequestRef = useRef<{ query: string; field: 'to' | 'cc' | 'bcc' } | null>(null);
   const serverSearchRef = useRef<{ pending: boolean } | null>(null);
+  // The From address sending would use (see draftSender), and the shared
+  // account it would go out from, resolved as sendEmail does. Suggestions
+  // then also offer the people that shared mailbox has written to;
+  // undefined for the user's own account.
+  const sendFromEmail = (fromOverrideEnabled && fromOverrideEmail.trim())
+    ? fromOverrideEmail.trim()
+    : currentIdentity?.email
+      ? subAddressTag
+        ? generateSubAddress(currentIdentity.email, subAddressTag, subAddressDelimiter)
+        : currentIdentity.email
+      : undefined;
+  const [resolvedSendAccount, setResolvedSendAccount] = useState<{
+    client: IJMAPClient; fromEmail: string | undefined; accountId: string | undefined;
+  } | null>(null);
+  useEffect(() => {
+    const resolve = composerClient?.resolveSendAccountId;
+    if (!composerClient || !resolve) return;
+    // Only the answer for the current client and From counts.
+    let current = true;
+    const settle = (accountId: string | undefined) => {
+      if (!current) return;
+      const shared = typeof accountId === 'string' && accountId !== composerClient.getAccountId?.() ? accountId : undefined;
+      setResolvedSendAccount({ client: composerClient, fromEmail: sendFromEmail, accountId: shared });
+    };
+    // A failed lookup leaves the suggestions as for the own account.
+    Promise.resolve()
+      .then(() => resolve.call(composerClient, sendFromEmail))
+      .then(settle, () => settle(undefined));
+    return () => { current = false; };
+  }, [composerClient, sendFromEmail]);
+  const sendingAccountId = resolvedSendAccount?.client === composerClient && resolvedSendAccount.fromEmail === sendFromEmail
+    ? resolvedSendAccount.accountId
+    : undefined;
   const serverSearchContextRef = useRef<object | null>(null);
   useLayoutEffect(() => {
-    // A new context also distinguishes client A -> B -> A. Local contacts
-    // continue to use the shared pool regardless of the From identity.
+    // A new context also distinguishes client A -> B -> A, and a From change,
+    // which can move the search to another (shared) account's Sent folder.
     serverSearchContextRef.current = {};
     return () => { serverSearchContextRef.current = null; };
-  }, [composerClient]);
+  }, [composerClient, sendFromEmail, sendingAccountId]);
 
   const invalidateAutocomplete = useCallback(() => {
     autocompleteRequestRef.current = null;
@@ -2627,7 +2660,7 @@ export function EmailComposer({
     setAutoQuery(query);
 
     autocompleteTimeoutRef.current = setTimeout(async () => {
-      const localResults = getAutocomplete(query);
+      const localResults = getAutocomplete(query, { sendingAccountId });
       // Let plugins contribute extra suggestions (Slack handles, GitHub, CRM, …).
       const initial: RecipientSuggestion[] = localResults.map(r => ({ name: r.name, email: r.email, group: r.group }));
       const merged = await contactHooks.onProvideRecipientSuggestions.transform(initial, { query });
@@ -2639,7 +2672,7 @@ export function EmailComposer({
       setActiveAutoField(merged.length > 0 || canSearchServer ? field : null);
       setAutoSelectedIndex(-1);
     }, 200);
-  }, [getAutocomplete, canSearchServer, invalidateAutocomplete]);
+  }, [getAutocomplete, canSearchServer, invalidateAutocomplete, sendingAccountId]);
 
   // On-demand: search the Sent folder server-side for recipients matching the
   // current query and merge fresh hits into the open dropdown (deduped by email).
@@ -2655,7 +2688,7 @@ export function EmailComposer({
       serverSearchContextRef.current === context && serverSearchRef.current === search;
     setIsSearchingServer(true);
     try {
-      const serverResults = await searchRecipients(composerClient, query);
+      const serverResults = await searchRecipients(composerClient, query, sendingAccountId);
       if (!isCurrent()) return;
       setAutocompleteResults((prev) => {
         if (!isCurrent()) return prev;
@@ -2681,7 +2714,7 @@ export function EmailComposer({
         setIsSearchingServer(false);
       }
     }
-  }, [autoQuery, composerClient, isSearchingServer, searchRecipients]);
+  }, [autoQuery, composerClient, isSearchingServer, searchRecipients, sendingAccountId]);
 
   // Recipients picked in the directory dialog; addresses already in that
   // field are skipped.

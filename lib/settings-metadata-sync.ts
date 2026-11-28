@@ -54,6 +54,7 @@ export const METADATA_SETTING_NAMES: readonly string[] = [
   'sidebarApps', 'keepAppsLoaded', 'expandedFilterView', 'emailDownloadTemplate', 'attachmentDownloadTemplate',
   'filenameSpaceReplacement', 'filenameLowercase', 'filenameStripDiacritics', 'birthdayCalendarColor',
   'toastDuration', 'quickReplyEnabled', 'calendarTintedEvents', 'recipientMentionsEnabled', 'mentionAddsRecipientTo',
+  'sharedSentRecipientSuggestions',
 ];
 
 /**

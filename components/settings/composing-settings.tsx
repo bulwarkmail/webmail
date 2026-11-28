@@ -42,6 +42,7 @@ export function ComposingSettings() {
     placeholderWarningEnabled,
     recipientMentionsEnabled,
     mentionAddsRecipientTo,
+    sharedSentRecipientSuggestions,
     sendDelaySeconds,
     signaturePosition,
     signatureNewMailEnabled,
@@ -88,6 +89,13 @@ export function ComposingSettings() {
             />
           </SettingItem>
         )}
+
+        <SettingItem label={t('shared_sent_recipients.label')} description={t('shared_sent_recipients.description')}>
+          <ToggleSwitch
+            checked={sharedSentRecipientSuggestions}
+            onChange={(checked) => updateSetting('sharedSentRecipientSuggestions', checked)}
+          />
+        </SettingItem>
 
         <SettingItem advanced label={t('rtl_editing.label')} description={t('rtl_editing.description')}>
           <ToggleSwitch
