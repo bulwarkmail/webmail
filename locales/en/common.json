@@ -1382,6 +1382,7 @@
     "from_sub_address": "Use a sub-address…",
     "from_edit_sender": "Edit sender…",
     "shortcut_insert_link": "Insert link",
+    "shortcut_paste_plain": "Paste as plain text",
     "shortcut_save_draft": "Save draft",
     "shortcut_show_cc": "Show Cc",
     "shortcut_show_bcc": "Show Bcc"

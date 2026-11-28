@@ -1382,6 +1382,7 @@
     "from_sub_address": "하위 주소 사용…",
     "from_edit_sender": "보낸 사람 편집…",
     "shortcut_insert_link": "링크 삽입",
+    "shortcut_paste_plain": "일반 텍스트로 붙여넣기",
     "shortcut_save_draft": "임시 저장",
     "shortcut_show_cc": "참조 표시",
     "shortcut_show_bcc": "숨은 참조 표시"

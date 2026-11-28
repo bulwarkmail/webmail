@@ -13,6 +13,7 @@ import Link from "@tiptap/extension-link";
 import TextAlign from "@tiptap/extension-text-align";
 import { TextDirection } from "@/components/email/text-direction";
 import { PlainTextPaste } from "@/components/email/plain-text-paste";
+import { handlePlainPasteKey } from "@/components/email/paste-plain-shortcut";
 import { pastedImageFiles } from "@/components/email/paste-images";
 import { TextStyle, BackgroundColor } from "@tiptap/extension-text-style";
 import Color from "@tiptap/extension-color";
@@ -660,7 +661,8 @@ export function RichTextEditor({
     content,
     editorProps: {
       attributes: editorA11yAttributes({ ariaLabel, ariaInvalid, ariaDescribedBy, defaultTextStyle, spellcheck, lang }),
-      handleKeyDown: (_view, event) => {
+      handleKeyDown: (view, event) => {
+        if (handlePlainPasteKey(view, event)) return true;
         if (event.altKey && event.key === "F10" && focusToolbarRef.current?.()) {
           event.preventDefault();
           return true;

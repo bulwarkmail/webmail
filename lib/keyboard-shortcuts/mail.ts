@@ -49,6 +49,8 @@ export const MAIL_SHORTCUTS = {
     // "t" opens templates only outside a text field, so it isn't listed: in the composer it types a t.
     { key: "Mod + S", description: "compose_ux.shortcut_save_draft" },
     { key: "Mod + K", description: "compose_ux.shortcut_insert_link" },
+    // components/email/paste-plain-shortcut.ts; ⌥ is optional on a Mac (#1890).
+    { key: "Mod + Shift + V", description: "compose_ux.shortcut_paste_plain" },
     { key: "Mod + Shift + C", description: "compose_ux.shortcut_show_cc" },
     { key: "Mod + Shift + B", description: "compose_ux.shortcut_show_bcc" },
     // Proofreading (components/email/proofreading); shown even without a checker.

@@ -1382,6 +1382,7 @@
     "from_sub_address": "Usar una subdirección…",
     "from_edit_sender": "Editar remitente…",
     "shortcut_insert_link": "Insertar enlace",
+    "shortcut_paste_plain": "Pegar como texto sin formato",
     "shortcut_save_draft": "Guardar borrador",
     "shortcut_show_cc": "Mostrar CC",
     "shortcut_show_bcc": "Mostrar CCO"

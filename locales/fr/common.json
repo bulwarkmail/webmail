@@ -1382,6 +1382,7 @@
     "from_sub_address": "Utiliser une sous-adresse…",
     "from_edit_sender": "Modifier l'expéditeur…",
     "shortcut_insert_link": "Insérer un lien",
+    "shortcut_paste_plain": "Coller en texte brut",
     "shortcut_save_draft": "Enregistrer le brouillon",
     "shortcut_show_cc": "Afficher Cc",
     "shortcut_show_bcc": "Afficher Cci"

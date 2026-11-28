@@ -1382,6 +1382,7 @@
     "from_sub_address": "サブアドレスを使用…",
     "from_edit_sender": "差出人を編集…",
     "shortcut_insert_link": "リンクを挿入",
+    "shortcut_paste_plain": "書式なしで貼り付け",
     "shortcut_save_draft": "下書きを保存",
     "shortcut_show_cc": "Cc を表示",
     "shortcut_show_bcc": "Bcc を表示"

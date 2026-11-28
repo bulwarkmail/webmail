@@ -1382,6 +1382,7 @@
     "from_sub_address": "使用子地址…",
     "from_edit_sender": "编辑发件人…",
     "shortcut_insert_link": "插入链接",
+    "shortcut_paste_plain": "粘贴为纯文本",
     "shortcut_save_draft": "保存草稿",
     "shortcut_show_cc": "显示抄送",
     "shortcut_show_bcc": "显示密送"
