@@ -347,10 +347,11 @@ describe('reader-above-quote', () => {
     const doc = iframe.contentDocument!;
     doc.body.innerHTML = '<p>New text</p><div data-quoted-html style="display:flex">Old text</div><p id="after">New text below</p>';
     expect(setupQuoteCollapse(doc, { show: 'Show quoted text', hide: 'Hide quoted text' })).toBe(true);
-    const button = doc.querySelector<HTMLButtonElement>('[data-quote-toggle]')!;
+    const button = doc.querySelector<HTMLLabelElement>('[data-quote-toggle]')!;
+    const display = (el: Element) => doc.defaultView!.getComputedStyle(el).display;
     const quote = doc.querySelector<HTMLElement>('[data-quoted-html]')!;
-    expect(button.getAttribute('aria-expanded')).toBe('true');
-    expect(quote.style.display).toBe('flex');
+    expect(button.querySelector('input')!.checked).toBe(true);
+    expect(display(quote)).toBe('flex');
 
     const { unmount } = render(
       <ReaderAboveQuoteSlot root={doc.body} frame={iframe} extraProps={{ email: { id: 'e1' } }} />,
@@ -362,13 +363,13 @@ describe('reader-above-quote', () => {
     expect(pluginFrame).toBeVisible();
 
     act(() => { button.click(); });
-    expect(quote.style.display).toBe('none');
+    expect(display(quote)).toBe('none');
     expect(doc.getElementById('after')).toBeVisible();
     expect(pluginFrame).toBeVisible();
     expect(anchor.isConnected).toBe(true);
 
     act(() => { button.click(); });
-    expect(quote.style.display).toBe('flex');
+    expect(display(quote)).toBe('flex');
     expect(pluginFrame).toBeVisible();
     expect(doc.querySelectorAll(`[${QUOTE_ANCHOR_ATTR}]`)).toHaveLength(1);
     unmount();

@@ -4048,7 +4048,10 @@ export function EmailViewer({
           if (iframe.contentDocument !== doc) return; // navigated away; stale
           sizeFrame(force);
         };
-        const resizeObserver = new ResizeObserver(() => applyHeight());
+        // Forced: when the body shrinks (a folded quote), the scroll height
+        // stays pinned to the old viewport and the size cache would skip the
+        // re-measure. The quote toggle's own callback does not run in Safari.
+        const resizeObserver = new ResizeObserver(() => applyHeight(true));
         resizeObserver.observe(doc.body);
         // Re-fit when the iframe itself changes width. Height-only changes are
         // our own applyHeight writing back, so they're ignored - re-entering on

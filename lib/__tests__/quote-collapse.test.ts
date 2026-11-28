@@ -1,11 +1,18 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 
-import { setupQuoteCollapse, collapsePlainTextQuotes, QUOTE_TOGGLE_ATTR, QUOTE_COLLAPSED_ATTR } from '@/lib/quote-collapse';
+import { setupQuoteCollapse, collapsePlainTextQuotes, QUOTE_TOGGLE_ATTR, QUOTE_COLLAPSED_ATTR, QUOTE_LABEL_ATTR } from '@/lib/quote-collapse';
 import { plainTextToSafeHtml, sanitizeEmailHtml, sanitizePlainTextRenderedHtml } from '@/lib/email-sanitization';
 
 const labels = { show: 'Show quoted text', hide: 'Hide quoted text' };
 
-const toggle = () => document.body.querySelector<HTMLButtonElement>(`[${QUOTE_TOGGLE_ATTR}]`);
+const toggle = () => document.body.querySelector<HTMLLabelElement>(`[${QUOTE_TOGGLE_ATTR}]`);
+/** The checkbox inside the toggle; it carries the state and the ARIA attributes. */
+const checkbox = () => toggle()!.querySelector<HTMLInputElement>('input[type="checkbox"]')!;
+/** Computed display: the fold is a stylesheet rule, not an inline style. */
+const display = (el: Element) => getComputedStyle(el).display;
+/** The label the toggle shows for its state (tooltip and accessible name). */
+const shownLabel = () => [...toggle()!.querySelectorAll<HTMLElement>(`[${QUOTE_LABEL_ATTR}]`)]
+  .filter((el) => display(el) !== 'none').map((el) => el.title).join('|');
 
 describe('setupQuoteCollapse', () => {
   beforeEach(() => {
@@ -22,11 +29,11 @@ describe('setupQuoteCollapse', () => {
     expect(setupQuoteCollapse(document, labels)).toBe(true);
 
     const quote = document.querySelector<HTMLElement>('.gmail_quote')!;
-    expect(quote.style.display).toBe('none');
+    expect(display(quote)).toBe('none');
     const btn = toggle()!;
     expect(btn).toBeTruthy();
-    expect(btn.getAttribute('aria-expanded')).toBe('false');
-    expect(btn.title).toBe(labels.show);
+    expect(checkbox().checked).toBe(false);
+    expect(shownLabel()).toBe(labels.show);
     // Button sits directly before the quote it controls.
     expect(btn.nextElementSibling).toBe(quote);
   });
@@ -40,15 +47,37 @@ describe('setupQuoteCollapse', () => {
     const quote = document.querySelector<HTMLElement>('.gmail_quote')!;
     const btn = toggle()!;
     btn.click();
-    expect(quote.style.display).toBe('flex');
-    expect(quote.hasAttribute(QUOTE_COLLAPSED_ATTR)).toBe(false);
-    expect(btn.getAttribute('aria-expanded')).toBe('true');
-    expect(btn.title).toBe(labels.hide);
+    expect(display(quote)).toBe('flex');
+    expect(checkbox().checked).toBe(true);
+    expect(shownLabel()).toBe(labels.hide);
 
     btn.click();
-    expect(quote.style.display).toBe('none');
-    expect(btn.getAttribute('aria-expanded')).toBe('false');
-    expect(btn.title).toBe(labels.show);
+    expect(display(quote)).toBe('none');
+    expect(checkbox().checked).toBe(false);
+    expect(shownLabel()).toBe(labels.show);
+  });
+
+  it('folds by stylesheet alone, for frames where no listener runs (Safari)', () => {
+    document.body.innerHTML = `
+      <p>reply text</p>
+      <div><div style="border:none;border-top:solid #E1E1E1 1.0pt"><p><b>From:</b> John</p></div></div>
+      <p id="quoted" style="display:flex">quoted</p>`;
+    const onToggle = vi.fn();
+    setupQuoteCollapse(document, labels, onToggle);
+    const quoted = document.getElementById('quoted')!;
+    expect(quoted.hasAttribute(QUOTE_COLLAPSED_ATTR)).toBe(true);
+    expect(quoted.getAttribute('style')).toBe('display:flex');
+    expect(quoted).not.toBeVisible();
+
+    // WebKit runs no parent-attached listener in a frame sandboxed without
+    // allow-scripts; only the checkbox's native state changes on a click.
+    checkbox().checked = true;
+    expect(display(quoted)).toBe('flex');
+    expect(shownLabel()).toBe(labels.hide);
+    checkbox().checked = false;
+    expect(quoted).not.toBeVisible();
+    expect(shownLabel()).toBe(labels.show);
+    expect(onToggle).not.toHaveBeenCalled();
   });
 
   it('collapses an Apple Mail cite blockquote but keeps the attribution line visible', () => {
@@ -59,7 +88,7 @@ describe('setupQuoteCollapse', () => {
     expect(setupQuoteCollapse(document, labels)).toBe(true);
 
     const quote = document.querySelector<HTMLElement>('blockquote')!;
-    expect(quote.style.display).toBe('none');
+    expect(display(quote)).toBe('none');
     expect(document.body.textContent).toContain('Jane wrote:');
   });
 
@@ -69,7 +98,7 @@ describe('setupQuoteCollapse', () => {
       <div>On Jul 20, John &lt;j@example.com&gt; wrote:</div>
       <div data-quoted-html style="border-left:2px solid #c5c5c5;padding-left:12px;">original</div>`;
     expect(setupQuoteCollapse(document, labels)).toBe(true);
-    expect(document.querySelector<HTMLElement>('[data-quoted-html]')!.style.display).toBe('none');
+    expect(display(document.querySelector<HTMLElement>('[data-quoted-html]')!)).toBe('none');
   });
 
   it('collapses everything after an Outlook divRplyFwdMsg separator', () => {
@@ -81,10 +110,10 @@ describe('setupQuoteCollapse', () => {
     expect(setupQuoteCollapse(document, labels)).toBe(true);
 
     const divs = [...document.querySelectorAll<HTMLElement>('body > div')];
-    expect(divs[0].style.display).toBe('');
-    expect(divs[1].style.display).toBe('none');
-    expect(divs[2].style.display).toBe('none');
-    expect(divs[3].style.display).toBe('none');
+    expect(divs[0]).toBeVisible();
+    expect(display(divs[1])).toBe('none');
+    expect(display(divs[2])).toBe('none');
+    expect(display(divs[3])).toBe('none');
   });
 
   it('collapses from a Thunderbird moz-cite-prefix attribution onwards', () => {
@@ -93,31 +122,31 @@ describe('setupQuoteCollapse', () => {
       <div class="moz-cite-prefix">On 20.07.2026, Jane wrote:</div>
       <blockquote type="cite">original</blockquote>`;
     expect(setupQuoteCollapse(document, labels)).toBe(true);
-    expect(document.querySelector<HTMLElement>('.moz-cite-prefix')!.style.display).toBe('none');
-    expect(document.querySelector<HTMLElement>('blockquote')!.style.display).toBe('none');
+    expect(display(document.querySelector<HTMLElement>('.moz-cite-prefix')!)).toBe('none');
+    expect(display(document.querySelector<HTMLElement>('blockquote')!)).toBe('none');
   });
 
   it('collapses an iPhone Mail reply, whose attribution sits in a quote of its own (#1476)', () => {
     document.body.innerHTML = `<div dir="ltr">Works for me.</div><div dir="ltr"><br><blockquote type="cite">On 30 Oct 2026, at 17:02, John &lt;john@example.com&gt; wrote:<br><br></blockquote></div><blockquote type="cite"><div dir="ltr">Shall we meet on Friday?</div></blockquote>`;
     expect(setupQuoteCollapse(document, labels)).toBe(true);
     const [attribution, original] = [...document.querySelectorAll<HTMLElement>('blockquote')];
-    expect(attribution.style.display).toBe('none');
-    expect(original.style.display).toBe('none');
-    expect(document.querySelector<HTMLElement>('div[dir="ltr"]')!.style.display).toBe('');
+    expect(display(attribution)).toBe('none');
+    expect(display(original)).toBe('none');
+    expect(document.querySelector<HTMLElement>('div[dir="ltr"]')!).toBeVisible();
   });
 
   it('collapses from the header block of an Outlook for Windows reply (#1476)', () => {
     document.body.innerHTML = `<div class="WordSection1"><p class="MsoNormal">Done, see attached.</p><div><div style="border:none;border-top:solid #E1E1E1 1.0pt;padding:3.0pt 0cm 0cm 0cm"><p class="MsoNormal"><b>From:</b> John<br><b>Sent:</b> Friday</p></div></div><p class="MsoNormal">Can you send the file?</p></div>`;
     expect(setupQuoteCollapse(document, labels)).toBe(true);
     const paragraphs = [...document.querySelectorAll<HTMLElement>('.WordSection1 > p')];
-    expect(paragraphs[0].style.display).toBe('');
-    expect(paragraphs[1].style.display).toBe('none');
+    expect(paragraphs[0]).toBeVisible();
+    expect(display(paragraphs[1])).toBe('none');
   });
 
   it('collapses an Outlook mobile reference message (#1476)', () => {
     document.body.innerHTML = `<div>On my way</div><div id="mail-editor-reference-message-container"><div><b>From:</b> John</div><div>Where are you?</div></div>`;
     expect(setupQuoteCollapse(document, labels)).toBe(true);
-    expect(document.getElementById('mail-editor-reference-message-container')!.style.display).toBe('none');
+    expect(display(document.getElementById('mail-editor-reference-message-container')!)).toBe('none');
   });
 
   it('does not collapse when the quote is the entire message', () => {
@@ -125,7 +154,7 @@ describe('setupQuoteCollapse', () => {
       <div class="gmail_quote">forwarded content only</div>`;
     expect(setupQuoteCollapse(document, labels)).toBe(false);
     expect(toggle()).toBeNull();
-    expect(document.querySelector<HTMLElement>('.gmail_quote')!.style.display).toBe('');
+    expect(document.querySelector<HTMLElement>('.gmail_quote')!).toBeVisible();
   });
 
   it('keeps an interleaved reply visible and offers a manual quote toggle', () => {
@@ -136,9 +165,9 @@ describe('setupQuoteCollapse', () => {
     expect(setupQuoteCollapse(document, labels)).toBe(true);
     expect(document.querySelector('blockquote')).toBeVisible();
     expect(document.body.lastElementChild).toBeVisible();
-    expect(toggle()!.getAttribute('aria-expanded')).toBe('true');
-    expect(toggle()!.getAttribute('aria-label')).toBe(labels.hide);
-    expect(toggle()!.title).toBe(labels.hide);
+    expect(checkbox().checked).toBe(true);
+    expect(shownLabel()).toBe(labels.hide);
+    expect(shownLabel()).toBe(labels.hide);
   });
 
   it.each([
@@ -157,25 +186,23 @@ describe('setupQuoteCollapse', () => {
     expect(setupQuoteCollapse(document, labels)).toBe(true);
     const button = toggle()!;
     expect(quote).toBeVisible();
-    expect(quote.hasAttribute(QUOTE_COLLAPSED_ATTR)).toBe(false);
-    expect(button.getAttribute('aria-expanded')).toBe('true');
-    expect(button.getAttribute('aria-label')).toBe(labels.hide);
+    expect(checkbox().checked).toBe(true);
+    expect(shownLabel()).toBe(labels.hide);
 
     button.click();
     expect(quote).not.toBeVisible();
     expect(document.getElementById('reply')).toBeVisible();
     expect(document.getElementById('after')).toBeVisible();
-    expect(button.getAttribute('aria-expanded')).toBe('false');
-    expect(button.getAttribute('aria-label')).toBe(labels.show);
-    expect(button.title).toBe(labels.show);
+    expect(checkbox().checked).toBe(false);
+    expect(shownLabel()).toBe(labels.show);
+    expect(shownLabel()).toBe(labels.show);
     expect(quote.innerHTML).toBe(content);
 
     button.click();
     expect(quote).toBeVisible();
-    expect(quote.hasAttribute(QUOTE_COLLAPSED_ATTR)).toBe(false);
-    expect(button.getAttribute('aria-expanded')).toBe('true');
-    expect(button.getAttribute('aria-label')).toBe(labels.hide);
-    expect(button.title).toBe(labels.hide);
+    expect(checkbox().checked).toBe(true);
+    expect(shownLabel()).toBe(labels.hide);
+    expect(shownLabel()).toBe(labels.hide);
     expect(quote.innerHTML).toBe(content);
   });
 
@@ -193,13 +220,13 @@ describe('setupQuoteCollapse', () => {
     const originalText = document.body.textContent;
 
     expect(setupQuoteCollapse(document, labels)).toBe(true);
-    expect(quote.style.display).toBe('flex');
+    expect(display(quote)).toBe('flex');
     expect(document.getElementById('signature')).toBeVisible();
     toggle()!.click();
-    expect(quote.style.display).toBe('none');
+    expect(display(quote)).toBe('none');
     expect(document.getElementById('signature')).toBeVisible();
     toggle()!.click();
-    expect(quote.style.display).toBe('flex');
+    expect(display(quote)).toBe('flex');
     expect(quote.innerHTML).toBe(originalQuote);
     expect(document.getElementById('signature')!.outerHTML).toBe(originalSignature);
     expect(document.querySelector('img')!.getAttribute('src')).toBe('cid:original-image');
@@ -255,13 +282,13 @@ describe('setupQuoteCollapse', () => {
     expect(setupQuoteCollapse(document, labels)).toBe(true);
     const button = toggle()!;
     expect(setupQuoteCollapse(document, labels)).toBe(false);
-    expect(button.getAttribute('aria-expanded')).toBe('true');
+    expect(checkbox().checked).toBe(true);
     button.click();
     expect(setupQuoteCollapse(document, labels)).toBe(false);
     expect(document.querySelectorAll(`[${QUOTE_TOGGLE_ATTR}]`)).toHaveLength(1);
-    expect(button.getAttribute('aria-expanded')).toBe('false');
+    expect(checkbox().checked).toBe(false);
     button.click();
-    expect(button.getAttribute('aria-expanded')).toBe('true');
+    expect(checkbox().checked).toBe(true);
     expect(document.querySelector('[data-quoted-html]')).toBeVisible();
   });
 
@@ -271,7 +298,7 @@ describe('setupQuoteCollapse', () => {
     const quote = document.querySelector<HTMLElement>('[data-quoted-html]')!;
     const states: Array<{ expanded: string | null; display: string }> = [];
     const onToggle = vi.fn(() => {
-      states.push({ expanded: toggle()!.getAttribute('aria-expanded'), display: quote.style.display });
+      states.push({ expanded: String(checkbox().checked), display: display(quote) });
     });
 
     expect(setupQuoteCollapse(document, labels, onToggle)).toBe(true);
@@ -289,7 +316,7 @@ describe('setupQuoteCollapse', () => {
       + '<style>html,body{height:auto!important;min-height:0!important}body{overflow-y:hidden!important}</style>';
     expect(setupQuoteCollapse(document, labels)).toBe(true);
     expect(document.querySelector('.gmail_quote')).not.toBeVisible();
-    expect(toggle()!.getAttribute('aria-expanded')).toBe('false');
+    expect(checkbox().checked).toBe(false);
   });
 
   it('still folds the full run of adjacent cite quotes when a stylesheet follows it', () => {
@@ -299,7 +326,7 @@ describe('setupQuoteCollapse', () => {
     const quotes = document.querySelectorAll('blockquote');
     expect(quotes[0]).not.toBeVisible();
     expect(quotes[1]).not.toBeVisible();
-    expect(toggle()!.getAttribute('aria-expanded')).toBe('false');
+    expect(checkbox().checked).toBe(false);
   });
 
   it('does not treat a stylesheet as a reply preceding a quote-only message', () => {
@@ -314,7 +341,7 @@ describe('setupQuoteCollapse', () => {
       + '<style>body{height:auto}</style>';
     expect(setupQuoteCollapse(document, labels)).toBe(true);
     expect(document.querySelector('blockquote')).not.toBeVisible();
-    expect(toggle()!.getAttribute('aria-expanded')).toBe('false');
+    expect(checkbox().checked).toBe(false);
   });
 
   it('ignores whitespace-only trailing content after the quote container', () => {
@@ -353,7 +380,7 @@ describe('setupQuoteCollapse', () => {
       </div>`;
     expect(setupQuoteCollapse(document, labels)).toBe(true);
     const outer = document.querySelector<HTMLElement>('blockquote')!;
-    expect(outer.style.display).toBe('none');
+    expect(display(outer)).toBe('none');
     expect(document.body.textContent).toContain('Tracey Tiefisher wrote:');
   });
 
@@ -379,7 +406,7 @@ describe('setupQuoteCollapse', () => {
       walkerSpy.mockRestore();
     }
     expect(document.body.lastElementChild!.textContent).toBe('late quote');
-    expect((document.body.lastElementChild as HTMLElement).style.display).toBe('none');
+    expect(display((document.body.lastElementChild as HTMLElement))).toBe('none');
   });
 
   it('collapses a nested wrapper case: separator inside a wrapper div hides content outside it too', () => {
@@ -390,7 +417,7 @@ describe('setupQuoteCollapse', () => {
     expect(setupQuoteCollapse(document, labels)).toBe(true);
     const last = document.body.lastElementChild as HTMLElement;
     expect(last.textContent).toBe('quoted rest');
-    expect(last.style.display).toBe('none');
+    expect(display(last)).toBe('none');
   });
 });
 
