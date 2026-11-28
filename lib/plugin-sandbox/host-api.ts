@@ -88,7 +88,8 @@ import { requestOpenEmail } from './open-email';
 import { doComposerAttach, doComposerGetBody, doComposerGetSelection, doComposerGetSnapshot, doComposerReadAttachment, doComposerReplaceBody, doComposerReplaceSelection, doComposerSetSubject } from './host-api-composer';
 import { wkdAllowed } from '../outgoing-hosts';
 import { noThirdPartyTraffic } from '../third-party-mode';
-import { openExternalLink } from '../plugin-hook-result';
+import { linkCheckActive, normaliseLinkHref, resolveExternalLink } from '../plugin-hook-result';
+import { openCheckedLink } from '../sidebar-app-links';
 import { ASSISTANT_PERMS, NOT_MINE, dispatchAssistant } from './assistant';
 import { KEYSTORE_METHODS, KEYSTORE_PERMS, doKeystoreCall } from './host-api-keystore';
 
@@ -2424,6 +2425,12 @@ export async function dispatchApiCall(
       return undefined;
     }
     case 'ui.openExternalUrl': {
+      // Only a call made while the user is acting (a click or key in the app
+      // or a plugin's frame, `navigator.userActivation`) may open an admin
+      // app's pane: the method needs no permission, and the pane replaces the
+      // mail view and sends the app's signed-in frame to the address. Read
+      // now, before the link check's dialog can let it lapse.
+      const activated = (navigator as Navigator & { userActivation?: { isActive: boolean } }).userActivation?.isActive === true;
       const url = String(args[0] ?? '');
       // Only http(s) - the sandbox should not be able to navigate the host
       // anywhere internal, nor open javascript:/data:/file: schemes.
@@ -2438,9 +2445,15 @@ export async function dispatchApiCall(
       // Other plugins' link checks (onBeforeExternalLink) see it like a
       // click in a message; the plugin's own handler isn't asked again, so a
       // link check opens the link after its dialog.
-      // Always opens in a new tab; plugins must not be able to navigate the
+      const href = parsed.toString();
+      const target = linkCheckActive(plugin.id)
+        ? await resolveExternalLink({ href, target: '_blank' }, { skipPluginId: plugin.id })
+        : normaliseLinkHref(href);
+      // A link to an admin inline app (a chat's direct message) opens that
+      // app in its pane at that address, as the same link in a mail does.
+      // Else always a new tab; plugins must not be able to navigate the
       // host window (_self/_top/_parent) to an attacker-controlled origin.
-      await openExternalLink({ href: parsed.toString(), target: '_blank' }, { skipPluginId: plugin.id });
+      if (target) openCheckedLink(target, activated);
       return undefined;
     }
     case 'ui.print': return doUiPrint(plugin, args[0]);

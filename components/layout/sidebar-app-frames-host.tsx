@@ -80,6 +80,26 @@ export function SidebarAppFramesHost() {
     });
   }, [frames]);
 
+  // A link opening the app again at the address it already has (`visit`
+  // bumped, `src` the same) sets `src` again by hand, which navigates: the app
+  // has moved on inside since, and the user asked for that address. A new
+  // `src` navigates by itself (React sets it).
+  const visits = useRef(new Map<string, { src: string; visit?: number }>());
+  useEffect(() => {
+    for (const appId of [...visits.current.keys()]) {
+      if (!frames.some((f) => f.id === appId)) visits.current.delete(appId);
+    }
+    for (const app of frames) {
+      const src = app.src ?? app.url;
+      const before = visits.current.get(app.id);
+      visits.current.set(app.id, { src, visit: app.visit });
+      if (before && before.visit !== app.visit && before.src === src) {
+        const frame = frameRefs.current.get(app.id);
+        if (frame) frame.src = src;
+      }
+    }
+  }, [frames]);
+
   // An app removed from the rail, or pointed elsewhere, loses its frame. The
   // operator's apps arrive with the policy, so nothing is dropped before it.
   const policyLoaded = usePolicyStore((s) => s.loaded);
@@ -143,7 +163,7 @@ export function SidebarAppFramesHost() {
               if (el) frameRefs.current.set(app.id, el);
               else frameRefs.current.delete(app.id);
             }}
-            src={app.url}
+            src={app.src ?? app.url}
             title={app.name}
             className={cn(
               'absolute inset-0 w-full h-full border-0',

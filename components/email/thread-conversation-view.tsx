@@ -7,6 +7,7 @@ import { EMAIL_SANITIZE_CONFIG, TRANSPARENT_BLOCKED_PIXEL, blockExternalResource
 import { gateLinkClick, linkCheckActive, linkText, resolveExternalLink } from "@/lib/plugin-hook-result";
 import { HELD_LINK_CSS, holdFrameLinks, releaseFrameLinks } from "@/lib/email-frame-links";
 import { gateMessageLink } from "@/lib/link-gate-holder";
+import { gateAppLinkClick, isPlainLinkClick, openCheckedLink } from "@/lib/sidebar-app-links";
 import { stripBidiControls } from "@/lib/bidi";
 import { requestInternalMailto } from "@/lib/protocol-handlers/mailto";
 import { emailListDate } from "@/lib/email-date";
@@ -1116,8 +1117,10 @@ export function ConversationEmailBody({
         ev.preventDefault();
         ev.stopPropagation();
         if (!isOpenableLinkHref(href)) return;
+        const plain = isPlainLinkClick(ev);
         void resolveExternalLink({ href, target: link.getAttribute('target') ?? undefined, emailId: email.id, text: linkText(link) })
-          .then((target) => { if (target) window.open(target, '_blank', 'noopener,noreferrer'); });
+          // An admin inline app's link opens the app in its pane (email-viewer's gate).
+          .then((target) => { if (target) openCheckedLink(target, plain); });
       };
       doc.addEventListener('click', onLinkClick, true);
       doc.addEventListener('auxclick', onLinkClick, true);
@@ -1366,7 +1369,7 @@ export function ConversationEmailBody({
             onContextMenu={(e) => selectionMenu.onElementContextMenu(e, email.id)}
             // A plain-text body renders in the page, not the iframe: its
             // links go through the link check here.
-            onClick={(e) => gateLinkClick(e, { emailId: email.id })}
+            onClick={(e) => gateAppLinkClick(e, { emailId: email.id })}
             onAuxClick={(e) => gateLinkClick(e, { emailId: email.id })}
             dangerouslySetInnerHTML={plainBodyHtml}
           />

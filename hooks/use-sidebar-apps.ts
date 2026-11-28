@@ -6,6 +6,7 @@ import { appUrlToFrameOrigin, inlineAppFrameOrigins } from '@/lib/security/app-f
 import { readAppFrameOrigins, writeAppFrameOrigins } from '@/lib/security/app-frame-origins-client';
 import { sidebarAppHooks } from '@/lib/plugin-hooks';
 import { useSidebarAppFramesStore } from '@/stores/sidebar-app-frames-store';
+import { useIsEmbedded } from '@/hooks/use-is-embedded';
 
 export interface InlineAppState {
   id: string;
@@ -33,6 +34,8 @@ function takePendingInlineApp(): InlineAppState | null {
   }
 }
 
+let nextHost = 0;
+
 export function useSidebarApps() {
   const [showAppsModal, setShowAppsModal] = useState(false);
   const [inlineApp, setInlineApp] = useState<InlineAppState | null>(null);
@@ -58,6 +61,18 @@ export function useSidebarApps() {
     void sidebarAppHooks.onSidebarAppOpen.emit({ appId: inlineAppId });
     return () => { void sidebarAppHooks.onSidebarAppClose.emit({ appId: inlineAppId }); };
   }, [inlineAppId]);
+
+  // A link to an admin app opens it in the newest page that can show it
+  // (openLinkInSidebarApp). A page embedded in another (a Pro pane) is not
+  // one: the page around it shows the app.
+  const [hostId] = useState(() => ++nextHost);
+  const embedded = useIsEmbedded();
+  useEffect(() => {
+    if (embedded) return;
+    const store = useSidebarAppFramesStore.getState();
+    store.addHost({ id: hostId, show: (app) => setInlineApp({ id: app.id, url: app.url, name: app.name }) });
+    return () => useSidebarAppFramesStore.getState().removeHost(hostId);
+  }, [embedded, hostId]);
 
   // The frames themselves live in the layout (SidebarAppFramesHost), so an app
   // keeps its document when the user moves to another page. Each page starts
