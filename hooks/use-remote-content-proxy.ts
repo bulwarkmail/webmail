@@ -4,6 +4,11 @@ import { IS_LITE } from '@/lib/lite';
 import { withBasePath } from '@/lib/browser-navigation';
 import { remoteContentProxyBase } from '@/lib/remote-content-proxy';
 
+function proxyBaseFor(on: boolean): string | null {
+  if (!on || IS_LITE || typeof window === 'undefined') return null;
+  return remoteContentProxyBase(window.location.origin, withBasePath('/'));
+}
+
 /**
  * Where remote pictures of a message load from when the user allows them:
  * this server's /api/remote-content folder while the admin policy's
@@ -13,8 +18,10 @@ import { remoteContentProxyBase } from '@/lib/remote-content-proxy';
  */
 export function useRemoteContentProxyBase(): string | null {
   const on = usePolicyStore((s) => s.policy.features?.remoteContentProxyEnabled === true);
-  return useMemo(() => {
-    if (!on || IS_LITE || typeof window === 'undefined') return null;
-    return remoteContentProxyBase(window.location.origin, withBasePath('/'));
-  }, [on]);
+  return useMemo(() => proxyBaseFor(on), [on]);
+}
+
+/** {@link useRemoteContentProxyBase} outside React (the composer's quote island). */
+export function remoteContentProxyBaseNow(): string | null {
+  return proxyBaseFor(usePolicyStore.getState().policy.features?.remoteContentProxyEnabled === true);
 }

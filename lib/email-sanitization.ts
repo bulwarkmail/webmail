@@ -877,16 +877,23 @@ const PARKABLE_URL_ATTRS = ['src', 'poster', 'background'] as const;
  * reference is parked in a `data-bulwark-remote-*` attribute so nothing
  * loads, and {@link restoreRemoteResources} puts it back exactly. Parsing
  * happens in an inert DOMParser document, which fetches nothing.
+ *
+ * With `proxyBase` (remote content allowed while the admin's
+ * `remoteContentProxyEnabled` gate is on, #1872) the parked pictures show
+ * through this server instead, as {@link proxyExternalResourcesOnNode} points
+ * them in the viewer; the originals stay parked for the way back.
  */
-export function parkRemoteResources(html: string): { html: string; parked: boolean } {
+export function parkRemoteResources(html: string, proxyBase?: string | null): { html: string; parked: boolean } {
   const doc = parseHtmlSafely(`<body>${html}</body>`);
   let parked = false;
   for (const el of Array.from(doc.body.querySelectorAll('*'))) {
+    const originals: [string, string][] = [];
     for (const attr of PARKABLE_URL_ATTRS) {
       const value = el.getAttribute(attr);
       if (isExternalResourceUrl(value)) {
         el.setAttribute(PARKED_ATTR_PREFIX + attr, value!);
         el.removeAttribute(attr);
+        originals.push([attr, value!]);
         parked = true;
       }
     }
@@ -894,13 +901,20 @@ export function parkRemoteResources(html: string): { html: string; parked: boole
     if (srcset && srcsetHasExternalUrl(srcset)) {
       el.setAttribute(PARKED_ATTR_PREFIX + 'srcset', srcset);
       el.removeAttribute('srcset');
+      originals.push(['srcset', srcset]);
       parked = true;
     }
     const style = el.getAttribute('style');
     if (style && styleHasExternalUrl(style)) {
       el.setAttribute(PARKED_ATTR_PREFIX + 'style', style);
       el.setAttribute('style', stripExternalCssUrls(style));
+      originals.push(['style', style]);
       parked = true;
+    }
+    // A <style> sheet's text is not parked, so it couldn't be put back.
+    if (proxyBase && originals.length > 0 && el.tagName !== 'STYLE') {
+      for (const [attr, value] of originals) el.setAttribute(attr, value);
+      proxyExternalResourcesOnNode(el, proxyBase);
     }
   }
   return { html: parked ? doc.body.innerHTML : html, parked };

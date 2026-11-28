@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { imageIsAnimated, isAnimatedImageData, pauseAnimatedImages, remoteImageMayBeAnimated } from '@/lib/animated-images';
+import { proxiedResourceUrl } from '@/lib/remote-content-proxy';
 
 const bytes = (...parts: Array<string | number[]>) =>
   new Uint8Array(parts.flatMap((p) => (typeof p === 'string' ? [...p].map((c) => c.charCodeAt(0)) : p)));
@@ -46,6 +47,13 @@ describe('imageIsAnimated', () => {
   it('goes by the name for remote images', async () => {
     expect(remoteImageMayBeAnimated('https://cdn.example/promo.GIF?x=1')).toBe(true);
     expect(await imageIsAnimated('https://cdn.example/photo.jpg', async () => gif(2))).toBe(false);
+  });
+  // #1872: through this server's proxy the path ends in a token.
+  it('goes by the carried name for proxied remote images', () => {
+    const base = 'https://mail.example.org/webmail/api/remote-content/';
+    expect(remoteImageMayBeAnimated(proxiedResourceUrl('https://cdn.example/promo.gif?x=1', base)!)).toBe(true);
+    expect(remoteImageMayBeAnimated(proxiedResourceUrl('https://cdn.example/photo.jpg', base)!)).toBe(false);
+    expect(remoteImageMayBeAnimated(`${base}not-a-token`)).toBe(false);
   });
 });
 

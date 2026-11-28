@@ -5,7 +5,9 @@ import { Node, mergeAttributes } from "@tiptap/core";
 import { NodeViewWrapper, ReactNodeViewRenderer } from "@tiptap/react";
 import type { NodeViewProps } from "@tiptap/react";
 import { useRemoteContentHeldBackAnywhere } from "@/hooks/use-third-party-mode";
+import { useRemoteContentProxyBase } from "@/hooks/use-remote-content-proxy";
 import { TRANSPARENT_BLOCKED_PIXEL } from "@/lib/email-sanitization";
+import { proxiedResourceUrl } from "@/lib/remote-content-proxy";
 
 export interface ResizableImageOptions {
   /** Open the alt text dialog for the image at this position. */
@@ -27,7 +29,14 @@ function ResizableImageView({ node, updateAttributes, selected, extension, getPo
   // known yet; the address stays in the message.
   const heldBack = useRemoteContentHeldBackAnywhere();
   const src = typeof node.attrs.src === "string" ? node.attrs.src : "";
-  const parked = heldBack && /^(https?:)?\/\//i.test(src.trim());
+  const remote = /^(https?:)?\/\//i.test(src.trim());
+  const parked = heldBack && remote;
+  // Otherwise it loads through this server while the admin's gate is on
+  // (#1872); the node keeps the address that is sent.
+  const proxyBase = useRemoteContentProxyBase();
+  const shownSrc = parked
+    ? TRANSPARENT_BLOCKED_PIXEL
+    : remote && proxyBase ? (proxiedResourceUrl(src, proxyBase) ?? TRANSPARENT_BLOCKED_PIXEL) : node.attrs.src;
   const startState = useRef<{ x: number; y: number; width: number; height: number; handle: string }>({
     x: 0, y: 0, width: 0, height: 0, handle: "",
   });
@@ -90,7 +99,7 @@ function ResizableImageView({ node, updateAttributes, selected, extension, getPo
       >
         <img
           ref={imgRef}
-          src={parked ? TRANSPARENT_BLOCKED_PIXEL : node.attrs.src}
+          src={shownSrc}
           data-remote-parked={parked ? "" : undefined}
           alt={node.attrs.alt || ""}
           title={node.attrs.title || undefined}

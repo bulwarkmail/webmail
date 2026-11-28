@@ -6,6 +6,8 @@ import { Clock, ExternalLink, Package, ShoppingBag, Truck } from "@/components/i
 import { formatMomentDate, formatMoney, isWebLink, shipmentItems, summarizeItems } from "@/lib/structured-mail/format";
 import type { Item, OrderStatus, Parcel, Shipment } from "@/lib/structured-mail/types";
 import { cn } from "@/lib/utils";
+import { useRemoteContentProxyBase } from "@/hooks/use-remote-content-proxy";
+import { proxiedResourceUrl } from "@/lib/remote-content-proxy";
 import { CardLink, CardShell, MetaRow, PILL_CLASS, brandText, useCardFormat } from "./card-parts";
 import { CopyValueChip } from "./copy-value-chip";
 
@@ -38,16 +40,25 @@ function OrderStatusPill({ status }: { status: OrderStatus }) {
   return <span className={cn(PILL_CLASS, STATUS_TONE[status])}>{labels[status]}</span>;
 }
 
-/** Product images, only when remote content may load for this message; https only, no referrer. */
+/**
+ * Product images, only when remote content may load for this message; https
+ * only, no referrer. Through this server while the admin's gate is on, as the
+ * message's own pictures (#1872).
+ */
 function ItemImages({ items }: { items: Item[] }) {
-  const shown = items.filter((item) => item.image && isWebLink(item.image) && item.image.url.toLowerCase().startsWith("https:"));
+  const proxyBase = useRemoteContentProxyBase();
+  const shown = items.flatMap((item) => {
+    if (!item.image || !isWebLink(item.image) || !item.image.url.toLowerCase().startsWith("https:")) return [];
+    const src = proxyBase ? proxiedResourceUrl(item.image.url, proxyBase) : item.image.url;
+    return src ? [src] : [];
+  });
   if (shown.length === 0) return null;
   return (
     <div className="flex flex-wrap gap-1.5 pt-0.5">
-      {shown.map((item, i) => (
+      {shown.map((src, i) => (
         <img
-          key={`${item.image!.url}-${i}`}
-          src={item.image!.url}
+          key={`${src}-${i}`}
+          src={src}
           alt=""
           referrerPolicy="no-referrer"
           loading="lazy"

@@ -16,6 +16,8 @@ vi.mock('@/stores/toast-store', () => ({ toast: { success: (m: string) => toastS
 import expectedCards from '@/lib/structured-mail/__tests__/fixtures/expected-cards.json';
 import type { Booking, Shipment, StructuredCard, TransportBooking } from '@/lib/structured-mail/types';
 import { useSettingsStore } from '@/stores/settings-store';
+import { usePolicyStore } from '@/stores/policy-store';
+import { decodeRemoteUrl } from '@/lib/remote-content-proxy';
 import { StructuredMailCards } from '../structured-mail-cards';
 
 const fixtures = expectedCards as unknown as Record<string, StructuredCard[]>;
@@ -340,6 +342,21 @@ describe('StructuredMailCards', () => {
     expect(imgs[0]).toHaveAttribute('referrerpolicy', 'no-referrer');
     // The item names are in the text already.
     expect(imgs[0]).toHaveAttribute('alt', '');
+  });
+
+  // #1872: with "Remote pictures through this server" on, the sender's
+  // address doesn't reach the reader's browser.
+  it('loads item images through this server while the proxy gate is on', () => {
+    const before = usePolicyStore.getState().policy;
+    usePolicyStore.setState({ policy: { ...before, features: { ...before.features, remoteContentProxyEnabled: true } } });
+    try {
+      const { container } = show([card('order-and-parcel')], { allowRemoteImages: true });
+      const src = container.querySelector('img')!.getAttribute('src')!;
+      expect(src.startsWith(`${window.location.origin}/api/remote-content/`)).toBe(true);
+      expect(decodeRemoteUrl(src.split('/api/remote-content/')[1])).toBe('https://img.shop.example.com/p/1.jpg');
+    } finally {
+      usePolicyStore.setState({ policy: before });
+    }
   });
 
   it('gives each booking to the calendar slot, and none for a shipment', () => {

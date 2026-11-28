@@ -8,6 +8,8 @@
  * image's place, and the button's listener lives in our own window.
  */
 
+import { REMOTE_CONTENT_PATH, decodeRemoteUrl } from '@/lib/remote-content-proxy';
+
 /** Whether image bytes hold more than one frame. */
 export function isAnimatedImageData(bytes: Uint8Array): boolean {
   if (bytes.length < 12) return false;
@@ -71,7 +73,15 @@ export function isAnimatedImageData(bytes: Uint8Array): boolean {
  */
 export function remoteImageMayBeAnimated(src: string): boolean {
   try {
-    return /\.(gif|apng)$/i.test(new URL(src).pathname);
+    const { pathname } = new URL(src);
+    // Through this server's proxy the path ends in a token: its name is the
+    // address it carries (#1872).
+    const at = pathname.lastIndexOf(REMOTE_CONTENT_PATH);
+    if (at >= 0) {
+      const carried = decodeRemoteUrl(pathname.slice(at + REMOTE_CONTENT_PATH.length));
+      return carried ? /\.(gif|apng)$/i.test(new URL(carried).pathname) : false;
+    }
+    return /\.(gif|apng)$/i.test(pathname);
   } catch {
     return false;
   }

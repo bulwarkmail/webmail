@@ -16,6 +16,7 @@ import { remoteContentHeldBack } from '@/hooks/use-third-party-mode';
 import { setNoThirdPartyTraffic } from '@/lib/third-party-mode';
 import { ResizableImage } from '../resizable-image';
 import { serializeEditorContent } from '../quoted-html';
+import { decodeRemoteUrl } from '@/lib/remote-content-proxy';
 
 // The organisation's remote-content lock follows the account a message
 // belongs to and holds while that account's scopes aren't known yet:
@@ -171,5 +172,23 @@ describe('remote images in a draft’s own content', () => {
     const img = container.querySelector('img');
     expect(img?.getAttribute('src')).not.toContain('tracker.example');
     expect(img?.hasAttribute('data-remote-parked')).toBe(true);
+  });
+
+  // #1872: allowed, they load through this server while "Remote pictures
+  // through this server" is on, and are still sent with their own address.
+  it('load through this server while the proxy gate is on', async () => {
+    usePolicyStore.setState({ policy: { ...DEFAULT_POLICY, features: { ...DEFAULT_POLICY.features, remoteContentProxyEnabled: true } }, loaded: true });
+    let editorRef: ReturnType<typeof useEditor> | null = null;
+    function Box() {
+      const editor = useEditor({ extensions: [Document, Paragraph, Text, ResizableImage], content: HTML, immediatelyRender: true });
+      editorRef = editor;
+      return <EditorContent editor={editor} />;
+    }
+    const { container } = render(<Box />);
+    await act(async () => { await new Promise((r) => setTimeout(r, 30)); });
+    const src = container.querySelector('img')?.getAttribute('src') ?? '';
+    expect(src.startsWith(`${window.location.origin}/api/remote-content/`)).toBe(true);
+    expect(decodeRemoteUrl(src.split('/api/remote-content/')[1])).toBe('https://tracker.example/p.gif');
+    expect(serializeEditorContent(editorRef!)).toContain('src="https://tracker.example/p.gif"');
   });
 });

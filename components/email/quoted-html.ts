@@ -10,6 +10,7 @@ import { buildSignatureBlock } from "@/components/email/signature-markers";
 import { parkRemoteResources, restoreRemoteResources, sanitizeComposerIslandHtml } from "@/lib/email-sanitization";
 import { useSettingsStore } from "@/stores/settings-store";
 import { remoteContentHeldBackAnywhere } from "@/hooks/use-third-party-mode";
+import { remoteContentProxyBaseNow } from "@/hooks/use-remote-content-proxy";
 
 // Marker attribute that identifies the quoted-original wrapper in serialized
 // HTML, so parseHTML can recognise it on the way back in.
@@ -190,12 +191,17 @@ export const QuotedHtml = TiptapNode.create({
       // signed-in account keeps it parked.
       const blockRemote = remoteContentHeldBackAnywhere()
         || (!node.attrs.remoteAllowed && useSettingsStore.getState().externalContentPolicy !== "allow");
+      // Allowed, they load through this server while the admin's gate is
+      // on, as in the viewer (#1872); parked all the same, so the sent
+      // quote keeps the sender's addresses.
+      const proxyBase = blockRemote ? null : remoteContentProxyBaseNow();
+      const parks = blockRemote || !!proxyBase;
       let renderedHtml = "";
       const render = (html: string) => {
         renderedHtml = html;
-        inner.innerHTML = blockRemote ? parkRemoteResources(html).html : html;
+        inner.innerHTML = parks ? parkRemoteResources(html, proxyBase).html : html;
       };
-      const readBack = () => (blockRemote ? restoreRemoteResources(inner.innerHTML) : inner.innerHTML);
+      const readBack = () => (parks ? restoreRemoteResources(inner.innerHTML) : inner.innerHTML);
       render(node.attrs.html || "");
       shadow.appendChild(inner);
 
