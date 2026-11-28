@@ -5,7 +5,11 @@
  *
  * The message frame is sandboxed without scripts, so all of this runs from
  * the parent document: the still frame is drawn onto a canvas that takes the
- * image's place, and the button's listener lives in our own window.
+ * image's place. The toggle works without any script: a checkbox holds the
+ * state and an injected stylesheet shows the still or the moving image.
+ * WebKit does not run parent-attached listeners on nodes of a frame that is
+ * sandboxed without allow-scripts, so a click handler never fired in Safari
+ * (the same cause as the quote toggle, see lib/quote-collapse.ts).
  */
 
 import { REMOTE_CONTENT_PATH, decodeRemoteUrl } from '@/lib/remote-content-proxy';
@@ -112,19 +116,37 @@ export interface PauseLabels {
   pause: string;
 }
 
+const WRAP_ATTR = 'data-bulwark-animation-wrap';
+/** Marks the toggle's label. */
 const TOGGLE_ATTR = 'data-bulwark-animation';
+/** Marks the label's two texts; the value is the action it names. */
+const LABEL_ATTR = 'data-bulwark-animation-label';
 const STILL_ATTR = 'data-bulwark-still';
+const STYLE_ATTR = 'data-bulwark-animation-style';
 
-const STYLE = `[${TOGGLE_ATTR}-wrap]{position:relative;display:inline-block;max-width:100%;line-height:0}
+/**
+ * The checkbox sits right before its label, the canvas and the image, so
+ * sibling selectors switch them and no :has() is needed. Checked means
+ * playing. !important beats the mail's own inline display on the image, and
+ * the one the canvas copied from it.
+ */
+const STYLE = `[${WRAP_ATTR}]{position:relative;display:inline-block;max-width:100%;line-height:0}
+[${WRAP_ATTR}]>input{position:absolute;top:0;left:0;width:1px;height:1px;margin:0;padding:0;opacity:0;pointer-events:none}
 canvas[${STILL_ATTR}]{max-width:100%;height:auto}
-button[${TOGGLE_ATTR}]{position:absolute;top:6px;inset-inline-start:6px;z-index:1;min-width:32px;min-height:32px;padding:4px 10px;border:2px solid #fff;border-radius:999px;background:rgba(0,0,0,.75);color:#fff;font:600 13px/1.2 system-ui,sans-serif;cursor:pointer;animation:none!important;transition:none!important}
-button[${TOGGLE_ATTR}]:focus-visible{outline:3px solid #1d4ed8;outline-offset:2px}`;
+[${WRAP_ATTR}]>input:checked~canvas[${STILL_ATTR}],[${WRAP_ATTR}]>input:not(:checked)~img{display:none!important}
+[${WRAP_ATTR}]>input:checked+label>[${LABEL_ATTR}="play"],[${WRAP_ATTR}]>input:not(:checked)+label>[${LABEL_ATTR}="pause"]{display:none!important}
+label[${TOGGLE_ATTR}]{position:absolute;top:6px;inset-inline-start:6px;z-index:1;box-sizing:border-box;min-width:32px;min-height:32px;padding:4px 10px;border:2px solid #fff;border-radius:999px;background:rgba(0,0,0,.75);color:#fff;font:600 13px/1.2 system-ui,sans-serif;cursor:pointer;user-select:none;animation:none!important;transition:none!important}
+[${WRAP_ATTR}]>input:focus-visible+label{outline:3px solid #1d4ed8;outline-offset:2px}`;
+
+let toggleIds = 0;
 
 /**
  * Freezes the animated images of a rendered message. Each one is swapped for
  * a canvas holding its current (first) frame, with a Play button on top;
- * Play shows the moving image again and the button becomes Pause, which draws
- * the frame it stopped at. Returns a cleanup that drops the listener.
+ * Play shows the moving image again and the button becomes Pause. Where the
+ * frame runs our listeners (not in Safari), Pause first draws the frame it
+ * stopped at; elsewhere the still shows the first frame again. Returns a
+ * cleanup that drops the listeners.
  */
 export function pauseAnimatedImages(
   doc: Document,
@@ -134,9 +156,9 @@ export function pauseAnimatedImages(
   const isAnimated = options.isAnimated ?? ((src: string) => imageIsAnimated(src));
   let disposed = false;
 
-  if (!doc.head.querySelector(`style[${TOGGLE_ATTR}]`)) {
+  if (!doc.head.querySelector(`style[${STYLE_ATTR}]`)) {
     const style = doc.createElement('style');
-    style.setAttribute(TOGGLE_ATTR, '');
+    style.setAttribute(STYLE_ATTR, '');
     style.textContent = STYLE;
     doc.head.appendChild(style);
   }
@@ -177,52 +199,64 @@ export function pauseAnimatedImages(
       }
 
       const wrap = doc.createElement('span');
-      wrap.setAttribute(`${TOGGLE_ATTR}-wrap`, '');
-      const button = doc.createElement('button');
-      button.type = 'button';
-      button.setAttribute(TOGGLE_ATTR, 'paused');
-      button.textContent = labels.play;
+      wrap.setAttribute(WRAP_ATTR, '');
+      // Visually hidden but still focusable, so the button works from the
+      // keyboard. The id ties the label to it: the label can't wrap it, the
+      // canvas and the image have to follow it as siblings.
+      const checkbox = doc.createElement('input');
+      checkbox.type = 'checkbox';
+      do checkbox.id = `bulwark-animation-${++toggleIds}`;
+      while (doc.getElementById(checkbox.id)); // the mail may use the name
+      // Both texts are in the markup and the stylesheet shows the one that
+      // matches the state, so the checkbox's accessible name follows it too.
+      const label = doc.createElement('label');
+      label.setAttribute(TOGGLE_ATTR, '');
+      label.htmlFor = checkbox.id;
+      for (const action of ['play', 'pause'] as const) {
+        const text = doc.createElement('span');
+        text.setAttribute(LABEL_ATTR, action);
+        text.textContent = labels[action];
+        label.appendChild(text);
+      }
 
       img.parentNode?.insertBefore(wrap, img);
-      wrap.append(button, canvas, img);
-      img.style.setProperty('display', 'none', 'important');
+      wrap.append(checkbox, label, canvas, img);
     });
   };
 
-  // One listener on the document, in the capture phase and ahead of the
-  // reader's link handling: a button inside a linked image must not also
-  // open the link.
+  // Only where the frame runs our listeners (not in Safari), in the capture
+  // phase and ahead of the reader's link handling: a click on the toggle
+  // inside a linked image must not reach the link handler, which would open
+  // the link. No preventDefault, the click is what flips the checkbox. Where
+  // these don't run, the link isn't opened either: a click on a label or a
+  // checkbox never activates the link around it.
+  const toggleOf = (target: EventTarget | null) =>
+    (target as Element | null)?.closest?.(`[${WRAP_ATTR}]>label[${TOGGLE_ATTR}],[${WRAP_ATTR}]>input`) ?? null;
   const onClick = (event: Event) => {
-    const button = (event.target as Element | null)?.closest?.(`button[${TOGGLE_ATTR}]`) as HTMLButtonElement | null;
-    if (!button) return;
-    event.preventDefault();
-    event.stopImmediatePropagation();
-    const wrap = button.parentElement;
-    const canvas = wrap?.querySelector<HTMLCanvasElement>(`canvas[${STILL_ATTR}]`);
-    const img = wrap?.querySelector('img');
-    if (!canvas || !img) return;
-    if (button.getAttribute(TOGGLE_ATTR) === 'paused') {
-      img.style.removeProperty('display');
-      canvas.style.setProperty('display', 'none');
-      button.setAttribute(TOGGLE_ATTR, 'playing');
-      button.textContent = labels.pause;
-    } else {
-      draw(img, canvas);
-      canvas.style.removeProperty('display');
-      img.style.setProperty('display', 'none', 'important');
-      button.setAttribute(TOGGLE_ATTR, 'paused');
-      button.textContent = labels.play;
-    }
+    if (toggleOf(event.target)) event.stopImmediatePropagation();
+  };
+  // Pause shows the frame the image stopped at rather than the first one.
+  const onChange = (event: Event) => {
+    const checkbox = event.target as HTMLInputElement | null;
+    if (!toggleOf(checkbox) || checkbox?.checked) return;
+    const canvas = checkbox?.parentElement?.querySelector<HTMLCanvasElement>(`canvas[${STILL_ATTR}]`);
+    const img = checkbox?.parentElement?.querySelector('img');
+    if (canvas && img) draw(img, canvas);
   };
   doc.addEventListener('click', onClick, true);
+  doc.addEventListener('change', onChange, true);
 
   doc.querySelectorAll('img').forEach((img) => {
     if (img.complete) freeze(img);
+    // WebKit doesn't call a load listener here either, but decode() settles
+    // once the image has loaded.
+    else if (typeof img.decode === 'function') img.decode().then(() => freeze(img), () => {});
     else img.addEventListener('load', () => freeze(img), { once: true });
   });
 
   return () => {
     disposed = true;
     doc.removeEventListener('click', onClick, true);
+    doc.removeEventListener('change', onChange, true);
   };
 }
