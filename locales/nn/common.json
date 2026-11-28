@@ -2127,6 +2127,10 @@
         "label": "Be om lesekvittering som standard",
         "description": "Slå på førespurnaden om lesekvittering på førehand når du skriv ei ny melding."
       },
+      "request_dsn": {
+        "label": "Be om leveringsvarsel som standard",
+        "description": "Slår på leveringsvarsel for kvar melding du skriv, der e-posttenaren din tilbyr det."
+      },
       "read_receipt_response": {
         "label": "Svar på førespurnader om lesekvittering",
         "description": "Kva som skal skje når ei innkomande melding ber om lesekvittering.",
@@ -3759,6 +3763,7 @@
       "text_size": "skriftstorleik større tekst zoom",
       "vacation": "autosvar automatisk svar fråvær ferie ikkje til stades",
       "two_factor": "2FA tofaktor tostegs MFA OTP autentiserar eingongskode",
+      "dsn": "DSN leveringsstatus leveringsrapport leveringskvittering",
       "encryption": "S/MIME smime PGP OpenPGP kryptering sertifikat",
       "password": "passord endre passord nytt passord",
       "offline": "fråkopla utan tilkopling ikkje internett last ned e-post lagring synkronisering",

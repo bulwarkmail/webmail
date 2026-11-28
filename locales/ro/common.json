@@ -2119,6 +2119,10 @@
         "label": "Solicitați confirmări de citire în mod implicit",
         "description": "Activați în prealabil solicitarea de confirmare de citire atunci când redactați un mesaj nou."
       },
+      "request_dsn": {
+        "label": "Solicitați notificări de livrare în mod implicit",
+        "description": "Activează notificarea de livrare pentru fiecare mesaj pe care îl scrieți, dacă serverul dvs. de e-mail o oferă."
+      },
       "read_receipt_response": {
         "label": "Răspundeți la solicitările de confirmare de citire",
         "description": "Ce trebuie făcut atunci când un mesaj primit solicită o confirmare de citire.",
@@ -3751,6 +3755,7 @@
       "text_size": "mărime font text mai mare zoom mărire",
       "vacation": "răspuns automat în afara biroului absent concediu vacanță autoreply",
       "two_factor": "2FA doi factori doi pași MFA OTP autentificator cod unic",
+      "dsn": "DSN notificare de stare a livrării raport de livrare confirmare de livrare",
       "encryption": "S/MIME smime PGP OpenPGP criptare certificat",
       "password": "parolă schimbă parola parolă nouă",
       "offline": "offline fără conexiune fără internet descărcare stocare sincronizare",

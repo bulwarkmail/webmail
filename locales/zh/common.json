@@ -2116,6 +2116,10 @@
         "label": "默认请求已读回执",
         "description": "撰写新邮件时预先启用已读回执请求。"
       },
+      "request_dsn": {
+        "label": "默认请求投递通知",
+        "description": "为你撰写的每封邮件开启投递通知（需邮件服务器支持）。"
+      },
       "read_receipt_response": {
         "label": "响应已读回执请求",
         "description": "当收到的邮件请求已读回执时的处理方式。",
@@ -3751,6 +3755,7 @@
       "text_size": "字体大小 字号 大字 放大 缩放",
       "vacation": "自动回复 不在办公室 外出 休假 假期 autoreply",
       "two_factor": "2FA 双重验证 两步验证 MFA OTP 身份验证器 一次性验证码",
+      "dsn": "DSN 投递状态通知 投递报告 投递回执",
       "encryption": "S/MIME smime PGP OpenPGP 加密 证书",
       "password": "密码 修改密码 新密码",
       "offline": "离线 offline 无网络 无连接 下载 存储 同步",

@@ -2116,6 +2116,10 @@
         "label": "Varsayılan olarak okundu bilgisi iste",
         "description": "Yeni bir ileti yazarken okundu bilgisi isteğini önceden etkinleştir."
       },
+      "request_dsn": {
+        "label": "Varsayılan olarak teslim bildirimi iste",
+        "description": "Posta sunucunuz destekliyorsa yazdığınız her iletide teslim bildirimini açar."
+      },
       "read_receipt_response": {
         "label": "Okundu bilgisi isteklerine yanıt ver",
         "description": "Gelen bir ileti okundu bilgisi istediğinde ne yapılacağı.",
@@ -3751,6 +3755,7 @@
       "text_size": "yazı tipi boyutu büyük metin yakınlaştır zoom",
       "vacation": "otomatik yanıt ofis dışında uzakta tatil izin autoreply",
       "two_factor": "2FA iki faktörlü iki adımlı MFA OTP doğrulayıcı tek kullanımlık kod",
+      "dsn": "DSN teslim durumu bildirimi teslim raporu teslim alındısı",
       "encryption": "S/MIME smime PGP OpenPGP şifreleme sertifika",
       "password": "parola şifre parolayı değiştir yeni parola",
       "offline": "çevrimdışı bağlantısız internetsiz indir depolama eşitleme",

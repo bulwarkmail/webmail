@@ -2116,6 +2116,10 @@
         "label": "Domyślnie żądaj potwierdzeń przeczytania",
         "description": "Włącz wcześniej żądanie potwierdzenia przeczytania podczas tworzenia nowej wiadomości."
       },
+      "request_dsn": {
+        "label": "Domyślnie żądaj powiadomień o doręczeniu",
+        "description": "Włącza powiadomienie o doręczeniu dla każdej pisanej wiadomości, jeśli Twój serwer poczty to obsługuje."
+      },
       "read_receipt_response": {
         "label": "Odpowiadaj na żądania potwierdzenia przeczytania",
         "description": "Co zrobić, gdy przychodząca wiadomość prosi o potwierdzenie przeczytania.",
@@ -3751,6 +3755,7 @@
       "text_size": "rozmiar czcionki większy tekst powiększenie zoom",
       "vacation": "autoodpowiedź automatyczna odpowiedź poza biurem nieobecność urlop autoreply",
       "two_factor": "2FA dwuetapowe dwuskładnikowe MFA OTP uwierzytelniacz kod jednorazowy",
+      "dsn": "DSN powiadomienie o stanie doręczenia raport doręczenia potwierdzenie doręczenia",
       "encryption": "S/MIME smime PGP OpenPGP szyfrowanie certyfikat",
       "password": "hasło zmień hasło nowe hasło",
       "offline": "offline bez połączenia bez internetu pobierz pamięć synchronizacja",

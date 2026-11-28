@@ -431,6 +431,7 @@ export const tabSearchEntries: Record<Tab, SettingsSearchEntry[]> = {
     { label: 'settings.email_behavior.trusted_senders.use_address_book_label' },
     { label: 'settings.composing_page.sections.receipts' },
     { label: 'settings.email_behavior.request_read_receipt.label' },
+    { label: 'settings.email_behavior.request_dsn.label', synonyms: syn('dsn') },
     { label: 'settings.email_behavior.read_receipt_response.label' },
     { label: 'settings.message_list.sections.senders' },
     { label: 'uxp2_settings.sender_favicons.label' },

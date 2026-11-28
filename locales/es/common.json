@@ -2116,6 +2116,10 @@
         "label": "Solicitar confirmaciones de lectura de forma predeterminada",
         "description": "Activar previamente la solicitud de confirmación de lectura al redactar un mensaje nuevo."
       },
+      "request_dsn": {
+        "label": "Solicitar notificaciones de entrega de forma predeterminada",
+        "description": "Activa la notificación de entrega en cada mensaje que escribas, si tu servidor de correo la ofrece."
+      },
       "read_receipt_response": {
         "label": "Responder a las solicitudes de confirmación de lectura",
         "description": "Qué hacer cuando un mensaje entrante solicita una confirmación de lectura.",
@@ -3751,6 +3755,7 @@
       "text_size": "tamaño de letra texto más grande zoom ampliar",
       "vacation": "respuesta automática fuera de la oficina ausente vacaciones autoreply",
       "two_factor": "2FA dos factores dos pasos MFA OTP autenticador código de un solo uso",
+      "dsn": "DSN notificación de estado de entrega informe de entrega acuse de entrega",
       "encryption": "S/MIME smime PGP OpenPGP cifrado certificado",
       "password": "contraseña cambiar contraseña nueva contraseña",
       "offline": "sin conexión offline sin internet descargar almacenamiento sincronizar",

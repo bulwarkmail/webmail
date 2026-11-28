@@ -2119,6 +2119,10 @@
         "label": "預設請求已讀回執",
         "description": "寫新郵件時預先啟用已讀回執請求。"
       },
+      "request_dsn": {
+        "label": "預設請求投遞通知",
+        "description": "為你撰寫的每封郵件開啟投遞通知（需郵件伺服器支援）。"
+      },
       "read_receipt_response": {
         "label": "回應已讀回執請求",
         "description": "當收到的郵件請求已讀回執時的處理方式。",
@@ -3751,6 +3755,7 @@
       "text_size": "字型大小 字級 大字 放大 縮放",
       "vacation": "自動回覆 不在辦公室 外出 休假 假期 autoreply",
       "two_factor": "2FA 雙重驗證 兩步驟驗證 MFA OTP 驗證器 一次性驗證碼",
+      "dsn": "DSN 投遞狀態通知 投遞報告 投遞回執",
       "encryption": "S/MIME smime PGP OpenPGP 加密 憑證",
       "password": "密碼 變更密碼 新密碼",
       "offline": "離線 offline 無網路 無連線 下載 儲存空間 同步",

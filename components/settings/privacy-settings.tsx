@@ -157,13 +157,20 @@ function RemoteContentSection() {
 function ReadReceiptsSection() {
   const t = useTranslations('settings.email_behavior');
   const tPage = useTranslations('settings.composing_page');
-  const { requestReadReceiptDefault, readReceiptResponse, updateSetting } = useSettingsStore();
+  const { requestReadReceiptDefault, requestDsnDefault, readReceiptResponse, updateSetting } = useSettingsStore();
   return (
     <SettingsSection id="receipts" title={tPage('sections.receipts')}>
       <SettingItem label={t('request_read_receipt.label')} description={t('request_read_receipt.description')}>
         <ToggleSwitch
           checked={requestReadReceiptDefault}
           onChange={(checked) => updateSetting('requestReadReceiptDefault', checked)}
+        />
+      </SettingItem>
+
+      <SettingItem label={t('request_dsn.label')} description={t('request_dsn.description')}>
+        <ToggleSwitch
+          checked={requestDsnDefault}
+          onChange={(checked) => updateSetting('requestDsnDefault', checked)}
         />
       </SettingItem>
 

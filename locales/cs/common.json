@@ -2116,6 +2116,10 @@
         "label": "Standardně vyžadovat potvrzení o přečtení",
         "description": "Při psaní nové zprávy předem zapnout žádost o potvrzení o přečtení."
       },
+      "request_dsn": {
+        "label": "Standardně vyžadovat oznámení o doručení",
+        "description": "Zapne oznámení o doručení u každé zprávy, kterou napíšete, pokud ho váš poštovní server nabízí."
+      },
       "read_receipt_response": {
         "label": "Reagovat na žádosti o potvrzení o přečtení",
         "description": "Co dělat, když příchozí zpráva žádá o potvrzení o přečtení.",
@@ -3751,6 +3755,7 @@
       "text_size": "velikost písma větší text zoom zvětšit",
       "vacation": "automatická odpověď mimo kancelář nepřítomnost dovolená autoreply",
       "two_factor": "2FA dvoufázové dvoufaktorové MFA OTP autentikátor jednorázový kód",
+      "dsn": "DSN oznámení o stavu doručení zpráva o doručení potvrzení o doručení",
       "encryption": "S/MIME smime PGP OpenPGP šifrování certifikát",
       "password": "heslo změnit heslo nové heslo",
       "offline": "offline bez připojení bez internetu stáhnout úložiště synchronizace",

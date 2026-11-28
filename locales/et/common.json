@@ -2119,6 +2119,10 @@
         "label": "Küsi vaikimisi lugemiskinnitust",
         "description": "Luba uue kirja koostamisel vaikimisi lugemiskinnituse küsimine."
       },
+      "request_dsn": {
+        "label": "Küsi vaikimisi kohaletoimetamise teadet",
+        "description": "Lülitab kohaletoimetamise teate sisse iga kirja jaoks, mille kirjutad, kui su meiliserver seda pakub."
+      },
       "read_receipt_response": {
         "label": "Vastamine lugemiskinnituse päringutele",
         "description": "Mida teha, kui saabuv kiri küsib lugemiskinnitust.",
@@ -3751,6 +3755,7 @@
       "text_size": "fondi suurus suurem tekst suum suurendus",
       "vacation": "automaatvastus kontorist väljas eemal puhkus autoreply",
       "two_factor": "2FA kaheastmeline kahefaktoriline MFA OTP autentija ühekordne kood",
+      "dsn": "DSN kohaletoimetamise olek kohaletoimetamise aruanne kättetoimetamise kinnitus",
       "encryption": "S/MIME smime PGP OpenPGP krüpteerimine sertifikaat",
       "password": "parool muuda parooli uus parool",
       "offline": "võrguühenduseta offline ilma ühenduseta ilma internetita laadi alla salvestus sünkroonimine",

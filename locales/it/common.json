@@ -2116,6 +2116,10 @@
         "label": "Richiedi conferme di lettura per impostazione predefinita",
         "description": "Attiva in anticipo la richiesta di conferma di lettura durante la composizione di un nuovo messaggio."
       },
+      "request_dsn": {
+        "label": "Richiedi notifiche di consegna per impostazione predefinita",
+        "description": "Attiva la notifica di consegna per ogni messaggio che scrivi, se il tuo server di posta la offre."
+      },
       "read_receipt_response": {
         "label": "Rispondi alle richieste di conferma di lettura",
         "description": "Cosa fare quando un messaggio in arrivo richiede una conferma di lettura.",
@@ -3751,6 +3755,7 @@
       "text_size": "dimensione carattere testo più grande zoom ingrandire",
       "vacation": "risposta automatica fuori sede assente ferie vacanza autoreply",
       "two_factor": "2FA due fattori due passaggi MFA OTP autenticatore codice monouso",
+      "dsn": "DSN notifica di stato della consegna rapporto di consegna ricevuta di consegna",
       "encryption": "S/MIME smime PGP OpenPGP crittografia certificato",
       "password": "password cambia password nuova password",
       "offline": "offline senza connessione senza internet scaricare archiviazione sincronizzare",

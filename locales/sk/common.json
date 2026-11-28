@@ -2121,6 +2121,10 @@
         "label": "Predvolene žiadať potvrdenie o prečítaní",
         "description": "Pred-povoliť žiadosť o potvrdenie o prečítaní pri písaní novej správy."
       },
+      "request_dsn": {
+        "label": "Predvolene žiadať oznámenie o doručení",
+        "description": "Zapne oznámenie o doručení pri každej správe, ktorú napíšete, ak ho váš poštový server ponúka."
+      },
       "read_receipt_response": {
         "label": "Reagovať na žiadosti o potvrdenie o prečítaní",
         "description": "Čo robiť, keď prichádzajúca správa žiada o potvrdenie o prečítaní.",
@@ -3751,6 +3755,7 @@
       "text_size": "veľkosť písma väčší text zoom zväčšiť",
       "vacation": "automatická odpoveď mimo kancelárie neprítomnosť dovolenka autoreply",
       "two_factor": "2FA dvojfázové dvojfaktorové MFA OTP autentifikátor jednorazový kód",
+      "dsn": "DSN oznámenie o stave doručenia správa o doručení potvrdenie o doručení",
       "encryption": "S/MIME smime PGP OpenPGP šifrovanie certifikát",
       "password": "heslo zmeniť heslo nové heslo",
       "offline": "offline bez pripojenia bez internetu stiahnuť úložisko synchronizácia",

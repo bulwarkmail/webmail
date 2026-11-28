@@ -804,6 +804,7 @@ export function EmailComposer({
   const autoSignatureEnabled = mode === 'compose' ? signatureNewMailEnabled : signatureReplyForwardEnabled;
   const signatureSeparatorEnabled = useSettingsStore((state) => state.signatureSeparatorEnabled);
   const requestReadReceiptDefault = useSettingsStore((state) => state.requestReadReceiptDefault);
+  const requestDsnDefault = useSettingsStore((state) => state.requestDsnDefault);
   // A draft belongs to the account the composer was opened in. Switching
   // accounts with the composer open must not move it: its saves would land in
   // the other account, and replacing the previous save would delete that
@@ -1231,7 +1232,7 @@ export function EmailComposer({
   const [requestReadReceipt, setRequestReadReceipt] = useState(initialData?.requestReadReceipt ?? requestReadReceiptDefault);
   // SMTP submission options, offered only when the server advertises the
   // extension (RFC 8621 §1.3 submissionExtensions).
-  const [requestDsn, setRequestDsn] = useState(initialData?.requestDsn ?? false);
+  const [requestDsn, setRequestDsn] = useState(initialData?.requestDsn ?? requestDsnDefault);
   const [requireTls, setRequireTls] = useState(initialData?.requireTls ?? false);
   // "File in folder": only a folder the host still offers counts.
   const [fileInPick, setFileInMailboxId] = useState<string | null>(initialData?.fileInMailboxId ?? null);
@@ -1488,6 +1489,11 @@ export function EmailComposer({
   const composerClient = identityLogin
     ? (useAuthStore.getState().getClientForAccount(identityLogin) ?? (identityLogin === composerAccountIdRef.current ? client : null))
     : client;
+  // A delivery notification only goes out where the sending account's
+  // server takes DSN; the "always request" default must not send NOTIFY
+  // to one that doesn't (#1883).
+  const dsnOffered = !!composerClient?.supportsSubmissionExtension?.('DSN');
+  const sendDsn = requestDsn && dsnOffered;
   // The From address belongs to a login that is not connected.
   const fromLoginGone = !!identityLogin && !composerClient;
   // The signed-in account the message goes out from, whose domain and group
@@ -4865,7 +4871,7 @@ export function EmailComposer({
         replyTo: currentIdentity?.replyTo,
         readReceiptTo: requestReadReceipt ? fromEmail || currentIdentity?.email : undefined,
         priority: priority !== 'normal' ? priority : undefined,
-        requestDsn: requestDsn || undefined,
+        requestDsn: sendDsn || undefined,
         requireTls: requireTls || undefined,
       });
       try {
@@ -5003,7 +5009,7 @@ export function EmailComposer({
           inReplyTo: threadingHeaders?.inReplyTo,
           references: threadingHeaders?.references,
           requestReadReceipt,
-          requestDsn: requestDsn || undefined,
+          requestDsn: sendDsn || undefined,
           requireTls: requireTls || undefined,
           priority: priority !== 'normal' ? priority : undefined,
           headers: labelled.headers,
@@ -6813,7 +6819,7 @@ export function EmailComposer({
             <ComposerToolbarMenu
               icon={SlidersHorizontal}
               label={t('options')}
-              activeCount={[plainTextMode, requestReadReceipt, requestDsn, requireTls, priority !== 'normal'].filter(Boolean).length + pluginOptionsOn}
+              activeCount={[plainTextMode, requestReadReceipt, sendDsn, requireTls, priority !== 'normal'].filter(Boolean).length + pluginOptionsOn}
               testId="composer-options-menu"
             >
               {(close) => <>
@@ -6833,7 +6839,7 @@ export function EmailComposer({
                 >
                   {t('option_read_receipt')}
                 </ComposerToolbarMenuCheckItem>
-                {composerClient?.supportsSubmissionExtension?.('DSN') && (
+                {dsnOffered && (
                   <ComposerToolbarMenuCheckItem
                     checked={requestDsn}
                     onToggle={() => setRequestDsn(v => !v)}

@@ -2116,6 +2116,10 @@
         "label": "기본적으로 읽음 확인 요청",
         "description": "새 메시지를 작성할 때 읽음 확인 요청을 미리 켭니다."
       },
+      "request_dsn": {
+        "label": "기본적으로 배달 알림 요청",
+        "description": "메일 서버가 지원하는 경우 작성하는 모든 메시지에 배달 알림을 켭니다."
+      },
       "read_receipt_response": {
         "label": "읽음 확인 요청에 응답",
         "description": "수신 메시지가 읽음 확인을 요청할 때의 동작.",
@@ -3751,6 +3755,7 @@
       "text_size": "글꼴 크기 큰 글자 확대 줌",
       "vacation": "자동 응답 부재중 휴가 외근 autoreply",
       "two_factor": "2FA 2단계 2요소 MFA OTP 인증 앱 일회용 코드",
+      "dsn": "DSN 배달 상태 알림 배달 보고서 배달 확인",
       "encryption": "S/MIME smime PGP OpenPGP 암호화 인증서",
       "password": "비밀번호 암호 비밀번호 변경 새 비밀번호",
       "offline": "오프라인 offline 연결 없음 인터넷 없음 다운로드 저장 공간 동기화",

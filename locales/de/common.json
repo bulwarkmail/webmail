@@ -2116,6 +2116,10 @@
         "label": "Lesebestätigung standardmäßig anfordern",
         "description": "Beim Verfassen einer neuen Nachricht die Anforderung einer Lesebestätigung vorab aktivieren."
       },
+      "request_dsn": {
+        "label": "Zustellbenachrichtigung standardmäßig anfordern",
+        "description": "Schaltet die Zustellbenachrichtigung für jede Nachricht ein, die Sie schreiben, sofern Ihr Mailserver sie anbietet."
+      },
       "read_receipt_response": {
         "label": "Auf Lesebestätigungs-Anfragen reagieren",
         "description": "Verhalten, wenn eine eingehende Nachricht um eine Lesebestätigung bittet.",
@@ -3751,6 +3755,7 @@
       "text_size": "Schriftgröße größere Schrift Zoom vergrößern",
       "vacation": "Abwesenheit Abwesenheitsnotiz automatische Antwort Urlaub abwesend Autoreply out of office",
       "two_factor": "2FA Zwei-Faktor zweistufig MFA OTP Authenticator Einmalcode",
+      "dsn": "DSN Zustellbenachrichtigung Zustellbericht Zustellbestätigung Übermittlungsstatus",
       "encryption": "S/MIME smime PGP OpenPGP Verschlüsselung Zertifikat",
       "password": "Passwort Kennwort ändern neues Passwort",
       "offline": "offline ohne Verbindung ohne Internet Mails herunterladen Speicher synchronisieren",

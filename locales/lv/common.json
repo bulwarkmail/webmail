@@ -2116,6 +2116,10 @@
         "label": "Pēc noklusējuma pieprasīt lasīšanas apstiprinājumus",
         "description": "Sastādot jaunu ziņojumu, iepriekš ieslēgt lasīšanas apstiprinājuma pieprasījumu."
       },
+      "request_dsn": {
+        "label": "Pēc noklusējuma pieprasīt piegādes paziņojumus",
+        "description": "Ieslēdz piegādes paziņojumu katrai jūsu rakstītajai vēstulei, ja jūsu pasta serveris to piedāvā."
+      },
       "read_receipt_response": {
         "label": "Atbildēt uz lasīšanas apstiprinājuma pieprasījumiem",
         "description": "Ko darīt, kad ienākošs ziņojums pieprasa lasīšanas apstiprinājumu.",
@@ -3751,6 +3755,7 @@
       "text_size": "fonta izmērs lielāks teksts tālummaiņa palielināt",
       "vacation": "automātiskā atbilde ārpus biroja prombūtne atvaļinājums autoreply",
       "two_factor": "2FA divpakāpju divfaktoru MFA OTP autentifikators vienreizējs kods",
+      "dsn": "DSN piegādes statusa paziņojums piegādes atskaite piegādes apstiprinājums",
       "encryption": "S/MIME smime PGP OpenPGP šifrēšana sertifikāts",
       "password": "parole mainīt paroli jauna parole",
       "offline": "bezsaistē offline bez savienojuma bez interneta lejupielādēt krātuve sinhronizēt",

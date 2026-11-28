@@ -2119,6 +2119,10 @@
         "label": "Olvasási visszaigazolás kérése alapértelmezés szerint",
         "description": "Az olvasási visszaigazolás kérésének előre bekapcsolása új üzenet írásakor."
       },
+      "request_dsn": {
+        "label": "Kézbesítési értesítés kérése alapértelmezés szerint",
+        "description": "Bekapcsolja a kézbesítési értesítést minden megírt üzenetnél, ha a levelezőszervere támogatja."
+      },
       "read_receipt_response": {
         "label": "Válasz az olvasási visszaigazolásokra",
         "description": "Mi történjen, ha egy beérkező üzenet olvasási visszaigazolást kér.",
@@ -3751,6 +3755,7 @@
       "text_size": "betűméret nagyobb szöveg nagyítás zoom",
       "vacation": "automatikus válasz házon kívül távol szabadság autoreply",
       "two_factor": "2FA kétlépcsős kéttényezős MFA OTP hitelesítő egyszeri kód",
+      "dsn": "DSN kézbesítési állapot értesítés kézbesítési jelentés kézbesítési visszaigazolás",
       "encryption": "S/MIME smime PGP OpenPGP titkosítás tanúsítvány",
       "password": "jelszó jelszócsere új jelszó",
       "offline": "offline kapcsolat nélkül internet nélkül letöltés tárhely szinkronizálás",

@@ -2116,6 +2116,10 @@
         "label": "Demander un accusé de lecture par défaut",
         "description": "Activer au préalable la demande d''accusé de lecture lors de la rédaction d''un nouveau message."
       },
+      "request_dsn": {
+        "label": "Demander une notification de remise par défaut",
+        "description": "Active la notification de remise pour chaque message que vous écrivez, si votre serveur de messagerie la propose."
+      },
       "read_receipt_response": {
         "label": "Répondre aux demandes d''accusé de lecture",
         "description": "Que faire lorsqu''un message entrant demande un accusé de lecture.",
@@ -3751,6 +3755,7 @@
       "text_size": "taille de police texte plus grand zoom agrandir",
       "vacation": "réponse automatique absence congés vacances absent autoreply",
       "two_factor": "2FA double authentification deux facteurs MFA OTP authentificateur code unique",
+      "dsn": "DSN notification d'état de remise rapport de remise accusé de remise",
       "encryption": "S/MIME smime PGP OpenPGP chiffrement certificat",
       "password": "mot de passe changer nouveau mot de passe",
       "offline": "hors ligne sans connexion sans internet télécharger stockage synchronisation",

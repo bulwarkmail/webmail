@@ -2119,6 +2119,10 @@
         "label": "Anmod om læsekvittering som standard",
         "description": "Aktivér anmodningen om læsekvittering på forhånd, når du skriver en ny besked."
       },
+      "request_dsn": {
+        "label": "Anmod om leveringsbesked som standard",
+        "description": "Slår leveringsbesked til for hver besked, du skriver, hvis din mailserver tilbyder det."
+      },
       "read_receipt_response": {
         "label": "Svar på anmodninger om læsekvittering",
         "description": "Hvad der skal ske, når en indgående besked beder om en læsekvittering.",
@@ -3751,6 +3755,7 @@
       "text_size": "skriftstørrelse større tekst zoom forstør",
       "vacation": "autosvar automatisk svar ikke på kontoret fraværende ferie autoreply",
       "two_factor": "2FA totrins to-faktor MFA OTP godkendelsesapp engangskode",
+      "dsn": "DSN leveringsstatus leveringsrapport leveringskvittering",
       "encryption": "S/MIME smime PGP OpenPGP kryptering certifikat",
       "password": "adgangskode skift adgangskode ny adgangskode",
       "offline": "offline uden forbindelse uden internet hent lager synkroniser",

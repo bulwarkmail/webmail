@@ -2119,6 +2119,10 @@
         "label": "Request read receipts by default",
         "description": "Pre-enable the read-receipt request when composing a new message."
       },
+      "request_dsn": {
+        "label": "Request delivery notifications by default",
+        "description": "Turn on Delivery notification for every message you write, where your mail server offers it."
+      },
       "read_receipt_response": {
         "label": "Respond to read-receipt requests",
         "description": "What to do when an incoming message asks for a read receipt.",
@@ -3751,6 +3755,7 @@
       "text_size": "font size bigger text larger text zoom",
       "vacation": "autoreply auto-reply automatic reply out of office away vacation holiday",
       "two_factor": "2FA two-factor two-step MFA OTP authenticator one-time code",
+      "dsn": "DSN delivery status notification delivery report delivery receipt",
       "encryption": "S/MIME smime PGP OpenPGP encryption certificate",
       "password": "password change password new password",
       "offline": "offline without connection no internet download mail storage sync",

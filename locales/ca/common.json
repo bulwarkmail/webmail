@@ -2119,6 +2119,10 @@
         "label": "Sol·licita confirmacions de lectura per defecte",
         "description": "Activa per defecte la sol·licitud de confirmació de lectura en redactar un missatge nou."
       },
+      "request_dsn": {
+        "label": "Sol·licita notificacions de lliurament per defecte",
+        "description": "Activa la notificació de lliurament a cada missatge que escriviu, si el vostre servidor de correu l'ofereix."
+      },
       "read_receipt_response": {
         "label": "Respon a les sol·licituds de confirmació de lectura",
         "description": "Què fer quan un missatge entrant sol·licita una confirmació de lectura.",
@@ -3751,6 +3755,7 @@
       "text_size": "mida de la lletra text més gran zoom ampliar",
       "vacation": "resposta automàtica fora de l’oficina absent vacances autoreply",
       "two_factor": "2FA dos factors dos passos MFA OTP autenticador codi d’un sol ús",
+      "dsn": "DSN notificació d'estat de lliurament informe de lliurament confirmació de lliurament",
       "encryption": "S/MIME smime PGP OpenPGP xifratge certificat",
       "password": "contrasenya canviar contrasenya nova contrasenya",
       "offline": "fora de línia sense connexió sense internet baixar emmagatzematge sincronitzar",

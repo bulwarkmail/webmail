@@ -2116,6 +2116,10 @@
         "label": "Standaard om leesbevestiging vragen",
         "description": "De aanvraag voor een leesbevestiging vooraf inschakelen bij het opstellen van een nieuw bericht."
       },
+      "request_dsn": {
+        "label": "Standaard om bezorgmelding vragen",
+        "description": "Zet de bezorgmelding aan voor elk bericht dat je schrijft, als je mailserver die aanbiedt."
+      },
       "read_receipt_response": {
         "label": "Reageren op verzoeken om leesbevestiging",
         "description": "Wat te doen wanneer een inkomend bericht om een leesbevestiging vraagt.",
@@ -3751,6 +3755,7 @@
       "text_size": "lettergrootte grotere tekst zoom vergroten",
       "vacation": "automatisch antwoord afwezig vakantie buiten kantoor autoreply",
       "two_factor": "2FA tweestaps twee-factor MFA OTP authenticator eenmalige code",
+      "dsn": "DSN bezorgstatusmelding bezorgrapport bezorgbevestiging",
       "encryption": "S/MIME smime PGP OpenPGP versleuteling certificaat",
       "password": "wachtwoord wijzigen nieuw wachtwoord",
       "offline": "offline zonder verbinding zonder internet downloaden opslag synchroniseren",

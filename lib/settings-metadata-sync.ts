@@ -42,7 +42,7 @@ export const METADATA_SETTING_NAMES: readonly string[] = [
   'colorBlindPalette', 'autoSelectReplyIdentity', 'replyIdentityMatch', 'attachmentReminderEnabled',
   'attachmentReminderKeywords', 'plainTextMode', 'sendConfirmation', 'confirmDelete', 'confirmArchive',
   'sendDelaySeconds', 'signaturePosition', 'signatureSeparatorEnabled', 'signatureNewMailEnabled',
-  'signatureReplyForwardEnabled', 'requestReadReceiptDefault', 'emptySubjectWarningEnabled',
+  'signatureReplyForwardEnabled', 'requestReadReceiptDefault', 'requestDsnDefault', 'emptySubjectWarningEnabled',
   'placeholderWarningEnabled', 'subAddressDelimiter', 'markAsReadDelay', 'deleteAction', 'permanentlyDeleteJunk',
   'showPreview', 'showVerificationCodes', 'showAttachmentChips', 'emailsPerPage', 'disableThreading',
   'showAvatarsInJunk', 'showFolderTotalCount', 'compactSharedMailboxes', 'clearSearchOnFolderChange',

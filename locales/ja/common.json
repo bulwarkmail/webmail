@@ -2116,6 +2116,10 @@
         "label": "既定で開封確認を要求する",
         "description": "新しいメッセージの作成時に、開封確認の要求をあらかじめ有効にします。"
       },
+      "request_dsn": {
+        "label": "既定で配信通知を要求する",
+        "description": "作成するすべてのメッセージで配信通知をオンにします（メールサーバーが対応している場合）。"
+      },
       "read_receipt_response": {
         "label": "開封確認の要求に応答する",
         "description": "受信メッセージが開封確認を求めたときの動作。",
@@ -3751,6 +3755,7 @@
       "text_size": "文字サイズ フォントサイズ 大きい文字 拡大 ズーム",
       "vacation": "自動返信 不在 休暇 外出中 autoreply",
       "two_factor": "2FA 二要素 二段階 MFA OTP 認証アプリ ワンタイムコード",
+      "dsn": "DSN 配信状態通知 配信レポート 配信確認",
       "encryption": "S/MIME smime PGP OpenPGP 暗号化 証明書",
       "password": "パスワード パスワード変更 新しいパスワード",
       "offline": "オフライン offline 接続なし インターネットなし ダウンロード ストレージ 同期",

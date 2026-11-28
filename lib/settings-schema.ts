@@ -312,6 +312,7 @@ const ENTRIES: SettingSchemaEntry[] = [
   bool('emptySubjectWarningEnabled', 'composing', `${EB}empty_subject_warning.label`),
   bool('placeholderWarningEnabled', 'composing', `${EB}placeholder_warning.label`),
   bool('requestReadReceiptDefault', 'privacy', `${EB}request_read_receipt.label`),
+  bool('requestDsnDefault', 'privacy', `${EB}request_dsn.label`),
   bool('archiveAfterReply', 'composing', `${EB}archive_after_reply.label`, { gate: 'archiveActionEnabled' }),
   // No "always": that sends a receipt mail by itself.
   choice('readReceiptResponse', 'privacy', `${EB}read_receipt_response.label`,

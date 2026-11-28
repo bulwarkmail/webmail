@@ -2134,6 +2134,10 @@
         "label": "Begär läskvitton som standard",
         "description": "Förval läskvittobegäran när du skriver ett nytt meddelande."
       },
+      "request_dsn": {
+        "label": "Begär leveransavisering som standard",
+        "description": "Slår på leveransavisering för varje meddelande du skriver, om din e-postserver erbjuder det."
+      },
       "read_receipt_response": {
         "label": "Svara på läskvittoförfrågningar",
         "description": "Vad som ska hända när ett inkommande meddelande begär ett läskvitto.",
@@ -3766,6 +3770,7 @@
       "text_size": "textstorlek större text zoom",
       "vacation": "autosvar automatiskt svar frånvaro semester borta",
       "two_factor": "2FA tvåfaktor tvåstegs MFA OTP autentiserare engångskod",
+      "dsn": "DSN leveransstatus leveransrapport leveranskvitto",
       "encryption": "S/MIME smime PGP OpenPGP kryptering certifikat",
       "password": "lösenord byt lösenord nytt lösenord",
       "offline": "offline utan anslutning ingen internet ladda ner e-post lagring synk",

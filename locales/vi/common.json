@@ -2131,6 +2131,10 @@
         "label": "Mặc định yêu cầu xác nhận đã đọc",
         "description": "Bật sẵn yêu cầu xác nhận đã đọc khi soạn thư mới."
       },
+      "request_dsn": {
+        "label": "Mặc định yêu cầu thông báo phát thư",
+        "description": "Bật thông báo phát thư cho mọi thư bạn viết, nếu máy chủ thư của bạn hỗ trợ."
+      },
       "read_receipt_response": {
         "label": "Phản hồi yêu cầu xác nhận đã đọc",
         "description": "Cách xử lý khi thư đến yêu cầu xác nhận đã đọc.",
@@ -3763,6 +3767,7 @@
       "text_size": "cỡ chữ chữ to hơn phóng to thu phóng",
       "vacation": "trả lời tự động vắng mặt nghỉ phép kỳ nghỉ ngoài văn phòng autoreply",
       "two_factor": "2FA hai lớp hai bước MFA OTP ứng dụng xác thực mã dùng một lần",
+      "dsn": "DSN thông báo trạng thái phát thư báo cáo phát thư xác nhận phát thư",
       "encryption": "S/MIME smime PGP OpenPGP mã hóa chứng chỉ",
       "password": "mật khẩu đổi mật khẩu mật khẩu mới",
       "offline": "ngoại tuyến offline không có kết nối không có mạng tải xuống bộ nhớ đồng bộ",
