@@ -61,6 +61,7 @@ services:
       # Enables "Remember me" / settings-sync cookies. Not required for the
       # sync tests but harmless and avoids noisy warnings.
       SESSION_SECRET: integration-only-not-a-real-secret-at-least-32-characters
+      SETTINGS_SYNC_ENABLED: ${IT_SETTINGS_SYNC_ENABLED:-false}
       LOG_LEVEL: info
     depends_on:
       stalwart:

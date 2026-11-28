@@ -24,6 +24,18 @@ export interface SearchFilters {
   pluginFilter?: PluginSearchFilter | null;
 }
 
+/** The criteria needed to replay an account search through Advanced Search. */
+export interface SearchCriteria {
+  query: string;
+  filters: Omit<SearchFilters, "pluginFilter">;
+  mailboxId: string;
+}
+
+export interface SavedSearch extends SearchCriteria {
+  id: string;
+  name: string;
+}
+
 export interface PluginSearchFilter {
   pluginId: string;
   /** Chip text: the plugin's label for the search, or its name. */
@@ -63,6 +75,33 @@ export const DEFAULT_SEARCH_FILTERS: SearchFilters = {
   untagged: false,
   pluginFilter: null,
 };
+
+/** Settings can come from another client or an imported file. */
+export function sanitizeSavedSearches(value: unknown): Record<string, SavedSearch[]> {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return {};
+  const { pluginFilter: _pluginFilter, ...defaults } = DEFAULT_SEARCH_FILTERS;
+  return Object.fromEntries(Object.entries(value).flatMap(([accountId, list]) => {
+    if (!Array.isArray(list)) return [];
+    const searches: SavedSearch[] = [];
+    const ids = new Set<string>();
+    for (const entry of list) {
+      if (!entry || typeof entry !== "object") continue;
+      const { id, name, query, mailboxId, filters } = entry;
+      if (typeof id !== "string" || !id || ids.has(id) || typeof name !== "string" || !name.trim()
+        || typeof query !== "string" || typeof mailboxId !== "string"
+        || !filters || typeof filters !== "object" || Array.isArray(filters) || filters.pluginFilter) continue;
+      const criteria = Object.fromEntries(Object.entries(defaults).map(([key, fallback]) => {
+        const field = filters[key];
+        const valid = fallback === null ? typeof field === "boolean" : typeof field === typeof fallback;
+        return [key, valid ? field : fallback];
+      })) as SearchCriteria["filters"];
+      if (!query.trim() && isFilterEmpty(criteria)) continue;
+      ids.add(id);
+      searches.push({ id, name: name.trim(), query, mailboxId, filters: criteria });
+    }
+    return [[accountId, searches]];
+  }));
+}
 
 // Upper bound on a serialized plugin filter. A filter tree bigger than this
 // is either a bug or an abuse vector for the JMAP request budget.

@@ -45,6 +45,7 @@ import {
   MailOpen,
   MoreHorizontal,
   MoreVertical,
+  Search,
 } from "@/components/icons";
 import { cn, buildMailboxTree, MailboxNode } from "@/lib/utils";
 import { FOLDER_CHEVRON_SLOT, FOLDER_ROW_PX_BASE, FolderRowsSkeleton } from "@/components/boot-skeleton/mail-skeleton";
@@ -65,6 +66,8 @@ import { useContextMenu } from "@/hooks/use-context-menu";
 import { useLongPress } from "@/hooks/use-long-press";
 import { useDeviceDetection, useMediaQuery } from "@/hooks/use-media-query";
 import { IconButton } from "@/components/ui/icon-button";
+import { ContextMenu, ContextMenuItem } from "@/components/ui/context-menu";
+import type { SavedSearch } from "@/lib/jmap/search-utils";
 import { MailboxContextMenu, type MailboxContextTarget, type MailboxNotificationActions } from "./mailbox-context-menu";
 import { useAccountStore } from '@/stores/account-store';
 import { useShallow } from "zustand/react/shallow";
@@ -111,6 +114,9 @@ import { batchToastTitle } from "@/lib/selection-toast";
 
 interface SidebarProps {
   mailboxes: Mailbox[];
+  savedSearches?: SavedSearch[];
+  onOpenSavedSearch?: (search: SavedSearch) => void;
+  onManageSavedSearch?: (search: SavedSearch, action: "rename" | "delete") => void;
   selectedMailbox?: string;
   selectedKeyword?: string | null;
   onMailboxSelect?: (mailboxId: string) => void;
@@ -1420,6 +1426,9 @@ export function VacationBanner() {
 
 function SidebarImpl({
   mailboxes = [],
+  savedSearches,
+  onOpenSavedSearch,
+  onManageSavedSearch,
   selectedMailbox = "",
   selectedKeyword = null,
   onMailboxSelect,
@@ -1459,6 +1468,13 @@ function SidebarImpl({
   onDrawerChange,
 }: SidebarProps) {
   const router = useRouter();
+  const tSaved = useTranslations("saved_searches");
+  const savedSearchMenu = useContextMenu<SavedSearch>();
+  const runSavedSearchAction = (action: "rename" | "delete") => {
+    const search = savedSearchMenu.contextMenu.data;
+    savedSearchMenu.closeContextMenu();
+    if (search) onManageSavedSearch?.(search, action);
+  };
   // The rail is a desktop thing. Below that the sidebar is a drawer, opened to
   // read the folder names, whatever the collapse button last said on a wider
   // window. A compact desktop (or Pro pane) starts with the rail.
@@ -3125,6 +3141,42 @@ function SidebarImpl({
 
         {!tagsAboveShared && renderTags()}
 
+        {!!savedSearches?.length && (
+          <section aria-label={tSaved("title")}>
+            {!isCollapsed && <h2 className="px-3 pt-3 pb-1 text-xs font-medium text-muted-foreground">{tSaved("title")}</h2>}
+            {savedSearches.map((search) => (
+              <div key={search.id} className="relative [&>div:first-child]:pe-8">
+                <SidebarRow
+                  icon={<Search className="size-4" />}
+                  label={search.name}
+                  onClick={() => onOpenSavedSearch?.(search)}
+                  isCollapsed={isCollapsed}
+                  railKey={`saved-search:${search.id}`}
+                />
+                {!isCollapsed && (
+                  <IconButton
+                    label={tSaved("actions", { name: search.name })}
+                    aria-haspopup="menu"
+                    aria-expanded={savedSearchMenu.contextMenu.isOpen && savedSearchMenu.contextMenu.data?.id === search.id}
+                    className="absolute end-1 top-1/2 -translate-y-1/2"
+                    onClick={(event) => savedSearchMenu.openContextMenuFrom(event.currentTarget, search, "end")}
+                  >
+                    <MoreHorizontal className="size-4" />
+                  </IconButton>
+                )}
+              </div>
+            ))}
+            <ContextMenu
+              ref={savedSearchMenu.menuRef}
+              isOpen={savedSearchMenu.contextMenu.isOpen}
+              position={savedSearchMenu.contextMenu.position}
+              onClose={savedSearchMenu.closeContextMenu}
+            >
+              <ContextMenuItem icon={Pencil} label={tSaved("rename")} onClick={() => runSavedSearchAction("rename")} />
+              <ContextMenuItem icon={Trash2} label={tSaved("delete")} destructive onClick={() => runSavedSearchAction("delete")} />
+            </ContextMenu>
+          </section>
+        )}
         {!isCollapsed && <PluginSidebarSections mailboxId={selectedKeyword ? null : selectedMailbox || null} />}
         {!isCollapsed && <PluginSlot name="sidebar-widget" className="border-t border-border" />}
       </nav>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useId, useMemo, useRef, useState } from "react";
+import { useCallback, useId, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import { ToolbarSearch } from "@/components/ui/toolbar";
 import { useContactStore } from "@/stores/contact-store";
@@ -40,7 +40,6 @@ export function SearchBox({ value, onChange, onSubmit, onClear, onSelectContact,
   const t = useTranslations("sidebar");
   const listId = `search-suggestions-${useId().replace(/:/g, "")}`;
 
-  const containerRef = useRef<HTMLDivElement>(null);
   const [open, setOpen] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
   // The text being typed belongs to the box until it is submitted, cleared or
@@ -125,7 +124,7 @@ export function SearchBox({ value, onChange, onSubmit, onClear, onSelectContact,
   };
 
   return (
-    <div ref={containerRef} className="relative flex-1">
+    <div className="relative flex-1">
       <form
         onSubmit={(e) => {
           e.preventDefault();
@@ -156,7 +155,7 @@ export function SearchBox({ value, onChange, onSubmit, onClear, onSelectContact,
           onBlur={(e) => {
             // Focus moving into the dropdown (e.g. its action buttons) keeps it open.
             const next = e.relatedTarget as Node | null;
-            if (next && containerRef.current?.contains(next)) return;
+            if (next && document.getElementById(listId)?.contains(next)) return;
             // Anything that reads the query from outside (the filter panel's
             // search) sees what was typed once focus moves to it.
             commitDraft();
