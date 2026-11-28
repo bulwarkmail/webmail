@@ -367,11 +367,19 @@ describe('reply quote attribution markers', () => {
     expect(html).toContain('<blockquote');
   });
 
-  it('leaves forwarding attribution unmarked', () => {
+  it('marks the forward header without folding it', () => {
     render(<EmailComposer mode="forward" replyTo={TO_ME} />);
     const html = screen.getByTestId('rich-text-editor').getAttribute('data-html')!;
     expect(html).not.toContain('data-reply-quote-start');
+    expect(html).toContain('<p data-forward-header="true">forwarded_separator<br>');
     expect(html).toContain('Original text');
+  });
+
+  it('marks the forward header of a plain-text original composed in rich-text mode', () => {
+    render(<EmailComposer mode="forward" replyTo={{ ...TO_ME, htmlBody: undefined }} />);
+    const html = screen.getByTestId('rich-text-editor').getAttribute('data-html')!;
+    expect(html).not.toContain('data-reply-quote-start');
+    expect(html).toMatch(/<p data-forward-header="true">forwarded_separator<br>[^]*<\/p>Original text/);
   });
 
   it('preserves a simple plugin attribution', () => {

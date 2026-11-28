@@ -1,6 +1,6 @@
 import { SIGNATURE_BLOCK_MARKER, SIGNATURE_RANGE_MARKER } from "@/components/email/signature-markers";
 import { QUOTED_HTML_MARKER } from "@/components/email/quoted-html";
-import { REPLY_QUOTE_START_ATTRIBUTE } from "@/components/email/reply-quote-collapse";
+import { FORWARD_HEADER_ATTRIBUTE, REPLY_QUOTE_START_ATTRIBUTE } from "@/components/email/reply-quote-collapse";
 
 /**
  * Empty lines in the composer (#1015).
@@ -106,6 +106,8 @@ export function keepLoadedParagraphSpacing(html: string): string {
     if (p.closest(`[${QUOTED_HTML_MARKER}], [${SIGNATURE_BLOCK_MARKER}]`)) return;
     // The reply's attribution line is the composer's own (#1405).
     if (p.hasAttribute(REPLY_QUOTE_START_ATTRIBUTE)) return;
+    // So is the forward's header block.
+    if (p.hasAttribute(FORWARD_HEADER_ATTRIBUTE)) return;
     // A paragraph in a table cell sits flush in the composer and in the mail.
     if (p.closest("table")) return;
     if (!(p.textContent ?? "").trim() && !p.querySelector("img")) return;

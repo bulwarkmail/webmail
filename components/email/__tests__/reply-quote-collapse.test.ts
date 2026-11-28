@@ -5,7 +5,7 @@ import Paragraph from '@tiptap/extension-paragraph';
 import { trailingParagraphBreakRule } from '../paragraph-breaks';
 import { QuotedHtml, buildQuotedHtmlBlock, serializeEditorContent } from '../quoted-html';
 import { SignatureBlock, buildSignatureBlock } from '../signature-block';
-import { ReplyQuoteCollapse, markReplyQuoteHeader, userTextEnd } from '../reply-quote-collapse';
+import { ReplyQuoteCollapse, markForwardHeader, markReplyQuoteHeader, userTextEnd } from '../reply-quote-collapse';
 
 // jsdom has no elementFromPoint; ProseMirror's own mousedown handler asks it where a click landed.
 // Without it that handler throws after the test, as an unhandled error, while the test still passes.
@@ -167,6 +167,15 @@ describe('reply quote visibility', () => {
     mount(html);
     expect(toggle()).toBeNull();
     expect(editor!.view.dom.querySelector('[data-reply-quote-collapsed]')).toBeNull();
+  });
+
+  it('marks a forward header so it goes out with the message, without folding the forwarded original', () => {
+    const header = markForwardHeader('<div>Forwarded message<br>From: Bob<br></div>');
+    expect(header).toBe('<p data-forward-header="true">Forwarded message<br>From: Bob<br></p>');
+    const e = mount(`<p>FYI</p>${header}${QUOTE}`);
+    expect(toggle()).toBeNull();
+    expect(serializeEditorContent(e)).toMatch(/<p data-forward-header="true"[^>]*>Forwarded message<br>From: Bob/);
+    expect(markForwardHeader('<section><div><p>Custom header</p></div></section>')).toBe('<section><div><p>Custom header</p></div></section>');
   });
 
   it('preserves an unrecognized plugin header and recognizes a simple plugin paragraph', () => {

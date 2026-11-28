@@ -85,7 +85,7 @@ import { isFilePreviewable } from "@/lib/file-preview";
 import { saveBlobAs } from "@/lib/download-guard";
 import { isEditableEventTarget } from "@/lib/keyboard";
 import { isSingleKeyShortcutOff } from "@/lib/single-key-shortcuts";
-import { markReplyQuoteHeader, userTextEnd } from "@/components/email/reply-quote-collapse";
+import { markForwardHeader, markReplyQuoteHeader, userTextEnd } from "@/components/email/reply-quote-collapse";
 import { attachmentIcon } from "@/components/email/attachment-chips";
 import { attachmentsForDisplay } from "@/lib/compose/attachment-order";
 import { RenameAttachmentDialog } from "@/components/email/rename-attachment-dialog";
@@ -1055,9 +1055,12 @@ export function EmailComposer({
     const quoteRemoteAllowed = !remoteContentHeldBack() && !remoteContentHeldBack(replyTo?.accountId)
       && (externalContentPolicy === 'allow' || (!!from?.email && isSenderTrusted(from.email)));
 
+    // A reply's attribution folds with the quote (data-reply-quote-start); a
+    // forward's header only gets a marker (data-forward-header) so whoever
+    // reads the sent message can tell where the forwarded part starts.
     const replyHeader = (html: string) => mode === 'reply' || mode === 'replyAll'
       ? markReplyQuoteHeader(html)
-      : html;
+      : mode === 'forward' ? markForwardHeader(html) : html;
 
     // Plugin override (resolved at composer open via onBuildQuoteHeader).
     if (replyTo.quoteHeaderHtml !== undefined && (mode === 'reply' || mode === 'replyAll' || mode === 'forward')) {
@@ -1102,7 +1105,7 @@ export function EmailComposer({
     if (replyTo.body) {
       const escapedOriginal = replyTo.body.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>');
       if (mode === 'forward') {
-        return `${head}<br><br>${tQuote('forwarded_separator')}<br>${tQuote('from_label')}: ${escapeHtml(fromStrFull)}<br>${tQuote('date_label')}: ${escapeHtml(date)}<br>${tQuote('subject_label')}: ${escapeHtml(replyTo.subject || '')}<br>${forwardLinesHtml}<br>${escapedOriginal}`;
+        return `${head}<br><br>${replyHeader(`<p>${tQuote('forwarded_separator')}<br>${tQuote('from_label')}: ${escapeHtml(fromStrFull)}<br>${tQuote('date_label')}: ${escapeHtml(date)}<br>${tQuote('subject_label')}: ${escapeHtml(replyTo.subject || '')}<br>${forwardLinesHtml}</p>`)}${escapedOriginal}`;
       } else if (mode === 'reply' || mode === 'replyAll') {
         return `${head}<br><br>${replyHeader(`<p>${tQuote('reply_line', { date: escapeHtml(date), from: escapeHtml(fromStrFull) })}<br></p>`)}<blockquote style="margin:0 0 0 0.8ex;border-left:2px solid #ccc;padding-left:1ex">${escapedOriginal}</blockquote>`;
       }

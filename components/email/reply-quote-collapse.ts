@@ -6,27 +6,44 @@ import { Plugin, PluginKey, Selection, TextSelection, type EditorState } from '@
 import { Decoration, DecorationSet } from '@tiptap/pm/view';
 
 export const REPLY_QUOTE_START_ATTRIBUTE = 'data-reply-quote-start';
+/**
+ * Marks the header block a forward starts with (the "Forwarded message"
+ * separator and its From/Date/Subject/To lines). It changes nothing in the
+ * composer; it travels with the sent message so a server filter or another
+ * client can tell where the forwarded part begins, as a reply's quote start
+ * can be told by REPLY_QUOTE_START_ATTRIBUTE.
+ */
+export const FORWARD_HEADER_ATTRIBUTE = 'data-forward-header';
 const START_ATTRIBUTE = REPLY_QUOTE_START_ATTRIBUTE;
 const HEADER_BLOCKS = 'p, h1, h2, h3, h4, h5, h6, table, ul, ol, pre, blockquote';
 
 /** Mark only attribution generated for a reply. Unknown plugin markup stays visible. */
 export function markReplyQuoteHeader(html: string): string {
+  return markHeaderBlock(html, START_ATTRIBUTE);
+}
+
+/** Mark the header generated for a forward. Unknown plugin markup is left as it is. */
+export function markForwardHeader(html: string): string {
+  return markHeaderBlock(html, FORWARD_HEADER_ATTRIBUTE);
+}
+
+function markHeaderBlock(html: string, attribute: string): string {
   if (typeof document === 'undefined') return html;
   // A template is inert: attribution containing an image must not load it here.
   const template = document.createElement('template');
   template.innerHTML = html;
   const first = template.content.firstElementChild;
-  if (!first) return `<p ${START_ATTRIBUTE}="true">${html}</p>`;
+  if (!first) return `<p ${attribute}="true">${html}</p>`;
   // The default attribution is a div of inline content, parsed as a paragraph
   // by the editor. Make that paragraph explicit so its marker round-trips.
   if (first.tagName === 'DIV' && !first.querySelector(HEADER_BLOCKS)) {
     const paragraph = document.createElement('p');
-    for (const attribute of first.attributes) paragraph.setAttribute(attribute.name, attribute.value);
+    for (const attr of first.attributes) paragraph.setAttribute(attr.name, attr.value);
     paragraph.innerHTML = first.innerHTML;
     first.replaceWith(paragraph);
-    paragraph.setAttribute(START_ATTRIBUTE, 'true');
+    paragraph.setAttribute(attribute, 'true');
   } else if (first.matches(HEADER_BLOCKS)) {
-    first.setAttribute(START_ATTRIBUTE, 'true');
+    first.setAttribute(attribute, 'true');
   } else {
     return html;
   }
@@ -160,6 +177,12 @@ export const ReplyQuoteCollapse = Extension.create<{ show: string; hide: string;
           default: false,
           parseHTML: (el) => el.getAttribute(START_ATTRIBUTE) === 'true',
           renderHTML: (attrs) => attrs.replyQuoteStart ? { [START_ATTRIBUTE]: 'true' } : {},
+        },
+        // Not used for folding: kept so the marker survives the editor and goes out with the message.
+        forwardHeader: {
+          default: false,
+          parseHTML: (el) => el.getAttribute(FORWARD_HEADER_ATTRIBUTE) === 'true',
+          renderHTML: (attrs) => attrs.forwardHeader ? { [FORWARD_HEADER_ATTRIBUTE]: 'true' } : {},
         },
       },
     }];
