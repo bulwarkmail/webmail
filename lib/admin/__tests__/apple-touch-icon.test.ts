@@ -38,8 +38,8 @@ async function uploadIcon(png: Buffer): Promise<void> {
   expect(res.status).toBe(200);
 }
 
-async function render(size: number) {
-  const res = await pwaIcon(new NextRequest(`https://mail.example/api/pwa-icon/${size}`), {
+async function render(size: number, host = 'mail.example') {
+  const res = await pwaIcon(new NextRequest(`https://${host}/api/pwa-icon/${size}`, { headers: { host } }), {
     params: Promise.resolve({ size: String(size) }),
   });
   expect(res.status).toBe(200);
@@ -93,6 +93,15 @@ describe('/api/pwa-icon/180 (apple-touch-icon)', () => {
     clearRenderCaches();
     const { pixel } = await render(180);
     expect(pixel(2, 2)).toEqual([255, 255, 255, 255]);
+  });
+
+  it("uses the domain's background colour over the global one for that host only", async () => {
+    await uploadIcon(await wideRedBar());
+    await configManager.updateAdminConfig('pwaBackgroundColor', () => '#0c2f53');
+    await configManager.updateAdminConfig('domainBranding', () => [{ host: 'mail.example', pwaBackgroundColor: '#00ff00' }], []);
+    clearRenderCaches();
+    expect((await render(180)).pixel(2, 2)).toEqual([0, 255, 0, 255]);
+    expect((await render(180, 'other.example')).pixel(2, 2)).toEqual([0x0c, 0x2f, 0x53, 255]);
   });
 
   it('keeps the transparent padding of the manifest sizes', async () => {
