@@ -7,15 +7,15 @@ import {
   supportsSpamGuard, VACATION_SCRIPT_NAME,
 } from '@/lib/sieve/generator';
 import {
-  OpaqueFiltersError, applyScriptTransforms, assertFiltersSaveAllowed, filterRuleToView, readAccountFilters, renderFiltersScript,
-  supportsInclude, vacationScriptToInclude, writeFiltersScript,
+  OpaqueFiltersError, applyScriptTransforms, assertFiltersSaveAllowed, autoReplyIsOff, filterRuleToView, isVacationAudienceIdle,
+  readAccountFilters, renderFiltersScript, supportsInclude, vacationScriptToInclude, writeFiltersScript,
 } from '@/lib/filters/account-filters';
 import { countKeywordUses, renameKeywordInRules } from '@/lib/sieve/keyword-rename';
 import { filterHooks } from '@/lib/plugin-hooks';
 import { worstCaseForwards } from '@/lib/filters/forward-limit';
 import { supportsPeriods } from '@/lib/sieve/period';
 import { isValidVacationForward, withVacationPeriod } from '@/lib/sieve/vacation-forward';
-import { isValidVacationAudience, normalizeVacationAudience } from '@/lib/sieve/vacation-audience';
+import { isValidVacationAudience, withAudiencePeriod } from '@/lib/sieve/vacation-audience';
 import { debug } from '@/lib/debug';
 
 /** What a tag rename managed to do to the filters that name the tag. */
@@ -71,6 +71,8 @@ interface FilterStore {
   vacationForward: VacationForward | null;
   /** Who gets the auto-reply, when not everyone; carried through every save. */
   vacationAudience: VacationAudience | null;
+  /** The audience waits while the auto-reply is off (see isVacationAudienceIdle), as of the last load. */
+  vacationAudienceIdle: boolean;
   /** The host's server rules region (lib/sieve/server-rules); carried through every save. */
   serverRules: string;
   availableAccounts: SieveAccount[];
@@ -111,6 +113,7 @@ function stateFromScript(result: ReturnType<typeof parseScript>, vacationActive:
       includeVacation: false,
       vacationForward: null,
       vacationAudience: null,
+      vacationAudienceIdle: false,
       serverRules: '',
     };
   }
@@ -122,6 +125,7 @@ function stateFromScript(result: ReturnType<typeof parseScript>, vacationActive:
     includeVacation: !!result.includeVacation || vacationActive,
     vacationForward: result.vacationForward ?? null,
     vacationAudience: result.vacationAudience ?? null,
+    vacationAudienceIdle: !!result.vacationAudienceIdle,
     serverRules: result.serverRules ?? '',
   };
 }
@@ -142,6 +146,7 @@ export const useFilterStore = create<FilterStore>()((set, get) => ({
   vacationScriptName: VACATION_SCRIPT_NAME,
   vacationForward: null,
   vacationAudience: null,
+  vacationAudienceIdle: false,
   serverRules: '',
   availableAccounts: [],
   selectedAccountId: null,
@@ -187,6 +192,7 @@ export const useFilterStore = create<FilterStore>()((set, get) => ({
           vacationScriptName: vacationScriptToInclude(allScripts),
           vacationForward: null,
           vacationAudience: null,
+          vacationAudienceIdle: false,
           serverRules: '',
         });
         return;
@@ -199,10 +205,17 @@ export const useFilterStore = create<FilterStore>()((set, get) => ({
       set({ rawScript: content });
 
       const result = parseScript(content);
+      const audienceIdle = await isVacationAudienceIdle(client, resolvedId, allScripts, activeScript, result);
+      if (stale()) return;
       if (result.isOpaque) debug.log('filters', 'Sieve script is opaque (hand-edited)');
       else debug.log('filters', 'Parsed', result.rules.length, 'filter rules');
       emitFiltersLoaded(result.isOpaque ? [] : result.rules);
-      set({ isLoading: false, vacationScriptName: vacationScriptToInclude(allScripts, result), ...stateFromScript(result, vacationActive) });
+      set({
+        isLoading: false,
+        vacationScriptName: vacationScriptToInclude(allScripts, result),
+        ...stateFromScript(result, vacationActive),
+        vacationAudienceIdle: audienceIdle,
+      });
     } catch (error) {
       if (stale()) return;
       debug.error('Failed to fetch filters:', error);
@@ -228,6 +241,7 @@ export const useFilterStore = create<FilterStore>()((set, get) => ({
       vacationScriptName: VACATION_SCRIPT_NAME,
       vacationForward: null,
       vacationAudience: null,
+      vacationAudienceIdle: false,
       serverRules: '',
     });
     await get().fetchFilters(client, accountId);
@@ -238,7 +252,8 @@ export const useFilterStore = create<FilterStore>()((set, get) => ({
     try {
       const {
         isOpaque, rawScript, rules, activeScriptId, vacationSettings, externalRequires, includeVacation,
-        vacationScriptName, vacationForward, vacationAudience, selectedAccountId, sieveCapabilities, serverRules,
+        vacationScriptName, vacationForward, vacationAudience, vacationAudienceIdle, selectedAccountId, sieveCapabilities,
+        serverRules,
       } = get();
       // Throws FiltersSaveVetoedError (handled below like any failed save,
       // so the settings UI puts its optimistic change back).
@@ -248,12 +263,17 @@ export const useFilterStore = create<FilterStore>()((set, get) => ({
       if (isOpaque) {
         content = rawScript;
       } else {
+        // For every sender only with the server's word that the auto-reply
+        // is off right now: this page may have been loaded before another
+        // tab or client turned it on.
+        const audienceIdle = vacationAudienceIdle && await autoReplyIsOff(client, selectedAccountId || undefined);
         content = generateScript(rules, vacationSettings || undefined, {
           externalRequires,
           includeVacation,
           vacationScriptName,
           vacationForward,
           vacationAudience,
+          vacationAudienceIdle: audienceIdle,
           extensions: sieveCapabilities?.sieveExtensions,
           serverRules,
         });
@@ -430,6 +450,7 @@ export const useFilterStore = create<FilterStore>()((set, get) => ({
       vacationScriptName: VACATION_SCRIPT_NAME,
       vacationForward: null,
       vacationAudience: null,
+      vacationAudienceIdle: false,
       serverRules: '',
       availableAccounts: [],
       selectedAccountId: null,
@@ -488,9 +509,19 @@ export interface VacationFilters {
    * Forwarding that is on, or an auto-reply for some senders only, is stored
    * but does not run: both run only from the active filters script, and
    * Stalwart's own vacation script took over (a save cut short, another
-   * client), or no script runs at all. Saving the card sets it right.
+   * client), or no script runs at all. Saving the card sets it right. Where
+   * "managed" took over, whether the audience should run depends on the
+   * auto-reply: see audienceIdle.
    */
   notRunning: boolean;
+  /**
+   * An audience is stored, and "managed" runs for every sender: as the
+   * active script, or included by the active filters script outside the
+   * audience test. That is as it should be while the auto-reply is off (see
+   * syncVacationWithFilters). While it is on (another client turned it on, a
+   * save cut short), the audience does not run until the card is saved.
+   */
+  audienceIdle: boolean;
   /**
    * The most forwards the filter rules let one message collect (see
    * worstCaseForwards). Forwarding that keeps a copy runs ahead of them, so
@@ -528,6 +559,7 @@ export async function readVacationFilters(client: IJMAPClient, accountId?: strin
   const audience = parsed?.vacationAudience ?? null;
   const included = target?.isActive && parsed?.includeVacation ? parsed.vacationScriptName ?? VACATION_SCRIPT_NAME : null;
   const stalwartVacation = scripts.find(s => s.name === VACATION_SCRIPT_NAME);
+  const managedActive = !!vacationScript?.isActive && isManagedScriptName(vacationScript.name);
   return {
     includesVacation: !!included && !isManagedScriptName(included) && scripts.some(s => s.name === included),
     stalwartVacation: stalwartVacation ? { blobId: stalwartVacation.blobId, isActive: stalwartVacation.isActive } : null,
@@ -536,26 +568,30 @@ export async function readVacationFilters(client: IJMAPClient, accountId?: strin
     audience,
     // Told apart by the envelope sender, which the auto-reply goes to.
     audienceAvailable: filtersUsable && !!capabilities?.sieveExtensions?.includes('envelope'),
-    notRunning: storedButIdle(!!target?.isActive, !!vacationScript?.isActive, forward, audience),
+    // An active "vacation" script answers; an active "managed" may run the
+    // server's own rules only.
+    notRunning: storedButIdle(!!target?.isActive, !!vacationScript?.isActive && !managedActive, forward, audience),
+    audienceIdle: !!audience && (managedActive || (!!included && !!parsed?.vacationAudienceIdle)),
     otherForwards: worstCaseForwards(parsed?.rules ?? []),
   };
 }
 
-function same<T>(a: T | null, b: T | null, normalize: (value: T) => T): boolean {
-  if (!a || !b) return a === b;
-  return JSON.stringify(normalize(a)) === JSON.stringify(normalize(b));
-}
-
 // The same moment, however it is written: the server hands the vacation's
-// dates back in its own form.
-function sameMoment(a: string | undefined, b: string | undefined): boolean {
-  if (a === undefined || b === undefined) return a === b;
+// dates back in its own form. No moment on both sides is the same as well.
+export function sameMoment(a: string | null | undefined, b: string | null | undefined): boolean {
+  if (!a || !b) return !a && !b;
   return a === b || Date.parse(a) === Date.parse(b);
 }
 
 function sameForward(a: VacationForward | null, b: VacationForward | null): boolean {
   if (!a || !b) return a === b;
   return a.enabled === b.enabled && a.to === b.to && a.keepCopy === b.keepCopy &&
+    sameMoment(a.activeFrom, b.activeFrom) && sameMoment(a.activeUntil, b.activeUntil);
+}
+
+function sameAudience(a: VacationAudience | null, b: VacationAudience | null): boolean {
+  if (!a || !b) return a === b;
+  return a.only === b.only && a.domains.join(',') === b.domains.join(',') &&
     sameMoment(a.activeFrom, b.activeFrom) && sameMoment(a.activeUntil, b.activeUntil);
 }
 
@@ -570,14 +606,19 @@ function sameForward(a: VacationForward | null, b: VacationForward | null): bool
  * the activation alone. When the auto-reply is turned off, drop the include
  * of "vacation". One of "managed" stays: that script also runs the server's
  * own mail rules and sender lists, and answers nobody while the auto-reply
- * is off.
+ * is off. It then runs for every sender: an audience narrows the include
+ * only while the auto-reply is on.
  *
  * `forward` replaces the stored forwarding (null removes it, undefined keeps
  * it). Forwarding runs with or without the auto-reply, but only from an
  * active filters script, so for it the script is activated even without
  * rules, and created when there is none. `audience` likewise replaces who
  * gets the auto-reply (null: everyone). `period` is the vacation's, which
- * whatever forwarding there is keeps to.
+ * whatever forwarding there is keeps to. So does the audience around
+ * "managed": outside the period that script answers nobody and runs for
+ * every sender. 'pending' is for a call ahead of a change to when the server
+ * answers (the vacation store makes it): the audience then holds whatever
+ * the period, until the call after the change brings the new one.
  */
 export async function syncVacationWithFilters(
   client: IJMAPClient,
@@ -585,7 +626,7 @@ export async function syncVacationWithFilters(
   accountId?: string,
   forward?: VacationForward | null,
   audience?: VacationAudience | null,
-  period?: { from: string | null; until: string | null },
+  period?: { from: string | null; until: string | null } | 'pending',
 ): Promise<void> {
   const sieveAccountId = accountId || client.getSieveAccountId();
   const capabilities = client.getSieveCapabilities(sieveAccountId);
@@ -596,12 +637,16 @@ export async function syncVacationWithFilters(
   const opaque = !!target && !parsed;
   const storedForward = parsed?.vacationForward ?? null;
   const storedAudience = parsed?.vacationAudience ?? null;
+  const dates = period === 'pending' ? undefined : period;
+  const managed = vacationScript && isManagedScriptName(vacationScript.name) ? vacationScript : undefined;
   const requestedForward = forward === undefined ? storedForward : forward;
-  const nextForward = requestedForward && period ? withVacationPeriod(requestedForward, period) : requestedForward;
-  const nextAudience = audience === undefined ? storedAudience : audience;
-  const changed =
-    !sameForward(storedForward, nextForward) ||
-    !same(storedAudience, nextAudience, normalizeVacationAudience);
+  const nextForward = requestedForward && dates ? withVacationPeriod(requestedForward, dates) : requestedForward;
+  const requestedAudience = audience === undefined ? storedAudience : audience;
+  const nextAudience = !requestedAudience ? requestedAudience
+    : period === 'pending' ? withAudiencePeriod(requestedAudience, null)
+    : managed && dates ? withAudiencePeriod(requestedAudience, dates)
+    : requestedAudience;
+  const changed = !sameForward(storedForward, nextForward) || !sameAudience(storedAudience, nextAudience);
 
   if (changed) {
     // The card only offers these where they can be stored and run.
@@ -618,9 +663,15 @@ export async function syncVacationWithFilters(
   const forwarding = !!nextForward?.enabled;
   // The host's server rules run only from an active filters script.
   const serverRules = !!parsed?.serverRules;
-  const managed = vacationScript && isManagedScriptName(vacationScript.name) ? vacationScript : undefined;
-  // Whether the script written below includes the server's vacation script.
+  // The script as it stands has its include inside the test for the stored
+  // audience, or outside it, where it runs for every sender.
+  const includes = !!parsed?.includeVacation;
+  const narrowed = includes && !!storedAudience && !parsed?.vacationAudienceIdle;
+  const waiting = includes && !!storedAudience && !!parsed?.vacationAudienceIdle;
+  // Whether the script written below includes the server's vacation script,
+  // and for every sender although an audience is stored.
   let include = enabled;
+  let audienceIdle = false;
   // "managed" is the active script although the auto-reply is off, over
   // filters that have something to run.
   let managedTookOver = false;
@@ -630,7 +681,8 @@ export async function syncVacationWithFilters(
     // only must run from the filters script: on its own it answers everyone.
     const tookOver = !!vacationScript?.isActive && !target?.isActive;
     const needsFilters = rules.length > 0 || forwarding || !!nextAudience || serverRules;
-    if (!changed && !(tookOver && needsFilters)) return;
+    // The include was written for every sender while the auto-reply was off.
+    if (!changed && !(tookOver && needsFilters) && !waiting) return;
   } else {
     // A "vacation" script left over from before Stalwart 1.2 answers while
     // it is the active one: the server switches only its own "managed" off.
@@ -658,8 +710,17 @@ export async function syncVacationWithFilters(
     // auto-reply, from an active filters script; turning the auto-reply off
     // can leave no script active.
     const filtersIdle = (forwarding || serverRules) && !target?.isActive;
-    const dropsInclude = !!parsed?.includeVacation && !include;
-    if (!changed && !dropsInclude && !managedTookOver && !filtersIdle) return;
+    const dropsInclude = includes && !include;
+    // An include that stays runs for every sender while the auto-reply is
+    // off: inside the audience test it would keep the server's own rules and
+    // sender lists to those senders as well. It is written that way only
+    // once the server says the auto-reply is off too: `enabled` is what the
+    // caller last saw, and another client may have turned it on since.
+    let off: Promise<boolean> | undefined;
+    const replyIsOff = () => (off ??= autoReplyIsOff(client, accountId));
+    const widens = include && narrowed && await replyIsOff();
+    if (!changed && !dropsInclude && !managedTookOver && !filtersIdle && !widens) return;
+    audienceIdle = include && !!nextAudience && await replyIsOff();
   }
 
   const content = await applyScriptTransforms(
@@ -669,6 +730,7 @@ export async function syncVacationWithFilters(
       vacationScriptName: vacationScript?.name ?? VACATION_SCRIPT_NAME,
       vacationForward: nextForward,
       vacationAudience: nextAudience,
+      vacationAudienceIdle: audienceIdle,
       extensions: capabilities?.sieveExtensions,
       serverRules: parsed?.serverRules,
     }),

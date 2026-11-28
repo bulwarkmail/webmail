@@ -1,4 +1,5 @@
 import type { VacationAudience } from '@/lib/jmap/sieve-types';
+import { isPeriodBoundary } from '@/lib/sieve/period';
 
 // A host name in the form the identities give it: labels of letters, digits
 // and inner hyphens, at least two of them.
@@ -9,13 +10,37 @@ export function isValidVacationAudience(value: unknown): value is VacationAudien
   if (!value || typeof value !== 'object') return false;
   const a = value as Record<string, unknown>;
   if (a.only !== 'internal' && a.only !== 'external') return false;
+  if (a.activeFrom !== undefined && !isPeriodBoundary(a.activeFrom)) return false;
+  if (a.activeUntil !== undefined && !isPeriodBoundary(a.activeUntil)) return false;
   return Array.isArray(a.domains) && a.domains.length > 0
     && a.domains.every((d) => typeof d === 'string' && DOMAIN.test(d));
 }
 
 /** The fields Bulwark stores, in a fixed order. */
 export function normalizeVacationAudience(audience: VacationAudience): VacationAudience {
-  return { only: audience.only, domains: audience.domains };
+  return {
+    only: audience.only,
+    domains: audience.domains,
+    ...(audience.activeFrom !== undefined ? { activeFrom: audience.activeFrom } : {}),
+    ...(audience.activeUntil !== undefined ? { activeUntil: audience.activeUntil } : {}),
+  };
+}
+
+/**
+ * The audience with the vacation's period, whatever period it had (an empty
+ * date leaves that end open). Without a period (null) it holds for as long
+ * as the auto-reply is on.
+ */
+export function withAudiencePeriod(
+  audience: Pick<VacationAudience, 'only' | 'domains'>,
+  period: { from: string | null; until: string | null } | null,
+): VacationAudience {
+  return {
+    only: audience.only,
+    domains: audience.domains,
+    ...(period?.from ? { activeFrom: period.from } : {}),
+    ...(period?.until ? { activeUntil: period.until } : {}),
+  };
 }
 
 /** The domains of the given addresses, lower-cased, each once, in order. */

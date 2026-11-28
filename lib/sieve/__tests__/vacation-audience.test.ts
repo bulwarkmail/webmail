@@ -65,11 +65,84 @@ describe('who gets the auto-reply (generator)', () => {
     expect(parseScript(script).vacationAudience).toEqual(audience('external'));
   });
 
+  it('lets an include that stays while the auto-reply is off run for every sender, and keeps the choice', () => {
+    // Stalwart 1.2 keeps its own rules and sender lists in "managed" next to
+    // the auto-reply: inside the test they would run for those senders only.
+    const script = generateScript([rule], undefined, {
+      includeVacation: true,
+      vacationScriptName: 'managed',
+      vacationAudience: audience('external'),
+      vacationAudienceIdle: true,
+      extensions: EXTENSIONS,
+    });
+    expect(replyBlock(script)).toBe(['# Vacation auto-reply', 'include :personal :optional "managed";'].join('\n'));
+    expect(script).toMatch(/^require \["imap4flags", "include"\];$/m);
+    expect(parseScript(script)).toMatchObject({
+      includeVacation: true,
+      vacationScriptName: 'managed',
+      vacationAudience: audience('external'),
+      vacationAudienceIdle: true,
+    });
+  });
+
+  it('keeps to the period the choice carries: outside it the include runs for every sender', () => {
+    // Around Stalwart's "managed", which answers nobody outside the
+    // auto-reply's period and runs the rules kept in Stalwart itself.
+    const now = 'currentdate :zone "+0000"';
+    const from = `anyof(${now} :value "gt" "date" "2026-12-24", allof(${now} :is "date" "2026-12-24", ${now} :value "ge" "time" "08:00:00"))`;
+    const until = `anyof(${now} :value "lt" "date" "2027-01-06", allof(${now} :is "date" "2027-01-06", ${now} :value "le" "time" "17:30:00"))`;
+    const senders = 'envelope :domain :is "from" ["example.com", "example.org"]';
+    const write = (period: Partial<VacationAudience>, extensions = [...EXTENSIONS, 'date', 'relational']) =>
+      generateScript([rule], undefined, {
+        includeVacation: true,
+        vacationScriptName: 'managed',
+        vacationAudience: { ...audience('internal'), ...period },
+        extensions,
+      });
+    const block = (test: string) => ['# Vacation auto-reply', `if ${test} {`, '    include :personal :optional "managed";', '}'].join('\n');
+    const both = { activeFrom: '2026-12-24T09:00:00+01:00', activeUntil: '2027-01-06T17:30:00Z' };
+
+    const script = write(both);
+    expect(replyBlock(script)).toBe(block(`anyof(${senders}, not allof(${from}, ${until}))`));
+    expect(script).toMatch(/^require \["date", "envelope", "imap4flags", "include", "relational"\];$/m);
+    // Read back as its own, and written the same again.
+    const parsed = parseScript(script);
+    expect(parsed).toMatchObject({ includeVacation: true, vacationScriptName: 'managed', vacationAudience: { ...audience('internal'), ...both } });
+    expect(parsed.vacationAudienceIdle).toBeUndefined();
+    expect(parsed.rules.map((r) => r.origin ?? 'bulwark')).toEqual(['bulwark']);
+    expect(generateScript(parsed.rules, parsed.vacation, {
+      includeVacation: parsed.includeVacation,
+      vacationScriptName: parsed.vacationScriptName,
+      vacationAudience: parsed.vacationAudience,
+      externalRequires: parsed.externalRequires,
+      extensions: [...EXTENSIONS, 'date', 'relational'],
+    })).toBe(script);
+
+    // One end left open.
+    expect(replyBlock(write({ activeFrom: both.activeFrom }))).toBe(block(`anyof(${senders}, not ${from})`));
+    expect(replyBlock(write({ activeUntil: both.activeUntil }))).toBe(block(`anyof(${senders}, not ${until})`));
+    // A server that cannot test the date: narrowed throughout, the period kept.
+    const untested = write(both, EXTENSIONS);
+    expect(replyBlock(untested)).toBe(block(senders));
+    expect(parseScript(untested).vacationAudience).toEqual({ ...audience('internal'), ...both });
+    // While the auto-reply is off, for every sender, whatever the period.
+    const off = generateScript([rule], undefined, {
+      includeVacation: true,
+      vacationScriptName: 'managed',
+      vacationAudience: { ...audience('internal'), ...both },
+      vacationAudienceIdle: true,
+      extensions: [...EXTENSIONS, 'date', 'relational'],
+    });
+    expect(replyBlock(off)).toBe(['# Vacation auto-reply', 'include :personal :optional "managed";'].join('\n'));
+    expect(parseScript(off)).toMatchObject({ vacationAudience: { ...audience('internal'), ...both }, vacationAudienceIdle: true });
+  });
+
   it('never writes a choice it cannot read back', () => {
     for (const unusable of [
       audience('external', []),
       audience('external', ['example.com"; discard; "']),
       { only: 'everyone', domains: ['example.com'] } as unknown as VacationAudience,
+      { ...audience('external'), activeFrom: 'next week' },
     ]) {
       const script = generate(unusable);
       expect(replyBlock(script)).toBe(['# Vacation auto-reply', INCLUDE].join('\n'));
@@ -99,14 +172,39 @@ describe('who gets the auto-reply (parser)', () => {
     expect(first.parsed.rules.map((r) => r.origin ?? 'bulwark')).toEqual(['bulwark']);
     expect(readAndWrite(first.script).script).toBe(first.script);
     expect(first.script.split(INCLUDE).length).toBe(2);
+    expect(first.parsed.vacationAudienceIdle).toBeUndefined();
+  });
+
+  it('reads an include for every sender back as one, with the choice that waits', () => {
+    const write = (parsed: ReturnType<typeof parseScript>) => generateScript(parsed.rules, parsed.vacation, {
+      includeVacation: parsed.includeVacation,
+      vacationAudience: parsed.vacationAudience,
+      vacationAudienceIdle: parsed.vacationAudienceIdle,
+      externalRequires: parsed.externalRequires,
+      extensions: EXTENSIONS,
+    });
+    const idle = generateScript([rule], undefined, {
+      includeVacation: true, vacationAudience: audience('internal'), vacationAudienceIdle: true, extensions: EXTENSIONS,
+    });
+    expect(replyBlock(idle)).toBe(['# Vacation auto-reply', INCLUDE].join('\n'));
+    expect(parseScript(idle)).toMatchObject({ vacationAudience: audience('internal'), vacationAudienceIdle: true });
+    expect(write(parseScript(idle))).toBe(idle);
+
+    // Narrowed from it, and read back as narrowed.
+    const narrowed = write({ ...parseScript(idle), vacationAudienceIdle: false });
+    expect(replyBlock(narrowed)).toContain('if envelope :domain :is "from" ["example.com", "example.org"] {');
+    expect(parseScript(narrowed).vacationAudienceIdle).toBeUndefined();
+    // Nothing waits where everyone gets the auto-reply.
+    expect(parseScript(generate(null)).vacationAudienceIdle).toBeUndefined();
   });
 
   it('treats a choice it cannot read as a hand-edited script', () => {
-    const script = generate(audience('internal'));
+    const script = generate({ ...audience('internal'), activeUntil: '2027-01-06T17:30:00Z' });
     for (const [from, to] of [
       ['"only":"internal"', '"only":"intern"'],
       ['"domains":["example.com","example.org"]', '"domains":[]'],
       ['"domains":["example.com","example.org"]', '"domains":["example com"]'],
+      ['"activeUntil":"2027-01-06T17:30:00Z"', '"activeUntil":"2027-01-06"'],
     ]) {
       expect(script).toContain(from);
       expect(parseScript(script.replace(from, to)).isOpaque).toBe(true);

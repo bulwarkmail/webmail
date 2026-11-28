@@ -2,9 +2,11 @@ import { afterEach, describe, expect, it } from 'vitest';
 import type { FilterRule } from '@/lib/jmap/sieve-types';
 import { generateScript } from '@/lib/sieve/generator';
 import { parseScript } from '@/lib/sieve/parser';
-import { mockStalwartAccount, stalwartVacationScript } from '@/lib/filters/__tests__/sieve-mock';
-import { useFilterStore } from '../filter-store';
-import { useVacationStore } from '../vacation-store';
+import { updateAccountFilters } from '@/lib/filters/account-filters';
+import { insertRuleAtTop } from '@/lib/filters/quick-rules';
+import { STALWART_MANAGED_IDLE, mockStalwartAccount, stalwartVacationScript } from '@/lib/filters/__tests__/sieve-mock';
+import { syncVacationWithFilters, useFilterStore } from '../filter-store';
+import { VacationFiltersError, useVacationStore } from '../vacation-store';
 
 const EXTENSIONS = ['fileinto', 'mailbox', 'mailboxid', 'imap4flags', 'include', 'envelope', 'copy', 'date', 'relational', 'spamtestplus'];
 
@@ -167,57 +169,414 @@ describe('Stalwart 1.2 with rules of its own in "managed"', () => {
   });
 });
 
+// The chosen senders are told apart around the include of "managed", and that
+// script also runs the rules and sender lists a user keeps in Stalwart itself.
+// So the include is narrowed only while the auto-reply answers: switched off,
+// and before and after its period, "managed" answers nobody and runs for
+// every sender.
 describe('Stalwart 1.2: who the auto-reply is for, and forwarding', () => {
   const vacation = () => useVacationStore.getState();
+  const filterStore = () => useFilterStore.getState();
+  const external = { only: 'external' as const, domains: ['example.com'] };
   const AUDIENCE = 'if not envelope :domain :is "from" ["example.com"] {';
+  const NARROWED = `# Vacation auto-reply\n${AUDIENCE}\n    ${include('managed')}\n}\n`;
+  const FOR_EVERYONE = `# Vacation auto-reply\n${include('managed')}\n`;
+  const FORWARD = { enabled: true, to: 'kollege@example.com', keepCopy: true };
+  const FROM = '2026-12-24T08:00:00Z';
+  const UNTIL = '2027-01-06T17:30:00Z';
+  /** The auto-reply block: its marker comment up to the next blank line. */
+  const replyBlock = (script: string) => {
+    const start = script.indexOf('# Vacation auto-reply');
+    return script.slice(start, script.indexOf('\n\n', start));
+  };
+  type Server = ReturnType<typeof mockStalwartAccount>;
+  const account = (initial: Parameters<typeof mockStalwartAccount>[1], managedRules = false) =>
+    mockStalwartAccount('b', initial, EXTENSIONS, { managedScript: true, managedRules, vacation: { textBody: '' } });
+  const card = async (server: Server) => {
+    await vacation().fetchVacationResponse(server.client, 'b');
+    const { isEnabled, notRunning, audience, forward } = vacation();
+    return { isEnabled, notRunning, audience, forwarding: !!forward?.enabled };
+  };
+  const saveRule = async (server: Server, id: string) => {
+    await filterStore().fetchFilters(server.client, 'b');
+    filterStore().addRule(rule(id));
+    await filterStore().saveFilters(server.client);
+    expect(filterStore().error).toBeNull();
+  };
+  /** Filters next to an auto-reply for senders from outside that was on and is off again. */
+  const offAgain = async () => {
+    useVacationStore.setState(initialVacation, true);
+    const server = account([{ name: 'filters', content: filters([rule('a')]), isActive: true }]);
+    await vacation().updateVacationResponse(server.client, { isEnabled: true, audience: external }, 'b');
+    expect(server.content('filters')).toContain(NARROWED);
+    await vacation().updateVacationResponse(server.client, { isEnabled: false }, 'b');
+    expect(server.content('filters')).toContain(FOR_EVERYONE);
+    return server;
+  };
 
-  it('keeps the include of "managed" through changes made while the auto-reply is off', async () => {
-    const server = mockStalwartAccount('b', [
-      { name: 'filters', content: filters([rule('a')]), isActive: true },
-    ], EXTENSIONS, { managedScript: true, vacation: { textBody: '' } });
-    const card = async () => {
-      await vacation().fetchVacationResponse(server.client, 'b');
-      const { isEnabled, notRunning, audience, forward } = vacation();
-      return { isEnabled, notRunning, audience, forwarding: !!forward?.enabled };
-    };
-    const external = { only: 'external' as const, domains: ['example.com'] };
+  it('narrows the include of "managed" only while the auto-reply is on, through every save of the rules', async () => {
+    const server = account([{ name: 'filters', content: filters([rule('a')]), isActive: true }]);
 
     // On, for senders from outside only, with forwarding.
-    await vacation().updateVacationResponse(server.client, {
-      isEnabled: true,
-      audience: external,
-      forward: { enabled: true, to: 'kollege@example.com', keepCopy: true },
-    }, 'b');
+    await vacation().updateVacationResponse(server.client, { isEnabled: true, audience: external, forward: FORWARD }, 'b');
     expect(server.active()).toBe('filters');
-    expect(server.content('filters')).toContain(`${AUDIENCE}\n    ${include('managed')}\n}`);
+    expect(server.content('filters')).toContain(NARROWED);
     expect(server.content('filters')).toContain('redirect :copy "kollege@example.com";');
-    expect(await card()).toEqual({ isEnabled: true, notRunning: false, audience: external, forwarding: true });
+    expect(await card(server)).toEqual({ isEnabled: true, notRunning: false, audience: external, forwarding: true });
+    await saveRule(server, 'b');
+    expect(server.content('filters')).toContain(NARROWED);
 
-    // Off: the script stays as it is, forwarding goes on.
-    const writes = server.writes();
+    // Off: "managed" answers nobody and runs for every sender again. The
+    // choice waits, forwarding goes on.
     await vacation().updateVacationResponse(server.client, { isEnabled: false }, 'b');
-    expect(server.writes()).toBe(writes);
     expect(server.active()).toBe('filters');
-    expect(await card()).toEqual({ isEnabled: false, notRunning: false, audience: external, forwarding: true });
+    expect(server.content('filters')).toContain(FOR_EVERYONE);
+    expect(server.content('filters')).not.toContain(AUDIENCE);
+    expect(server.content('filters')).toContain('redirect :copy "kollege@example.com";');
+    expect(await card(server)).toEqual({ isEnabled: false, notRunning: false, audience: external, forwarding: true });
 
-    // For everyone again and forwarding off, still while off: the include stays, without its test.
+    // It stays that way: a save of the rules, a rule made from a message,
+    // and a save of the card, which has nothing more to write.
+    await saveRule(server, 'c');
+    await updateAccountFilters(server.client, 'b', (rules) => insertRuleAtTop(rules, rule('quick')));
+    const writes = server.writes();
+    await vacation().updateVacationResponse(server.client, { isEnabled: false, subject: 'Urlaub' }, 'b');
+    expect(server.writes()).toBe(writes);
+    expect(server.content('filters')).toContain(FOR_EVERYONE);
+    expect(server.content('filters')).not.toContain(AUDIENCE);
+    expect(ruleIds(server.content('filters'))).toEqual(['quick', 'a', 'b', 'c']);
+
+    // On again: narrowed again, to the choice that waited.
+    await vacation().updateVacationResponse(server.client, { isEnabled: true }, 'b');
+    expect(server.active()).toBe('filters');
+    expect(server.content('filters')).toContain(NARROWED);
+    expect(await card(server)).toEqual({ isEnabled: true, notRunning: false, audience: external, forwarding: true });
+    const managed = server.scripts.find((s) => s.name === 'managed');
+    expect(server.client.updateSieveScript.mock.calls.some(([id]) => id === managed?.id)).toBe(false);
+  });
+
+  it('keeps the test to the period of the auto-reply, so that "managed" runs for every sender before and after it', async () => {
+    const server = account([{ name: 'filters', content: filters([rule('a')]), isActive: true }]);
+    const scheduled = { ...external, activeFrom: FROM, activeUntil: UNTIL };
+
+    await vacation().updateVacationResponse(server.client, { isEnabled: true, fromDate: FROM, toDate: UNTIL, audience: external }, 'b');
+    expect(server.active()).toBe('filters');
+    const block = replyBlock(server.content('filters'));
+    // The include runs for the chosen senders, or outside the period.
+    expect(block.split('\n')[1]).toMatch(
+      /^if anyof\(not envelope :domain :is "from" \["example\.com"\], not allof\(anyof\(currentdate .*"ge" "time" "08:00:00"\)\), anyof\(currentdate .*"le" "time" "17:30:00"\)\)\)\) \{$/,
+    );
+    expect(block).toContain('"date" "2026-12-24"');
+    expect(block).toContain('"date" "2027-01-06"');
+    expect(block.split('\n').slice(2)).toEqual([`    ${include('managed')}`, '}']);
+    expect(parseScript(server.content('filters')).vacationAudience).toEqual(scheduled);
+    expect(await card(server)).toEqual({ isEnabled: true, notRunning: false, audience: scheduled, forwarding: false });
+
+    // A save of the rules keeps it, and a save of the card has nothing to write.
+    await saveRule(server, 'b');
+    expect(replyBlock(server.content('filters'))).toBe(block);
+    const writes = server.writes();
+    await vacation().updateVacationResponse(server.client, { isEnabled: true, fromDate: FROM, toDate: UNTIL, subject: 'Urlaub' }, 'b');
+    expect(server.writes()).toBe(writes);
+    expect(replyBlock(server.content('filters'))).toBe(block);
+  });
+
+  it('moves the test to a new period, and turns it on again, without answering anyone else in between', async () => {
+    const server = account([{ name: 'filters', content: filters([rule('a')]), isActive: true }]);
+    await vacation().updateVacationResponse(server.client, { isEnabled: true, fromDate: FROM, toDate: UNTIL, audience: external }, 'b');
+    const filtersAtSet: string[] = [];
+    const setVacation = server.client.setVacationResponse.getMockImplementation();
+    server.client.setVacationResponse.mockImplementation(async (updates: Record<string, unknown>) => {
+      filtersAtSet.push(server.content('filters'));
+      await setVacation?.(updates);
+    });
+
+    // Next year's dates. When the server takes them, the test holds whatever the period.
+    const next = { fromDate: '2027-12-23T08:00:00Z', toDate: '2028-01-07T17:30:00Z' };
+    await vacation().updateVacationResponse(server.client, { isEnabled: true, ...next }, 'b');
+    expect(filtersAtSet).toHaveLength(1);
+    expect(filtersAtSet[0]).toContain(NARROWED);
+    expect(parseScript(server.content('filters')).vacationAudience).toEqual({ ...external, activeFrom: next.fromDate, activeUntil: next.toDate });
+    expect(replyBlock(server.content('filters'))).toContain('"date" "2027-12-23"');
+    expect(replyBlock(server.content('filters'))).not.toContain('"date" "2026-12-24"');
+
+    // Off: for every sender. On again: the test is there before the server answers.
+    await vacation().updateVacationResponse(server.client, { isEnabled: false }, 'b');
+    expect(server.content('filters')).toContain(FOR_EVERYONE);
+    await vacation().updateVacationResponse(server.client, { isEnabled: true }, 'b');
+    expect(filtersAtSet).toHaveLength(3);
+    expect(filtersAtSet[2]).toContain(NARROWED);
+    expect(replyBlock(server.content('filters'))).toContain('"date" "2027-12-23"');
+    expect(await card(server)).toMatchObject({ isEnabled: true, notRunning: false });
+  });
+
+  it('says when another client moved the period of the auto-reply, and follows it with the next save of the card', async () => {
+    const server = account([{ name: 'filters', content: filters([rule('a')]), isActive: true }]);
+    await vacation().updateVacationResponse(server.client, { isEnabled: true, fromDate: FROM, toDate: UNTIL, audience: external }, 'b');
+    const earlier = '2026-12-01T08:00:00Z';
+    await server.client.setVacationResponse({ fromDate: earlier });
+    expect(await card(server)).toMatchObject({ isEnabled: true, notRunning: true });
+
+    // The card saves what it shows.
+    const shown = vacation();
+    await shown.updateVacationResponse(server.client, { isEnabled: true, fromDate: shown.fromDate, toDate: shown.toDate }, 'b');
+    expect(parseScript(server.content('filters')).vacationAudience).toEqual({ ...external, activeFrom: earlier, activeUntil: UNTIL });
+    expect(await card(server)).toMatchObject({ isEnabled: true, notRunning: false });
+  });
+
+  it('keeps what is changed while the auto-reply is off, with the include for every sender', async () => {
+    const server = await offAgain();
+    const internal = { only: 'internal' as const, domains: ['example.com'] };
+
+    // Another choice and forwarding: stored, and nothing is narrowed.
+    await vacation().updateVacationResponse(server.client, { isEnabled: false, audience: internal, forward: FORWARD }, 'b');
+    expect(server.content('filters')).toContain(FOR_EVERYONE);
+    expect(server.content('filters')).not.toContain('envelope :domain');
+    expect(server.content('filters')).toContain('redirect :copy "kollege@example.com";');
+    expect(await card(server)).toEqual({ isEnabled: false, notRunning: false, audience: internal, forwarding: true });
+
+    // On: narrowed to that choice.
+    await vacation().updateVacationResponse(server.client, { isEnabled: true }, 'b');
+    expect(server.content('filters')).toContain(
+      `# Vacation auto-reply\nif envelope :domain :is "from" ["example.com"] {\n    ${include('managed')}\n}\n`,
+    );
+    expect(await card(server)).toEqual({ isEnabled: true, notRunning: false, audience: internal, forwarding: true });
+
+    // For everyone again and forwarding off, while off: the include stays, without a test.
     await vacation().updateVacationResponse(server.client, {
       isEnabled: false,
       audience: null,
-      forward: { enabled: false, to: 'kollege@example.com', keepCopy: true },
+      forward: { ...FORWARD, enabled: false },
     }, 'b');
     expect(server.active()).toBe('filters');
-    expect(server.content('filters')).toContain(`\n${include('managed')}\n`);
-    expect(server.content('filters')).not.toContain(AUDIENCE);
+    expect(server.content('filters')).toContain(FOR_EVERYONE);
+    expect(server.content('filters')).not.toContain('envelope :domain');
     expect(server.content('filters')).not.toContain('redirect');
     expect(ruleIds(server.content('filters'))).toEqual(['a']);
-    expect(await card()).toEqual({ isEnabled: false, notRunning: false, audience: null, forwarding: false });
+    expect(await card(server)).toEqual({ isEnabled: false, notRunning: false, audience: null, forwarding: false });
 
     // On again changes the auto-reply only.
     const before = server.writes();
     await vacation().updateVacationResponse(server.client, { isEnabled: true }, 'b');
     expect(server.writes()).toBe(before);
-    expect(await card()).toEqual({ isEnabled: true, notRunning: false, audience: null, forwarding: false });
+    expect(await card(server)).toEqual({ isEnabled: true, notRunning: false, audience: null, forwarding: false });
+  });
+
+  it('says when the auto-reply was turned on elsewhere and answers everyone, and narrows it with the next save', async () => {
+    // Another client: the server flips its switch, the include is as it was.
+    const byCard = await offAgain();
+    await byCard.client.setVacationResponse({ isEnabled: true });
+    expect(byCard.content('filters')).toContain(FOR_EVERYONE);
+    expect(await card(byCard)).toEqual({ isEnabled: true, notRunning: true, audience: external, forwarding: false });
+    await vacation().updateVacationResponse(byCard.client, { isEnabled: true }, 'b');
+    expect(byCard.content('filters')).toContain(NARROWED);
+    expect(await card(byCard)).toEqual({ isEnabled: true, notRunning: false, audience: external, forwarding: false });
+
+    // A save of the rules does the same: the server tells that it is on.
+    const byRules = await offAgain();
+    await byRules.client.setVacationResponse({ isEnabled: true });
+    await saveRule(byRules, 'b');
+    expect(byRules.content('filters')).toContain(NARROWED);
+    expect(await card(byRules)).toEqual({ isEnabled: true, notRunning: false, audience: external, forwarding: false });
+
+    // And a rule made from a message.
+    const byMessage = await offAgain();
+    await byMessage.client.setVacationResponse({ isEnabled: true });
+    await updateAccountFilters(byMessage.client, 'b', (rules) => insertRuleAtTop(rules, rule('quick')));
+    expect(byMessage.content('filters')).toContain(NARROWED);
+  });
+
+  it('asks the server again before a filters page loaded while the auto-reply was off writes the include for every sender', async () => {
+    const server = await offAgain();
+    await filterStore().fetchFilters(server.client, 'b');
+    const loadedWhileOff = useFilterStore.getState();
+    expect(loadedWhileOff.vacationAudienceIdle).toBe(true);
+
+    // Turned on from another tab: this page still holds what it loaded.
+    await vacation().updateVacationResponse(server.client, { isEnabled: true }, 'b');
+    expect(server.content('filters')).toContain(NARROWED);
+    useFilterStore.setState(loadedWhileOff, true);
+    expect(filterStore().vacationAudienceIdle).toBe(true);
+    filterStore().addRule(rule('b'));
+    await filterStore().saveFilters(server.client);
+    expect(filterStore().error).toBeNull();
+    expect(server.content('filters')).toContain(NARROWED);
+    expect(server.content('filters')).not.toContain(FOR_EVERYONE);
+    expect(ruleIds(server.content('filters'))).toEqual(['a', 'b']);
+  });
+
+  it('narrows the include before it turns the auto-reply on again, so that nobody else is answered in between', async () => {
+    const server = await offAgain();
+    const filtersAtSet: string[] = [];
+    const setVacation = server.client.setVacationResponse.getMockImplementation();
+    server.client.setVacationResponse.mockImplementation(async (updates: Record<string, unknown>) => {
+      filtersAtSet.push(server.content('filters'));
+      await setVacation?.(updates);
+    });
+
+    await vacation().updateVacationResponse(server.client, { isEnabled: true }, 'b');
+    expect(filtersAtSet).toHaveLength(1);
+    expect(filtersAtSet[0]).toContain(NARROWED);
+    expect(await card(server)).toEqual({ isEnabled: true, notRunning: false, audience: external, forwarding: false });
+
+    // Turned off, the server stops answering first.
+    await vacation().updateVacationResponse(server.client, { isEnabled: false }, 'b');
+    expect(filtersAtSet[1]).toContain(NARROWED);
+    expect(server.content('filters')).toContain(FOR_EVERYONE);
+  });
+
+  it('says when turning the auto-reply on could not narrow the include again', async () => {
+    const server = await offAgain();
+    await card(server);
+    // Neither ahead of the auto-reply nor after it.
+    server.client.updateSieveScript
+      .mockRejectedValueOnce(new Error('server said no'))
+      .mockRejectedValueOnce(new Error('server said no'));
+    await expect(vacation().updateVacationResponse(server.client, { isEnabled: true }, 'b'))
+      .rejects.toBeInstanceOf(VacationFiltersError);
+    expect(vacation()).toMatchObject({ isEnabled: true, notRunning: true, audience: external });
+
+    // Saved again, as the card offers.
+    await vacation().updateVacationResponse(server.client, { isEnabled: true }, 'b');
+    expect(server.content('filters')).toContain(NARROWED);
+    expect(vacation().notRunning).toBe(false);
+  });
+
+  it('puts the include back as it was when the server refuses the save it was narrowed for', async () => {
+    // Turned on: narrowed ahead of the save, which the server then refuses.
+    const off = await offAgain();
+    off.client.setVacationResponse.mockRejectedValueOnce(new Error('refused'));
+    await expect(vacation().updateVacationResponse(off.client, { isEnabled: true }, 'b')).rejects.toThrow('refused');
+    expect(off.active()).toBe('filters');
+    expect(off.content('filters')).toContain(FOR_EVERYONE);
+    expect(off.content('filters')).not.toContain(AUDIENCE);
+    expect(await card(off)).toEqual({ isEnabled: false, notRunning: false, audience: external, forwarding: false });
+
+    // Other dates: the test goes back to the period the server still has.
+    const on = account([{ name: 'filters', content: filters([rule('a')]), isActive: true }]);
+    await vacation().updateVacationResponse(on.client, { isEnabled: true, fromDate: FROM, toDate: UNTIL, audience: external }, 'b');
+    const block = replyBlock(on.content('filters'));
+    on.client.setVacationResponse.mockRejectedValueOnce(new Error('refused'));
+    await expect(vacation().updateVacationResponse(on.client, { isEnabled: true, fromDate: '2027-12-23T08:00:00Z' }, 'b'))
+      .rejects.toThrow('refused');
+    expect(replyBlock(on.content('filters'))).toBe(block);
+    expect(parseScript(on.content('filters')).vacationAudience).toEqual({ ...external, activeFrom: FROM, activeUntil: UNTIL });
+    expect(await card(on)).toMatchObject({ isEnabled: true, notRunning: false });
+  });
+
+  it('leaves the include narrowed after a save that failed while the server cannot be asked, until the next save', async () => {
+    const server = await offAgain();
+    server.client.setVacationResponse.mockRejectedValueOnce(new Error('offline'));
+    server.client.getVacationResponse.mockRejectedValueOnce(new Error('offline'));
+    await expect(vacation().updateVacationResponse(server.client, { isEnabled: true }, 'b')).rejects.toThrow('offline');
+    expect(server.content('filters')).toContain(NARROWED);
+
+    await vacation().updateVacationResponse(server.client, { isEnabled: false }, 'b');
+    expect(server.content('filters')).toContain(FOR_EVERYONE);
+    expect(server.content('filters')).not.toContain(AUDIENCE);
+  });
+
+  it('goes by the server, not by the caller, before the include runs for every sender', async () => {
+    const server = account([{ name: 'filters', content: filters([rule('a')]), isActive: true }]);
+    await vacation().updateVacationResponse(server.client, { isEnabled: true, audience: external }, 'b');
+    expect(server.content('filters')).toContain(NARROWED);
+
+    // A store that was never loaded takes the auto-reply for off, and a save
+    // that leaves the switch out syncs the filters with that.
+    useVacationStore.setState(initialVacation, true);
+    await vacation().updateVacationResponse(server.client, { forward: FORWARD }, 'b');
+    expect(server.content('filters')).toContain(NARROWED);
+    expect(server.content('filters')).toContain('redirect :copy "kollege@example.com";');
+    const writes = server.writes();
+    await syncVacationWithFilters(server.client, false, 'b');
+    expect(server.writes()).toBe(writes);
+
+    // Off, but the server cannot be asked: narrowed until it can.
+    await server.client.setVacationResponse({ isEnabled: false });
+    server.client.getVacationResponse.mockRejectedValueOnce(new Error('offline'));
+    await syncVacationWithFilters(server.client, false, 'b');
+    expect(server.content('filters')).toContain(NARROWED);
+    await syncVacationWithFilters(server.client, false, 'b');
+    expect(server.content('filters')).toContain(FOR_EVERYONE);
+    expect(server.content('filters')).toContain('redirect :copy "kollege@example.com";');
+  });
+
+  it('lets the filters take over from "managed" with rules of its own for every sender, unless the auto-reply is on', async () => {
+    // A choice from an earlier auto-reply, and no include: Stalwart made
+    // "managed" the active script for rules set there.
+    const stored = generateScript([rule('a')], undefined, { extensions: EXTENSIONS, vacationAudience: external });
+    const taken = () => account([
+      { name: 'filters', content: stored, isActive: false },
+      { name: 'managed', content: '# Rules set in Stalwart\n', isActive: true },
+    ], true);
+
+    // Off: that the choice does not run is as it should be.
+    const byRules = taken();
+    expect(await card(byRules)).toEqual({ isEnabled: false, notRunning: false, audience: external, forwarding: false });
+    await saveRule(byRules, 'b');
+    expect(byRules.active()).toBe('filters');
+    expect(byRules.content('filters')).toContain(FOR_EVERYONE);
+    expect(byRules.content('filters')).not.toContain(AUDIENCE);
+
+    const byCard = taken();
+    await vacation().updateVacationResponse(byCard.client, { isEnabled: false }, 'b');
+    expect(byCard.active()).toBe('filters');
+    expect(byCard.content('filters')).toContain(FOR_EVERYONE);
+    expect(byCard.content('filters')).not.toContain(AUDIENCE);
+
+    // On (another client), "managed" answers everyone: the card says so, and
+    // the filters come back with the include narrowed.
+    const on = taken();
+    await on.client.setVacationResponse({ isEnabled: true });
+    expect(await card(on)).toEqual({ isEnabled: true, notRunning: true, audience: external, forwarding: false });
+    await saveRule(on, 'b');
+    expect(on.active()).toBe('filters');
+    expect(on.content('filters')).toContain(NARROWED);
+    expect(await card(on)).toEqual({ isEnabled: true, notRunning: false, audience: external, forwarding: false });
+  });
+
+  it('lets an include that was left narrowed while off run for every sender with the next save', async () => {
+    const left = () => account([
+      {
+        name: 'filters',
+        content: generateScript([rule('a')], undefined, {
+          extensions: EXTENSIONS, includeVacation: true, vacationScriptName: 'managed', vacationAudience: external,
+        }),
+        isActive: true,
+      },
+      { name: 'managed', content: STALWART_MANAGED_IDLE, isActive: false },
+    ]);
+
+    // Of the card.
+    const byCard = left();
+    expect(byCard.content('filters')).toContain(NARROWED);
+    expect(await card(byCard)).toEqual({ isEnabled: false, notRunning: false, audience: external, forwarding: false });
+    await vacation().updateVacationResponse(byCard.client, { isEnabled: false }, 'b');
+    expect(byCard.active()).toBe('filters');
+    expect(byCard.content('filters')).toContain(FOR_EVERYONE);
+    expect(byCard.content('filters')).not.toContain(AUDIENCE);
+
+    // Of the rules: the server tells that the auto-reply is off.
+    const byRules = left();
+    await saveRule(byRules, 'b');
+    expect(byRules.active()).toBe('filters');
+    expect(byRules.content('filters')).toContain(FOR_EVERYONE);
+    expect(byRules.content('filters')).not.toContain(AUDIENCE);
+    expect(ruleIds(byRules.content('filters'))).toEqual(['a', 'b']);
+  });
+
+  it('narrows an include that does not run when a save of the rules brings it back', async () => {
+    const server = await offAgain();
+    // Another client switched every script off. Nothing tells whom "managed"
+    // answers once the filters include it again.
+    await server.client.deactivateSieveScript('b');
+    await saveRule(server, 'b');
+    expect(server.active()).toBe('filters');
+    expect(server.content('filters')).toContain(NARROWED);
+
+    // The auto-reply is off, and the card's next save says so.
+    await vacation().updateVacationResponse(server.client, { isEnabled: false }, 'b');
+    expect(server.content('filters')).toContain(FOR_EVERYONE);
   });
 });
 

@@ -149,6 +149,14 @@ export interface VacationAudience {
   only: 'internal' | 'external';
   /** The account's own domains (from its identities) when it was saved. */
   domains: string[];
+  /**
+   * The auto-reply's period when it was saved, as for FilterRule.activeFrom.
+   * Only kept where the senders are told apart around the include of
+   * Stalwart's "managed": outside the period that script answers nobody, and
+   * its include runs for every sender.
+   */
+  activeFrom?: string;
+  activeUntil?: string;
 }
 
 export interface FilterMetadata {
