@@ -3,7 +3,6 @@ import sharp from 'sharp';
 import { configManager } from '@/lib/admin/config-manager';
 import { fetchBrandingAsset } from '@/lib/admin/branding-asset';
 import { renderCache } from '@/lib/admin/render-cache';
-import { parseHexColor } from '@/lib/tag-hex-color';
 import {
   matchDomainBranding,
   parseDomainBranding,
@@ -14,6 +13,12 @@ import {
 // <link rel="apple-touch-icon">, not from the manifest.
 const APPLE_TOUCH_SIZE = 180;
 const VALID_SIZES = new Set([APPLE_TOUCH_SIZE, 192, 512]);
+
+/** `#rgb` or `#rrggbb` (the # optional), else null: sharp throws on a colour it can't parse. */
+function hexColor(value: string | undefined): string | null {
+  const match = /^#?([0-9a-f]{3}|[0-9a-f]{6})$/i.exec((value ?? '').trim());
+  return match ? `#${match[1].toLowerCase()}` : null;
+}
 
 // Cache resized images keyed by (size, source URL) so admin re-uploads (the
 // URL carries the upload's version) or URL changes invalidate the prior
@@ -56,8 +61,8 @@ export async function GET(
   // only a valid hex colour is used; anything else falls back to white.
   const background =
     size === APPLE_TOUCH_SIZE
-      ? parseHexColor(domainOverrides.pwaBackgroundColor ?? '') ??
-        parseHexColor(configManager.get<string>('pwaBackgroundColor', '') ?? '') ??
+      ? hexColor(domainOverrides.pwaBackgroundColor) ??
+        hexColor(configManager.get<string>('pwaBackgroundColor', '')) ??
         '#ffffff'
       : '';
 
