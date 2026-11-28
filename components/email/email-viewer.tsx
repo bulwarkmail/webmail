@@ -4808,6 +4808,7 @@ export function EmailViewer({
           <>
             <Button
               variant="default"
+              data-filled=""
               size="sm"
               onClick={() => void rescheduleScheduled(new Date(Date.now() + 1000).toISOString())}
               className="sm:flex sm:flex-row sm:h-8 sm:gap-1.5 sm:py-0"
@@ -4843,6 +4844,7 @@ export function EmailViewer({
         {!isScheduled && isDraft && onEditDraft && (
           <Button
             variant="default"
+            data-filled=""
             size="sm"
             onClick={() => onEditDraft()}
             data-testid="edit-draft"

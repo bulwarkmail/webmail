@@ -1717,9 +1717,13 @@ html[data-window-controls-left] [data-window-rail] {
   min-width: 40px;
   padding-inline: 10px;
   border-radius: 9999px;
+}
+/* The filled buttons (Edit on a draft, Send now) keep their own text colour
+   on the primary background (#1903). */
+[data-interface-layout="mountain-view"] [data-mv-viewer-toolbar] button:not([role="menu"] *):not([data-mv-pager] *):not([data-filled]) {
   color: var(--color-muted-foreground);
 }
-[data-interface-layout="mountain-view"] [data-mv-viewer-toolbar] button:not([role="menu"] *):not([data-mv-pager] *):hover {
+[data-interface-layout="mountain-view"] [data-mv-viewer-toolbar] button:not([role="menu"] *):not([data-mv-pager] *):not([data-filled]):hover {
   color: var(--color-foreground);
 }
 [data-interface-layout="mountain-view"] [data-mv-viewer-toolbar] button:not([role="menu"] *) > svg {
