@@ -130,4 +130,32 @@ describe('useAppBadge', () => {
     expect(() => renderHook(() => useAppBadge(0))).not.toThrow();
     await waitFor(() => expect(clearAppBadge).toHaveBeenCalled());
   });
+
+  describe('inside Ferdium', () => {
+    afterEach(() => {
+      delete (window as { ferdium?: unknown }).ferdium;
+    });
+
+    it('hands the count to the Ferdium service badge', async () => {
+      const setBadge = vi.fn();
+      (window as { ferdium?: unknown }).ferdium = { setBadge };
+      const { rerender } = renderHook(({ count, enabled }) => useAppBadge(count, enabled), {
+        initialProps: { count: 6, enabled: true },
+      });
+      await waitFor(() => expect(setBadge).toHaveBeenLastCalledWith(6, 0));
+      rerender({ count: 0, enabled: true });
+      await waitFor(() => expect(setBadge).toHaveBeenLastCalledWith(0, 0));
+      rerender({ count: 6, enabled: true });
+      await waitFor(() => expect(setBadge).toHaveBeenLastCalledWith(6, 0));
+      rerender({ count: 6, enabled: false });
+      await waitFor(() => expect(setBadge).toHaveBeenLastCalledWith(0, 0));
+    });
+
+    it('carries on when the Ferdium badge throws', async () => {
+      const { setAppBadge } = stubBadgingApi();
+      (window as { ferdium?: unknown }).ferdium = { setBadge: () => { throw new Error('gone'); } };
+      expect(() => renderHook(() => useAppBadge(3))).not.toThrow();
+      await waitFor(() => expect(setAppBadge).toHaveBeenCalledWith(3));
+    });
+  });
 });

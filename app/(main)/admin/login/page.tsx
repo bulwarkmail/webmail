@@ -1,9 +1,10 @@
 'use client';
 
-import { useEffect, useState, type FormEvent } from 'react';
+import { useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { AlertCircle, Shield } from '@/components/icons';
 import { useConfig } from '@/hooks/use-config';
+import { useDocumentTitle } from '@/hooks/use-document-title';
 import { apiFetch, withBasePath } from '@/lib/browser-navigation';
 import { safeAdminNext } from '@/lib/connector/admin-next';
 
@@ -12,15 +13,13 @@ export default function AdminLoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { loginLogoLightUrl, loginLogoDarkUrl, appName } = useConfig();
+  const { loginLogoLightUrl, loginLogoDarkUrl } = useConfig();
   // Both logos, picked by CSS: the server can't know the theme, and a logo
   // chosen from the theme store swaps after the first paint.
   const logoLight = withBasePath(loginLogoLightUrl || loginLogoDarkUrl);
   const logoDark = withBasePath(loginLogoDarkUrl || loginLogoLightUrl);
 
-  useEffect(() => {
-    document.title = `Sign in - Admin - ${appName}`;
-  }, [appName]);
+  useDocumentTitle('Sign in - Admin', { showAccount: false });
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();

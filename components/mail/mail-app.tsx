@@ -203,6 +203,7 @@ import { withStableHandlers } from "@/components/ui/with-stable-handlers";
 import { Button } from "@/components/ui/button";
 import { ToolbarButton, ToolbarSearchAction } from "@/components/ui/toolbar";
 import { useDocumentTitle } from "@/hooks/use-document-title";
+import { useTitleBadgeCount } from "@/hooks/use-title-badge";
 import { mailTitleContext, mailboxTitleLine } from "@/lib/tab-title";
 import { useOtherAccountsUnread } from "@/hooks/use-all-inboxes-unread";
 import { usePluginStore } from "@/stores/plugin-store";
@@ -1762,6 +1763,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   // subjects out of browser history must not let one through while unknown.
   const subjectInTabTitle = usePolicyStore((s) => s.loaded && s.isFeatureEnabled('tabTitleSubjectEnabled'));
   const otherAccountsUnread = useOtherAccountsUnread();
+  const badgeInTitle = (useTitleBadgeCount() ?? 0) > 0;
   const titleContext = useMemo(() => {
     // Composing email
     const composer = showComposer
@@ -1786,14 +1788,16 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
         name: mailboxName,
         unread: mailbox.unreadEmails || 0,
         otherUnread: otherAccountsUnread,
+        inbox: mailbox.role === 'inbox',
         ownInbox: mailbox.role === 'inbox' && !mailbox.isShared && !isUnifiedView,
+        badgeInTitle,
       }, t);
     }
 
     const inDesktopApp = !!getDesktopBridge()?.windows;
     return mailTitleContext({ composer, subject, mailbox: mailboxLine }, { showSubject: subjectInTabTitle, desktopWindow: inDesktopApp })
       ?? (inDesktopApp ? t('sidebar.mail') : null);
-  }, [showComposer, composerMode, selectedEmail, selectedMailbox, mailboxes, t, subjectInTabTitle, otherAccountsUnread, isUnifiedView]);
+  }, [showComposer, composerMode, selectedEmail, selectedMailbox, mailboxes, t, subjectInTabTitle, otherAccountsUnread, isUnifiedView, badgeInTitle]);
   useDocumentTitle(titleContext);
   // The Window menu names this window by its folder, never by the open message (desktop-p2-5).
   const windowView = useMemo(() => {

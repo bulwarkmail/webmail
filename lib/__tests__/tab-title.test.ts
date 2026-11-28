@@ -60,21 +60,33 @@ describe('mailTitleContext', () => {
 describe('mailboxTitleLine', () => {
   const t = (key: string, values?: Record<string, string | number>) => `${key} ${JSON.stringify(values)}`;
 
-  it('names the folder with its unread count', () => {
-    expect(mailboxTitleLine({ name: 'Family', unread: 2 }, t)).toBe('Family (2)');
-    expect(mailboxTitleLine({ name: 'Family', unread: 0 }, t)).toBe('Family');
+  it('names the Inbox with its unread count, the way Gmail does', () => {
+    expect(mailboxTitleLine({ name: 'Inbox', unread: 2, inbox: true }, t)).toBe('Inbox (2)');
+    expect(mailboxTitleLine({ name: 'Inbox', unread: 0, inbox: true }, t)).toBe('Inbox');
+    expect(mailboxTitleLine({ name: 'Inbox', unread: 10, otherUnread: 0, inbox: true, ownInbox: true }, t)).toBe('Inbox (10)');
+  });
+
+  it('names every other folder without a count, as Gmail does', () => {
+    expect(mailboxTitleLine({ name: 'Archive', unread: 125 }, t)).toBe('Archive');
+    expect(mailboxTitleLine({ name: 'Spam', unread: 3, otherUnread: 20 }, t)).toBe('Spam');
   });
 
   // mail-6: the title said 10 while 30 were unread in all accounts.
   it('adds the other accounts on the Inbox', () => {
-    expect(mailboxTitleLine({ name: 'Inbox', unread: 10, otherUnread: 20, ownInbox: true }, t))
+    expect(mailboxTitleLine({ name: 'Inbox', unread: 10, otherUnread: 20, inbox: true, ownInbox: true }, t))
       .toBe('mail_p2_folders.title_all_accounts {"name":"Inbox","count":10,"total":30}');
-    expect(mailboxTitleLine({ name: 'Inbox', unread: 0, otherUnread: 20, ownInbox: true }, t))
+    expect(mailboxTitleLine({ name: 'Inbox', unread: 0, otherUnread: 20, inbox: true, ownInbox: true }, t))
       .toBe('mail_p2_folders.title_all_accounts_only {"name":"Inbox","total":20}');
   });
 
-  it('leaves other folders and an Inbox with no other unread mail alone', () => {
-    expect(mailboxTitleLine({ name: 'Family', unread: 1, otherUnread: 20 }, t)).toBe('Family (1)');
-    expect(mailboxTitleLine({ name: 'Inbox', unread: 10, otherUnread: 0, ownInbox: true }, t)).toBe('Inbox (10)');
+  it('counts a shared or unified Inbox on its own', () => {
+    expect(mailboxTitleLine({ name: 'Inbox', unread: 4, otherUnread: 20, inbox: true }, t)).toBe('Inbox (4)');
+  });
+
+  it('leaves the total to the count at the front of the title when that is there', () => {
+    expect(mailboxTitleLine({ name: 'Inbox', unread: 10, otherUnread: 0, inbox: true, ownInbox: true, badgeInTitle: true }, t)).toBe('Inbox');
+    expect(mailboxTitleLine({ name: 'Inbox', unread: 10, otherUnread: 20, inbox: true, ownInbox: true, badgeInTitle: true }, t)).toBe('Inbox (10)');
+    expect(mailboxTitleLine({ name: 'Inbox', unread: 0, otherUnread: 20, inbox: true, ownInbox: true, badgeInTitle: true }, t)).toBe('Inbox');
+    expect(mailboxTitleLine({ name: 'Archive', unread: 125, badgeInTitle: true }, t)).toBe('Archive');
   });
 });

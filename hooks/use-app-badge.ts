@@ -5,6 +5,18 @@ import { debug } from '@/lib/debug';
 import { getDesktopBridge } from '@/lib/desktop/bridge';
 import { isPopoutWindow } from '@/lib/popout/window-role';
 
+type FerdiumBadge = { setBadge?: (direct: number, indirect?: number) => void };
+
+function setFerdiumBadge(count: number): void {
+  const ferdium = (window as unknown as { ferdium?: FerdiumBadge }).ferdium;
+  if (typeof ferdium?.setBadge !== 'function') return;
+  try {
+    ferdium.setBadge(count, 0);
+  } catch (error) {
+    debug.log('[app-badge] Ferdium badge failed:', error);
+  }
+}
+
 /**
  * Badges the *installed* PWA's icon — the shortcut Chrome/Edge pin next to
  * the address bar, or the OS taskbar/dock/Home Screen icon once launched
@@ -43,6 +55,8 @@ export function useAppBadge(count: number, enabled = true): void {
       if (!isPopoutWindow()) desktopOs.setBadge(effectiveCount);
       return;
     }
+
+    if (!isPopoutWindow()) setFerdiumBadge(effectiveCount);
 
     void (async () => {
       try {

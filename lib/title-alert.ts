@@ -1,3 +1,5 @@
+import { withTitleBadge } from '@/lib/title-badge';
+
 /**
  * Visual alerts (Settings > Accessibility): the browser-tab title swaps
  * slowly between the page's own title and a short alert ("3 new messages")
@@ -42,12 +44,13 @@ export function startTitleAlert(text: string): void {
   alertText = text;
   swaps = 0;
   if (timer !== null) {
-    if (showingAlert) document.title = alertText;
+    if (showingAlert) document.title = withTitleBadge(alertText);
     return;
   }
-  baseTitle = document.title;
+  const badge = withTitleBadge('');
+  baseTitle = badge && document.title.startsWith(badge) ? document.title.slice(badge.length) : document.title;
   showingAlert = true;
-  document.title = alertText;
+  document.title = withTitleBadge(alertText);
   timer = setInterval(() => {
     swaps += 1;
     if (swaps >= TITLE_ALERT_MAX_SWAPS) {
@@ -55,7 +58,7 @@ export function startTitleAlert(text: string): void {
       return;
     }
     showingAlert = !showingAlert;
-    document.title = showingAlert ? alertText : baseTitle;
+    document.title = withTitleBadge(showingAlert ? alertText : baseTitle);
   }, TITLE_ALERT_INTERVAL_MS);
   window.addEventListener('focus', stopTitleAlert);
   document.addEventListener('visibilitychange', onVisibilityChange);
@@ -71,5 +74,5 @@ export function stopTitleAlert(): void {
   document.removeEventListener('visibilitychange', onVisibilityChange);
   // useDocumentTitle sees the change and writes the current title if the
   // page moved on in the meantime.
-  document.title = baseTitle;
+  document.title = withTitleBadge(baseTitle);
 }

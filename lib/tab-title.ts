@@ -48,9 +48,11 @@ type Translate = (key: string, values?: Record<string, string | number>) => stri
  * account only.
  */
 export function mailboxTitleLine(
-  { name, unread, otherUnread = 0, ownInbox = false }: { name: string; unread: number; otherUnread?: number; ownInbox?: boolean },
+  { name, unread, otherUnread = 0, inbox = false, ownInbox = false, badgeInTitle = false }: { name: string; unread: number; otherUnread?: number; inbox?: boolean; ownInbox?: boolean; badgeInTitle?: boolean },
   t: Translate,
 ): string {
+  if (!inbox && !ownInbox) return name;
+  if (ownInbox && badgeInTitle) return otherUnread > 0 && unread > 0 ? `${name} (${unread})` : name;
   if (ownInbox && otherUnread > 0) {
     const total = unread + otherUnread;
     return unread > 0

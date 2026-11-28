@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { useEffect } from 'react';
 import { act, render, renderHook, waitFor } from '@testing-library/react';
 
 vi.mock('@/hooks/use-config', () => ({ useConfig: () => ({ appName: 'Acme Mail' }) }));
@@ -6,6 +7,7 @@ vi.mock('@/hooks/use-config', () => ({ useConfig: () => ({ appName: 'Acme Mail' 
 import { useDocumentTitle } from '@/hooks/use-document-title';
 import { useAccountStore, type AccountEntry } from '@/stores/account-store';
 import { PaneIdContext, ProTabFocusContext } from '@/hooks/use-pane-context';
+import { setTitleBadge } from '@/lib/title-badge';
 
 const account = (id: string, email: string) => ({ id, email }) as AccountEntry;
 
@@ -43,6 +45,7 @@ async function settle(): Promise<void> {
 describe('useDocumentTitle', () => {
   beforeEach(() => {
     document.title = '';
+    setTitleBadge(null);
     useAccountStore.setState({
       accounts: [account('a', 'jane@example.com'), account('b', 'joe@example.com')],
       activeAccountId: 'a',
@@ -140,5 +143,67 @@ describe('useDocumentTitle', () => {
     rerenderMetadataTitle('Sign in');
     await settle();
     expect(document.title).toBe('Sign in');
+  });
+
+  describe('inside a wrapper that reads the count from the title', () => {
+    it('leads with the unread count', () => {
+      setTitleBadge(3);
+      renderHook(() => useDocumentTitle('Calendar'));
+      expect(document.title).toBe('(3) Calendar - jane@example.com - Acme Mail');
+    });
+
+    it('follows the count as mail comes in and is read', () => {
+      renderHook(() => useDocumentTitle('Calendar'));
+      expect(document.title).toBe('Calendar - jane@example.com - Acme Mail');
+      act(() => setTitleBadge(4));
+      expect(document.title).toBe('(4) Calendar - jane@example.com - Acme Mail');
+      act(() => setTitleBadge(0));
+      expect(document.title).toBe('(0) Calendar - jane@example.com - Acme Mail');
+      act(() => setTitleBadge(null));
+      expect(document.title).toBe('Calendar - jane@example.com - Acme Mail');
+    });
+
+    it('never writes the old count when the count and the page change together', async () => {
+      setTitleBadge(3);
+      const native = Object.getOwnPropertyDescriptor(Document.prototype, 'title')!;
+      const writes: string[] = [];
+      Object.defineProperty(document, 'title', {
+        configurable: true,
+        get: () => native.get!.call(document),
+        set: (value: string) => {
+          writes.push(value);
+          native.set!.call(document, value);
+        },
+      });
+      try {
+        function Publisher({ count }: { count: number }) {
+          useEffect(() => setTitleBadge(count), [count]);
+          return null;
+        }
+        function Page({ context, count }: { context: string; count: number }) {
+          return (
+            <>
+              <Publisher count={count} />
+              <TitleProbe context={context} />
+            </>
+          );
+        }
+        const { rerender } = render(<Page context="Calendar" count={3} />);
+        writes.length = 0;
+        act(() => rerender(<Page context="Settings" count={4} />));
+        await settle();
+        expect(writes.filter((w) => w.startsWith('(3) '))).toEqual([]);
+        expect(document.title).toBe('(4) Settings - jane@example.com - Acme Mail');
+      } finally {
+        delete (document as { title?: string }).title;
+      }
+    });
+
+    it('keeps the count when the metadata title is rendered again', async () => {
+      setTitleBadge(2);
+      renderHook(() => useDocumentTitle('Settings'));
+      rerenderMetadataTitle();
+      await waitFor(() => expect(document.title).toBe('(2) Settings - jane@example.com - Acme Mail'));
+    });
   });
 });

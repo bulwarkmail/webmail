@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   isTitleAlertActive, startTitleAlert, stopTitleAlert, TITLE_ALERT_INTERVAL_MS, TITLE_ALERT_MAX_SWAPS,
 } from '../title-alert';
+import { setTitleBadge } from '../title-badge';
 
 describe('title alert', () => {
   let focused = false;
@@ -13,6 +14,7 @@ describe('title alert', () => {
   });
   afterEach(() => {
     stopTitleAlert();
+    setTitleBadge(null);
     vi.restoreAllMocks();
     vi.useRealTimers();
   });
@@ -49,5 +51,30 @@ describe('title alert', () => {
     startTitleAlert('1 new message');
     expect(isTitleAlertActive()).toBe(false);
     expect(document.title).toBe('Inbox');
+  });
+
+  it('keeps the unread count at the front while it alerts, so a wrapper badge does not drop', () => {
+    setTitleBadge(3);
+    document.title = '(3) Inbox';
+    startTitleAlert('1 new message');
+    expect(document.title).toBe('(3) 1 new message');
+    vi.advanceTimersByTime(TITLE_ALERT_INTERVAL_MS);
+    expect(document.title).toBe('(3) Inbox');
+    setTitleBadge(4);
+    vi.advanceTimersByTime(TITLE_ALERT_INTERVAL_MS);
+    expect(document.title).toBe('(4) 1 new message');
+    vi.advanceTimersByTime(TITLE_ALERT_INTERVAL_MS);
+    expect(document.title).toBe('(4) Inbox');
+    stopTitleAlert();
+    expect(document.title).toBe('(4) Inbox');
+  });
+
+  it('shows a new count at once, not only at the next swap', () => {
+    setTitleBadge(0);
+    document.title = '(0) Inbox';
+    startTitleAlert('1 new message');
+    expect(document.title).toBe('(0) 1 new message');
+    setTitleBadge(1);
+    expect(document.title).toBe('(1) 1 new message');
   });
 });
