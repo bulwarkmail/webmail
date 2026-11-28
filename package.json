@@ -99,7 +99,7 @@
     "@sentry/cli": "3.8.2",
     "@tailwindcss/postcss": "^4.3.3",
     "@testing-library/dom": "^10.4.2",
-    "@testing-library/jest-dom": "^7.0.1",
+    "@testing-library/jest-dom": "^8.0.0",
     "@testing-library/react": "^16.3.3",
     "@types/node": "^25.9.9",
     "@types/qrcode": "^1.5.6",
