@@ -7,6 +7,7 @@ import type { SearchScope } from '@/lib/global-search/query-parser';
 import { useOfflineStore } from '@/lib/offline/state';
 import { openComposerInWindow } from '@/lib/popout/compose-in-window';
 import type { ComposePopoutPayload } from '@/lib/popout/compose-payload';
+import { useAuthStore } from '@/stores/auth-store';
 
 export type ProTabKind =
   | 'mail' | 'calendar' | 'tasks' | 'contacts' | 'files' | 'settings'
@@ -444,6 +445,20 @@ function withTabActivated(state: ProTabCoreState, tab: ProTab): ProTabCoreState 
   };
 }
 
+function isSameEmailTab(a: ProEmailTabData, b: ProEmailTabData): boolean {
+  if (a.emailId !== b.emailId || a.clientAccountId !== b.clientAccountId) return false;
+  if (a.accountId === b.accountId) return true;
+
+  // A folder can leave the login's own account implicit, while search
+  // results name it. Only the tab's login can tell us what that means.
+  const login = a.clientAccountId;
+  const owner = a.accountId || b.accountId;
+  if (!login || !owner || (a.accountId && b.accountId)) return false;
+  const auth = useAuthStore.getState();
+  const client = auth.getClientForAccount(login) ?? (login === auth.activeAccountId ? auth.client : null);
+  return client?.getAccountId() === owner;
+}
+
 export const useProTabStore = create<ProTabState>()(
   persist(
     (set, get) => {
@@ -511,10 +526,7 @@ export const useProTabStore = create<ProTabState>()(
           // Same email already open anywhere: focus it, never open twice.
           // Of the same login: ids and account ids repeat across servers.
           const existing = state.tabs.find(
-            (tab) => tab.kind === 'email'
-              && tab.emailData?.emailId === data.emailId
-              && tab.emailData?.accountId === data.accountId
-              && tab.emailData?.clientAccountId === data.clientAccountId
+            (tab) => tab.kind === 'email' && tab.emailData && isSameEmailTab(tab.emailData, data),
           );
           if (existing) {
             commit((s) => withTabActivated(s, existing));

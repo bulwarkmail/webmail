@@ -1,5 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
+import type { JMAPClient } from '@/lib/jmap/client';
 import { useOfflineStore } from '@/lib/offline/state';
+import { useAuthStore } from '@/stores/auth-store';
 import {
   useProTabStore,
   normalizeProTabState,
@@ -163,6 +165,61 @@ describe('openEmailTab', () => {
     expect(s.activeSplitTabId).toBe('e1');
     expect(s.focusedPaneId).toBe('split');
     assertInvariants();
+  });
+
+  it.each([
+    { firstAccountId: '', nextAccountId: 'primary' },
+    { firstAccountId: 'primary', nextAccountId: '' },
+  ])('focuses the same personal message when the openers spell its account differently ($firstAccountId → $nextAccountId)', ({
+    firstAccountId, nextAccountId,
+  }) => {
+    const previous = useAuthStore.getState();
+    const client = { getAccountId: () => 'primary' } as JMAPClient;
+    useAuthStore.setState({ activeAccountId: 'login-a', client, getClientForAccount: () => undefined });
+    try {
+      const tab = { ...data(1), clientAccountId: 'login-a' };
+      const s = useProTabStore.getState();
+      const first = s.openEmailTab({ ...tab, accountId: firstAccountId }, { pane: 'split' });
+      s.setActiveTab(HOME_ID);
+      expect(s.openEmailTab({ ...tab, accountId: nextAccountId })).toBe(first);
+      expect(useProTabStore.getState().activeSplitTabId).toBe(first);
+      expect(useProTabStore.getState().focusedPaneId).toBe('split');
+      expect(useProTabStore.getState().tabs.filter((t) => t.kind === 'email')).toHaveLength(1);
+    } finally {
+      useAuthStore.setState({
+        activeAccountId: previous.activeAccountId,
+        client: previous.client,
+        getClientForAccount: previous.getClientForAccount,
+      });
+    }
+  });
+
+  it('uses the named login’s primary account without merging its shared namesake', () => {
+    const previous = useAuthStore.getState();
+    const active = { getAccountId: () => 'shared' } as JMAPClient;
+    const background = { getAccountId: () => 'primary' } as JMAPClient;
+    useAuthStore.setState({
+      activeAccountId: 'login-a',
+      client: active,
+      getClientForAccount: (id) => id === 'login-b' ? background : undefined,
+    });
+    try {
+      const tab = { ...data(1), clientAccountId: 'login-b' };
+      const s = useProTabStore.getState();
+      const own = s.openEmailTab({ ...tab, accountId: '' });
+      const shared = s.openEmailTab({ ...tab, accountId: 'shared' });
+      const otherLogin = s.openEmailTab({ ...tab, clientAccountId: 'login-a', accountId: '' });
+      expect(shared).not.toBe(own);
+      expect(otherLogin).not.toBe(own);
+      expect(s.openEmailTab({ ...tab, accountId: 'primary' })).toBe(own);
+      expect(useProTabStore.getState().tabs.filter((t) => t.kind === 'email')).toHaveLength(3);
+    } finally {
+      useAuthStore.setState({
+        activeAccountId: previous.activeAccountId,
+        client: previous.client,
+        getClientForAccount: previous.getClientForAccount,
+      });
+    }
   });
 
   // userb is account `e` on the 0.16.23 and the 1.0 test server, and message
