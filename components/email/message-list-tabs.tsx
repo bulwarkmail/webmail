@@ -20,6 +20,8 @@ import { cn } from '@/lib/utils';
  * Whether an optimistic list update can move category-tab unread totals.
  * Scroll/load-more and star/tag toggles rebuild `emails` without changing
  * unread membership — those must not trigger a recount (one Email/query per tab).
+ * An unread row that comes back (Undo after a delete) or arrives (new mail)
+ * counts; unread rows on a page appended after the existing ones don't.
  */
 export function listChangeMayAffectCategoryUnread(
   previous: Email[],
@@ -32,7 +34,10 @@ export function listChangeMayAffectCategoryUnread(
     if (!updated) return true;
     if (!!email.keywords?.$seen !== !!updated.keywords?.$seen) return true;
   }
-  return false;
+  const appended = previous.every((email, i) => next[i]?.id === email.id);
+  if (appended) return false;
+  const previousIds = new Set(previous.map((email) => email.id));
+  return next.some((email) => !previousIds.has(email.id) && !email.keywords?.$seen);
 }
 
 /**

@@ -180,4 +180,18 @@ describe('MessageListTabs', () => {
     expect(listChangeMayAffectCategoryUnread([a, b], [a])).toBe(true);
     expect(listChangeMayAffectCategoryUnread([a, b], [aRead, b])).toBe(true);
   });
+
+  it('recounts when an unread row comes back or arrives above the loaded rows', () => {
+    const a = { id: 'a', keywords: { $seen: true } } as Email;
+    const b = { id: 'b', keywords: { $seen: true } } as Email;
+    const restored = { id: 'r', keywords: {} } as Email;
+    // Undo after deleting an unread message puts it back between the rows.
+    expect(listChangeMayAffectCategoryUnread([a, b], [a, restored, b])).toBe(true);
+    // New unread mail on top of the list.
+    expect(listChangeMayAffectCategoryUnread([a, b], [restored, a, b])).toBe(true);
+    // A read row coming back can't move an unread total.
+    expect(listChangeMayAffectCategoryUnread([a, b], [{ ...restored, keywords: { $seen: true } } as Email, a, b])).toBe(false);
+    // An unread row on a page loaded below the list is a scroll, not a change.
+    expect(listChangeMayAffectCategoryUnread([a, b], [a, b, restored])).toBe(false);
+  });
 });
