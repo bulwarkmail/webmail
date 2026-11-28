@@ -5445,6 +5445,15 @@
       "title": "Správa kalendáře",
       "description": "Vytvářejte, přejmenovávejte a přizpůsobujte si své kalendáře. Klikněte pravým tlačítkem na kalendář v postranním panelu pro rychlou změnu jeho barvy.",
       "description_touch": "Vytvářejte, přejmenovávejte a přizpůsobujte si své kalendáře.",
+      "hide_unsubscribed": {
+        "label": "Skrýt sdílené kalendáře, které neodebíráte",
+        "description": "Kalendáře, které s vámi sdílejí ostatní, se v Kalendáři zobrazí, jakmile je v seznamu níže začnete odebírat."
+      },
+      "subscribe": "Odebírat",
+      "unsubscribe": "Zrušit odběr",
+      "subscribe_named": "Odebírat {name}",
+      "unsubscribe_named": "Zrušit odběr {name}",
+      "error_subscription": "Odběr se nepodařilo změnit",
       "name": "Název",
       "name_placeholder": "Název kalendáře",
       "color": "Barva",

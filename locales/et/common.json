@@ -5474,6 +5474,15 @@
       "title": "Kalendrite haldamine",
       "description": "Loo, nimeta ümber ja kohanda oma kalendreid. Kalendri värvi kiireks muutmiseks tee küljeribal kalendril paremklõps.",
       "description_touch": "Loo, nimeta ümber ja kohanda oma kalendreid.",
+      "hide_unsubscribed": {
+        "label": "Peida jagatud kalendrid, mida sa ei telli",
+        "description": "Kalendrid, mida teised sinuga jagavad, ilmuvad kalendrisse, kui need allolevas loendis tellid."
+      },
+      "subscribe": "Telli",
+      "unsubscribe": "Lõpeta tellimus",
+      "subscribe_named": "Telli {name}",
+      "unsubscribe_named": "Lõpeta {name} tellimus",
+      "error_subscription": "Tellimust ei õnnestunud muuta",
       "name": "Nimi",
       "name_placeholder": "Kalendri nimi",
       "color": "Värv",

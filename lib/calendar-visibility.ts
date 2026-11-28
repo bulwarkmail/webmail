@@ -19,6 +19,31 @@ const LOGIN_DELIMITER = '::';
 
 type CalendarRef = Pick<Calendar, 'id'> & Partial<Pick<Calendar, 'localAccountId' | 'isTasksOnly'>>;
 
+/** A calendar shared with the user that they haven't subscribed to (JMAP isSubscribed, #1731). */
+export function isUnsubscribedShare(calendar: Pick<Calendar, 'isShared' | 'isSubscribed'>): boolean {
+  return !!calendar.isShared && calendar.isSubscribed === false;
+}
+
+/**
+ * The calendars the calendar shows, and which of them it shows events of:
+ * while `hide` is on (hideUnsubscribedCalendars), without the shared
+ * calendars the user hasn't subscribed to. A server that sends no
+ * isSubscribed has every calendar subscribed.
+ */
+export function withoutUnsubscribedShares<T extends Pick<Calendar, 'id' | 'isShared' | 'isSubscribed'>>(
+  calendars: T[],
+  selectedIds: string[],
+  hide: boolean,
+): { calendars: T[]; selectedIds: string[] } {
+  if (!hide) return { calendars, selectedIds };
+  const hidden = new Set(calendars.filter(isUnsubscribedShare).map((c) => c.id));
+  if (hidden.size === 0) return { calendars, selectedIds };
+  return {
+    calendars: calendars.filter((c) => !hidden.has(c.id)),
+    selectedIds: selectedIds.filter((id) => !hidden.has(id)),
+  };
+}
+
 /** Where `calendar`'s choice is kept; `login` names the login of a calendar without a prefix. Null for birthdays, which are a setting of their own. */
 export function visibilityKeyOf(calendar: CalendarRef, login: string | null): { login: string; key: string } | null {
   if (calendar.id === BIRTHDAY_CALENDAR_ID) return null;

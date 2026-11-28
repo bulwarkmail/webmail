@@ -28,6 +28,7 @@ import { formatDateTime, cn } from "@/lib/utils";
 import { readableTextOn } from "@/lib/color-transform";
 import { Avatar } from "@/components/ui/avatar";
 import type { CalendarEvent } from "@/lib/jmap/types";
+import { isUnsubscribedShare } from "@/lib/calendar-visibility";
 import { useCvdColor } from "@/hooks/use-cvd-color";
 import { useCloseBesideControls } from "@/hooks/use-close-beside-controls";
 import { PluginSidePanelBody, SidePanelButton, usePluginSidePanel, useSidePanelWidth } from "@/components/plugins/plugin-side-panels";
@@ -231,8 +232,12 @@ function CalendarPanel({ onClose }: { onClose: () => void }) {
     return paint(event.color || calendars.find((c) => c.id === calId)?.color || "var(--color-primary)");
   };
 
+  // Leaves out the shared calendars the user hasn't subscribed to, as the calendar does (#1731).
+  const hideUnsubscribed = useSettingsStore((s) => s.hideUnsubscribedCalendars);
+  const hiddenShares = hideUnsubscribed ? new Set(calendars.filter(isUnsubscribedShare).map((c) => c.id)) : null;
   const visible = events.filter((e) => {
     const ids = Object.keys(e.calendarIds ?? {});
+    if (hiddenShares?.size && ids.length > 0 && ids.every((id) => hiddenShares.has(id))) return false;
     return selectedCalendarIds.length === 0 || ids.some((id) => selectedCalendarIds.includes(id));
   });
   const timed = visible

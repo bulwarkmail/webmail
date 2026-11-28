@@ -5489,6 +5489,15 @@
       "title": "Kalenderhantering",
       "description": "Skapa, byt namn på och anpassa dina kalendrar. Högerklicka på en kalender i sidopanelen för att snabbt ändra dess färg.",
       "description_touch": "Skapa, byt namn på och anpassa dina kalendrar.",
+      "hide_unsubscribed": {
+        "label": "Dölj delade kalendrar du inte prenumererar på",
+        "description": "Kalendrar som andra delar med dig visas i Kalender när du prenumererar på dem i listan nedan."
+      },
+      "subscribe": "Prenumerera",
+      "unsubscribe": "Avsluta prenumeration",
+      "subscribe_named": "Prenumerera på {name}",
+      "unsubscribe_named": "Avsluta prenumerationen på {name}",
+      "error_subscription": "Det gick inte att ändra prenumerationen",
       "name": "Namn",
       "name_placeholder": "Kalenderns namn",
       "color": "Färg",

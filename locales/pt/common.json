@@ -5471,6 +5471,15 @@
       "title": "Gerenciamento de calendários",
       "description": "Crie, renomeie e personalize seus calendários. Clique com o botão direito em um calendário na barra lateral para alterar rapidamente sua cor.",
       "description_touch": "Crie, renomeie e personalize seus calendários.",
+      "hide_unsubscribed": {
+        "label": "Ocultar calendários partilhados sem subscrição",
+        "description": "Os calendários que outras pessoas partilham consigo aparecem no Calendário depois de os subscrever na lista abaixo."
+      },
+      "subscribe": "Subscrever",
+      "unsubscribe": "Cancelar subscrição",
+      "subscribe_named": "Subscrever {name}",
+      "unsubscribe_named": "Cancelar a subscrição de {name}",
+      "error_subscription": "Não foi possível alterar a subscrição",
       "name": "Nome",
       "name_placeholder": "Nome do calendário",
       "color": "Cor",

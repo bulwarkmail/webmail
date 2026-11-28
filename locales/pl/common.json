@@ -5445,6 +5445,15 @@
       "title": "Zarządzanie kalendarzem",
       "description": "Twórz, zmieniaj nazwy i dostosowuj swoje kalendarze. Kliknij prawym przyciskiem kalendarz na pasku bocznym, aby szybko zmienić jego kolor.",
       "description_touch": "Twórz, zmieniaj nazwy i dostosowuj swoje kalendarze.",
+      "hide_unsubscribed": {
+        "label": "Ukryj udostępnione kalendarze, których nie subskrybujesz",
+        "description": "Kalendarze udostępnione Ci przez innych pojawiają się w Kalendarzu, gdy zasubskrybujesz je na liście poniżej."
+      },
+      "subscribe": "Subskrybuj",
+      "unsubscribe": "Anuluj subskrypcję",
+      "subscribe_named": "Subskrybuj {name}",
+      "unsubscribe_named": "Anuluj subskrypcję {name}",
+      "error_subscription": "Nie udało się zmienić subskrypcji",
       "name": "Nazwa",
       "name_placeholder": "Nazwa kalendarza",
       "color": "Kolor",

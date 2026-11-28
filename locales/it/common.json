@@ -5445,6 +5445,15 @@
       "title": "Gestione calendari",
       "description": "Crea, rinomina e personalizza i tuoi calendari. Fai clic destro su un calendario nella barra laterale per cambiarne rapidamente il colore.",
       "description_touch": "Crea, rinomina e personalizza i tuoi calendari.",
+      "hide_unsubscribed": {
+        "label": "Nascondi i calendari condivisi a cui non sei iscritto",
+        "description": "I calendari che altri condividono con te compaiono in Calendario quando ti iscrivi nell'elenco qui sotto."
+      },
+      "subscribe": "Iscriviti",
+      "unsubscribe": "Annulla iscrizione",
+      "subscribe_named": "Iscriviti a {name}",
+      "unsubscribe_named": "Annulla l'iscrizione a {name}",
+      "error_subscription": "Impossibile modificare l'iscrizione",
       "name": "Nome",
       "name_placeholder": "Nome del calendario",
       "color": "Colore",

@@ -959,6 +959,37 @@ describe('CalendarApp long names', () => {
   });
 });
 
+// #1731: a shared calendar the user hasn't subscribed to leaves the sidebar
+// and the grid while they hide unsubscribed ones.
+describe('CalendarApp unsubscribed shared calendars', () => {
+  const room = {
+    ...calendars[0], id: 'owner:room', originalId: 'room', accountId: 'owner', accountName: 'Owner',
+    name: 'Room 2', isDefault: false, isShared: true, isSubscribed: false,
+  } as Calendar;
+  const offsite = makeEvent({ id: 'e2', uid: 'u2', title: 'Room booking', calendarIds: { 'owner:room': true } });
+
+  function showRoom(hide: boolean) {
+    setUp([makeEvent(), offsite]);
+    useCalendarStore.setState({ calendars: [...calendars, room], selectedCalendarIds: ['cal', 'owner:room'] } as never);
+    useSettingsStore.setState({ hideUnsubscribedCalendars: hide } as never);
+    renderApp();
+  }
+  const listed = () => screen.getAllByTestId('calendar-item').map((el) => el.textContent ?? '');
+
+  it('lists it and its events while the setting is off', () => {
+    showRoom(false);
+    expect(listed().some((text) => text.includes('Room 2'))).toBe(true);
+    expect(screen.getAllByText('Room booking').length).toBeGreaterThan(0);
+  });
+
+  it('leaves it and its events out while the setting is on', () => {
+    showRoom(true);
+    expect(listed().some((text) => text.includes('Room 2'))).toBe(false);
+    expect(screen.queryByText('Room booking')).toBeNull();
+    expect(screen.getAllByText('Standup').length).toBeGreaterThan(0);
+  });
+});
+
 describe('CalendarApp after saving', () => {
   it('brings a new event into view when it starts outside the hours shown', async () => {
     useSettingsStore.setState({ calendarLimitHours: true, calendarDayStartHour: 8, calendarDayEndHour: 18 } as never);

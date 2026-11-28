@@ -5471,6 +5471,15 @@
       "title": "Kalenderadministration",
       "description": "Opret, omdøb og tilpas dine kalendere. Højreklik på en kalender i sidepanelet for hurtigt at ændre dens farve.",
       "description_touch": "Opret, omdøb og tilpas dine kalendere.",
+      "hide_unsubscribed": {
+        "label": "Skjul delte kalendere, du ikke abonnerer på",
+        "description": "Kalendere, som andre deler med dig, vises i Kalender, når du abonnerer på dem i listen nedenfor."
+      },
+      "subscribe": "Abonner",
+      "unsubscribe": "Afmeld",
+      "subscribe_named": "Abonner på {name}",
+      "unsubscribe_named": "Afmeld {name}",
+      "error_subscription": "Abonnementet kunne ikke ændres",
       "name": "Navn",
       "name_placeholder": "Kalendernavn",
       "color": "Farve",

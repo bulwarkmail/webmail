@@ -5474,6 +5474,15 @@
       "title": "Gestió de calendaris",
       "description": "Creeu, canvieu el nom i personalitzeu els calendaris. Feu clic dret a un calendari a la barra lateral per canviar-ne ràpidament el color.",
       "description_touch": "Creeu, canvieu el nom i personalitzeu els calendaris.",
+      "hide_unsubscribed": {
+        "label": "Amaga els calendaris compartits als quals no us heu subscrit",
+        "description": "Els calendaris que altres comparteixen amb vós apareixen al Calendari quan us hi subscriviu a la llista de sota."
+      },
+      "subscribe": "Subscriu-me",
+      "unsubscribe": "Cancel·la la subscripció",
+      "subscribe_named": "Subscriu-me a {name}",
+      "unsubscribe_named": "Cancel·la la subscripció a {name}",
+      "error_subscription": "No s'ha pogut canviar la subscripció",
       "name": "Nom",
       "name_placeholder": "Nom del calendari",
       "color": "Color",

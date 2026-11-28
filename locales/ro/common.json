@@ -5474,6 +5474,15 @@
       "title": "Gestionarea calendarului",
       "description": "Creați, redenumiți și personalizați-vă calendarele. Faceți clic dreapta pe un calendar din bara laterală pentru a-i schimba rapid culoarea.",
       "description_touch": "Creați, redenumiți și personalizați-vă calendarele.",
+      "hide_unsubscribed": {
+        "label": "Ascunde calendarele partajate la care nu sunteți abonat",
+        "description": "Calendarele pe care alții le partajează cu dvs. apar în Calendar după ce vă abonați la ele în lista de mai jos."
+      },
+      "subscribe": "Abonare",
+      "unsubscribe": "Dezabonare",
+      "subscribe_named": "Abonare la {name}",
+      "unsubscribe_named": "Dezabonare de la {name}",
+      "error_subscription": "Abonamentul nu a putut fi schimbat",
       "name": "Nume",
       "name_placeholder": "Numele calendarului",
       "color": "Culoare",

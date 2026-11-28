@@ -956,6 +956,10 @@ interface SettingsState extends AccessibilitySettings {
 
   // Contact Birthday Calendar
   showBirthdayCalendar: boolean;
+  // Calendars shared with the user that they haven't subscribed to (JMAP
+  // isSubscribed) leave the calendar. Off by default: Stalwart makes a new
+  // share unsubscribed, so every shared calendar would disappear. (#1731)
+  hideUnsubscribedCalendars: boolean;
   birthdayCalendarColor: string;
 
   // Per-viewer color overrides for shared calendars, keyed by
@@ -1357,6 +1361,7 @@ const DEFAULT_SETTINGS = {
 
   // Contact Birthday Calendar
   showBirthdayCalendar: false,
+  hideUnsubscribedCalendars: false,
   birthdayCalendarColor: '#eab308',
 
   sharedCalendarColors: {} as Record<string, string>,
@@ -1983,6 +1988,7 @@ export const useSettingsStore = create<SettingsState>()(
           showTasksOnCalendar: state.showTasksOnCalendar,
           showTasksApp: state.showTasksApp,
           showBirthdayCalendar: state.showBirthdayCalendar,
+          hideUnsubscribedCalendars: state.hideUnsubscribedCalendars,
           birthdayCalendarColor: state.birthdayCalendarColor,
           sharedCalendarColors: state.sharedCalendarColors,
           calendarVisibility: state.calendarVisibility,

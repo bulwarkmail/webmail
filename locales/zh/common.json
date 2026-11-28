@@ -5445,6 +5445,15 @@
       "title": "日历管理",
       "description": "创建、重命名和自定义您的日历。右键单击侧栏中的日历可快速更改其颜色。",
       "description_touch": "创建、重命名和自定义您的日历。",
+      "hide_unsubscribed": {
+        "label": "隐藏未订阅的共享日历",
+        "description": "别人与你共享的日历在下方列表中订阅后才会显示在日历中。"
+      },
+      "subscribe": "订阅",
+      "unsubscribe": "取消订阅",
+      "subscribe_named": "订阅 {name}",
+      "unsubscribe_named": "取消订阅 {name}",
+      "error_subscription": "无法更改订阅",
       "name": "名称",
       "name_placeholder": "日历名称",
       "color": "颜色",

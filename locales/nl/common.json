@@ -5445,6 +5445,15 @@
       "title": "Agendabeheer",
       "description": "Maak, hernoem en pas uw agenda's aan. Klik met de rechtermuisknop op een agenda in de zijbalk om snel de kleur te wijzigen.",
       "description_touch": "Maak, hernoem en pas uw agenda's aan.",
+      "hide_unsubscribed": {
+        "label": "Gedeelde agenda's zonder abonnement verbergen",
+        "description": "Agenda's die anderen met u delen, verschijnen in Agenda zodra u zich in de lijst hieronder abonneert."
+      },
+      "subscribe": "Abonneren",
+      "unsubscribe": "Abonnement opzeggen",
+      "subscribe_named": "Abonneren op {name}",
+      "unsubscribe_named": "Abonnement op {name} opzeggen",
+      "error_subscription": "Het abonnement kon niet worden gewijzigd",
       "name": "Naam",
       "name_placeholder": "Agendanaam",
       "color": "Kleur",

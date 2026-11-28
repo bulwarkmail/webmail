@@ -73,6 +73,7 @@ import { ResizeHandle } from "@/components/layout/resize-handle";
 import { EdgeDrawer } from "@/components/layout/edge-drawer";
 import { descriptionWithNote } from "@/lib/calendar-description";
 import { filterTasksByCalendars, taskSeriesId } from "@/lib/calendar-tasks";
+import { withoutUnsubscribedShares } from "@/lib/calendar-visibility";
 import { baseEventStoreId, isServerRecurrenceInstance, storeIdBeside } from "@/lib/recurrence-instances";
 import { deleteOccurrence, movedEvent, saveOccurrenceEdit, whenAfterMove, type EventEditorState } from "@/lib/recurrence-scope-edit";
 import { useContactNameResolver } from "@/hooks/use-contact-name-resolver";
@@ -267,7 +268,7 @@ export function CalendarApp({ linkSegments: routeSegments, surface = "calendar" 
   const launchedFile = useHandoffFiles("calendar", isAuthenticated && !!client && !demoMode && (isEmbedded || !proInterfaceActive));
   const { quota, isPushConnected } = useEmailStore();
   const {
-    calendars, events, selectedDate, viewMode, selectedCalendarIds,
+    calendars: storeCalendars, events, selectedDate, viewMode, selectedCalendarIds: storeSelectedCalendarIds,
     isLoading, isLoadingEvents, supportsCalendar, error, eventsLoadError,
     fetchCalendars, fetchEvents, createEvent, updateEvent, deleteEvent, rsvpEvent,
     setSelectedDate, setViewMode: storeSetViewMode, showViewMode, toggleCalendarVisibility, updateCalendar, shareCalendar,
@@ -277,6 +278,13 @@ export function CalendarApp({ linkSegments: routeSegments, surface = "calendar" 
   const calendarEnabled = usePolicyStore((s) => s.isFeatureEnabled('calendarEnabled'));
   const { firstDayOfWeek, timeFormat, showWeekNumbers, enableCalendarTasks, showTasksOnCalendar, calendarHoverPreview, showBirthdayCalendar, birthdayCalendarColor, updateSetting } = useSettingsStore();
   const sharedCalendarColors = useSettingsStore((s) => s.sharedCalendarColors);
+  // Shared calendars the user hasn't subscribed to stay out of the sidebar
+  // and the grid while they asked for that (#1731).
+  const hideUnsubscribedCalendars = useSettingsStore((s) => s.hideUnsubscribedCalendars);
+  const { calendars, selectedIds: selectedCalendarIds } = useMemo(
+    () => withoutUnsubscribedShares(storeCalendars, storeSelectedCalendarIds, hideUnsubscribedCalendars),
+    [storeCalendars, storeSelectedCalendarIds, hideUnsubscribedCalendars],
+  );
   const defaultEventLength = useSettingsStore((s) => s.defaultEventLength);
   const setSharedCalendarColor = useSettingsStore((s) => s.setSharedCalendarColor);
   const removeSharedCalendarColor = useSettingsStore((s) => s.removeSharedCalendarColor);

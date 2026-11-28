@@ -5486,6 +5486,15 @@
       "title": "Quản lý lịch",
       "description": "Tạo, đổi tên và tùy chỉnh lịch của bạn. Bấm chuột phải vào lịch trong thanh bên để nhanh chóng thay đổi màu của lịch.",
       "description_touch": "Tạo, đổi tên và tùy chỉnh lịch của bạn.",
+      "hide_unsubscribed": {
+        "label": "Ẩn lịch được chia sẻ mà bạn chưa đăng ký",
+        "description": "Lịch người khác chia sẻ với bạn sẽ hiện trong Lịch khi bạn đăng ký trong danh sách bên dưới."
+      },
+      "subscribe": "Đăng ký",
+      "unsubscribe": "Hủy đăng ký",
+      "subscribe_named": "Đăng ký {name}",
+      "unsubscribe_named": "Hủy đăng ký {name}",
+      "error_subscription": "Không thể thay đổi đăng ký",
       "name": "Tên",
       "name_placeholder": "Tên lịch",
       "color": "Màu sắc",

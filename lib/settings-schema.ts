@@ -354,6 +354,7 @@ const ENTRIES: SettingSchemaEntry[] = [
     opts(`${CAL}hover_preview_`, ['instant', 'delay-500ms', 'delay-1s', 'delay-2s', 'off'],
       { 'delay-500ms': 'delay_500ms', 'delay-1s': 'delay_1s', 'delay-2s': 'delay_2s' })),
   bool('showBirthdayCalendar', 'calendar', `${CAL}show_birthday_calendar`),
+  bool('hideUnsubscribedCalendars', 'calendar', 'calendar.management.hide_unsubscribed.label'),
   bool('enableCalendarTasks', 'calendar', `${CAL}enable_tasks`, { gate: 'calendarTasksEnabled' }),
   bool('showTasksOnCalendar', 'calendar', `${CAL}show_tasks_on_calendar`, { gate: 'calendarTasksEnabled' }),
   bool('showTasksApp', 'calendar', `${CAL}show_tasks_app`, { gate: 'calendarTasksEnabled' }),

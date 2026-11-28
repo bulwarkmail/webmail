@@ -5471,6 +5471,15 @@
       "title": "Takvim Yönetimi",
       "description": "Takvimlerinizi oluşturun, yeniden adlandırın ve özelleştirin. Rengini hızlıca değiştirmek için kenar çubuğundaki bir takvime sağ tıklayın.",
       "description_touch": "Takvimlerinizi oluşturun, yeniden adlandırın ve özelleştirin.",
+      "hide_unsubscribed": {
+        "label": "Abone olmadığınız paylaşılan takvimleri gizle",
+        "description": "Başkalarının sizinle paylaştığı takvimler, aşağıdaki listede abone olduğunuzda Takvim'de görünür."
+      },
+      "subscribe": "Abone ol",
+      "unsubscribe": "Abonelikten çık",
+      "subscribe_named": "{name} takvimine abone ol",
+      "unsubscribe_named": "{name} aboneliğinden çık",
+      "error_subscription": "Abonelik değiştirilemedi",
       "name": "Ad",
       "name_placeholder": "Takvim adı",
       "color": "Renk",

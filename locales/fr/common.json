@@ -5471,6 +5471,15 @@
       "title": "Gestion des calendriers",
       "description": "Créez, renommez et personnalisez vos calendriers. Clic droit sur un calendrier dans la barre latérale pour changer rapidement sa couleur.",
       "description_touch": "Créez, renommez et personnalisez vos calendriers.",
+      "hide_unsubscribed": {
+        "label": "Masquer les calendriers partagés auxquels vous n'êtes pas abonné",
+        "description": "Les calendriers que d'autres partagent avec vous s'affichent dans Calendrier dès que vous vous y abonnez dans la liste ci-dessous."
+      },
+      "subscribe": "S'abonner",
+      "unsubscribe": "Se désabonner",
+      "subscribe_named": "S'abonner à {name}",
+      "unsubscribe_named": "Se désabonner de {name}",
+      "error_subscription": "Impossible de modifier l'abonnement",
       "name": "Nom",
       "name_placeholder": "Nom du calendrier",
       "color": "Couleur",

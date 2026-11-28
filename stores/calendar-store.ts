@@ -1044,6 +1044,11 @@ interface CalendarStore {
     options?: { throwIfNoneImported?: boolean; sendSchedulingMessages?: boolean },
   ) => Promise<number | null>;
   updateCalendar: (client: IJMAPClient, calendarId: string, updates: Partial<Calendar>) => Promise<void>;
+  /**
+   * Subscribe to a calendar shared with the user, or unsubscribe (JMAP
+   * isSubscribed, #1731). Shown at once, undone if the server says no.
+   */
+  setCalendarSubscribed: (client: IJMAPClient, calendarId: string, isSubscribed: boolean) => Promise<void>;
   /** Store `orderedIds` in that order by renumbering their sortOrder. */
   reorderCalendars: (client: IJMAPClient, orderedIds: string[]) => Promise<void>;
   setDefaultCalendar: (client: IJMAPClient, calendarId: string) => Promise<void>;
@@ -1835,6 +1840,25 @@ export const useCalendarStore = create<CalendarStore>()(
         } catch (error) {
           debug.error('Failed to update calendar:', error);
           set({ error: 'Failed to update calendar' });
+          throw error;
+        }
+      },
+
+      setCalendarSubscribed: async (client, calendarId, isSubscribed) => {
+        const cal = get().calendars.find(c => c.id === calendarId);
+        if (!cal) return;
+        const previous = cal.isSubscribed;
+        const patch = (value: boolean) => set((state) => ({
+          calendars: state.calendars.map(c => c.id === calendarId ? { ...c, isSubscribed: value } : c),
+        }));
+        patch(isSubscribed);
+        try {
+          const realId = cal.originalId || stripLocalAccountPrefix(calendarId, cal.localAccountId);
+          await resolveAccountClient(client, cal.localAccountId).updateCalendar(realId, { isSubscribed }, cal.accountId);
+          void calendarHooks.onCalendarChange.emit({ calendarId, change: 'updated' });
+        } catch (error) {
+          patch(previous);
+          debug.error('Failed to change the calendar subscription:', error);
           throw error;
         }
       },

@@ -4,7 +4,7 @@ import { useMemo, useRef, useState } from "react";
 import { useLongPress } from "@/hooks/use-long-press";
 import { IconButton } from "@/components/ui/icon-button";
 import { useTranslations } from "next-intl";
-import { Check, ChevronDown, ChevronRight, Globe, ListTodo, MoreVertical, Pencil, RefreshCw, Share2, Star, Trash2, Cake, User, Users, Plus, Eraser, Palette, RotateCcw, Shuffle } from "@/components/icons";
+import { Check, ChevronDown, ChevronRight, EyeOff, Globe, ListTodo, MoreVertical, Pencil, RefreshCw, Share2, Star, Trash2, Cake, User, Users, Plus, Eraser, Palette, RotateCcw, Shuffle } from "@/components/icons";
 import { cn, formatDateTime } from "@/lib/utils";
 import type { Calendar } from "@/lib/jmap/types";
 import { CalendarColorPicker } from "@/components/settings/calendar-management-settings";
@@ -119,6 +119,8 @@ export function CalendarSidebarPanel({
   const removeICalSubscription = useCalendarStore((s) => s.removeICalSubscription);
   const setDefaultCalendar = useCalendarStore((s) => s.setDefaultCalendar);
   const updateCalendar = useCalendarStore((s) => s.updateCalendar);
+  const setCalendarSubscribed = useCalendarStore((s) => s.setCalendarSubscribed);
+  const hideUnsubscribedCalendars = useSettingsStore((s) => s.hideUnsubscribedCalendars);
   const storedViewMode = useCalendarStore((s) => s.viewMode);
   const viewMode = viewModeProp ?? storedViewMode;
   const hiddenTaskListIds = useCalendarStore((s) => s.hiddenTaskListIds);
@@ -484,9 +486,11 @@ export function CalendarSidebarPanel({
     const canChangeColor = !!onColorChange;
     const hasColorOverride = !!cal.isShared && !!sharedCalendarColors[sharedCalendarColorKey(cal)];
     const canResetColor = !!onResetColor && hasColorOverride;
+    // Unsubscribing takes a shared calendar out of the sidebar while unsubscribed ones are hidden (#1731).
+    const canUnsubscribe = !!client && hideUnsubscribedCalendars && !!cal.isShared;
     const canClear = onClearCalendar && !isBirthday && cal.myRights?.mayDelete !== false;
     const canDelete = onDeleteCalendar && !isBirthday && !cal.isDefault && !cal.isShared;
-    const showSeparator = (canCreate || canRename || canShare || canSetDefault || canChangeColor || canResetColor) && (canClear || canDelete);
+    const showSeparator = (canCreate || canRename || canShare || canSetDefault || canChangeColor || canResetColor || canUnsubscribe) && (canClear || canDelete);
     const color = cal.color || "#3b82f6";
 
     return (
@@ -535,6 +539,17 @@ export function CalendarSidebarPanel({
             icon={cal.serverColor ? RotateCcw : Shuffle}
             label={tMgmt(cal.serverColor ? 'reset_color' : 'random_color')}
             onClick={() => { closeContextMenu(); onResetColor!(cal); }}
+          />
+        )}
+        {canUnsubscribe && (
+          <ContextMenuItem
+            icon={EyeOff}
+            label={tMgmt('unsubscribe')}
+            testId="calendar-unsubscribe"
+            onClick={() => {
+              closeContextMenu();
+              setCalendarSubscribed(client!, cal.id, false).catch(() => toast.error(tMgmt('error_subscription')));
+            }}
           />
         )}
         {showSeparator && <ContextMenuSeparator />}

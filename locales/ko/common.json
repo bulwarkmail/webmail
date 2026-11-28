@@ -5445,6 +5445,15 @@
       "title": "캘린더 관리",
       "description": "캘린더를 만들고 이름을 바꾸거나 색상을 꾸며보세요. 사이드바에서 캘린더를 우클릭하면 색상을 빠르게 바꿀 수 있어요.",
       "description_touch": "캘린더를 만들고 이름을 바꾸거나 색상을 꾸며보세요.",
+      "hide_unsubscribed": {
+        "label": "구독하지 않은 공유 캘린더 숨기기",
+        "description": "다른 사람이 공유한 캘린더는 아래 목록에서 구독하면 캘린더에 표시돼요."
+      },
+      "subscribe": "구독",
+      "unsubscribe": "구독 해지",
+      "subscribe_named": "{name} 구독",
+      "unsubscribe_named": "{name} 구독 해지",
+      "error_subscription": "구독을 변경하지 못했어요",
       "name": "이름",
       "name_placeholder": "캘린더 이름",
       "color": "색상",

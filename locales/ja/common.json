@@ -5445,6 +5445,15 @@
       "title": "カレンダー管理",
       "description": "カレンダーの作成、名前変更、カスタマイズができます。サイドバーのカレンダーを右クリックして色を素早く変更できます。",
       "description_touch": "カレンダーの作成、名前変更、カスタマイズができます。",
+      "hide_unsubscribed": {
+        "label": "購読していない共有カレンダーを非表示",
+        "description": "ほかの人が共有したカレンダーは、下の一覧で購読するとカレンダーに表示されます。"
+      },
+      "subscribe": "購読",
+      "unsubscribe": "購読を解除",
+      "subscribe_named": "{name} を購読",
+      "unsubscribe_named": "{name} の購読を解除",
+      "error_subscription": "購読を変更できませんでした",
       "name": "名前",
       "name_placeholder": "カレンダー名",
       "color": "色",

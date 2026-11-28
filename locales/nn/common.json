@@ -5482,6 +5482,15 @@
       "title": "Kalenderadministrasjon",
       "description": "Opprett, gi nytt namn til og tilpass kalendrane dine. Høgreklikk på ein kalender i sidefeltet for raskt å endre fargen.",
       "description_touch": "Opprett, gi nytt namn til og tilpass kalendrane dine.",
+      "hide_unsubscribed": {
+        "label": "Gøym delte kalendrar du ikkje abonnerer på",
+        "description": "Kalendrar andre deler med deg, blir viste i Kalender når du abonnerer på dei i lista nedanfor."
+      },
+      "subscribe": "Abonner",
+      "unsubscribe": "Sei opp abonnement",
+      "subscribe_named": "Abonner på {name}",
+      "unsubscribe_named": "Sei opp abonnementet på {name}",
+      "error_subscription": "Kunne ikkje endre abonnementet",
       "name": "Namn",
       "name_placeholder": "Kalendernamn",
       "color": "Farge",

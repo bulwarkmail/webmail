@@ -5474,6 +5474,15 @@
       "title": "Správa kalendára",
       "description": "Vytvárajte, premenúvajte a prispôsobujte si svoje kalendáre.",
       "description_touch": "Vytvárajte, premenúvajte a prispôsobujte si svoje kalendáre.",
+      "hide_unsubscribed": {
+        "label": "Skryť zdieľané kalendáre, ktoré neodoberáte",
+        "description": "Kalendáre, ktoré s vami zdieľajú ostatní, sa v Kalendári zobrazia, keď ich v zozname nižšie začnete odoberať."
+      },
+      "subscribe": "Odoberať",
+      "unsubscribe": "Zrušiť odber",
+      "subscribe_named": "Odoberať {name}",
+      "unsubscribe_named": "Zrušiť odber {name}",
+      "error_subscription": "Odber sa nepodarilo zmeniť",
       "name": "Názov",
       "name_placeholder": "Názov kalendára",
       "color": "Farba",

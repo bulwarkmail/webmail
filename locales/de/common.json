@@ -5445,6 +5445,15 @@
       "title": "Kalenderverwaltung",
       "description": "Erstellen, umbenennen und anpassen Ihrer Kalender. Rechtsklick auf einen Kalender in der Seitenleiste, um die Farbe schnell zu ändern.",
       "description_touch": "Erstellen, benennen und gestalten Sie Ihre Kalender.",
+      "hide_unsubscribed": {
+        "label": "Geteilte Kalender ausblenden, die Sie nicht abonniert haben",
+        "description": "Kalender, die andere mit Ihnen teilen, erscheinen im Kalender, sobald Sie sie unten in der Liste abonnieren."
+      },
+      "subscribe": "Abonnieren",
+      "unsubscribe": "Abbestellen",
+      "subscribe_named": "{name} abonnieren",
+      "unsubscribe_named": "{name} abbestellen",
+      "error_subscription": "Das Abonnement konnte nicht geändert werden",
       "name": "Name",
       "name_placeholder": "Kalendername",
       "color": "Farbe",

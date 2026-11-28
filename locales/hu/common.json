@@ -5474,6 +5474,15 @@
       "title": "Naptár kezelés",
       "description": "Naptárak létrehozása, átnevezése és testreszabása. Kattints jobb gombbal egy naptárra az oldalsávban a szín gyors módosításához.",
       "description_touch": "Naptárak létrehozása, átnevezése és testreszabása.",
+      "hide_unsubscribed": {
+        "label": "Nem előfizetett megosztott naptárak elrejtése",
+        "description": "A mások által Önnel megosztott naptárak akkor jelennek meg a Naptárban, ha az alábbi listában előfizet rájuk."
+      },
+      "subscribe": "Előfizetés",
+      "unsubscribe": "Leiratkozás",
+      "subscribe_named": "Előfizetés erre: {name}",
+      "unsubscribe_named": "Leiratkozás erről: {name}",
+      "error_subscription": "Nem sikerült módosítani az előfizetést",
       "name": "Név",
       "name_placeholder": "Naptár neve",
       "color": "Szín",

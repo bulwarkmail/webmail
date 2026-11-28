@@ -8,8 +8,9 @@ import type { Calendar, CalendarComponentType } from '@/lib/jmap/types';
 import { useAuthStore } from '@/stores/auth-store';
 import { getActiveAccountSlotHeaders } from '@/lib/auth/active-account-slot';
 import { toast } from '@/stores/toast-store';
-import { SettingsSection } from './settings-section';
-import { Plus, Pencil, Trash2, Calendar as CalendarIcon, Copy, Link, Upload, Globe, RefreshCw, Eraser, Users, Bell, ArrowUp, ArrowDown, GripVertical, MoreVertical } from '@/components/icons';
+import { SettingsSection, SettingItem, ToggleSwitch } from './settings-section';
+import { Plus, Pencil, Trash2, Calendar as CalendarIcon, Copy, Link, Upload, Globe, RefreshCw, Eraser, Users, Bell, ArrowUp, ArrowDown, GripVertical, MoreVertical, Eye, EyeOff } from '@/components/icons';
+import { usePolicyStore } from '@/stores/policy-store';
 import { IconButton } from '@/components/ui/icon-button';
 import { ContextMenu, ContextMenuItem, ContextMenuSeparator } from '@/components/ui/context-menu';
 import { useContextMenu } from '@/hooks/use-context-menu';
@@ -323,6 +324,10 @@ export function CalendarManagementSettings() {
   const timeFormat = useSettingsStore((s) => s.timeFormat);
   const sharedCalendarColors = useSettingsStore((s) => s.sharedCalendarColors);
   const setSharedCalendarColor = useSettingsStore((s) => s.setSharedCalendarColor);
+  const hideUnsubscribedCalendars = useSettingsStore((s) => s.hideUnsubscribedCalendars);
+  const updateSetting = useSettingsStore((s) => s.updateSetting);
+  const setCalendarSubscribed = useCalendarStore((s) => s.setCalendarSubscribed);
+  const { isSettingHidden, isSettingLocked } = usePolicyStore();
   const colorPickerRef = useRef<HTMLDivElement>(null);
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const { contextMenu, openContextMenu, openContextMenuFrom, closeContextMenu, menuRef } = useContextMenu<Calendar>();
@@ -664,6 +669,15 @@ export function CalendarManagementSettings() {
   // from there) and a ⋮ with the rest; right-click opens the same menu.
   // Seven icons on hover hid what they did (pim-20).
   const canEditAlerts = (cal: Calendar) => !cal.isShared;
+  // Subscribing to a calendar shared with the user shows it in Calendar while
+  // unsubscribed ones are hidden; the choice is kept on the server (#1731).
+  const canToggleSubscribed = (cal: Calendar) => hideUnsubscribedCalendars && !!cal.isShared;
+  const toggleSubscribed = (cal: Calendar) => {
+    if (!client) return;
+    setCalendarSubscribed(client, cal.id, cal.isSubscribed === false).catch(() => {
+      toast.error(t('error_subscription'));
+    });
+  };
   const canShareCalendar = (cal: Calendar) => !!cal.myRights?.mayShare && !cal.isShared && !isSubscriptionCalendar(cal.id);
   const calendarActions = (cal: Calendar) => {
     const actions: Array<{ id: string; label: string; icon: typeof Pencil; run: () => void; destructive?: boolean }> = [
@@ -687,6 +701,13 @@ export function CalendarManagementSettings() {
     return (
       <ContextMenu ref={menuRef} isOpen={contextMenu.isOpen} position={contextMenu.position} onClose={closeContextMenu}>
         <ContextMenuItem icon={Pencil} label={tUx('edit_calendar')} onClick={run(() => setEditingId(cal.id))} />
+        {canToggleSubscribed(cal) && (
+          <ContextMenuItem
+            icon={cal.isSubscribed === false ? Eye : EyeOff}
+            label={cal.isSubscribed === false ? t('subscribe') : t('unsubscribe')}
+            onClick={run(() => toggleSubscribed(cal))}
+          />
+        )}
         {/* Without a mouse there is no drag: the order changes from here. */}
         {siblings.length > 1 && (
           <>
@@ -706,6 +727,18 @@ export function CalendarManagementSettings() {
   return (
     <SettingsSection id="calendars" title={t('title')} description={touch ? t('description_touch') : t('description')}>
       {renderRowMenu()}
+      {!managedAccountId && !isSettingHidden('hideUnsubscribedCalendars') && (
+        <SettingItem
+          label={t('hide_unsubscribed.label')}
+          description={t('hide_unsubscribed.description')}
+          locked={isSettingLocked('hideUnsubscribedCalendars')}
+        >
+          <ToggleSwitch
+            checked={hideUnsubscribedCalendars}
+            onChange={(v) => updateSetting('hideUnsubscribedCalendars', v)}
+          />
+        </SettingItem>
+      )}
       <div className="space-y-2">
         {calendarGroups.map((group) => (
           <div key={group.key || 'own'} className="space-y-2" data-testid="calendar-settings-group">
@@ -832,7 +865,14 @@ export function CalendarManagementSettings() {
               <CalendarIcon className="w-4 h-4 text-muted-foreground flex-shrink-0" />
 
               <div className="flex-1 min-w-0">
-                <span id={`calendar-name-${cal.id}`} className="text-sm font-medium truncate block" title={calName(cal)} dir="auto">{calName(cal)}</span>
+                <span
+                  id={`calendar-name-${cal.id}`}
+                  className={cn("text-sm font-medium truncate block", canToggleSubscribed(cal) && cal.isSubscribed === false && "text-muted-foreground")}
+                  title={calName(cal)}
+                  dir="auto"
+                >
+                  {calName(cal)}
+                </span>
               </div>
 
               {cal.isDefault && (
@@ -861,6 +901,18 @@ export function CalendarManagementSettings() {
                 );
               })()}
 
+              {/* Phone: in the ⋮, the row has no room for it. */}
+              {canToggleSubscribed(cal) && (
+                <IconButton
+                  label={cal.isSubscribed === false
+                    ? t('subscribe_named', { name: calName(cal) })
+                    : t('unsubscribe_named', { name: calName(cal) })}
+                  onClick={() => toggleSubscribed(cal)}
+                  className="hidden sm:inline-flex flex-shrink-0 text-muted-foreground"
+                >
+                  {cal.isSubscribed === false ? <EyeOff /> : <Eye />}
+                </IconButton>
+              )}
               <button
                 type="button"
                 onClick={() => setEditingId(cal.id)}

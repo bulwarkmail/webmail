@@ -378,6 +378,7 @@ export const tabSearchEntries: Record<Tab, SettingsSearchEntry[]> = {
     { label: 'calendar.settings.show_birthday_calendar' },
     { label: 'calendar.settings.enable_tasks' },
     { label: 'calendar.management.title' },
+    { label: 'calendar.management.hide_unsubscribed.label' },
     { label: 'calendar.import.title' },
     { label: 'calendar.subscription.title' },
   ],

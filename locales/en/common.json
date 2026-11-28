@@ -5474,6 +5474,15 @@
       "title": "Calendar management",
       "description": "Create, rename, and customize your calendars. Right-click a calendar in the sidebar to quickly change its color.",
       "description_touch": "Create, rename, and customize your calendars.",
+      "hide_unsubscribed": {
+        "label": "Hide shared calendars you haven't subscribed to",
+        "description": "Calendars others share with you show in Calendar once you subscribe to them in the list below."
+      },
+      "subscribe": "Subscribe",
+      "unsubscribe": "Unsubscribe",
+      "subscribe_named": "Subscribe to {name}",
+      "unsubscribe_named": "Unsubscribe from {name}",
+      "error_subscription": "Couldn't change the subscription",
       "name": "Name",
       "name_placeholder": "Calendar name",
       "color": "Color",

@@ -5444,6 +5444,15 @@
       "title": "Kalendāru pārvaldība",
       "description": "Izveidojiet, pārdēvējiet un konfigurējiet kalendārus. Ar labo klikšķi varat mainīt kalendāra krāsu.",
       "description_touch": "Izveidojiet, pārdēvējiet un konfigurējiet kalendārus.",
+      "hide_unsubscribed": {
+        "label": "Paslēpt neabonētos koplietotos kalendārus",
+        "description": "Kalendāri, ko citi kopīgo ar jums, parādās kalendārā, kad tos abonējat zemāk sarakstā."
+      },
+      "subscribe": "Abonēt",
+      "unsubscribe": "Atteikties",
+      "subscribe_named": "Abonēt {name}",
+      "unsubscribe_named": "Atteikties no {name}",
+      "error_subscription": "Abonementu neizdevās mainīt",
       "name": "Nosaukums",
       "name_placeholder": "Kalendāra nosaukums",
       "color": "Krāsa",
