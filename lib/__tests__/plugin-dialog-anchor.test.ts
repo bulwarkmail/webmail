@@ -140,6 +140,9 @@ describe('frameAnchor', () => {
     expect(frameAnchor(frame)).toEqual({ left: 0, top: 740, right: 55, bottom: 780 });
     const hidden = control('<iframe data-at></iframe>', { left: 0, top: 0, width: 1, height: 1 });
     expect(frameAnchor(hidden)).toBeNull();
+    // display: none measures 0 x 0.
+    const none = control('<iframe data-at></iframe>', { left: 0, top: 0, width: 0, height: 0 });
+    expect(frameAnchor(none)).toBeNull();
     frame.remove();
     expect(frameAnchor(frame)).toBeNull();
     expect(frameAnchor(undefined)).toBeNull();
@@ -155,6 +158,48 @@ describe("ui.openDialog's anchor", () => {
     expect(head()?.anchorSide).toBe('end');
     resolveHead(null);
     await expect(result).resolves.toBeNull();
+  });
+
+  it("is a spot of the calling frame below which it stands, clamped to the frame", async () => {
+    const frame = control('<iframe data-at></iframe>', { left: 60, top: 0, width: 800, height: 30 });
+    const result = dispatchApiCall(plugin(), 'ui.openDialog', [{ slot: 'plugin-dialog', anchor: { left: 120, top: 4, right: 200, bottom: 26 }, width: 260 }], { frame: 'slot', frameElement: frame });
+    await vi.waitFor(() => expect(head()).not.toBeNull());
+    expect(head()?.anchor).toEqual({ left: 180, top: 4, right: 260, bottom: 26 });
+    expect(head()?.anchorSide).toBeUndefined();
+    resolveHead(null);
+    await result;
+    // Never outside the frame: a spot beyond it is cut to its edges.
+    const far = dispatchApiCall(plugin(), 'ui.openDialog', [{ slot: 'plugin-dialog', anchor: { left: -500, top: -9, right: 5000, bottom: 900 } }], { frame: 'slot', frameElement: frame });
+    await vi.waitFor(() => expect(head()).not.toBeNull());
+    expect(head()?.anchor).toEqual({ left: 60, top: 0, right: 860, bottom: 30 });
+    resolveHead(null);
+    await far;
+    // Sides given the wrong way round are taken in order.
+    const turned = dispatchApiCall(plugin(), 'ui.openDialog', [{ slot: 'plugin-dialog', anchor: { left: 200, top: 26, right: 120, bottom: 4 } }], { frame: 'slot', frameElement: frame });
+    await vi.waitFor(() => expect(head()).not.toBeNull());
+    expect(head()?.anchor).toEqual({ left: 180, top: 4, right: 260, bottom: 26 });
+    resolveHead(null);
+    await turned;
+  });
+
+  it('is none for a rect from the background frame or one not of numbers', async () => {
+    const frame = control('<iframe data-at></iframe>', { left: 60, top: 0, width: 800, height: 30 });
+    const calls: [unknown, 'background' | 'slot'][] = [
+      [{ left: 1, top: 1, right: 2, bottom: 2 }, 'background'],
+      [{ left: '1', top: 1, right: 2, bottom: 2 }, 'slot'],
+      [{ left: Number.NaN, top: 1, right: 2, bottom: 2 }, 'slot'],
+      [{ left: 1, top: 1, right: Number.POSITIVE_INFINITY, bottom: 2 }, 'slot'],
+      [[1, 1, 2, 2], 'slot'],
+      // A DOMRect spread into an object: its sides are getters, so nothing comes along.
+      [{}, 'slot'],
+    ];
+    for (const [anchor, kind] of calls) {
+      const result = dispatchApiCall(plugin(), 'ui.openDialog', [{ slot: 'plugin-dialog', anchor }], { frame: kind, frameElement: frame });
+      await vi.waitFor(() => expect(head()).not.toBeNull());
+      expect(head()?.anchor).toBeUndefined();
+      resolveHead(null);
+      await result;
+    }
   });
 
   it('is none for the background frame or an unknown value', async () => {

@@ -919,10 +919,20 @@ function buildCoreApi(manifest: PluginManifest) {
        *  frame, which has no place, the dialog is centred. Any other value
        *  is ignored (centred).
        *
+       *  `anchor: { left, top, right, bottom }` names a spot inside the
+       *  calling frame, in its own CSS pixels, as a plain object (copy a
+       *  tile's getBoundingClientRect() into one: a DOMRect's sides are
+       *  getters and do not survive the message): the popover stands below
+       *  it (above when only that fits), over the page, the frame keeping
+       *  its size. Meant for a menu of a tile in a top banner. Clamped to
+       *  the frame; from the background frame, or without four numbers,
+       *  centred. Like `trigger` and `frame`, the place is measured when
+       *  the dialog opens; the popover does not follow the frame after.
+       *
        *  `fill: true` gives the dialog (or the popover) a fixed height, as
        *  tall as the window lets it be up to 640 px, and the plugin's root
        *  fills it, for a chat whose input stays at the bottom. */
-      openDialog: (opts: { title?: string; slot: string; extraProps?: Record<string, unknown>; width?: number; anchor?: 'trigger' | 'frame'; fill?: boolean }) =>
+      openDialog: (opts: { title?: string; slot: string; extraProps?: Record<string, unknown>; width?: number; anchor?: 'trigger' | 'frame' | { left: number; top: number; right: number; bottom: number }; fill?: boolean }) =>
         callApi('ui.openDialog', [opts], 0) as Promise<unknown>,
       /** Shows one of this plugin's OWN slots ('plugin-notice' unless `slot`
        *  names another) as a notice in the toasts' stack at the bottom end

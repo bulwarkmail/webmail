@@ -12,6 +12,11 @@
 // plugin frame that asked for it (a rail button's frame), at the frame's end
 // side with its bottom lined up with the frame's bottom. So it is placed the
 // same when opened by keyboard or again after another dialog.
+//
+// `anchor: { left, top, right, bottom }` names a spot inside the calling
+// frame (its own coordinates): the popover stands below it, as for a
+// trigger. A tile in a top banner opens its menu there, over the page,
+// instead of making its frame taller.
 
 /** A place in viewport coordinates; a point has left === right, top === bottom. */
 export interface AnchorRect {
@@ -89,6 +94,29 @@ export function frameAnchor(frame: Element | null | undefined): AnchorRect | nul
   const r = rectOf(frame);
   if (r.right - r.left <= 1 || r.bottom - r.top <= 1) return null;
   return r;
+}
+
+/**
+ * A place the calling frame names inside itself (`anchor: { left, top,
+ * right, bottom }` in the frame's own CSS pixels: a tile in a top banner),
+ * clamped to the frame and turned into viewport coordinates; null for a
+ * frame gone or without size, or anything but four numbers. The plugin
+ * names a spot of its own frame, never one elsewhere on the page.
+ */
+export function rectAnchor(asked: unknown, frame: Element | null | undefined): AnchorRect | null {
+  const box = frameAnchor(frame);
+  if (!box || !asked || typeof asked !== 'object') return null;
+  const o = asked as Record<string, unknown>;
+  const n = (v: unknown) => (typeof v === 'number' && Number.isFinite(v) ? v : null);
+  const l = n(o.left), t = n(o.top), r = n(o.right), b = n(o.bottom);
+  if (l === null || t === null || r === null || b === null) return null;
+  const width = box.right - box.left;
+  const height = box.bottom - box.top;
+  const x = (v: number) => box.left + Math.min(Math.max(v, 0), width);
+  const y = (v: number) => box.top + Math.min(Math.max(v, 0), height);
+  const left = x(Math.min(l, r));
+  const top = y(Math.min(t, b));
+  return { left, top, right: Math.max(left, x(Math.max(l, r))), bottom: Math.max(top, y(Math.max(t, b))) };
 }
 
 const MODIFIERS = new Set(['Shift', 'Control', 'Alt', 'Meta', 'AltGraph', 'CapsLock']);
