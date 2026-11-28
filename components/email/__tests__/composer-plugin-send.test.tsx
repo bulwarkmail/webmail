@@ -4,6 +4,7 @@ import React from 'react';
 import { EmailComposer } from '../email-composer';
 import { composeTakeoverOptions } from '@/lib/outgoing/compose-takeover';
 import { useIdentityStore } from '@/stores/identity-store';
+import { useAuthStore } from '@/stores/auth-store';
 
 const hoisted = vi.hoisted(() => ({
   takeOver: vi.fn(),
@@ -319,6 +320,14 @@ describe('send options a plugin takeover carries', () => {
       seen = composeTakeoverOptions('smime', 'id-me');
       return 'handled';
     });
+    // DSN only goes out where the server offers it (#1883).
+    const authState = useAuthStore.getState() as unknown as { client: unknown };
+    const previousClient = authState.client;
+    authState.client = new Proxy({}, {
+      get: (_target, prop) => prop === 'supportsSubmissionExtension'
+        ? (name: string) => name === 'DSN'
+        : prop === 'then' ? undefined : () => undefined,
+    });
     try {
       const onClose = vi.fn();
       render(
@@ -332,6 +341,7 @@ describe('send options a plugin takeover carries', () => {
       await waitFor(() => expect(onClose).toHaveBeenCalledTimes(1));
     } finally {
       useIdentityStore.setState({ identities });
+      authState.client = previousClient;
     }
 
     expect(seen).toEqual({
