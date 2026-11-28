@@ -1216,15 +1216,17 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   // Keyboard shortcuts handlers
   // j / k go on from the open message, or from the last one opened once the
   // reader is closed (Escape), not from the top. With the conversation in the
-  // reading pane they step by conversation, as the list's rows do. Rows
+  // reading pane (the default layout's, Mountain View's) they step by
+  // conversation, in the order the list's rows are drawn (#1904). Rows
   // folded away under a list header (a date group) are passed by.
+  const stepByRows = paneConversationView || (mvConversationView && !isScheduledView);
   const stepFrom = (direction: 1 | -1) => {
     const listRows = useEmailStore.getState().listRows;
     return stepListEmail(
       shownListEmails(activeEmails, listRows),
       selectedEmail ? emailKeyFor(selectedEmail) : lastOpenedKeyRef.current,
       direction,
-      paneConversationView ? listRows : null,
+      stepByRows ? listRows : null,
     );
   };
   // Delete on the ticked rows: the batch delete, asked first as the

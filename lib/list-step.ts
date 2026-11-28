@@ -29,12 +29,16 @@ export function stepListEmail(
     ? rows.filter((row) => byKey.has(row.key))
     : emails.map((e) => ({ key: emailKeyFor(e), members: [] }));
   if (order.length === 0) return null;
-  const at = fromKey
-    ? order.findIndex((row) => row.key === fromKey || row.members.includes(fromKey))
-    : -1;
-  const target = at < 0
-    ? (direction === 1 ? 0 : order.length - 1)
-    : Math.min(order.length - 1, Math.max(0, at + direction));
+  // A message's own row first: an unfolded conversation lists its messages
+  // under the conversation's row.
+  const own = fromKey ? order.findIndex((row) => row.key === fromKey) : -1;
+  const at = own >= 0 || !fromKey ? own : order.findIndex((row) => row.members.includes(fromKey));
+  if (at < 0) return byKey.get(order[direction === 1 ? 0 : order.length - 1].key) ?? null;
+  // The conversation's row and its newest message's row open the same
+  // message: step past it instead of staying put.
+  let target = at + direction;
+  while (target >= 0 && target < order.length && order[target].key === order[at].key) target += direction;
+  if (target < 0 || target >= order.length) target = at;
   return byKey.get(order[target].key) ?? null;
 }
 

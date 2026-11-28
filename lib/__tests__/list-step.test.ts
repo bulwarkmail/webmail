@@ -28,6 +28,18 @@ describe('stepListEmail', () => {
     expect(ids(stepListEmail(emails, 'd', -1, rows))).toBe('b');
     expect(ids(stepListEmail(emails, null, -1, rows))).toBe('c');
   });
+  it('steps past an unfolded conversation one message at a time', () => {
+    // b's conversation is unfolded: its row, then b's and a's own rows.
+    const rows = [
+      { key: 'b', members: ['b', 'a'] }, { key: 'b', members: ['b'] }, { key: 'a', members: ['a'] },
+      { key: 'd', members: ['d'] },
+    ];
+    expect(ids(stepListEmail(emails, 'b', 1, rows))).toBe('a');
+    expect(ids(stepListEmail(emails, 'a', 1, rows))).toBe('d');
+    expect(ids(stepListEmail(emails, 'a', -1, rows))).toBe('b');
+    expect(ids(stepListEmail(emails, 'd', -1, rows))).toBe('a');
+    expect(ids(stepListEmail(emails, 'b', -1, rows))).toBe('b');
+  });
   it('is empty for an empty list', () => {
     expect(stepListEmail([], 'a', 1)).toBeNull();
   });

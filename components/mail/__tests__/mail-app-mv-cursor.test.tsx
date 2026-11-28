@@ -139,4 +139,26 @@ describe('The Mountain View list cursor', () => {
     await act(async () => { fireEvent.keyDown(window, { key: 'j' }); });
     expect(cursor()).toBe('m2');
   });
+
+  it('counts a conversation once and follows the rows with j (#1904)', async () => {
+    // m1 and its older reply m0 are one conversation, drawn as m1's row.
+    const m0 = { ...row('m0', 15), threadId: 't-m1' } as Email;
+    useEmailStore.setState({
+      emails: [row('m1', 30), row('m2', 20), m0, row('m3', 10)],
+      listRows: [{ key: 'm1', members: ['m1', 'm0'] }, { key: 'm2', members: ['m2'] }, { key: 'm3', members: ['m3'] }],
+    } as never);
+    render(<MailApp />);
+    await screen.findByText('stub tick m2', {}, { timeout: 5000 });
+    const press = async (key: string) => act(async () => { fireEvent.keyDown(window, { key }); });
+    await press('j');
+    expect(cursor()).toBe('m1');
+    await press('j');
+    expect(cursor()).toBe('m2');
+    await press('j');
+    expect(cursor()).toBe('m3');
+    await press('j');
+    expect(cursor()).toBe('m3');
+    await press('k');
+    expect(cursor()).toBe('m2');
+  });
 });
