@@ -3541,9 +3541,9 @@
       },
       "reading_width": {
         "label": "Okuma genişliği",
-        "description": "İletilerdeki satırları yaklaşık 80 karakterle sınırlar, böylece gözleriniz uzağa gitmek zorunda kalmaz.",
+        "description": "İletileri ortalanmış bir sütunda gösterir, böylece gözleriniz uzağa gitmek zorunda kalmaz.",
         "full": "Tam genişlik",
-        "comfortable": "Yaklaşık 80 karakter"
+        "comfortable": "Rahat"
       },
       "reading_mask": {
         "label": "Okuma maskesi",

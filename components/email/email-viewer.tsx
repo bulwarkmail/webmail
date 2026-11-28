@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useState, useEffect, useLayoutEffect, useMemo, useRef, useCallback, useId, type CSSProperties } from "react";
+import { Fragment, useState, useEffect, useLayoutEffect, useMemo, useRef, useCallback, useId } from "react";
 import { spamApplicableIn } from "@/lib/spam-applicable";
 import { Email, ContactCard, Identity, Mailbox } from "@/lib/jmap/types";
 import { attachmentDownloadFilename, attachmentsBundleFilename, DEFAULT_ATTACHMENT_TEMPLATE, renamedAttachmentFilename } from "@/lib/download-filename";
@@ -969,7 +969,7 @@ export function MvExpandedConversationCard({
   currentUserEmail?: string;
   onViewContact?: (contact: ContactCard | null, email: string) => void;
   compact?: boolean;
-  /** Inside the reader's message card (reading width about 80 characters). */
+  /** Inside the reader's message card (comfortable reading width). */
   onCard?: boolean;
   /** The default layout's short date instead of Gmail's long one. */
   shortDates?: boolean;
@@ -3749,8 +3749,8 @@ export function EmailViewer({
   // inline colours written by our pass would only fight it. With the mail
   // shown in the app's own colours there is nothing left to recolour either.
   const recolorDark = isDark && !reading.forcedColors && !reading.overrideStyles;
-  // With lines of about 80 characters the message reads as a card on the
-  // pane, as wide as that column. Not on a phone: the column fills it anyway.
+  // With the comfortable reading width the message reads as a card on the
+  // pane. Not on a phone: the card would fill it anyway.
   const readingCard = reading.card;
   const appFontSources = reading.fontSources.join(' ');
 
@@ -5560,18 +5560,14 @@ export function EmailViewer({
       {/* Email Content Area. Mountain View reads the conversation on one plain
           sheet, so the reply buttons under the message sit on the page colour
           rather than on a tinted strip. */}
-      <div data-reader-scroll="" className={cn("flex-1 overflow-auto overscroll-contain", mvViewer || mvMobileViewer ? "bg-background" : "bg-muted/30", isMobile && !mvMobileViewer && "pb-[calc(3.25rem+env(safe-area-inset-bottom)/2)] sm:pb-0", readingCard && "px-4")}>
+      <div data-reader-scroll="" className={cn("flex-1 overflow-auto overscroll-contain", mvViewer || mvMobileViewer ? "bg-background" : "bg-muted/30", isMobile && !mvMobileViewer && "pb-[calc(3.25rem+env(safe-area-inset-bottom)/2)] sm:pb-0", readingCard && "px-5")}>
       {/* The card takes its surface, border, corners and shadow from the
           theme. Inside it the page colour is the card colour, so the
           message's sections and the element hosting the mail body are
           painted in the card colour too: the colour a dark mail's canvas
           has to match. */}
       <div
-        className={cn("min-h-full flex flex-col", readingCard && "min-h-0 max-w-(--reading-card-width) mx-auto my-4 overflow-clip rounded-xl border border-border bg-card shadow-sm [--color-background:var(--color-card)]")}
-        // Mountain View indents the bodies under the sender's name (60px for
-        // the open message, 80px for the others); the card makes room for it
-        // so their lines still hold about 80 characters.
-        style={readingCard ? { '--reading-card-width': mvViewer ? `calc(${reading.cardWidth} + 4rem)` : reading.cardWidth } as CSSProperties : undefined}
+        className={cn("min-h-full flex flex-col", readingCard && "min-h-0 max-w-[882px] mx-auto my-5 overflow-clip rounded-xl border border-border bg-card shadow-sm [--color-background:var(--color-card)]")}
         data-reading-card={readingCard ? "" : undefined}
       >
 
@@ -6180,7 +6176,6 @@ export function EmailViewer({
                 style={{
                   ...(plainTextFont === 'mono' && { fontFamily: 'ui-monospace, "SF Mono", Consolas, monospace' }),
                   fontSize: reading.plainFontSize(14),
-                  ...(reading.comfortableWidth && { maxWidth: '80ch', marginInline: 'auto' }),
                   lineHeight: '1.6',
                   wordBreak: 'break-word',
                   whiteSpace: 'pre-wrap',

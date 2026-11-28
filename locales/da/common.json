@@ -3541,9 +3541,9 @@
       },
       "reading_width": {
         "label": "Læsebredde",
-        "description": "Holder linjerne i beskeder på omkring 80 tegn, så dine øjne ikke skal flytte sig så langt.",
+        "description": "Viser beskeder i en centreret kolonne, så dine øjne ikke skal flytte sig så langt.",
         "full": "Fuld bredde",
-        "comfortable": "Omkring 80 tegn"
+        "comfortable": "Behagelig"
       },
       "reading_mask": {
         "label": "Læsemaske",

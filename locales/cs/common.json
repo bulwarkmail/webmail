@@ -3541,9 +3541,9 @@
       },
       "reading_width": {
         "label": "Šířka čtení",
-        "description": "Omezí řádky ve zprávách na zhruba 80 znaků, aby oči nemusely tolik cestovat.",
+        "description": "Zobrazí zprávy ve vystředěném sloupci, aby oči nemusely tolik cestovat.",
         "full": "Plná šířka",
-        "comfortable": "Zhruba 80 znaků"
+        "comfortable": "Pohodlná"
       },
       "reading_mask": {
         "label": "Čtecí maska",

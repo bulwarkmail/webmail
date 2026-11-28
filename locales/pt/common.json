@@ -3541,9 +3541,9 @@
       },
       "reading_width": {
         "label": "Largura de leitura",
-        "description": "Limita as linhas das mensagens a cerca de 80 caracteres, para os olhos não precisarem percorrer tanto.",
+        "description": "Mostra as mensagens numa coluna centrada, para os olhos não precisarem percorrer tanto.",
         "full": "Largura total",
-        "comfortable": "Cerca de 80 caracteres"
+        "comfortable": "Confortável"
       },
       "reading_mask": {
         "label": "Máscara de leitura",

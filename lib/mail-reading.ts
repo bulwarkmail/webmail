@@ -48,15 +48,6 @@ export function plainBodyFontSize(basePx: number, mailTextScale: number, fontSiz
 }
 
 /**
- * Widest the message card gets with the reading width at about 80
- * characters: the 80-character column at the mail's text size (a character
- * of the body fonts is about 0.55em, so 44em) and its gutters, 1.25rem a side.
- */
-export function readingCardWidth(mailTextScale: number, fontSize: FontSize, minPx: number): string {
-  return `calc(${plainBodyFontSize(MAIL_BASE_FONT_PX, mailTextScale, fontSize, minPx)} * 44 + 2.5rem)`;
-}
-
-/**
  * One element's text size after scaling by `factor` and raising it to the
  * minimum. A line height in px grows by the same ratio, so the enlarged text
  * doesn't overlap the next line; "normal" (null) needs nothing.
@@ -177,8 +168,6 @@ export type MailOverride = MailOverrideTheme & MailSpacing & { textFactor: numbe
 export interface MailFrameCssOptions {
   reduceMotion: boolean;
   underlineLinks?: boolean;
-  /** Keep lines to about 80 characters. */
-  comfortableWidth?: boolean;
   /** Replace the sender's fonts, sizes and colours; null leaves them. */
   override?: MailOverride | null;
   /** @font-face rules the override font needs inside the mail document. */
@@ -240,7 +229,6 @@ export function mailFrameCss(options: MailFrameCssOptions): string {
   if (options.fontFaceCss) parts.push(options.fontFaceCss);
   if (options.reduceMotion) parts.push(MAIL_REDUCED_MOTION_CSS);
   if (options.underlineLinks) parts.push('a[href]{text-decoration-line:underline!important}');
-  if (options.comfortableWidth) parts.push('body{max-width:80ch!important;margin-inline:auto!important}');
   if (options.override) parts.push(mailOverrideCss(options.override));
   return parts.join('\n');
 }

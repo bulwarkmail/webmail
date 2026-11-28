@@ -3541,9 +3541,9 @@
       },
       "reading_width": {
         "label": "Šírka čítania",
-        "description": "Obmedzí riadky v správach na približne 80 znakov, aby oči nemuseli prechádzať veľké vzdialenosti.",
+        "description": "Zobrazí správy vo vycentrovanom stĺpci, aby oči nemuseli prechádzať veľké vzdialenosti.",
         "full": "Plná šírka",
-        "comfortable": "Približne 80 znakov"
+        "comfortable": "Pohodlná"
       },
       "reading_mask": {
         "label": "Maska na čítanie",

@@ -3549,9 +3549,9 @@
       },
       "reading_width": {
         "label": "Lesebreidd",
-        "description": "Held linjene i meldingar til om lag 80 teikn, slik at augo ikkje treng å flytte seg så langt.",
+        "description": "Viser meldingar i ein midtstilt kolonne, slik at augo ikkje treng å flytte seg så langt.",
         "full": "Full breidd",
-        "comfortable": "Om lag 80 teikn"
+        "comfortable": "Behageleg"
       },
       "reading_mask": {
         "label": "Lesemaske",

@@ -3541,9 +3541,9 @@
       },
       "reading_width": {
         "label": "Amplada de lectura",
-        "description": "Limita les línies dels missatges a uns 80 caràcters perquè els ulls no hagin de fer tant recorregut.",
+        "description": "Mostra els missatges en una columna centrada perquè els ulls no hagin de fer tant recorregut.",
         "full": "Amplada completa",
-        "comfortable": "Uns 80 caràcters"
+        "comfortable": "Còmoda"
       },
       "reading_mask": {
         "label": "Màscara de lectura",

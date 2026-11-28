@@ -3541,9 +3541,9 @@
       },
       "reading_width": {
         "label": "阅读宽度",
-        "description": "将邮件中的每行限制在约 80 个字符，减少眼睛移动的距离。",
+        "description": "在居中的栏中显示邮件，减少眼睛移动的距离。",
         "full": "全宽",
-        "comfortable": "约 80 个字符"
+        "comfortable": "舒适"
       },
       "reading_mask": {
         "label": "阅读遮罩",

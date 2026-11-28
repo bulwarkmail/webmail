@@ -3541,9 +3541,9 @@
       },
       "reading_width": {
         "label": "읽기 너비",
-        "description": "메시지의 한 줄을 약 80자로 제한해서 시선을 멀리 옮기지 않아도 돼요.",
+        "description": "메시지를 가운데 열에 표시해서 시선을 멀리 옮기지 않아도 돼요.",
         "full": "전체 너비",
-        "comfortable": "약 80자"
+        "comfortable": "편안한 너비"
       },
       "reading_mask": {
         "label": "읽기 마스크",

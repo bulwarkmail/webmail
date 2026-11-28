@@ -3541,9 +3541,9 @@
       },
       "reading_width": {
         "label": "Leesbreedte",
-        "description": "Houdt regels in berichten op ongeveer 80 tekens, zodat je ogen niet zo ver hoeven te reizen.",
+        "description": "Toont berichten in een gecentreerde kolom, zodat je ogen niet zo ver hoeven te reizen.",
         "full": "Volledige breedte",
-        "comfortable": "Ongeveer 80 tekens"
+        "comfortable": "Comfortabel"
       },
       "reading_mask": {
         "label": "Leesmasker",

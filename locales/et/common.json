@@ -3541,9 +3541,9 @@
       },
       "reading_width": {
         "label": "Lugemislaius",
-        "description": "Hoiab kirjade read umbes 80 tähemärgi pikkused, et silmad ei peaks nii kaugele liikuma.",
+        "description": "Näitab kirju keskel olevas veerus, et silmad ei peaks nii kaugele liikuma.",
         "full": "Täislaius",
-        "comfortable": "Umbes 80 tähemärki"
+        "comfortable": "Mugav"
       },
       "reading_mask": {
         "label": "Lugemismask",

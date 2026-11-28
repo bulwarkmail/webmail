@@ -303,41 +303,40 @@ describe('mail in the app font and colours', () => {
 });
 
 describe('reading width', () => {
-  it('keeps HTML mail to about 80 characters a line, centred, when comfortable', async () => {
+  it('leaves HTML mail the whole width of the card when comfortable', async () => {
     useSettingsStore.setState({ readingWidth: 'comfortable' } as never);
     const { container } = await show(message({ html: '<p>Some <b>formatted</b> text</p>' }));
-    expect(container.querySelector('iframe')!.getAttribute('srcdoc')).toContain('body{max-width:80ch!important;margin-inline:auto!important}');
+    expect(container.querySelector('iframe')!.getAttribute('srcdoc')).not.toMatch(/body\{max-width/);
   });
 
-  it('keeps plain text to about 80 characters a line, centred, when comfortable', async () => {
+  it('leaves plain text the whole width of the card when comfortable', async () => {
     useSettingsStore.setState({ readingWidth: 'comfortable' } as never);
     await show(message({ text: 'Plain words here' }));
     const body = screen.getByText('Plain words here').closest('.email-content-text') as HTMLElement;
-    expect(body.style.maxWidth).toBe('80ch');
-    expect(body.style.marginInline).toBe('auto');
+    expect(body.style.maxWidth).toBe('');
   });
 
-  it('centres the reader view text at about 80 characters a line when comfortable', async () => {
+  it('centres the reader view text at the card width when comfortable', async () => {
     useSettingsStore.setState({ readingWidth: 'comfortable' } as never);
     await show(message({ html: '<p>Read this in peace.</p>' }));
     await act(async () => { screen.getByRole('button', { name: 'more_actions' }).click(); });
     const readerItem = screen.getAllByRole('menuitem').find((el) => el.textContent?.includes('reader_view'))!;
     await act(async () => { readerItem.click(); });
     const body = screen.getByTestId('reader-view-body');
-    expect(body.style.maxWidth).toBe('80ch');
+    expect(body.style.maxWidth).toBe('882px');
     expect(body.style.marginInline).toBe('auto');
   });
 
   it('uses the full width by default', async () => {
     const { container } = await show(message({ html: '<p>Some <b>formatted</b> text</p>' }));
-    expect(container.querySelector('iframe')!.getAttribute('srcdoc')).not.toContain('80ch');
+    expect(container.querySelector('iframe')!.getAttribute('srcdoc')).not.toMatch(/body\{max-width/);
   });
 });
 
 describe('message card', () => {
   const card = (container: HTMLElement) => container.querySelector<HTMLElement>('[data-reading-card]');
 
-  it('frames the message in a card on the pane when the reading width is about 80 characters', async () => {
+  it('frames the message in a card that fills the pane up to 882px when comfortable', async () => {
     useSettingsStore.setState({ readingWidth: 'comfortable' } as never);
     const { container } = await show(message({ html: '<p>Some text</p>' }));
     const frame = card(container)!;
@@ -347,9 +346,9 @@ describe('message card', () => {
     expect(frame).toHaveTextContent('Alice');
     // Its look comes from the theme: surface, border and corner tokens.
     expect(frame).toHaveClass('bg-card', 'border', 'border-border', 'rounded-xl');
-    // Centred, and no wider than the 80-character column it frames.
-    expect(frame).toHaveClass('mx-auto', 'max-w-(--reading-card-width)');
-    expect(frame.style.getPropertyValue('--reading-card-width')).toBe('calc(0.875rem * 44 + 2.5rem)');
+    expect(frame).toHaveClass('mx-auto', 'my-5', 'max-w-[882px]');
+    expect(frame.style.getPropertyValue('--reading-card-width')).toBe('');
+    expect(container.querySelector<HTMLElement>('[data-reader-scroll]')).toHaveClass('px-5');
   });
 
   it('puts the mail body on the card surface, also in dark mode', async () => {
@@ -401,15 +400,16 @@ describe('message card', () => {
     const { container } = await show(message({ html: '<p>Some text</p>' }));
     expect(card(container)).toBeNull();
     const pane = container.querySelector<HTMLElement>('[data-reader-scroll]')!;
-    expect(pane).not.toHaveClass('px-4');
+    expect(pane).not.toHaveClass('px-5');
     expect(pane.firstElementChild!.className).toBe('min-h-full flex flex-col');
   });
 
-  it('makes room in Mountain View for the bodies indented under the sender', async () => {
+  it('keeps the same card width in Mountain View', async () => {
     useSettingsStore.setState({ readingWidth: 'comfortable', interfaceLayout: 'mountain-view' } as never);
     try {
       const { container } = await show(message({ html: '<p>Some text</p>' }));
-      expect(card(container)!.style.getPropertyValue('--reading-card-width')).toBe('calc(calc(0.875rem * 44 + 2.5rem) + 4rem)');
+      expect(card(container)).toHaveClass('max-w-[882px]');
+      expect(card(container)!.style.getPropertyValue('--reading-card-width')).toBe('');
     } finally {
       useSettingsStore.setState({ interfaceLayout: 'default' } as never);
     }

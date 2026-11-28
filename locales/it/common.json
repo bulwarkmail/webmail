@@ -3541,9 +3541,9 @@
       },
       "reading_width": {
         "label": "Larghezza di lettura",
-        "description": "Limita le righe nei messaggi a circa 80 caratteri, così gli occhi non devono spostarsi troppo.",
+        "description": "Mostra i messaggi in una colonna centrata, così gli occhi non devono spostarsi troppo.",
         "full": "Larghezza intera",
-        "comfortable": "Circa 80 caratteri"
+        "comfortable": "Comoda"
       },
       "reading_mask": {
         "label": "Maschera di lettura",
