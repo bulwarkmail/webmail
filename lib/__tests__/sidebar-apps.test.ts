@@ -254,3 +254,18 @@ describe('sidebar app frame rights', () => {
     expect(managedAppOriginsWith(undefined, 'camera')).toEqual([]);
   });
 });
+
+describe('an app of the policy that reports its count', () => {
+  const base = { id: 'chat', name: 'Chat', url: 'https://chat.example.com/', icon: 'Globe', showOnMobile: false };
+
+  it('keeps badge: true for an inline app only, absent otherwise', () => {
+    const [inline, tab, off] = sanitizeDefaultSidebarApps([
+      { ...base, openMode: 'inline', badge: true },
+      { ...base, id: 'tab', openMode: 'tab', badge: true },
+      { ...base, id: 'off', openMode: 'inline', badge: 'yes' },
+    ]);
+    expect(inline.badge).toBe(true);
+    expect(tab).not.toHaveProperty('badge');
+    expect(off).not.toHaveProperty('badge');
+  });
+});

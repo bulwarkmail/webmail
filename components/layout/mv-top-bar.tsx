@@ -38,6 +38,7 @@ import { useSettingsStore } from "@/stores/settings-store";
 import { useAccountStore } from "@/stores/account-store";
 import { AccountSwitcher } from "@/components/layout/account-switcher";
 import { SidebarAppIcon } from "@/components/layout/sidebar-app-icon";
+import { SidebarAppBadge, useSidebarAppBadges } from "@/components/layout/sidebar-app-badge";
 import { SearchBox, type ContactSearchField } from "@/components/search/search-box";
 import { PluginActions } from "@/components/plugins/plugin-actions";
 import { usePluginPages, pluginPageHref, isPluginPageActive } from "@/hooks/use-plugin-pages";
@@ -152,6 +153,7 @@ export function MvTopBar({
   // The same gate the navigation rail puts on its "add app" button.
   const sidebarAppsEnabled = usePolicyStore((s) => s.isFeatureEnabled("sidebarAppsEnabled"));
   const sidebarApps = useResolvedSidebarApps();
+  const appBadge = useSidebarAppBadges();
   const pluginPages = usePluginPages();
   const isStalwartAdmin = useStalwartAdmin();
   const hasUpdate = useUpdateStore(selectHasUpdate);
@@ -425,8 +427,13 @@ export function MvTopBar({
                         "flex flex-col items-center gap-1.5 rounded-lg py-3 px-1 text-center transition-colors hover:bg-muted",
                         activeAppId === app.id && "bg-muted"
                       )}
+                      aria-label={appBadge(app).label}
+                      title={appBadge(app).stateText}
                     >
-                      <SidebarAppIcon app={app} className="w-6 h-6 text-muted-foreground" />
+                      <span className="relative">
+                        <SidebarAppIcon app={app} className="w-6 h-6 text-muted-foreground" />
+                        <SidebarAppBadge mark={appBadge(app).mark} placement="icon" />
+                      </span>
                       <span className="text-xs truncate max-w-full">{app.name}</span>
                     </button>
                   );

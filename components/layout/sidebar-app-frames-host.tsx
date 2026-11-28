@@ -7,7 +7,13 @@ import { useStrictestDevices } from '@/hooks/use-device-policy';
 import { appFrameRights } from '@/lib/sidebar-apps';
 import { useAuthStore } from '@/stores/auth-store';
 import { usePolicyStore } from '@/stores/policy-store';
-import { parseAppBadgeMessage, useSidebarAppFramesStore } from '@/stores/sidebar-app-frames-store';
+import {
+  parseAppBadgeMessage,
+  SILENT_MS,
+  SILENT_RELOAD_MS,
+  useSidebarAppFramesStore,
+  type AppBadgeStatus,
+} from '@/stores/sidebar-app-frames-store';
 
 interface Box {
   top: number;
@@ -45,6 +51,50 @@ function useViewportBox(el: HTMLElement | null): Box | null {
   return box;
 }
 
+/** The least time between two loads of a frame anew (the badge's states). */
+export const RELOAD_GAP_MS = 5_000;
+
+/**
+ * Calls back when the user comes back to this window: it has the focus again
+ * from another window, or the tab is shown again. Not when the focus only
+ * comes back from one of the page's own frames (the user clicked out of the
+ * app into Bulwark), which would load anew an app they just typed into.
+ */
+function useWindowReturn(onReturn: () => void) {
+  const latest = useRef(onReturn);
+  useEffect(() => {
+    latest.current = onReturn;
+  });
+  useEffect(() => {
+    let intoFrame = false;
+    let check: ReturnType<typeof setTimeout> | undefined;
+    const onBlur = () => {
+      // Where the focus went is known only once the blur is over.
+      check = setTimeout(() => {
+        intoFrame = document.activeElement instanceof HTMLIFrameElement;
+      }, 0);
+    };
+    const onFocus = () => {
+      clearTimeout(check);
+      const fromFrame = intoFrame;
+      intoFrame = false;
+      if (!fromFrame) latest.current();
+    };
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') latest.current();
+    };
+    window.addEventListener('blur', onBlur);
+    window.addEventListener('focus', onFocus);
+    document.addEventListener('visibilitychange', onVisible);
+    return () => {
+      clearTimeout(check);
+      window.removeEventListener('blur', onBlur);
+      window.removeEventListener('focus', onFocus);
+      document.removeEventListener('visibilitychange', onVisible);
+    };
+  }, []);
+}
+
 /**
  * The frames of inline sidebar apps, for the whole tab. A page shows an app by
  * giving its pane to the store (InlineAppView) and the frame is laid over that
@@ -62,6 +112,83 @@ export function SidebarAppFramesHost() {
   const downloadsOff = useStrictestDevices().noDownloads;
   const box = useViewportBox(shown?.slot ?? null);
   const frameRefs = useRef(new Map<string, HTMLIFrameElement>());
+  /** Each app's frame element as last made, to tell a new frame from a render. */
+  const made = useRef(new Map<string, HTMLIFrameElement>());
+
+  // Silence: an app of the policy with `badge: true` promises to report. From
+  // its frame's making, and each time Bulwark loads it anew, until its first
+  // message, at most SILENT_MS, else it is `silent` (unreachable, its
+  // reporting part missing, the frame refused). Not from each `load`: an app
+  // may report from a startup script before its images and fonts are in, and
+  // then only on a change, so a quiet app that said "ok" stays so.
+  const reports = (appId: string) => managedApps.some((a) => a.id === appId && a.badge === true);
+  const silence = useRef(new Map<string, ReturnType<typeof setTimeout>>());
+  const heard = (appId: string) => {
+    clearTimeout(silence.current.get(appId));
+    silence.current.delete(appId);
+  };
+  const listen = (appId: string) => {
+    if (!reports(appId)) return;
+    heard(appId);
+    silence.current.set(
+      appId,
+      setTimeout(() => {
+        silence.current.delete(appId);
+        const store = useSidebarAppFramesStore.getState();
+        const last = store.badges[appId];
+        store.setBadge(appId, {
+          count: last?.count ?? 0,
+          ...(last?.mentions !== undefined ? { mentions: last.mentions } : {}),
+          state: 'silent',
+        });
+      }, SILENT_MS)
+    );
+  };
+  useEffect(() => {
+    for (const appId of [...silence.current.keys()]) {
+      if (!frames.some((f) => f.id === appId)) heard(appId);
+    }
+  }, [frames]);
+  useEffect(() => {
+    const timers = silence.current;
+    return () => {
+      for (const timer of timers.values()) clearTimeout(timer);
+      timers.clear();
+    };
+  }, []);
+
+  // A frame whose app is signed out or silent is loaded anew when the user
+  // comes back to the window, a silent one also every SILENT_RELOAD_MS:
+  // signed in elsewhere, or the app reachable again, the count returns. The
+  // state stays until the new document says otherwise, so nothing flashes.
+  const lastLoad = useRef(new Map<string, number>());
+  const loadAnew = (states: readonly AppBadgeStatus[]) => {
+    const { badges, frames: live } = useSidebarAppFramesStore.getState();
+    for (const app of live) {
+      const frame = frameRefs.current.get(app.id);
+      const state = badges[app.id]?.state;
+      if (!frame || !state || !states.includes(state)) continue;
+      const now = Date.now();
+      if (now - (lastLoad.current.get(app.id) ?? 0) < RELOAD_GAP_MS) continue;
+      lastLoad.current.set(app.id, now);
+      // Setting src navigates even to the same URL; a cross-origin frame cannot be told to reload.
+      frame.src = frame.getAttribute('src') ?? app.url;
+      listen(app.id);
+    }
+  };
+  useWindowReturn(() => loadAnew(['signed-out', 'silent']));
+  // The interval calls this render's loadAnew (it starts the silence timer,
+  // which reads the policy's apps).
+  const latestLoadAnew = useRef(loadAnew);
+  useEffect(() => {
+    latestLoadAnew.current = loadAnew;
+  });
+  const anySilent = useSidebarAppFramesStore((s) => Object.values(s.badges).some((b) => b.state === 'silent'));
+  useEffect(() => {
+    if (!anySilent) return;
+    const timer = setInterval(() => latestLoadAnew.current(['silent']), SILENT_RELOAD_MS);
+    return () => clearInterval(timer);
+  }, [anySilent]);
 
   // Until an app's first load its frame holds the initial about:blank. That
   // document's color scheme is "normal" while the frame element inherits the
@@ -116,12 +243,15 @@ export function SidebarAppFramesHost() {
         }
         if (event.origin !== origin) return;
         const badge = parseAppBadgeMessage(event.data);
-        if (badge !== undefined) useSidebarAppFramesStore.getState().setBadge(app.id, badge);
+        if (badge === undefined) return;
+        heard(app.id);
+        useSidebarAppFramesStore.getState().setBadge(app.id, badge);
         return;
       }
     };
     window.addEventListener('message', onMessage);
     return () => window.removeEventListener('message', onMessage);
+    // `heard` reads only a ref.
   }, []);
 
   if (frames.length === 0) return null;
@@ -140,8 +270,17 @@ export function SidebarAppFramesHost() {
           <iframe
             key={app.id}
             ref={(el) => {
-              if (el) frameRefs.current.set(app.id, el);
-              else frameRefs.current.delete(app.id);
+              if (!el) {
+                frameRefs.current.delete(app.id);
+                return;
+              }
+              frameRefs.current.set(app.id, el);
+              // A new frame is waited for from now: Firefox fires no `load` for a
+              // frame whose address refuses the connection. (React calls an inline
+              // ref again on every render, with null first: only a frame not seen.)
+              if (made.current.get(app.id) === el) return;
+              made.current.set(app.id, el);
+              listen(app.id);
             }}
             src={app.url}
             title={app.name}

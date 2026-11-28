@@ -139,6 +139,8 @@ export function sanitizeDefaultSidebarApps(raw: unknown): AdminSidebarApp[] {
       openMode,
       showOnMobile: app.showOnMobile === true,
       ...(allow.length > 0 ? { allow } : {}),
+      // Only an inline app has a frame to report from; absent unless on.
+      ...(app.badge === true && openMode === 'inline' ? { badge: true } : {}),
     });
     if (out.length >= MAX_DEFAULT_SIDEBAR_APPS) break;
   }
