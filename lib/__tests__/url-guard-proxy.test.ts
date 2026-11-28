@@ -126,6 +126,40 @@ describe('fetchPublicUrl behind an outbound proxy', () => {
     expect(tunnels).toEqual([]);
   });
 
+  it('tunnels through the proxy to an allowlisted private hostname', async () => {
+    useProxy();
+    lookup.mockResolvedValue([{ address: '127.0.0.1', family: 4 }]);
+    const { fetchPublicUrl, DisallowedUrlError } = await import('@/lib/security/url-guard');
+    const origin = `http://cal.example:${originPort}`;
+
+    const res = await fetchPublicUrl(
+      `${origin}/a.ics`,
+      { signal: AbortSignal.timeout(3000) },
+      { allowedPrivateUrls: [origin] },
+    );
+    expect(await res.text()).toContain('BEGIN:VCALENDAR');
+    expect(tunnels.map((t) => t.target)).toEqual([`127.0.0.1:${originPort}`]);
+    expect(originHosts).toEqual([`cal.example:${originPort}`]);
+
+    await expect(fetchPublicUrl(`http://other.example:${originPort}/a.ics`, {}, { allowedPrivateUrls: [origin] }))
+      .rejects.toBeInstanceOf(DisallowedUrlError);
+  });
+
+  it('tunnels through the proxy to an allowlisted private literal', async () => {
+    useProxy();
+    lookup.mockResolvedValue([{ address: '10.1.2.3', family: 4 }]);
+    const { fetchPublicUrl } = await import('@/lib/security/url-guard');
+    const origin = `http://10.1.2.3:${originPort}`;
+
+    const res = await fetchPublicUrl(
+      `${origin}/a.ics`,
+      { signal: AbortSignal.timeout(3000) },
+      { allowedPrivateUrls: [origin] },
+    );
+    expect(await res.text()).toContain('BEGIN:VCALENDAR');
+    expect(tunnels.map((t) => t.target)).toEqual([`10.1.2.3:${originPort}`]);
+  });
+
   it('refuses a name that resolves to a private address, without a proxy', async () => {
     lookup.mockResolvedValue([{ address: '127.0.0.1', family: 4 }]);
     const { fetchPublicUrl, DisallowedUrlError } = await import('@/lib/security/url-guard');

@@ -63,11 +63,19 @@ type FetchOutcome =
  * `fetchPublicUrl`, which validates the resolved address inside the socket
  * lookup so a rebinding DNS server cannot steer the connection at an
  * internal host (GHSA-24w9-8r42-8jwm). `allowPrivateHost` lifts that for the
- * one hostname of a company calendar the admin entered (an intranet host).
+ * one hostname of a company calendar the admin entered (an intranet host);
+ * `allowedPrivateUrls` lifts it for exact origins the admin configured through
+ * ICAL_ALLOWED_LOCAL_ORIGINS, which any signed-in user may use.
  */
 async function fetchIcal(
   url: string,
-  options: { allowPrivateHost?: string; etag?: string | null; lastModified?: string | null; requireCalendar?: boolean } = {},
+  options: {
+    allowPrivateHost?: string;
+    allowedPrivateUrls?: readonly string[];
+    etag?: string | null;
+    lastModified?: string | null;
+    requireCalendar?: boolean;
+  } = {},
 ): Promise<FetchOutcome> {
   const fail = (error: string, status: number): FetchOutcome => ({ kind: 'error', response: NextResponse.json({ error }, { status }) });
   const extracted = extractBasicAuth(url);
@@ -99,9 +107,17 @@ async function fetchIcal(
       try {
         const init = { signal: controller.signal, headers };
         // The intranet exception holds for the admin's own address only, not
-        // for a redirect to another port or host.
-        response = options.allowPrivateHost && new URL(currentUrl).origin === originalOrigin
-          ? await fetchPublicUrl(currentUrl, init, { allowPrivateHost: options.allowPrivateHost })
+        // for a redirect to another port or host. Private URL exceptions are
+        // exact origins: they cover a redirect only to another listed origin.
+        const fetchOptions: NonNullable<Parameters<typeof fetchPublicUrl>[2]> = {};
+        if (options.allowPrivateHost && new URL(currentUrl).origin === originalOrigin) {
+          fetchOptions.allowPrivateHost = options.allowPrivateHost;
+        }
+        if (options.allowedPrivateUrls?.length) {
+          fetchOptions.allowedPrivateUrls = options.allowedPrivateUrls;
+        }
+        response = Object.keys(fetchOptions).length
+          ? await fetchPublicUrl(currentUrl, init, fetchOptions)
           : await fetchPublicUrl(currentUrl, init);
       } catch (error) {
         if (error instanceof DisallowedUrlError) {
@@ -262,7 +278,13 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'URL is required' }, { status: 400 });
   }
 
-  const outcome = await fetchIcal(url);
+  // The admin configures these exact origins for the deployment; every
+  // signed-in mailbox user may use them. Without the setting, only public URLs
+  // are fetched.
+  const allowedPrivateUrls = (process.env.ICAL_ALLOWED_LOCAL_ORIGINS ?? '')
+    .split(',').map((entry) => entry.trim()).filter(Boolean);
+
+  const outcome = await fetchIcal(url, { allowedPrivateUrls });
   if (outcome.kind === 'ok') return icalResponse(outcome.buffer);
   if (outcome.kind === 'error') return outcome.response;
   return NextResponse.json({ error: 'Failed to fetch calendar' }, { status: 502 });

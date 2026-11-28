@@ -52,11 +52,36 @@ describe('POST /api/fetch-ical', () => {
   beforeEach(() => {
     mockCreds.mockReset();
     guardedFetch.mockReset();
+    vi.stubEnv('ICAL_ALLOWED_LOCAL_ORIGINS', '');
     mockCreds.mockResolvedValue({ serverUrl: 'https://mail.example.com', authHeader: 'Basic x', username: 'u' });
   });
 
   afterEach(() => {
     vi.unstubAllEnvs();
+  });
+
+  it('applies the configured allowlist to any signed-in user', async () => {
+    vi.stubEnv('ICAL_ALLOWED_LOCAL_ORIGINS', 'http://10.0.0.5:8080');
+    guardedFetch.mockResolvedValueOnce(ics());
+    const res = await POST(makeReq({ url: 'http://10.0.0.5:8080/feed.ics' }));
+    expect(res.status).toBe(200);
+    expect(guardedFetch).toHaveBeenCalledTimes(1);
+    expect(guardedFetch.mock.calls[0][0]).toBe('http://10.0.0.5:8080/feed.ics');
+    expect(guardedFetch.mock.calls[0][2]).toEqual({ allowedPrivateUrls: ['http://10.0.0.5:8080'] });
+  });
+
+  it('guards redirects even when the first URL is allowlisted', async () => {
+    vi.stubEnv('ICAL_ALLOWED_LOCAL_ORIGINS', 'http://10.0.0.5:8080');
+    guardedFetch.mockResolvedValueOnce(new Response(null, {
+      status: 302, headers: { location: 'http://10.0.0.6:8080/feed.ics' },
+    }));
+    guardedFetch.mockRejectedValueOnce(new DisallowedUrlError('http://10.0.0.6:8080/feed.ics'));
+    const res = await POST(makeReq({ url: 'http://10.0.0.5:8080/feed.ics' }));
+    expect(res.status).toBe(400);
+    expect(guardedFetch).toHaveBeenCalledTimes(2);
+    expect(guardedFetch.mock.calls[0][2]).toEqual({ allowedPrivateUrls: ['http://10.0.0.5:8080'] });
+    expect(guardedFetch.mock.calls[1][2]).toEqual({ allowedPrivateUrls: ['http://10.0.0.5:8080'] });
+    expect(guardedFetch.mock.calls[1][0]).toBe('http://10.0.0.6:8080/feed.ics');
   });
 
   describe('response size limit (#692)', () => {
