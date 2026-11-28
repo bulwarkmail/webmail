@@ -5,7 +5,7 @@
 // at a time. Prompts collect one or more (optionally masked) text fields so a
 // plugin never has to fall back to the sandbox-blocked `window.prompt`.
 
-import type { AnchorRect } from './dialog-anchor';
+import type { AnchorRect, PopoverSide } from './dialog-anchor';
 
 export type DialogKind = 'confirm' | 'alert' | 'prompt' | 'custom';
 
@@ -60,10 +60,17 @@ export interface DialogRequest {
   width?: number;
   /**
    * Custom kind only: draw the dialog as a popover next to this place (the
-   * control whose activation led to it, see dialog-anchor.ts) instead of
-   * centred. Set by the host, never taken from the plugin.
+   * control whose activation led to it, the calling frame, or a spot the
+   * plugin names inside that frame; see dialog-anchor.ts) instead of
+   * centred. Measured by the host; a spot the plugin names is clamped to
+   * its own frame, so it never points elsewhere on the page.
    */
   anchor?: AnchorRect;
+  /**
+   * Which side of `anchor` the popover stands at: `end` for `anchor: 'frame'`
+   * (beside the calling frame, bottoms lined up), else below.
+   */
+  anchorSide?: PopoverSide;
   /** Called when the dialog closes with its typed result (see DialogResult). */
   resolve: (result: unknown) => void;
 }

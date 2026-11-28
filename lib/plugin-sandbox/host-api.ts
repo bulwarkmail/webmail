@@ -53,7 +53,7 @@ import { isValidKeywordDefinitionId, MAX_KEYWORD_LABEL_LENGTH } from '../keyword
 import { emailKeyFor } from '../thread-utils';
 import { DEFAULT_SEARCH_FILTERS, isFilterEmpty, normalizePluginFilter, type PluginListedEmail } from '../jmap/search-utils';
 import { awaitDialog, awaitPrompt, awaitCustomDialog, type PromptField } from './host-dialog';
-import { triggerAnchor } from './dialog-anchor';
+import { frameAnchor, rectAnchor, triggerAnchor, type AnchorRect } from './dialog-anchor';
 import { fileStorage } from '../plugin-storage';
 import { generateUUID } from '../utils';
 import { AddressBook, ContactCard, Email, Identity } from '../jmap/types';
@@ -2156,12 +2156,34 @@ async function adminDelete(pluginId: string, key: string): Promise<void> {
 
 // ─── Dispatcher ──────────────────────────────────────────────
 
+/**
+ * Where ui.openDialog's popover stands, as the host decides it: `trigger`
+ * beside the last activation, `frame` beside the calling frame (its end
+ * side), a rect below that spot of the calling frame (clamped to it);
+ * none (centred) for anything else or when there is no such place.
+ */
+function dialogAnchor(asked: unknown, frame: Element | undefined): { anchor?: AnchorRect; anchorSide?: 'end' } {
+  if (asked === 'trigger') {
+    const anchor = triggerAnchor();
+    return anchor ? { anchor } : {};
+  }
+  if (asked === 'frame') {
+    const anchor = frameAnchor(frame);
+    return anchor ? { anchor, anchorSide: 'end' } : {};
+  }
+  if (asked && typeof asked === 'object') {
+    const anchor = rectAnchor(asked, frame);
+    return anchor ? { anchor } : {};
+  }
+  return {};
+}
+
 /** Resolves an api-request method against the per-plugin permissions. */
 export async function dispatchApiCall(
   plugin: InstalledPlugin,
   method: string,
   args: unknown[],
-  opts?: { privileged?: boolean; sink?: StreamSink; eventSink?: EventStreamSink; toastSignal?: AbortSignal; frame?: 'background' | 'slot' },
+  opts?: { privileged?: boolean; sink?: StreamSink; eventSink?: EventStreamSink; toastSignal?: AbortSignal; frame?: 'background' | 'slot'; frameElement?: Element },
 ): Promise<unknown> {
   // Tier gate: privileged-only methods are refused for untrusted (null-origin)
   // instances even if the permission is somehow present. Defence-in-depth on
@@ -2388,22 +2410,25 @@ export async function dispatchApiCall(
       // real app-root overlay, instead of a fixed confirm/prompt form - see
       // the 'plugin-dialog' SlotName / host-dialog.ts comments for why this
       // exists (a small toolbar/row slot can't show a large custom UI).
-      const opts = (args[0] ?? {}) as { title?: unknown; slot?: string; extraProps?: Record<string, unknown>; width?: number; fill?: boolean; anchor?: unknown };
-      if (!opts.slot || typeof opts.slot !== 'string') {
+      const dialogOpts = (args[0] ?? {}) as { title?: unknown; slot?: string; extraProps?: Record<string, unknown>; width?: number; fill?: boolean; anchor?: unknown };
+      if (!dialogOpts.slot || typeof dialogOpts.slot !== 'string') {
         throw new Error('ui.openDialog requires a "slot" name');
       }
       return awaitCustomDialog({
         pluginId: plugin.id,
-        title: typeof opts.title === 'string' ? opts.title : (plugin.name ?? ''),
+        title: typeof dialogOpts.title === 'string' ? dialogOpts.title : (plugin.name ?? ''),
         message: '',
-        slot: opts.slot,
-        extraProps: (opts.extraProps && typeof opts.extraProps === 'object') ? opts.extraProps : {},
-        width: typeof opts.width === 'number' ? opts.width : undefined,
-        ...(opts.fill === true ? { fill: true } : {}),
-        // Next to what the user just clicked, when the plugin asks and there
-        // was such a click; the place is the host's, never the plugin's. With
-        // fill the popover takes the filled dialog's height.
-        anchor: opts.anchor === 'trigger' ? triggerAnchor() ?? undefined : undefined,
+        slot: dialogOpts.slot,
+        extraProps: (dialogOpts.extraProps && typeof dialogOpts.extraProps === 'object') ? dialogOpts.extraProps : {},
+        width: typeof dialogOpts.width === 'number' ? dialogOpts.width : undefined,
+        ...(dialogOpts.fill === true ? { fill: true } : {}),
+        // `trigger`: next to what the user just clicked, when there was such
+        // a click. `frame`: beside the frame that asked (a rail button), no
+        // click needed. A rect: below that spot of the frame, clamped to it.
+        // The host measures the place; a background frame has none, so the
+        // dialog stays centred. With fill the popover takes the filled
+        // dialog's height.
+        ...dialogAnchor(dialogOpts.anchor, opts?.frame === 'slot' ? opts.frameElement : undefined),
       });
     }
     case 'ui.showNotice': return showNotice(plugin, args[0], opts?.toastSignal);

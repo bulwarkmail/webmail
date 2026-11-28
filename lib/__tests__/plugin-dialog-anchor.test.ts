@@ -3,7 +3,7 @@ import type { InstalledPlugin } from '../plugin-types';
 import { dispatchApiCall } from '../plugin-sandbox/host-api';
 import { head, resetDialogLimits, resolveHead } from '../plugin-sandbox/host-dialog';
 import {
-  forgetTrigger, noteTrigger, placePopover, trackTriggers, triggerAnchor, POPOVER_GAP, POPOVER_MARGIN, TRIGGER_WINDOW_MS,
+  forgetTrigger, frameAnchor, noteTrigger, placePopover, trackTriggers, triggerAnchor, POPOVER_GAP, POPOVER_MARGIN, TRIGGER_WINDOW_MS,
 } from '../plugin-sandbox/dialog-anchor';
 
 // api.ui.openDialog({ anchor: 'trigger' }): the dialog beside the control the
@@ -105,7 +105,116 @@ describe('placePopover', () => {
   });
 });
 
+describe('placePopover at the end side', () => {
+  const viewport = { width: 1000, height: 800 };
+  const size = { width: 340, height: 600 };
+  // A rail's foot: 55 px wide, its button at the window's bottom.
+  const flag = { left: 0, top: 740, right: 55, bottom: 780 };
+
+  it('stands right of the anchor, bottoms lined up', () => {
+    expect(placePopover(flag, size, viewport, false, 'end')).toEqual({ left: 55 + POPOVER_GAP, top: 780 - 600 });
+  });
+
+  it('stands left of it in RTL', () => {
+    const rtlFlag = { left: 945, top: 740, right: 1000, bottom: 780 };
+    expect(placePopover(rtlFlag, size, viewport, true, 'end')).toEqual({ left: 945 - POPOVER_GAP - 340, top: 180 });
+  });
+
+  it('goes to the start side when the end side has no room', () => {
+    expect(placePopover({ left: 900, top: 100, right: 950, bottom: 140 }, { width: 340, height: 100 }, viewport, false, 'end').left)
+      .toBe(900 - POPOVER_GAP - 340);
+  });
+
+  it('stays inside a small window', () => {
+    const small = { width: 300, height: 400 };
+    expect(placePopover({ left: 0, top: 350, right: 55, bottom: 390 }, size, small, false, 'end'))
+      .toEqual({ left: POPOVER_MARGIN, top: POPOVER_MARGIN });
+    expect(placePopover({ left: 0, top: 10, right: 55, bottom: 50 }, { width: 200, height: 300 }, small, false, 'end').top)
+      .toBe(POPOVER_MARGIN);
+  });
+});
+
+describe('frameAnchor', () => {
+  it("is the frame's place, none for one gone or without size", () => {
+    const frame = control('<iframe data-at></iframe>', { left: 0, top: 740, width: 55, height: 40 });
+    expect(frameAnchor(frame)).toEqual({ left: 0, top: 740, right: 55, bottom: 780 });
+    const hidden = control('<iframe data-at></iframe>', { left: 0, top: 0, width: 1, height: 1 });
+    expect(frameAnchor(hidden)).toBeNull();
+    // display: none measures 0 x 0.
+    const none = control('<iframe data-at></iframe>', { left: 0, top: 0, width: 0, height: 0 });
+    expect(frameAnchor(none)).toBeNull();
+    frame.remove();
+    expect(frameAnchor(frame)).toBeNull();
+    expect(frameAnchor(undefined)).toBeNull();
+  });
+});
+
 describe("ui.openDialog's anchor", () => {
+  it("is the calling frame's place, at its end side, without any click", async () => {
+    const frame = control('<iframe data-at></iframe>', { left: 0, top: 740, width: 55, height: 40 });
+    const result = dispatchApiCall(plugin(), 'ui.openDialog', [{ slot: 'plugin-dialog', anchor: 'frame', width: 340 }], { frame: 'slot', frameElement: frame });
+    await vi.waitFor(() => expect(head()).not.toBeNull());
+    expect(head()?.anchor).toEqual({ left: 0, top: 740, right: 55, bottom: 780 });
+    expect(head()?.anchorSide).toBe('end');
+    resolveHead(null);
+    await expect(result).resolves.toBeNull();
+  });
+
+  it("is a spot of the calling frame below which it stands, clamped to the frame", async () => {
+    const frame = control('<iframe data-at></iframe>', { left: 60, top: 0, width: 800, height: 30 });
+    const result = dispatchApiCall(plugin(), 'ui.openDialog', [{ slot: 'plugin-dialog', anchor: { left: 120, top: 4, right: 200, bottom: 26 }, width: 260 }], { frame: 'slot', frameElement: frame });
+    await vi.waitFor(() => expect(head()).not.toBeNull());
+    expect(head()?.anchor).toEqual({ left: 180, top: 4, right: 260, bottom: 26 });
+    expect(head()?.anchorSide).toBeUndefined();
+    resolveHead(null);
+    await result;
+    // Never outside the frame: a spot beyond it is cut to its edges.
+    const far = dispatchApiCall(plugin(), 'ui.openDialog', [{ slot: 'plugin-dialog', anchor: { left: -500, top: -9, right: 5000, bottom: 900 } }], { frame: 'slot', frameElement: frame });
+    await vi.waitFor(() => expect(head()).not.toBeNull());
+    expect(head()?.anchor).toEqual({ left: 60, top: 0, right: 860, bottom: 30 });
+    resolveHead(null);
+    await far;
+    // Sides given the wrong way round are taken in order.
+    const turned = dispatchApiCall(plugin(), 'ui.openDialog', [{ slot: 'plugin-dialog', anchor: { left: 200, top: 26, right: 120, bottom: 4 } }], { frame: 'slot', frameElement: frame });
+    await vi.waitFor(() => expect(head()).not.toBeNull());
+    expect(head()?.anchor).toEqual({ left: 180, top: 4, right: 260, bottom: 26 });
+    resolveHead(null);
+    await turned;
+  });
+
+  it('is none for a rect from the background frame or one not of numbers', async () => {
+    const frame = control('<iframe data-at></iframe>', { left: 60, top: 0, width: 800, height: 30 });
+    const calls: [unknown, 'background' | 'slot'][] = [
+      [{ left: 1, top: 1, right: 2, bottom: 2 }, 'background'],
+      [{ left: '1', top: 1, right: 2, bottom: 2 }, 'slot'],
+      [{ left: Number.NaN, top: 1, right: 2, bottom: 2 }, 'slot'],
+      [{ left: 1, top: 1, right: Number.POSITIVE_INFINITY, bottom: 2 }, 'slot'],
+      [[1, 1, 2, 2], 'slot'],
+      // A DOMRect spread into an object: its sides are getters, so nothing comes along.
+      [{}, 'slot'],
+    ];
+    for (const [anchor, kind] of calls) {
+      const result = dispatchApiCall(plugin(), 'ui.openDialog', [{ slot: 'plugin-dialog', anchor }], { frame: kind, frameElement: frame });
+      await vi.waitFor(() => expect(head()).not.toBeNull());
+      expect(head()?.anchor).toBeUndefined();
+      resolveHead(null);
+      await result;
+    }
+  });
+
+  it('is none for the background frame or an unknown value', async () => {
+    const frame = control('<iframe data-at></iframe>', { left: 0, top: 740, width: 55, height: 40 });
+    const calls: [unknown, 'background' | 'slot'][] = [['frame', 'background'], ['beside', 'slot']];
+    for (const [anchor, kind] of calls) {
+      const result = dispatchApiCall(plugin(), 'ui.openDialog', [{ slot: 'plugin-dialog', anchor }], { frame: kind, frameElement: frame });
+      await vi.waitFor(() => expect(head()).not.toBeNull());
+      expect(head()?.anchor).toBeUndefined();
+      expect(head()?.anchorSide).toBeUndefined();
+      resolveHead(null);
+      await result;
+    }
+  });
+
   it("is the trigger's place when the plugin asks for it", async () => {
     const button = control('<button data-at>Follow up</button>', { left: 100, top: 50, width: 24, height: 24 });
     button.dispatchEvent(new MouseEvent('pointerdown', { bubbles: true, clientX: 110, clientY: 60 }));

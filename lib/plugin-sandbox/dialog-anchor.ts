@@ -7,6 +7,16 @@
 // it within TRIGGER_WINDOW_MS takes that place. Any other key forgets it, so
 // a keyboard shortcut (s to star) never borrows an older click's place.
 // Without one the dialog is centred as before.
+//
+// `anchor: 'frame'` needs no activation: the popover stands beside the
+// plugin frame that asked for it (a rail button's frame), at the frame's end
+// side with its bottom lined up with the frame's bottom. So it is placed the
+// same when opened by keyboard or again after another dialog.
+//
+// `anchor: { left, top, right, bottom }` names a spot inside the calling
+// frame (its own coordinates): the popover stands below it, as for a
+// trigger. A tile in a top banner opens its menu there, over the page,
+// instead of making its frame taller.
 
 /** A place in viewport coordinates; a point has left === right, top === bottom. */
 export interface AnchorRect {
@@ -75,6 +85,40 @@ export function triggerAnchor(now = Date.now()): AnchorRect | null {
   return last.rect;
 }
 
+/**
+ * The place of the plugin frame that asked for a dialog, or null when it is
+ * not on the page or has no size (a background frame).
+ */
+export function frameAnchor(frame: Element | null | undefined): AnchorRect | null {
+  if (!frame?.isConnected) return null;
+  const r = rectOf(frame);
+  if (r.right - r.left <= 1 || r.bottom - r.top <= 1) return null;
+  return r;
+}
+
+/**
+ * A place the calling frame names inside itself (`anchor: { left, top,
+ * right, bottom }` in the frame's own CSS pixels: a tile in a top banner),
+ * clamped to the frame and turned into viewport coordinates; null for a
+ * frame gone or without size, or anything but four numbers. The plugin
+ * names a spot of its own frame, never one elsewhere on the page.
+ */
+export function rectAnchor(asked: unknown, frame: Element | null | undefined): AnchorRect | null {
+  const box = frameAnchor(frame);
+  if (!box || !asked || typeof asked !== 'object') return null;
+  const o = asked as Record<string, unknown>;
+  const n = (v: unknown) => (typeof v === 'number' && Number.isFinite(v) ? v : null);
+  const l = n(o.left), t = n(o.top), r = n(o.right), b = n(o.bottom);
+  if (l === null || t === null || r === null || b === null) return null;
+  const width = box.right - box.left;
+  const height = box.bottom - box.top;
+  const x = (v: number) => box.left + Math.min(Math.max(v, 0), width);
+  const y = (v: number) => box.top + Math.min(Math.max(v, 0), height);
+  const left = x(Math.min(l, r));
+  const top = y(Math.min(t, b));
+  return { left, top, right: Math.max(left, x(Math.max(l, r))), bottom: Math.max(top, y(Math.max(t, b))) };
+}
+
 const MODIFIERS = new Set(['Shift', 'Control', 'Alt', 'Meta', 'AltGraph', 'CapsLock']);
 
 /** Follow the user's activations on the page; returns the way to stop. */
@@ -100,25 +144,46 @@ export function trackTriggers(doc: Document = document): () => void {
   };
 }
 
+/** Which side of the anchor a popover stands at. */
+export type PopoverSide = 'below' | 'end';
+
 /**
- * Top-left corner of a popover of `size` next to `anchor`: below it, lined
- * up with its start (its end in RTL); above when it doesn't fit below and
- * does above; always inside the viewport.
+ * Top-left corner of a popover of `size` next to `anchor`, always inside the
+ * viewport.
+ *
+ * `below` (the default): below it, lined up with its start (its end in
+ * RTL); above when it doesn't fit below and does above.
+ *
+ * `end`: at its end side (right in LTR, left in RTL), its bottom lined up
+ * with the anchor's bottom; at the start side when it doesn't fit at the end
+ * and does there.
  */
 export function placePopover(
   anchor: AnchorRect,
   size: { width: number; height: number },
   viewport: { width: number; height: number },
   rtl = false,
+  side: PopoverSide = 'below',
 ): { left: number; top: number } {
   const m = POPOVER_MARGIN;
-  let left = rtl ? anchor.right - size.width : anchor.left;
+  let left: number;
+  let top: number;
+  if (side === 'end') {
+    const right = anchor.right + POPOVER_GAP;
+    const leftOf = anchor.left - POPOVER_GAP - size.width;
+    const fitsRight = right + size.width <= viewport.width - m;
+    const fitsLeft = leftOf >= m;
+    if (rtl) left = fitsLeft || !fitsRight ? leftOf : right;
+    else left = fitsRight || !fitsLeft ? right : leftOf;
+    top = anchor.bottom - size.height;
+  } else {
+    left = rtl ? anchor.right - size.width : anchor.left;
+    top = anchor.bottom + POPOVER_GAP;
+    const above = anchor.top - POPOVER_GAP - size.height;
+    if (top + size.height > viewport.height - m && above >= m) top = above;
+  }
   left = Math.min(left, viewport.width - m - size.width);
   left = Math.max(m, left);
-
-  let top = anchor.bottom + POPOVER_GAP;
-  const above = anchor.top - POPOVER_GAP - size.height;
-  if (top + size.height > viewport.height - m && above >= m) top = above;
   top = Math.min(top, viewport.height - m - size.height);
   top = Math.max(m, top);
   return { left, top };

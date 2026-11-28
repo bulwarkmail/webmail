@@ -11,7 +11,8 @@
 // DialogButtons) drawn by the host in its footer; confirm, alert and prompt
 // are the app's ConfirmDialog and PromptDialog. A custom dialog opened with
 // `anchor: 'trigger'` is a popover beside the control the user clicked
-// (dialog-anchor.ts), with a one-line header naming the plugin. `fill: true`
+// (dialog-anchor.ts), `anchor: 'frame'` one beside the plugin frame that
+// opened it (a rail button), with a one-line header naming the plugin. `fill: true`
 // gives either form a fixed height the plugin's frame fills (a chat), so an
 // anchored, filled dialog is a tall popover beside the control.
 //
@@ -25,7 +26,7 @@
 import React, { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { useTranslations } from 'next-intl';
 import { cancelForPlugin, head, overlay, resolveDialog, subscribe, type DialogRequest } from '@/lib/plugin-sandbox/host-dialog';
-import { placePopover, POPOVER_MARGIN, trackTriggers, type AnchorRect } from '@/lib/plugin-sandbox/dialog-anchor';
+import { placePopover, POPOVER_MARGIN, trackTriggers, type AnchorRect, type PopoverSide } from '@/lib/plugin-sandbox/dialog-anchor';
 import type { DialogButtonSpec } from '@/lib/plugin-sandbox/ui-kit/dialog-buttons';
 import { usePluginStore } from '@/stores/plugin-store';
 import { useFocusTrap } from '@/hooks/use-focus-trap';
@@ -297,7 +298,8 @@ function PluginDialogView({ current, layer }: { current: DialogRequest; layer: '
   });
 
   const anchor = current?.kind === 'custom' ? current.anchor : undefined;
-  const place = usePopoverPlace(anchor, panelRef);
+  const side = current?.kind === 'custom' ? current.anchorSide : undefined;
+  const place = usePopoverPlace(anchor, side, panelRef);
 
   if (!current || surface.mode === 'pending') return null;
   const inWindow = surface.mode === 'window';
@@ -523,7 +525,7 @@ function PluginDialogView({ current, layer }: { current: DialogRequest; layer: '
  * Where a popover dialog's panel stands: measured before it paints and again
  * when its content (the plugin's frame) or the window changes size.
  */
-function usePopoverPlace(anchor: AnchorRect | undefined, panelRef: React.RefObject<HTMLElement | null>): { left: number; top: number } | null {
+function usePopoverPlace(anchor: AnchorRect | undefined, side: PopoverSide | undefined, panelRef: React.RefObject<HTMLElement | null>): { left: number; top: number } | null {
   const [place, setPlace] = useState<{ left: number; top: number } | null>(null);
   useLayoutEffect(() => {
     const panel = panelRef.current;
@@ -535,6 +537,7 @@ function usePopoverPlace(anchor: AnchorRect | undefined, panelRef: React.RefObje
         { width: r.width, height: r.height },
         { width: window.innerWidth, height: window.innerHeight },
         document.documentElement.dir === 'rtl',
+        side,
       );
       setPlace((p) => (p && p.left === next.left && p.top === next.top ? p : next));
     };
@@ -546,7 +549,7 @@ function usePopoverPlace(anchor: AnchorRect | undefined, panelRef: React.RefObje
       observer?.disconnect();
       window.removeEventListener('resize', update);
     };
-  }, [anchor, panelRef]);
+  }, [anchor, side, panelRef]);
   return place;
 }
 
