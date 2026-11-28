@@ -6036,6 +6036,18 @@
     "stopped_sharing": "لم يعد لدى {name} وصول إلى {item}",
     "stop_sharing_failed": "تعذّر إيقاف مشاركة {item}"
   },
+  "saved_searches": {
+    "title": "عمليات البحث المحفوظة",
+    "save": "حفظ البحث",
+    "update": "تحديث البحث المحفوظ",
+    "name": "اسم البحث",
+    "rename": "إعادة تسمية البحث المحفوظ",
+    "delete": "حذف البحث المحفوظ",
+    "confirm_delete": "هل تريد حذف البحث المحفوظ «{name}»؟",
+    "actions": "إجراءات {name}",
+    "plugin_filter": "أزل عامل تصفية الإضافة لحفظ هذا البحث.",
+    "account_scope": "افتح مجلدًا في حساب البريد النشط لحفظ البحث."
+  },
   "advanced_search": {
     "title": "بحث متقدم",
     "from": "من",

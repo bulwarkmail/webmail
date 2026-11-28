@@ -6036,6 +6036,18 @@
     "stopped_sharing": "{name} 已無法存取 {item}",
     "stop_sharing_failed": "無法停止共用 {item}"
   },
+  "saved_searches": {
+    "title": "已儲存的搜尋",
+    "save": "儲存搜尋",
+    "update": "更新已儲存的搜尋",
+    "name": "搜尋名稱",
+    "rename": "重新命名已儲存的搜尋",
+    "delete": "刪除已儲存的搜尋",
+    "confirm_delete": "要刪除已儲存的搜尋「{name}」嗎？",
+    "actions": "「{name}」的操作",
+    "plugin_filter": "移除外掛程式的篩選條件，即可儲存這項搜尋。",
+    "account_scope": "在目前的郵件帳號中開啟資料夾，即可儲存搜尋。"
+  },
   "advanced_search": {
     "title": "進階搜尋",
     "from": "寄件者",

@@ -5721,6 +5721,18 @@
     "week_days_short": "{count, plural, one {# dag} other {# dagen}}",
     "print": "Afdrukken…"
   },
+  "saved_searches": {
+    "title": "Opgeslagen zoekopdrachten",
+    "save": "Zoekopdracht opslaan",
+    "update": "Opgeslagen zoekopdracht bijwerken",
+    "name": "Naam van de zoekopdracht",
+    "rename": "Opgeslagen zoekopdracht hernoemen",
+    "delete": "Opgeslagen zoekopdracht verwijderen",
+    "confirm_delete": "Opgeslagen zoekopdracht ‘{name}’ verwijderen?",
+    "actions": "Acties voor {name}",
+    "plugin_filter": "Verwijder het plug-infilter om deze zoekopdracht op te slaan.",
+    "account_scope": "Open een map in het actieve e-mailaccount om een zoekopdracht op te slaan."
+  },
   "advanced_search": {
     "title": "Geavanceerd zoeken",
     "from": "Van",

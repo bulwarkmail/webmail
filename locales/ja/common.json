@@ -5721,6 +5721,18 @@
     "week_days_short": "{count, plural, other {#日}}",
     "print": "印刷…"
   },
+  "saved_searches": {
+    "title": "保存済みの検索",
+    "save": "検索を保存",
+    "update": "保存済みの検索を更新",
+    "name": "検索名",
+    "rename": "保存済みの検索の名前を変更",
+    "delete": "保存済みの検索を削除",
+    "confirm_delete": "保存済みの検索「{name}」を削除しますか？",
+    "actions": "「{name}」の操作",
+    "plugin_filter": "この検索を保存するには、プラグインのフィルターを解除してください。",
+    "account_scope": "検索を保存するには、使用中のメールアカウントのフォルダーを開いてください。"
+  },
   "advanced_search": {
     "title": "詳細検索",
     "from": "差出人",

@@ -6036,6 +6036,18 @@
     "stopped_sharing": "{name} už nemá prístup k {item}",
     "stop_sharing_failed": "Zdieľanie {item} sa nepodarilo zrušiť"
   },
+  "saved_searches": {
+    "title": "Uložené vyhľadávania",
+    "save": "Uložiť vyhľadávanie",
+    "update": "Aktualizovať uložené vyhľadávanie",
+    "name": "Názov vyhľadávania",
+    "rename": "Premenovať uložené vyhľadávanie",
+    "delete": "Odstrániť uložené vyhľadávanie",
+    "confirm_delete": "Odstrániť uložené vyhľadávanie „{name}“?",
+    "actions": "Akcie pre {name}",
+    "plugin_filter": "Ak chcete uložiť toto vyhľadávanie, odstráňte filter doplnku.",
+    "account_scope": "Ak chcete uložiť vyhľadávanie, otvorte priečinok v aktívnom poštovom účte."
+  },
   "advanced_search": {
     "title": "Pokročilé hľadanie",
     "from": "Od",

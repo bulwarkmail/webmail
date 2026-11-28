@@ -5721,6 +5721,18 @@
     "week_days_short": "{count, plural, one {# Tag} other {# Tage}}",
     "print": "Drucken…"
   },
+  "saved_searches": {
+    "title": "Gespeicherte Suchen",
+    "save": "Suche speichern",
+    "update": "Gespeicherte Suche aktualisieren",
+    "name": "Name der Suche",
+    "rename": "Gespeicherte Suche umbenennen",
+    "delete": "Gespeicherte Suche löschen",
+    "confirm_delete": "Die gespeicherte Suche „{name}“ löschen?",
+    "actions": "Aktionen für {name}",
+    "plugin_filter": "Entferne den Plugin-Filter, um diese Suche zu speichern.",
+    "account_scope": "Öffne einen Ordner im aktiven E-Mail-Konto, um eine Suche zu speichern."
+  },
   "advanced_search": {
     "title": "Erweiterte Suche",
     "from": "Von",

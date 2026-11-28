@@ -844,7 +844,8 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   );
   const savedSearches = useSettingsStore((state) => activeAccountId ? state.savedSearches?.[activeAccountId] : undefined);
   const [openedSavedSearch, setOpenedSavedSearch] = useState<{ id: string; accountId: string; viewToken: number } | null>(null);
-  const savedSearchViewToken = useEmailStore((state) => state.viewToken);
+  const isOpenedSavedSearchView = useEmailStore((state) =>
+    openedSavedSearch !== null && state.viewToken === openedSavedSearch.viewToken);
   const savedSearchHelpId = useId();
   // "Move to" for the open message offers the folders of the login it is in
   // (moveFoldersFor); none, with the reason, while those can't be had.
@@ -5295,7 +5296,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   };
 
   const selectedSavedSearch = openedSavedSearch && openedSavedSearch.accountId === activeAccountId
-    && openedSavedSearch.viewToken === savedSearchViewToken
+    && isOpenedSavedSearchView
     ? savedSearches?.find((search) => search.id === openedSavedSearch.id)
     : undefined;
   const savedSearchScopeAvailable = !!activeAccountId && !viewingAccountId && !isUnifiedView && !selectedKeyword;
@@ -6021,6 +6022,8 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   // update), which change nothing it shows.
   const sidebarHandlers = useStableHandlers({
     onOpenStarred: mvShell ? goToStarred : undefined,
+    onOpenSavedSearch: openSavedSearch,
+    onManageSavedSearch: manageSavedSearch,
     onMailboxSelect: handleMailboxSelect,
     onTagSelect: handleTagSelect,
     onMarkFolderRead: handleMarkFolderRead,
@@ -6800,8 +6803,6 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
             <Sidebar
               mailboxes={heldSendView.mailboxes}
               savedSearches={viewingAccountId ? undefined : savedSearches}
-              onOpenSavedSearch={openSavedSearch}
-              onManageSavedSearch={manageSavedSearch}
               selectedMailbox={selectedMailbox}
               selectedKeyword={selectedKeyword}
               scheduledTotal={heldSendView.scheduledTotal}

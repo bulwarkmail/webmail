@@ -6036,6 +6036,18 @@
     "stopped_sharing": "{name} ja no té accés a {item}",
     "stop_sharing_failed": "No s'ha pogut deixar de compartir {item}"
   },
+  "saved_searches": {
+    "title": "Cerques desades",
+    "save": "Desa la cerca",
+    "update": "Actualitza la cerca desada",
+    "name": "Nom de la cerca",
+    "rename": "Canvia el nom de la cerca desada",
+    "delete": "Suprimeix la cerca desada",
+    "confirm_delete": "Vols suprimir la cerca desada «{name}»?",
+    "actions": "Accions per a {name}",
+    "plugin_filter": "Treu el filtre del connector per desar aquesta cerca.",
+    "account_scope": "Obre una carpeta del compte de correu actiu per desar una cerca."
+  },
   "advanced_search": {
     "title": "Cerca avançada",
     "from": "De",

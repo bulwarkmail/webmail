@@ -6051,6 +6051,18 @@
     "stopped_sharing": "{name} har inte längre åtkomst till {item}",
     "stop_sharing_failed": "Det gick inte att sluta dela {item}"
   },
+  "saved_searches": {
+    "title": "Sparade sökningar",
+    "save": "Spara sökning",
+    "update": "Uppdatera sparad sökning",
+    "name": "Sökningens namn",
+    "rename": "Byt namn på sparad sökning",
+    "delete": "Ta bort sparad sökning",
+    "confirm_delete": "Vill du ta bort den sparade sökningen ”{name}”?",
+    "actions": "Åtgärder för {name}",
+    "plugin_filter": "Ta bort tilläggets filter för att spara den här sökningen.",
+    "account_scope": "Öppna en mapp i det aktiva e-postkontot för att spara en sökning."
+  },
   "advanced_search": {
     "title": "Avancerad sökning",
     "from": "Från",

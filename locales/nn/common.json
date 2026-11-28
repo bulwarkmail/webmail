@@ -6044,6 +6044,18 @@
     "stopped_sharing": "{name} har ikkje lenger tilgang til {item}",
     "stop_sharing_failed": "Kunne ikkje slutta å dela {item}"
   },
+  "saved_searches": {
+    "title": "Lagra søk",
+    "save": "Lagre søk",
+    "update": "Oppdater lagra søk",
+    "name": "Namn på søket",
+    "rename": "Gje lagra søk nytt namn",
+    "delete": "Slett lagra søk",
+    "confirm_delete": "Vil du slette det lagra søket «{name}»?",
+    "actions": "Handlingar for {name}",
+    "plugin_filter": "Fjern filteret frå programtillegget for å lagre dette søket.",
+    "account_scope": "Opne ei mappe i den aktive e-postkontoen for å lagre eit søk."
+  },
   "advanced_search": {
     "title": "Avansert søk",
     "from": "Frå",

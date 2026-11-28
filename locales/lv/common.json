@@ -5721,6 +5721,18 @@
     "week_days_short": "{count, plural, zero {# dienas} one {# diena} other {# dienas}}",
     "print": "Drukāt…"
   },
+  "saved_searches": {
+    "title": "Saglabātie meklējumi",
+    "save": "Saglabāt meklējumu",
+    "update": "Atjaunināt saglabāto meklējumu",
+    "name": "Meklējuma nosaukums",
+    "rename": "Pārdēvēt saglabāto meklējumu",
+    "delete": "Dzēst saglabāto meklējumu",
+    "confirm_delete": "Vai dzēst saglabāto meklējumu „{name}”?",
+    "actions": "Darbības ar {name}",
+    "plugin_filter": "Lai saglabātu šo meklējumu, noņemiet spraudņa filtru.",
+    "account_scope": "Lai saglabātu meklējumu, atveriet mapi aktīvajā pasta kontā."
+  },
   "advanced_search": {
     "title": "Izvērstā meklēšana",
     "from": "No",

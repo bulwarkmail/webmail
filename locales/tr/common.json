@@ -6036,6 +6036,18 @@
     "stopped_sharing": "{name} artık {item} öğesine erişemiyor",
     "stop_sharing_failed": "{item} paylaşımı durdurulamadı"
   },
+  "saved_searches": {
+    "title": "Kayıtlı aramalar",
+    "save": "Aramayı kaydet",
+    "update": "Kayıtlı aramayı güncelle",
+    "name": "Arama adı",
+    "rename": "Kayıtlı aramayı yeniden adlandır",
+    "delete": "Kayıtlı aramayı sil",
+    "confirm_delete": "“{name}” adlı kayıtlı arama silinsin mi?",
+    "actions": "{name} için işlemler",
+    "plugin_filter": "Bu aramayı kaydetmek için eklenti filtresini kaldırın.",
+    "account_scope": "Aramayı kaydetmek için etkin posta hesabında bir klasör açın."
+  },
   "advanced_search": {
     "title": "Gelişmiş Arama",
     "from": "Kimden",

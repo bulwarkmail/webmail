@@ -6036,6 +6036,18 @@
     "stopped_sharing": "{name} nu mai are acces la {item}",
     "stop_sharing_failed": "Nu s-a putut opri partajarea {item}"
   },
+  "saved_searches": {
+    "title": "Căutări salvate",
+    "save": "Salvează căutarea",
+    "update": "Actualizează căutarea salvată",
+    "name": "Numele căutării",
+    "rename": "Redenumește căutarea salvată",
+    "delete": "Șterge căutarea salvată",
+    "confirm_delete": "Ștergi căutarea salvată „{name}”?",
+    "actions": "Acțiuni pentru {name}",
+    "plugin_filter": "Elimină filtrul extensiei pentru a salva această căutare.",
+    "account_scope": "Deschide un dosar din contul de e-mail activ pentru a salva o căutare."
+  },
   "advanced_search": {
     "title": "Căutare avansată",
     "from": "De la",

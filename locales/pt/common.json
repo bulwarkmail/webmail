@@ -5721,6 +5721,18 @@
     "week_days_short": "{count, plural, one {# dia} other {# dias}}",
     "print": "Imprimir…"
   },
+  "saved_searches": {
+    "title": "Pesquisas guardadas",
+    "save": "Guardar pesquisa",
+    "update": "Atualizar pesquisa guardada",
+    "name": "Nome da pesquisa",
+    "rename": "Mudar o nome da pesquisa guardada",
+    "delete": "Eliminar pesquisa guardada",
+    "confirm_delete": "Eliminar a pesquisa guardada «{name}»?",
+    "actions": "Ações para {name}",
+    "plugin_filter": "Remova o filtro da extensão para guardar esta pesquisa.",
+    "account_scope": "Abra uma pasta da conta de correio ativa para guardar uma pesquisa."
+  },
   "advanced_search": {
     "title": "Pesquisa avançada",
     "from": "De",

@@ -5721,6 +5721,18 @@
     "week_days_short": "{count, plural, one {# jour} other {# jours}}",
     "print": "Imprimer…"
   },
+  "saved_searches": {
+    "title": "Recherches enregistrées",
+    "save": "Enregistrer la recherche",
+    "update": "Mettre à jour la recherche enregistrée",
+    "name": "Nom de la recherche",
+    "rename": "Renommer la recherche enregistrée",
+    "delete": "Supprimer la recherche enregistrée",
+    "confirm_delete": "Supprimer la recherche enregistrée « {name} » ?",
+    "actions": "Actions pour {name}",
+    "plugin_filter": "Retirez le filtre de l’extension pour enregistrer cette recherche.",
+    "account_scope": "Ouvrez un dossier du compte de messagerie actif pour enregistrer une recherche."
+  },
   "advanced_search": {
     "title": "Recherche avancée",
     "from": "De",
