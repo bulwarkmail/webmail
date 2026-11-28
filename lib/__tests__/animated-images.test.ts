@@ -148,6 +148,44 @@ describe('pauseAnimatedImages', () => {
     expect(shownLabel(doc, wrap)).toBe('Play');
   });
 
+  it('keeps a paused image hidden when its inline display is !important', async () => {
+    const doc = frameDoc('<img src="https://cdn.example/a.gif" style="display:block !important" alt="">');
+    pauseAnimatedImages(doc, { play: 'Play', pause: 'Pause' });
+    await flush();
+    const img = doc.querySelector('img')!;
+    const canvas = doc.querySelector('canvas')!;
+    const checkbox = doc.querySelector('input')!;
+    expect(img.style.getPropertyPriority('display')).toBe('');
+    expect(img.style.getPropertyValue('display')).toBe('block');
+    expect(display(doc, img)).toBe('none');
+    expect(display(doc, canvas)).not.toBe('none');
+
+    checkbox.checked = true;
+    expect(display(doc, img)).toBe('block');
+    expect(display(doc, canvas)).toBe('none');
+  });
+
+  it('toggles on Enter as well as Space, where listeners run', async () => {
+    const doc = frameDoc('<a href="https://ex.com"><img src="https://cdn.example/a.gif" alt=""></a>');
+    const linkClicks = vi.fn();
+    pauseAnimatedImages(doc, { play: 'Play', pause: 'Pause' });
+    doc.addEventListener('click', linkClicks, true);
+    await flush();
+    const checkbox = doc.querySelector('input')!;
+    const enter = () => {
+      const event = new (doc.defaultView as unknown as typeof window).KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true });
+      checkbox.dispatchEvent(event);
+      return event;
+    };
+
+    expect(enter().defaultPrevented).toBe(true);
+    expect(checkbox.checked).toBe(true);
+    enter();
+    expect(checkbox.checked).toBe(false);
+    expect(drawImage).toHaveBeenCalledTimes(2);
+    expect(linkClicks).not.toHaveBeenCalled();
+  });
+
   it('names each checkbox by its own label', async () => {
     const doc = frameDoc('<img src="https://cdn.example/a.gif" alt=""><img src="https://cdn.example/b.gif" alt="">');
     pauseAnimatedImages(doc, { play: 'Play', pause: 'Pause' });

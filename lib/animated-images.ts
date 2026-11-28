@@ -190,6 +190,14 @@ export function pauseAnimatedImages(
         if (value) canvas.setAttribute(attr, value);
       }
       if (width > 0) canvas.style.width = `${width}px`;
+      // An inline `display: … !important` beats the stylesheet's !important,
+      // so the paused image (and the canvas, which copied its style) would
+      // stay visible. Keep the mail's value, drop the priority.
+      for (const el of [img, canvas]) {
+        if (el.style.getPropertyPriority('display') === 'important') {
+          el.style.setProperty('display', el.style.getPropertyValue('display'));
+        }
+      }
       const alt = img.getAttribute('alt')?.trim();
       if (alt) {
         canvas.setAttribute('role', 'img');
@@ -243,8 +251,19 @@ export function pauseAnimatedImages(
     const img = checkbox?.parentElement?.querySelector('img');
     if (canvas && img) draw(img, canvas);
   };
+  // The old button toggled on Enter as well as Space; a checkbox answers
+  // only Space. Where these listeners run, Enter flips it too. In Safari
+  // Space is left, which works there natively.
+  const onKeyDown = (event: KeyboardEvent) => {
+    if (event.key !== 'Enter' || event.isComposing) return;
+    const checkbox = event.target as HTMLInputElement | null;
+    if (!checkbox?.matches?.(`[${WRAP_ATTR}]>input`)) return;
+    event.preventDefault();
+    checkbox.click();
+  };
   doc.addEventListener('click', onClick, true);
   doc.addEventListener('change', onChange, true);
+  doc.addEventListener('keydown', onKeyDown, true);
 
   doc.querySelectorAll('img').forEach((img) => {
     if (img.complete) freeze(img);
@@ -258,5 +277,6 @@ export function pauseAnimatedImages(
     disposed = true;
     doc.removeEventListener('click', onClick, true);
     doc.removeEventListener('change', onChange, true);
+    doc.removeEventListener('keydown', onKeyDown, true);
   };
 }
