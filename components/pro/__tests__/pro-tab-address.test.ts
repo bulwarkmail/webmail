@@ -90,14 +90,26 @@ describe('the address of the Mail tab', () => {
 describe('messages dragged onto the Pro shell', () => {
   it('open with the login and account of their row', () => {
     useEmailStore.setState({ emails: [row()] } as never);
-    expect(droppedEmailTabs([ID], 'New')).toEqual([{ accountId: 'ce', clientAccountId: 'login-a', emailId: ID, mailboxId: null, title: 'Order' }]);
+    const source = { accountId: 'ce', clientAccountId: 'login-a', emailId: ID };
+    expect(droppedEmailTabs([source], 'New')).toEqual([{ ...source, mailboxId: null, title: 'Order' }]);
   });
 
-  it('open nothing for an id that two rows have', () => {
+  it('opens the requested login and owner when both ids repeat', () => {
+    const source = { accountId: 'bf', clientAccountId: 'login-b', emailId: ID };
     useEmailStore.setState({
       isUnifiedView: true, selectedMailbox: '__unified_inbox__',
-      emails: [row({ sourceClientAccountId: 'login-a', sourceAccountId: 'cf' }), row({ sourceClientAccountId: 'login-b', sourceAccountId: 'bf' })],
+      emails: [
+        row({ sourceClientAccountId: 'login-a', sourceAccountId: 'bf', subject: 'Other login' }),
+        row({ sourceClientAccountId: 'login-b', sourceAccountId: 'cf', subject: 'Other owner' }),
+        row({ sourceClientAccountId: 'login-b', sourceAccountId: 'bf', subject: 'Dragged' }),
+      ],
     } as never);
-    expect(droppedEmailTabs([ID], 'New')).toEqual([]);
+    expect(droppedEmailTabs([source], 'New')).toEqual([{ ...source, mailboxId: null, title: 'Dragged' }]);
+  });
+
+  it('keeps a personal folder row consistent with the account used by double-click', () => {
+    useEmailStore.setState({ selectedMailbox: 'a', emails: [row()] } as never);
+    const source = { accountId: 'cf', clientAccountId: 'login-a', emailId: ID };
+    expect(droppedEmailTabs([source], 'New')).toEqual([{ ...source, accountId: '', mailboxId: null, title: 'Order' }]);
   });
 });

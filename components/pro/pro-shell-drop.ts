@@ -1,14 +1,8 @@
 import type { ProPaneId, ProSplitSide } from "@/stores/pro-tab-store";
+import { EMAIL_IDS_DRAG_MIME, EMAIL_SOURCES_DRAG_MIME } from "@/lib/email-drag-payload";
 
 /** Custom MIME type used to carry the dragged Pro tab id between handlers. */
 export const PRO_TAB_DRAG_MIME = "application/x-pro-tab-id";
-
-/**
- * MIME type email rows put on the drag (see hooks/use-email-drag.ts). The
- * Pro shell accepts these so a message can be dragged straight into a pane
- * or an edge zone to open it there / split the screen with it.
- */
-export const EMAIL_IDS_DRAG_MIME = "application/x-email-ids";
 
 /**
  * MIME type sidebar folder rows put on the drag (see MailboxTreeItem in
@@ -39,7 +33,9 @@ export type BodyDropTarget =
 export function dragKindFromTypes(types: readonly string[]): ShellDragKind | null {
   if (types.includes(PRO_TAB_DRAG_MIME)) return "tab";
   if (types.includes(MAILBOX_DRAG_MIME)) return "folder";
-  if (types.includes(EMAIL_IDS_DRAG_MIME)) return "email";
+  // An ID-only message drag still belongs to the shell, not a composer
+  // field. Opening a tab separately requires the scoped message payload.
+  if (types.includes(EMAIL_IDS_DRAG_MIME) || types.includes(EMAIL_SOURCES_DRAG_MIME)) return "email";
   return null;
 }
 
@@ -85,17 +81,6 @@ export function resolveBodyDropTarget(args: {
   if (!side) return null;
   if (!args.canCreateSplit) return null;
   return { type: "create-split", side };
-}
-
-/** Parse the email-ids drag payload; returns [] for anything malformed. */
-export function parseEmailIdsPayload(raw: string): string[] {
-  try {
-    const parsed = JSON.parse(raw);
-    if (!Array.isArray(parsed)) return [];
-    return parsed.filter((id): id is string => typeof id === "string" && id.length > 0);
-  } catch {
-    return [];
-  }
 }
 
 /** Parse the mailbox drag payload; returns null for anything malformed. */

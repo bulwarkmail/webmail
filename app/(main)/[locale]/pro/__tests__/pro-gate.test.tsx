@@ -1,5 +1,7 @@
 import { act, fireEvent, render } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { EMAIL_IDS_DRAG_MIME, EMAIL_SOURCES_DRAG_MIME } from '@/lib/email-drag-payload';
+import type { Email } from '@/lib/jmap/types';
 
 // Until the session is up the Pro page draws the same skeleton the server
 // sent (the Pro frame), not a spinner and not a blank page, so the first
@@ -61,8 +63,9 @@ vi.mock('@/hooks/use-sidebar-apps', () => ({
 vi.mock('@/hooks/use-deep-link-url', () => ({ useDeepLinkUrl: () => {} }));
 const { default: ProHome } = await import('../page');
 const { useSettingsStore } = await import('@/stores/settings-store');
+const { useEmailStore } = await import('@/stores/email-store');
 const { useProTabStore, takeHandedOffComposeDraft } = await import('@/stores/pro-tab-store');
-const { EMAIL_IDS_DRAG_MIME, PRO_TAB_DRAG_MIME } = await import('@/components/pro/pro-shell-drop');
+const { PRO_TAB_DRAG_MIME } = await import('@/components/pro/pro-shell-drop');
 
 const replace = vi.fn();
 
@@ -208,11 +211,52 @@ describe('Pro page gate', () => {
     const { container } = render(<ProHome />);
     await act(async () => {});
     const surface = container.querySelector('[data-testid="mail-app"]')!;
-    const dataTransfer = { types: [EMAIL_IDS_DRAG_MIME, 'text/plain'], getData: () => '["m1"]', dropEffect: '' };
+    const payload = JSON.stringify([{ emailId: 'm1', clientAccountId: 'login-a', accountId: 'primary' }]);
+    const dataTransfer = { types: [EMAIL_SOURCES_DRAG_MIME, 'text/plain'], getData: () => payload, dropEffect: '' };
     // No layout in jsdom: the position resolves to the middle, not a split edge.
     const notPrevented = fireEvent.drop(surface, { dataTransfer });
     expect(notPrevented).toBe(false);
     expect(useProTabStore.getState().tabs).toHaveLength(1);
+  });
+
+  it('requires the dragged source to open a tab in the target pane', async () => {
+    auth.state.isAuthenticated = true;
+    auth.state.client = {};
+    const main = { id: 'home-mail', kind: 'mail' as const, labelKey: 'mail', closeable: false, paneId: 'main' as const };
+    const split = { id: 'cal', kind: 'calendar' as const, labelKey: 'calendar', closeable: true, paneId: 'split' as const };
+    useProTabStore.setState({
+      tabs: [main, split], activeTabId: main.id, activeSplitTabId: split.id, focusedPaneId: 'main',
+      splitOrientation: 'vertical', splitSide: 'right', readerTabId: null, loadedTabIds: [main.id, split.id],
+    });
+    const { emails } = useEmailStore.getState();
+    const source = { emailId: 'm1', clientAccountId: 'login-b', accountId: 'primary' };
+    const other = { id: 'm1', sourceClientAccountId: 'login-a', sourceAccountId: 'primary', subject: 'Not dragged' } as Email;
+    useEmailStore.setState({ emails: [other] });
+    try {
+      const { getByTestId } = render(<ProHome />);
+      await act(async () => {});
+      const surface = getByTestId('mail-app');
+      // No layout in jsdom: the midpoint targets the right-hand (split) pane.
+      expect(fireEvent.drop(surface, {
+        dataTransfer: { types: [EMAIL_IDS_DRAG_MIME], getData: () => '["m1"]' },
+      })).toBe(false);
+      expect(useProTabStore.getState().tabs.some((tab) => tab.kind === 'email')).toBe(false);
+
+      act(() => useEmailStore.setState({ emails: [
+        other,
+        { id: 'm1', sourceClientAccountId: 'login-b', sourceAccountId: 'primary', subject: 'Dragged' } as Email,
+      ] }));
+      fireEvent.drop(surface, {
+        dataTransfer: {
+          types: [EMAIL_SOURCES_DRAG_MIME, EMAIL_IDS_DRAG_MIME],
+          getData: (type: string) => type === EMAIL_SOURCES_DRAG_MIME ? JSON.stringify([source]) : '["m1"]',
+        },
+      });
+      expect(useProTabStore.getState().tabs.filter((tab) => tab.kind === 'email'))
+        .toMatchObject([{ paneId: 'split', emailData: { ...source, title: 'Dragged' } }]);
+    } finally {
+      useEmailStore.setState({ emails });
+    }
   });
 
   it('leaves a tab dropped on a tab strip to the strip', async () => {

@@ -6,6 +6,8 @@ import { JMAPClient } from '@/lib/jmap/client';
 import type { Email, Mailbox } from '@/lib/jmap/types';
 import { emailKeyFor, groupEmailsByThread } from '@/lib/thread-utils';
 import { ThreadListItem } from '@/components/email/thread-list-item';
+import { droppedEmailTabs } from '@/components/pro/pro-tab-address';
+import { EMAIL_SOURCES_DRAG_MIME, parseEmailSourcesPayload } from '@/lib/email-drag-payload';
 import { useAuthStore } from '@/stores/auth-store';
 import { useEmailStore } from '@/stores/email-store';
 import { useSettingsStore } from '@/stores/settings-store';
@@ -125,6 +127,22 @@ async function warm(result: { current: ReturnType<typeof useEmailDrag> }) {
 function select(emails: Email[]) {
   useEmailStore.setState({ emails, selectedEmailKeys: new Set(emails.map(emailKeyFor)), isUnifiedView: true });
 }
+
+describe('dragging a message from Unified Inbox onto the Pro tab strip', () => {
+  it.each([false, true])('does not lose the dragged source when the namesake is present (list refreshed: %s)', (refresh) => {
+    const target = mail({ subject: 'Dragged', sourceClientAccountId: 'login-b', sourceAccountId: 'primary-b' });
+    const namesake = mail({ subject: 'Not dragged', sourceClientAccountId: 'login-a', sourceAccountId: 'primary-a' });
+    useEmailStore.setState({ emails: [namesake, target], selectedEmailKeys: new Set(), isUnifiedView: true });
+    const { result } = renderHook(() => useEmailDrag({ email: target, sourceMailboxId: '__unified_inbox__' }));
+    const payload = drag(result.current.dragHandlers);
+
+    if (refresh) act(() => useEmailStore.setState({ emails: [namesake] }));
+    const tabs = droppedEmailTabs(parseEmailSourcesPayload(payload.get(EMAIL_SOURCES_DRAG_MIME) ?? ''), 'Message');
+
+    if (refresh) expect(tabs).toEqual([]);
+    else expect(tabs).toMatchObject([{ clientAccountId: 'login-b', accountId: 'primary-b', emailId: target.id }]);
+  });
+});
 
 beforeEach(async () => {
   clients = new Map();
