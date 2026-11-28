@@ -131,10 +131,24 @@ describe('rule preview', () => {
     expect(preview!.inFolder).toBe(1);
   });
 
-  it('leaves out mail marked as spam when the rule files mail and does not include spam', async () => {
-    const { target } = server(() => [message('m1', 'a@b.example', 'x', { keywords: { $junk: true } })]);
-    const preview = await previewRule(target, rule({ conditions: [{ field: 'from', comparator: 'address_is', value: 'a@b.example' }] }), { skipJunk: true });
-    expect(preview!.total).toBe(0);
+  it('counts mail moved out of Spam, which keeps its $junk keyword', async () => {
+    const { target } = server(() => [
+      message('m1', 'abuse@seznam.cz', 'x'),
+      message('m2', 'abuse@seznam.cz', 'y', { keywords: { $junk: true } }),
+      message('m3', 'abuse@seznam.cz', 'z', { keywords: { $junk: true } }),
+    ]);
+    const filing = rule({ conditions: [{ field: 'from', comparator: 'address_is', value: 'abuse@seznam.cz' }], actions: [{ type: 'move', value: 'News', mailboxId: 'news' }] });
+    expect((await previewRule(target, filing))!.total).toBe(3);
+  });
+
+  it('looks in Spam only for a rule that also moves mail marked as spam', async () => {
+    const sender = rule({ conditions: [{ field: 'from', comparator: 'address_is', value: 'abuse@seznam.cz' }] });
+    const inScope = (plan: ReturnType<typeof previewPlan>) => !JSON.stringify(plan!.probes[0].filter).includes('"inMailbox":"junk"');
+    expect(inScope(previewPlan(sender, mailboxes))).toBe(false);
+    expect(inScope(previewPlan(sender, mailboxes, undefined, { includeJunk: true }))).toBe(true);
+    const { target } = server(() => [message('m1', 'abuse@seznam.cz', 'x', { mailboxIds: { junk: true }, keywords: { $junk: true } })]);
+    expect((await previewRule(target, sender))!.total).toBe(0);
+    expect((await previewRule(target, sender, { includeJunk: true }))!.total).toBe(1);
   });
 
   it('only looks at mail received within the rule period', () => {

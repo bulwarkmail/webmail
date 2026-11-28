@@ -17,7 +17,7 @@ import { isValidSieveHeaderName } from "@/lib/sieve/generator";
 import { REGEX_FIELDS, isValidSieveRegex, usesRegex } from "@/lib/sieve/regex";
 import { buildMailboxTree, type MailboxNode, generateUUID, cn } from "@/lib/utils";
 import { sameCondition, type RuleSuggestion } from "@/lib/filters/quick-rules";
-import { appliesToExisting, skipsJunk, type ApplyScope } from "@/lib/filters/rule-scope";
+import { appliesToExisting, includesJunk, type ApplyScope } from "@/lib/filters/rule-scope";
 import { ruleForwards, ruleStops } from "@/lib/filters/forward-limit";
 import { hasPeriod, isPeriodBoundary } from "@/lib/sieve/period";
 import { fromWallClock, getEffectiveTimeZone, getWallClock } from "@/lib/timezone";
@@ -45,7 +45,7 @@ export interface RuleEditorProps {
   suggestions?: RuleSuggestion[];
   offerApplyToExisting?: boolean;
   applyExistingFolder?: string;
-  previewMatches?: (rule: FilterRule, options: { skipJunk: boolean }) => Promise<RulePreview | null>;
+  previewMatches?: (rule: FilterRule, options: { includeJunk: boolean }) => Promise<RulePreview | null>;
   mailboxes: Mailbox[];
   maxRedirects?: number | null;
   forwardsBefore?: number;
@@ -298,14 +298,14 @@ export function RuleEditor({
   const activeUntil = periodOn ? fromPeriodInput(periodEnd, start?.activeUntil) : undefined;
   const problem = checklistProblem(resolvedChecklist);
 
-  const guardJunk = skipsJunk({ actions, includeSpam: includeSpam && filing });
+  const withJunk = includesJunk({ actions, includeSpam: includeSpam && filing });
   const [preview, setPreview] = useState<{ key: string; result: RulePreview | null } | null>(null);
   const [previewOpen, setPreviewOpen] = useState(false);
   // Mail that is already there no longer has its envelope, so a rule on
   // "Delivered to" is for new mail only: no preview, no Apply to.
   const newMailOnly = validConditions.some((c) => c.field === "delivered_to");
   const previewKey = previewMatches && validConditions.length > 0 && !newMailOnly && !validConditions.some(regexInvalid) && activeFrom !== null && activeUntil !== null
-    ? JSON.stringify([matchType, validConditions, guardJunk, activeFrom ?? null, activeUntil ?? null])
+    ? JSON.stringify([matchType, validConditions, withJunk, activeFrom ?? null, activeUntil ?? null])
     : null;
   const previewRef = useRef(previewMatches);
   previewRef.current = previewMatches;
@@ -316,7 +316,7 @@ export function RuleEditor({
     const timer = setTimeout(() => {
       previewRef.current!(
         { id: "preview", name: "", enabled: true, matchType: type, conditions: conds, actions: [], stopProcessing: false, activeFrom: from ?? undefined, activeUntil: until ?? undefined },
-        { skipJunk: junk },
+        { includeJunk: junk },
       )
         .then((result) => { if (!stale) setPreview({ key: previewKey, result }); })
         .catch(() => { if (!stale) setPreview({ key: previewKey, result: null }); });
