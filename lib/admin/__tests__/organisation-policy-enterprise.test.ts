@@ -23,7 +23,7 @@ describe('enterprise sections: defaults and sanitising', () => {
     expect(org.announcement.text).toEqual({});
     // The caps are numbers, and 0 is no cap. Spelled out, so a new key has to say its default.
     expect(org.devices).toEqual({
-      noDownloads: false, noExport: false, noPrint: false, noInstallPrompt: false,
+      noDownloads: false, noExport: false, noPrint: false, noInstallPrompt: false, noNotificationPrompt: false,
       pushWithoutContent: false, watermark: false, noOffline: false,
       offlineMaxDays: 0, noOfflineAttachments: false, offlineMaxAttachmentMb: 0, offlineMaxTotalMb: 0,
       wipeOnForcedSignOut: false,
@@ -122,6 +122,12 @@ describe('enterprise sections: defaults and sanitising', () => {
     expect(devices.noPrint).toBe(false);
     expect(devices.watermark).toBe(false);
   });
+
+  it('keeps the notification prompt switch next to the install prompt one (#1902)', () => {
+    expect(sanitizeOrganisationPolicy({ devices: { noNotificationPrompt: true } }).devices.noNotificationPrompt).toBe(true);
+    expect(sanitizeOrganisationPolicy({ devices: { noNotificationPrompt: 'true' } }).devices.noNotificationPrompt).toBe(false);
+    expect(sanitizeOrganisationPartial({ devices: { noNotificationPrompt: true } })).toEqual({ devices: { noNotificationPrompt: true } });
+  });
 });
 
 describe('enterprise sections: merging scopes', () => {
@@ -165,14 +171,16 @@ describe('enterprise sections: merging scopes', () => {
       ...DEFAULT_POLICY,
       organisation: { calendars: { feeds: [{ id: 'hol', name: 'Holidays', url: 'https://cal.example.org/h.ics' }] } },
       scopes: [{ id: 'team', label: 'Team', match: { groups: ['team@example.org'] }, policy: {
-        organisation: { calendars: { feeds: [{ id: 'team', name: 'Team', url: 'https://cal.example.org/t.ics' }] }, devices: { noDownloads: true } },
+        organisation: { calendars: { feeds: [{ id: 'team', name: 'Team', url: 'https://cal.example.org/t.ics' }] }, devices: { noDownloads: true, noNotificationPrompt: true } },
       } }],
     };
     const member = resolvePolicy(policy as never, { email: 'a@example.org', groups: ['team@example.org'] }).policy.organisation!;
     const other = resolvePolicy(policy as never, { email: 'c@example.org', groups: [] }).policy.organisation!;
     expect(member.calendars.feeds.map((f) => f.id)).toEqual(['hol', 'team']);
     expect(member.devices.noDownloads).toBe(true);
+    expect(member.devices.noNotificationPrompt).toBe(true);
     expect(other.calendars.feeds.map((f) => f.id)).toEqual(['hol']);
     expect(other.devices.noDownloads).toBe(false);
+    expect(other.devices.noNotificationPrompt).toBe(false);
   });
 });

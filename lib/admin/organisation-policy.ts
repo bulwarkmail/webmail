@@ -165,6 +165,8 @@ export interface OrganisationPolicy {
     noExport: boolean;
     noPrint: boolean;
     noInstallPrompt: boolean;
+    /** No card offering to turn on browser notifications; Settings still can. */
+    noNotificationPrompt: boolean;
     pushWithoutContent: boolean;
     watermark: boolean;
     noOffline: boolean;
@@ -218,7 +220,7 @@ export const DEFAULT_ORGANISATION_POLICY: OrganisationPolicy = {
   vacationTemplates: { library: [] },
   retention: { trashDays: 0, junkDays: 0 },
   devices: {
-    noDownloads: false, noExport: false, noPrint: false, noInstallPrompt: false,
+    noDownloads: false, noExport: false, noPrint: false, noInstallPrompt: false, noNotificationPrompt: false,
     pushWithoutContent: false, watermark: false, noOffline: false,
     offlineMaxDays: 0, noOfflineAttachments: false, offlineMaxAttachmentMb: 0, offlineMaxTotalMb: 0,
     wipeOnForcedSignOut: false,
@@ -561,6 +563,7 @@ export function sanitizeOrganisationPartial(raw: unknown): DeepPartial<Organisat
     noExport: bool(dev.noExport),
     noPrint: bool(dev.noPrint),
     noInstallPrompt: bool(dev.noInstallPrompt),
+    noNotificationPrompt: bool(dev.noNotificationPrompt),
     pushWithoutContent: bool(dev.pushWithoutContent),
     watermark: bool(dev.watermark),
     noOffline: bool(dev.noOffline),

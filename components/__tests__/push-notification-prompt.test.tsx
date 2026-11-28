@@ -28,6 +28,7 @@ const mocks = vi.hoisted(() => ({
     getAllConnectedClients: () => new Map(mocks.authState.connected),
   },
   accounts: [] as { id: string; username: string }[],
+  noNotificationPrompt: false,
   settingsState: {
     emailNotificationsEnabled: true,
     pushRelayUrl: "",
@@ -84,6 +85,11 @@ vi.mock("@/stores/policy-store", () => ({
     selector(mocks.policyState),
 }));
 
+vi.mock("@/hooks/use-device-policy", () => ({
+  useDevicePolicy: () => ({ noNotificationPrompt: mocks.noNotificationPrompt }),
+  useStrictestDevices: () => ({ noInstallPrompt: false }),
+}));
+
 vi.mock("@/lib/web-push", () => ({
   DEFAULT_RELAY_BASE_URL: "https://notifications.relay.bulwarkmail.org",
   enableWebPush: mocks.enableWebPush,
@@ -119,6 +125,7 @@ describe("PushNotificationPrompt", () => {
     mocks.translate.mockClear();
     mocks.supported = true;
     mocks.enabled = false;
+    mocks.noNotificationPrompt = false;
     mocks.authState.client = { getAccountId: () => "account-1" };
     mocks.authState.connectedAccountsRevision = 0;
     mocks.authState.connected = new Map([["alice@mail.example.com", mocks.authState.client]]);
@@ -427,6 +434,17 @@ describe("PushNotificationPrompt", () => {
     await advancePromptDelay();
 
     expect(mocks.resyncWebPush).not.toHaveBeenCalled();
+  });
+
+  it("does not render when the admin turned the notification prompt off (#1902)", async () => {
+    mocks.noNotificationPrompt = true;
+    setNotificationPermission("default");
+    render(<PushNotificationPrompt />);
+    await advancePromptDelay();
+    expect(screen.queryByText("title")).not.toBeInTheDocument();
+    expect(mocks.isWebPushEnabled).not.toHaveBeenCalled();
+    // Push already on for the account is still renewed in the background.
+    expect(mocks.resyncWebPush).toHaveBeenCalled();
   });
 
   it("does not render when browser notifications are blocked", async () => {

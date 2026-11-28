@@ -23,6 +23,7 @@ import { webPushErrorKey } from "@/lib/web-push-errors";
 import { resolveActiveRelayUrl } from "@/lib/push-relays";
 import { productName } from "@/lib/product-name";
 import { useConfig } from "@/hooks/use-config";
+import { useDevicePolicy } from "@/hooks/use-device-policy";
 import {
   isPWAInstallPromptVisible,
   PWA_INSTALL_PROMPT_VISIBILITY_EVENT,
@@ -114,6 +115,9 @@ export function PushNotificationPrompt() {
   const policyLoaded = usePolicyStore((state) => state.loaded);
   const policy = usePolicyStore((state) => state.policy);
   const userPushRelayUrl = useSettingsStore((state) => state.pushRelayUrl);
+  // Organisation > Devices > No notification prompt for the active account:
+  // no card. Push itself is untouched, and Settings can still turn it on.
+  const noNotificationPrompt = useDevicePolicy().noNotificationPrompt;
   // Sits where the install card does: keep off an open composer's Send button.
   const composing = useUIStore((state) => state.composingCount > 0);
 
@@ -255,6 +259,7 @@ export function PushNotificationPrompt() {
       || !client
       || !accountId
       || isDemoMode
+      || noNotificationPrompt
       || !emailNotificationsEnabled
       || isExcludedPath(pathname)
       || sessionDismissedAccountIds.has(accountId)
@@ -292,6 +297,7 @@ export function PushNotificationPrompt() {
     emailNotificationsEnabled,
     isAuthenticated,
     isDemoMode,
+    noNotificationPrompt,
     pathname,
     policyLoaded,
     pwaPromptVisible,

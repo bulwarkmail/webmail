@@ -7,7 +7,7 @@ import type { OrgPolicyDraft } from '../use-org-policy-draft';
 
 const DOCS_URL = 'https://bulwarkmail.org/docs/guides/organisation/device-policies';
 
-type DeviceKey = 'noDownloads' | 'noExport' | 'noPrint' | 'noInstallPrompt' | 'pushWithoutContent' | 'watermark';
+type DeviceKey = 'noDownloads' | 'noExport' | 'noPrint' | 'noInstallPrompt' | 'noNotificationPrompt' | 'pushWithoutContent' | 'watermark';
 
 interface DeviceField {
   key: DeviceKey;
@@ -40,6 +40,12 @@ export const DEVICE_FIELDS: DeviceField[] = [
     key: 'noInstallPrompt',
     label: 'No install prompt',
     description: 'Bulwark doesn’t offer to install itself as an app and holds back the browser’s own install banner. The browser’s menu can still install Bulwark.',
+    enforced: 'browser',
+  },
+  {
+    key: 'noNotificationPrompt',
+    label: 'No notification prompt',
+    description: 'Bulwark doesn’t offer to turn on browser notifications. People can still turn them on in Settings > Notifications.',
     enforced: 'browser',
   },
   {
