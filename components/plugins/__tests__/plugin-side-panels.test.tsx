@@ -129,6 +129,73 @@ describe('PluginSidePanel (default layout)', () => {
   });
 });
 
+describe('side panel width', () => {
+  afterEach(() => { document.documentElement.dir = ''; });
+
+  const panelWidth = (el: Element | null) => (el as HTMLElement | null)?.style.width;
+
+  it('drags wider from its start edge between 200 and 500 px and remembers the width', () => {
+    offer('fu', 'Follow-ups');
+    const first = render(<PluginSidePanel />);
+    fireEvent.click(screen.getByRole('button', { name: 'Follow-ups' }));
+    const panel = () => first.container.querySelector('[data-plugin-side-panel="fu"]');
+    expect(panelWidth(panel())).toBe('300px');
+
+    const handle = screen.getByRole('separator', { name: 'resize_side_panel' });
+    expect(handle).toHaveAttribute('aria-valuemin', '200');
+    expect(handle).toHaveAttribute('aria-valuemax', '500');
+    // The panel is at the end: the arrow towards the mail widens it.
+    fireEvent.keyDown(handle, { key: 'ArrowLeft' });
+    fireEvent.keyDown(handle, { key: 'ArrowLeft' });
+    expect(panelWidth(panel())).toBe('320px');
+    expect(handle).toHaveAttribute('aria-valuenow', '320');
+    first.unmount();
+
+    const second = render(<PluginSidePanel />);
+    expect(panelWidth(second.container.querySelector('[data-plugin-side-panel="fu"]'))).toBe('320px');
+  });
+
+  it('widens towards the right in RTL, where the panel is on the left', () => {
+    document.documentElement.dir = 'rtl';
+    offer('fu', 'Follow-ups');
+    const { container } = render(<PluginSidePanel />);
+    fireEvent.click(screen.getByRole('button', { name: 'Follow-ups' }));
+    fireEvent.keyDown(screen.getByRole('separator', { name: 'resize_side_panel' }), { key: 'ArrowRight' });
+    expect(panelWidth(container.querySelector('[data-plugin-side-panel="fu"]'))).toBe('310px');
+  });
+
+  it('keeps a stored width inside the limits and goes back to 300 px on a double-click', () => {
+    localStorage.setItem('pluginSidePanelWidth', '900');
+    offer('fu', 'Follow-ups');
+    const { container } = render(<PluginSidePanel />);
+    fireEvent.click(screen.getByRole('button', { name: 'Follow-ups' }));
+    const panel = () => container.querySelector('[data-plugin-side-panel="fu"]');
+    expect(panelWidth(panel())).toBe('500px');
+    fireEvent.doubleClick(screen.getByRole('separator', { name: 'resize_side_panel' }));
+    expect(panelWidth(panel())).toBe('300px');
+    expect(localStorage.getItem('pluginSidePanelWidth')).toBe('300');
+  });
+
+  it('has no handle while the panel is shut', () => {
+    offer('fu', 'Follow-ups');
+    render(<PluginSidePanel />);
+    expect(screen.queryByRole('separator')).toBeNull();
+  });
+
+  it('gives Mountain View\'s apps\' and plugins\' panels the same width', () => {
+    useCalendarStore.setState({ supportsCalendar: true, calendars: [], events: [] } as never);
+    useSettingsStore.setState({ enableCalendarTasks: false } as never);
+    localStorage.setItem('pluginSidePanelWidth', '420');
+    offer('fu', 'Follow-ups');
+    const { container } = render(<MvSidePanel />);
+    fireEvent.click(screen.getByRole('button', { name: 'Follow-ups' }));
+    expect(panelWidth(container.querySelector('[data-plugin-side-panel="fu"]'))).toBe('420px');
+    fireEvent.keyDown(screen.getByRole('separator', { name: 'resize_side_panel' }), { key: 'ArrowLeft' });
+    fireEvent.click(screen.getByRole('button', { name: 'calendar' }));
+    expect(panelWidth(container.querySelector('[data-mv-side-panel="calendar"]'))).toBe('430px');
+  });
+});
+
 describe('MvSidePanel with plugin panels', () => {
   beforeEach(() => {
     useCalendarStore.setState({ supportsCalendar: true, calendars: [], events: [] } as never);

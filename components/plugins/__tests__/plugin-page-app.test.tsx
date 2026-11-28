@@ -152,7 +152,8 @@ describe('plugin side panels on a plugin page', () => {
     await act(async () => { answer = await dispatchApiCall(plugin, 'ui.setPanel', ['side-panel', 'toggle']); });
     expect(answer).toBe(true);
     const panel = screen.getByRole('complementary', { name: 'Upcoming for me' });
-    expect(panel).toHaveClass('w-[300px]', 'shrink-0');
+    expect(panel).toHaveClass('shrink-0');
+    expect(panel.style.width).toBe('300px');
     // Beside the page's column, in the same row: the page gives up the width.
     const page = container.querySelector('[data-plugin-page="kanban/board"]')!;
     const row = panel.parentElement!;

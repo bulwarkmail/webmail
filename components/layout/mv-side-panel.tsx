@@ -30,7 +30,7 @@ import { Avatar } from "@/components/ui/avatar";
 import type { CalendarEvent } from "@/lib/jmap/types";
 import { useCvdColor } from "@/hooks/use-cvd-color";
 import { useCloseBesideControls } from "@/hooks/use-close-beside-controls";
-import { PluginSidePanelBody, SidePanelButton, usePluginSidePanel } from "@/components/plugins/plugin-side-panels";
+import { PluginSidePanelBody, SidePanelButton, usePluginSidePanel, useSidePanelWidth } from "@/components/plugins/plugin-side-panels";
 
 export type MvSidePanelId = "calendar" | "tasks" | "contacts";
 
@@ -54,6 +54,8 @@ export function MvSidePanel({ pluginsOnly = false }: { pluginsOnly?: boolean } =
   // Plugins' panels (the side-panel slot), their buttons below the apps'.
   // A plugin's panel opening (a click, or the plugin's openPanel) shuts the app's, and the other way round.
   const plugins = usePluginSidePanel(() => setOpen(null));
+  // One width for the apps' and the plugins' panels: they open in the same place.
+  const { width, handle } = useSidePanelWidth();
   const pluginOpen = plugins.entries.find((e) => e.pluginId === plugins.open) ?? null;
   const openApp = (id: MvSidePanelId | null) => {
     if (id) plugins.choose(null);
@@ -82,11 +84,13 @@ export function MvSidePanel({ pluginsOnly = false }: { pluginsOnly?: boolean } =
 
   return (
     <>
+      {(active || pluginOpen) && handle}
       {active && (
         <aside
           data-simple-hide=""
           data-mv-side-panel={active}
-          className="mb-4 me-2 flex w-[300px] shrink-0 flex-col overflow-hidden rounded-2xl bg-background"
+          className="mb-4 me-2 flex shrink-0 flex-col overflow-hidden rounded-2xl bg-background"
+          style={{ width }}
           aria-label={buttons.find((b) => b.id === active)?.label}
         >
           {active === "calendar" && <CalendarPanel onClose={() => setOpen(null)} />}
@@ -98,7 +102,8 @@ export function MvSidePanel({ pluginsOnly = false }: { pluginsOnly?: boolean } =
         <aside
           data-simple-hide=""
           data-plugin-side-panel={pluginOpen.pluginId}
-          className="mb-4 me-2 flex w-[300px] shrink-0 flex-col overflow-hidden rounded-2xl bg-background"
+          className="mb-4 me-2 flex shrink-0 flex-col overflow-hidden rounded-2xl bg-background"
+          style={{ width }}
           aria-label={pluginOpen.title}
         >
           <PluginSidePanelBody entry={pluginOpen} focusRequest={plugins.focusRequest} onClose={() => plugins.choose(null)} />

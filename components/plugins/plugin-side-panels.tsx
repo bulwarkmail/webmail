@@ -9,6 +9,8 @@ import { get as getActivePlugin } from '@/lib/plugin-sandbox/registry';
 import { onPanelRequest } from '@/lib/plugin-sandbox/panel-requests';
 import { sidePanelLooks, subscribeSidePanels } from '@/lib/plugin-sandbox/side-panels';
 import { cn } from '@/lib/utils';
+import { ResizeHandle } from '@/components/layout/resize-handle';
+import { APP_SIDE_PANEL_MAX_WIDTH, APP_SIDE_PANEL_MIN_WIDTH } from './app-side-panel';
 import { PluginIframeSlot } from './plugin-iframe-slot';
 
 // The `side-panel` slot: one panel per plugin beside the mail and beside a
@@ -18,9 +20,51 @@ import { PluginIframeSlot } from './plugin-iframe-slot';
 // shows PluginSidePanel. At most one panel is open; which one is
 // remembered in this browser. A plugin that set `rail: false` has no
 // button: its panel opens only on its request; a rail without buttons is
-// not drawn.
+// not drawn. The panel's start edge drags between 200 and 500 px, as the
+// app side panel's does; the width is kept in this browser, one for both
+// layouts.
 
 const STORAGE_KEY = 'plugin-side-panel-open';
+export const SIDE_PANEL_WIDTH_KEY = 'pluginSidePanelWidth';
+export const SIDE_PANEL_DEFAULT_WIDTH = 300;
+
+const clampWidth = (n: number) => Math.max(APP_SIDE_PANEL_MIN_WIDTH, Math.min(APP_SIDE_PANEL_MAX_WIDTH, Math.round(n)));
+
+function readWidth(): number {
+  try {
+    const n = parseInt(localStorage.getItem(SIDE_PANEL_WIDTH_KEY) ?? '', 10);
+    return Number.isFinite(n) ? clampWidth(n) : SIDE_PANEL_DEFAULT_WIDTH;
+  } catch { return SIDE_PANEL_DEFAULT_WIDTH; }
+}
+
+/**
+ * The side panel's width, remembered in this browser, and the handle that
+ * drags it. The handle goes right before the panel: the panel is at the
+ * window's end, so dragging towards the mail widens it (left, or right in
+ * RTL). A double-click puts back the default.
+ */
+export function useSidePanelWidth() {
+  const [width, setWidth] = useState<number>(readWidth);
+  const atStart = useRef(width);
+  const save = useCallback((n: number) => {
+    const next = clampWidth(n);
+    setWidth(next);
+    try { localStorage.setItem(SIDE_PANEL_WIDTH_KEY, String(next)); } catch { /* storage blocked: the width lasts this visit */ }
+  }, []);
+  const handle = (
+    <ResizeHandle
+      pane="sidePanel"
+      value={width}
+      min={APP_SIDE_PANEL_MIN_WIDTH}
+      max={APP_SIDE_PANEL_MAX_WIDTH}
+      onResizeStart={() => { atStart.current = width; }}
+      onResize={(delta) => save(atStart.current + (document.documentElement.dir === 'rtl' ? delta : -delta))}
+      onResizeEnd={() => { atStart.current = width; }}
+      onDoubleClick={() => save(SIDE_PANEL_DEFAULT_WIDTH)}
+    />
+  );
+  return { width, handle };
+}
 
 export interface SidePanelEntry {
   pluginId: string;
@@ -143,16 +187,19 @@ export function PluginSidePanelBody({ entry, focusRequest, onClose }: {
 export function PluginSidePanel() {
   const t = useTranslations('sidebar');
   const { entries, open, choose, focusRequest } = usePluginSidePanel();
+  const { width, handle } = useSidePanelWidth();
   if (entries.length === 0) return null;
   const active = entries.find((e) => e.pluginId === open) ?? null;
   const inRail = entries.filter((e) => e.inRail);
   return (
     <>
+      {active && handle}
       {active && (
         <aside
           data-plugin-side-panel={active.pluginId}
           data-window-end-column=""
-          className="flex w-[300px] shrink-0 flex-col overflow-hidden border-s border-border bg-background"
+          className="flex shrink-0 flex-col overflow-hidden border-s border-border bg-background"
+          style={{ width }}
           aria-label={active.title}
         >
           <PluginSidePanelBody entry={active} focusRequest={focusRequest} onClose={() => choose(null)} />
