@@ -9,6 +9,7 @@ import { applyLiteConfig, liteStalwartDefaults } from '@/lib/lite-config';
 import { isConfigData } from '@/lib/config-validation';
 import { setNoThirdPartyTraffic } from '@/lib/third-party-mode';
 import { setTrustedAuthservIds } from '@/lib/trusted-authserv';
+import { setPluginFrameLabel } from '@/lib/plugin-sandbox/frame-origin';
 import { configureErrorReporting, type ClientSettings } from '@/lib/error-reporting/client';
 
 export interface ConfigData {
@@ -73,6 +74,12 @@ export interface ConfigData {
   oauthRevokeOnSignOut?: boolean;
   /** Server build only; Lite reads it from policy.json (stores/policy-store.ts). */
   errorReporting?: ClientSettings;
+  /**
+   * PLUGIN_FRAME_SUBDOMAIN: the label of the host privileged plugin frames
+   * load from, '' for the webmail's own origin (lib/plugin-sandbox/frame-origin.ts).
+   * Server build only: Lite has no server to answer on a second host name.
+   */
+  pluginFrameSubdomain?: string;
 }
 
 interface AppConfig extends ConfigData {
@@ -160,6 +167,7 @@ export async function fetchConfig(): Promise<ConfigData> {
       configCache = data;
       setNoThirdPartyTraffic(data.noThirdPartyTraffic === true);
       setTrustedAuthservIds(data.trustedAuthservIds);
+      setPluginFrameLabel(IS_LITE ? '' : data.pluginFrameSubdomain ?? '');
       // Lite configures error reporting from policy.json instead.
       if (!IS_LITE) configureErrorReporting(data.errorReporting ?? null);
       // Fetch admin policy alongside config (non-blocking)

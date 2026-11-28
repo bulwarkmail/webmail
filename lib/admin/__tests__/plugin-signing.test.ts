@@ -7,7 +7,10 @@ import {
   getPublicKeyBase64,
   invalidatePluginSigningCache,
   signBytes,
+  signPrivilegedFrameBundle,
+  verifyBytes,
 } from '../plugin-signing';
+import { FRAME_BUNDLE_SIGNATURE_PREFIX } from '@/lib/plugin-sandbox/protocol';
 
 let dir: string;
 
@@ -120,5 +123,48 @@ describe('plugin signing key storage', () => {
     await expect(signBytes('payload')).rejects.toThrow(
       'PLUGIN_SIGNING_KEY_FILE has wrong key type (rsa); expected ed25519',
     );
+  });
+});
+
+// A frame on the plugin origin runs a bundle only with this signature
+// (lib/plugin-sandbox/protocol.ts). It must not be the signature of an
+// install, which every admin-installed bundle has, privileged or not.
+describe('the signature for a privileged frame', () => {
+  beforeEach(() => { vi.stubEnv('ADMIN_CONFIG_DIR', dir); });
+
+  it('covers the prefix and the code', async () => {
+    const signature = await signPrivilegedFrameBundle('CODE');
+
+    expect(await verifyBytes(FRAME_BUNDLE_SIGNATURE_PREFIX + 'CODE', signature)).toBe(true);
+  });
+
+  it('is not the signature of the install, and that one is not it', async () => {
+    const forFrame = await signPrivilegedFrameBundle('CODE');
+    const ofInstall = await signBytes('CODE');
+
+    expect(await verifyBytes('CODE', forFrame)).toBe(false);
+    expect(await verifyBytes(FRAME_BUNDLE_SIGNATURE_PREFIX + 'CODE', ofInstall)).toBe(false);
+  });
+
+  it('is for this code only', async () => {
+    const signature = await signPrivilegedFrameBundle('CODE');
+
+    expect(await verifyBytes(FRAME_BUNDLE_SIGNATURE_PREFIX + 'OTHER CODE', signature)).toBe(false);
+  });
+
+  // The prefix is valid JavaScript (a subtraction), so it can open any bundle
+  // an admin installs, of the untrusted tier too, and that bundle's install
+  // signature would then be a frame signature for the code after it.
+  it('cannot be had as the install signature of a bundle that starts with the prefix', async () => {
+    const crafted = FRAME_BUNDLE_SIGNATURE_PREFIX + 'stealKeys()';
+
+    await expect(signBytes(crafted)).rejects.toThrow(/prefix/);
+    await expect(signBytes(new TextEncoder().encode(crafted))).rejects.toThrow(/prefix/);
+  });
+
+  it('still signs a bundle that only mentions the prefix later on', async () => {
+    const code = `const marker = ${JSON.stringify(FRAME_BUNDLE_SIGNATURE_PREFIX)};`;
+
+    expect(await verifyBytes(code, await signBytes(code))).toBe(true);
   });
 });

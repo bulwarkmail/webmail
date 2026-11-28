@@ -28,6 +28,7 @@ import { readFile, writeFile, chmod } from 'node:fs/promises';
 import { ensureConfigDir, getConfigPath, assertWritable, isConfigReadOnly } from './paths';
 import { getStore, isSharedMode, StoreUnavailableError } from '@/lib/shared-store';
 import { logger } from '@/lib/logger';
+import { FRAME_BUNDLE_SIGNATURE_PREFIX } from '@/lib/plugin-sandbox/protocol';
 
 const KEY_FILENAME = 'plugin-signing.key';
 
@@ -244,12 +245,38 @@ export async function getPublicKeyBase64(): Promise<string> {
   return Buffer.from(raw).toString('base64');
 }
 
-/** Sign `bytes` and return a base64-encoded 64-byte Ed25519 signature. */
-export async function signBytes(bytes: Uint8Array | string): Promise<string> {
+const FRAME_PREFIX_BYTES = Buffer.from(FRAME_BUNDLE_SIGNATURE_PREFIX, 'utf-8');
+
+async function signData(data: Buffer): Promise<string> {
   const { privateKey } = await ensureLoaded();
+  return nodeSign(null, data, privateKey).toString('base64');
+}
+
+/**
+ * Sign `bytes` and return a base64-encoded 64-byte Ed25519 signature.
+ *
+ * Bytes that start with FRAME_BUNDLE_SIGNATURE_PREFIX are refused. The same
+ * key makes the frame signature over that prefix and a bundle, and this
+ * signs whatever bundle an admin installs, of any tier: a bundle made of the
+ * prefix and other code would carry, as its install signature, a frame
+ * signature for that other code.
+ */
+export async function signBytes(bytes: Uint8Array | string): Promise<string> {
   const data = typeof bytes === 'string' ? Buffer.from(bytes, 'utf-8') : Buffer.from(bytes);
-  const sig = nodeSign(null, data, privateKey);
-  return sig.toString('base64');
+  if (data.subarray(0, FRAME_PREFIX_BYTES.length).equals(FRAME_PREFIX_BYTES)) {
+    throw new Error('Refusing to sign bytes that start with the privileged frame prefix');
+  }
+  return signData(data);
+}
+
+/**
+ * The signature a frame on the plugin origin asks for before it runs a
+ * bundle (lib/plugin-sandbox/protocol.ts). Made for privileged plugins only:
+ * the signature of an install covers every admin-installed bundle, and one of
+ * those running in a privileged frame would get that frame's origin.
+ */
+export async function signPrivilegedFrameBundle(code: string): Promise<string> {
+  return signData(Buffer.from(FRAME_BUNDLE_SIGNATURE_PREFIX + code, 'utf-8'));
 }
 
 /** Whether `signature` (base64) is this key's signature of `bytes`. */

@@ -11,6 +11,7 @@
 
 import { apiFetch } from '@/lib/browser-navigation';
 import { verifySignature } from './bundle-signing';
+import { FRAME_SIGNATURE_HEADER } from './protocol';
 
 export function bundleUrl(pluginId: string, bundleHash?: string | null): string {
   // Append the hash as a query string so any intermediary HTTP cache
@@ -28,6 +29,27 @@ export function bundleUrl(pluginId: string, bundleHash?: string | null): string 
  * load-time error shows up on the plugin card instead of the plugin silently
  * vanishing from the list.
  */
+/**
+ * The server's signature of a privileged bundle for a frame on the plugin
+ * origin (protocol.ts). The frame checks it; this page only carries it. Asked
+ * with HEAD, so a bundle already in the browser's cache is not downloaded
+ * again for it.
+ */
+export async function fetchFrameSignature(pluginId: string, bundleHash?: string | null): Promise<string> {
+  let res: Response;
+  try {
+    res = await apiFetch(bundleUrl(pluginId, bundleHash), { method: 'HEAD' });
+  } catch (err) {
+    const reason = err instanceof Error ? err.message : String(err);
+    throw new Error(`Could not get the signature of the bundle for plugin "${pluginId}": ${reason}`);
+  }
+  const signature = res.ok ? res.headers.get(FRAME_SIGNATURE_HEADER) : null;
+  if (!signature) {
+    throw new Error(`The server gave no signature for the bundle of privileged plugin "${pluginId}"`);
+  }
+  return signature;
+}
+
 export async function downloadManagedBundle(
   pluginId: string,
   bundleHash?: string | null,

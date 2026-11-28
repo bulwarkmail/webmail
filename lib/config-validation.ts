@@ -82,6 +82,8 @@ const configValidators = {
   trustedAuthservIds: (value): value is string[] | undefined => value === undefined || (Array.isArray(value) && value.every(isString)),
   // Lite only (lib/lite-config.ts); the server's response leaves it out.
   oauthRevokeOnSignOut: (value): value is boolean | undefined => value === undefined || typeof value === 'boolean',
+  // Server build only; absent from Lite's config and from older servers.
+  pluginFrameSubdomain: (value): value is string | undefined => value === undefined || typeof value === 'string',
   // Absent from Lite's config and from servers before 1.20.
   errorReporting: (value): value is ConfigData['errorReporting'] => value === undefined || (
     isRecord(value)

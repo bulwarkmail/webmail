@@ -26,7 +26,12 @@ export interface RegionalSnapshot {
 }
 
 /** Initialisation payload for a background-instance iframe (one per plugin). */
-export interface BackgroundInit {
+/** In both init payloads: the server's signature for a frame on the plugin origin (FRAME_BUNDLE_SIGNATURE_PREFIX). */
+export interface SignedCode {
+  codeSignature?: string;
+}
+
+export interface BackgroundInit extends SignedCode {
   mode: 'background';
   pluginId: string;
   /**
@@ -55,7 +60,7 @@ export interface BackgroundInit {
 }
 
 /** Initialisation payload for a slot-instance iframe (one per slot mount). */
-export interface SlotInit {
+export interface SlotInit extends SignedCode {
   mode: 'slot';
   pluginId: string;
   /** Execution tier (mirrors `BackgroundInit.tier`). */
@@ -363,3 +368,25 @@ export const SANDBOX_PATH = '/plugin-sandbox';
  * `proxy.ts`. Serves the same document (sandbox-document.ts).
  */
 export const SANDBOX_PRIVILEGED_PATH = '/plugin-sandbox-privileged';
+
+/**
+ * `<meta name>` of the sandbox document that names the webmail's origin when
+ * the document is served on the plugin origin (frame-origin.ts). proxy.ts
+ * hands it to the route in the request header of the same name.
+ */
+export const HOST_ORIGIN_META = 'bulwark-host-origin';
+export const HOST_ORIGIN_HEADER = 'x-plugin-host-origin';
+
+/**
+ * A frame on the plugin origin does not take its code on trust from the page
+ * that frames it: that page is what the separate origin is there to keep out,
+ * and a script on it could otherwise hand a new frame a bundle of its own.
+ * The frame runs a bundle only with the server's signature over this prefix
+ * and the code, which the server makes for privileged plugins alone, and it
+ * checks that against the key the server wrote into its own document.
+ */
+export const FRAME_BUNDLE_SIGNATURE_PREFIX = 'bulwark-privileged-frame-bundle-v1\n';
+/** `<meta name>` of the sandbox document with the server's Ed25519 public key (base64, raw). */
+export const BUNDLE_KEY_META = 'bulwark-bundle-key';
+/** Response header of the bundle route with that signature (base64). */
+export const FRAME_SIGNATURE_HEADER = 'X-Bundle-Frame-Signature';

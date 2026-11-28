@@ -12,6 +12,7 @@ import {
   type BrandingOverrideKey,
 } from '@/lib/admin/domain-branding';
 import { isNoThirdPartyTrafficOn } from '@/lib/admin/third-party-mode';
+import { parsePluginFrameLabel } from '@/lib/plugin-sandbox/frame-origin';
 import { browserErrorSettings } from '@/lib/error-reporting/settings';
 import { parseTrustedAuthservIds } from '@/lib/trusted-authserv';
 
@@ -120,6 +121,8 @@ export async function GET(request: NextRequest) {
       accountManagementLabel: configManager.get<string>('accountManagementLabel', ''),
       // Whose Authentication-Results the sender check acts on (lib/trusted-authserv.ts).
       trustedAuthservIds: parseTrustedAuthservIds(configManager.get<string>('trustedAuthservIds', '')),
+      // Where the browser loads privileged plugin frames from (lib/plugin-sandbox/frame-origin.ts).
+      pluginFrameSubdomain: parsePluginFrameLabel(configManager.get<string>('pluginFrameSubdomain', '')),
       // Browser-side switches of lib/outgoing-hosts.ts read this (#903).
       noThirdPartyTraffic: await isNoThirdPartyTrafficOn(),
       // Error reporting (lib/error-reporting/client.ts): off unless a DSN is

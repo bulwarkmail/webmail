@@ -23,6 +23,8 @@ export interface ActivePlugin {
   plugin: InstalledPlugin;
   /** Verified bundle source. Reused when spinning up slot iframes. */
   code: string;
+  /** For a privileged frame on the plugin origin (protocol.ts). */
+  codeSignature?: string;
   /** Resolved execution tier. Slot iframes must use the SAME tier as the
    * background instance, so `PluginIframeSlot` reads it from here. */
   tier: PluginTier;

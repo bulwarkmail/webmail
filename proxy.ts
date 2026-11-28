@@ -21,6 +21,8 @@ import { bootGateResponse } from "./lib/shared-store/boot-gate";
 import { IS_DESKTOP_BUILD } from "./lib/desktop/flag";
 import { isDesktopBlockedRoute } from "./lib/desktop/blocked-routes";
 import { signedOutStartTarget, START_COOKIE } from "./lib/signed-out-start";
+import { parsePluginFrameLabel, pluginFrameOriginFor, webmailOriginOfPluginHost } from "./lib/plugin-sandbox/frame-origin";
+import { HOST_ORIGIN_HEADER } from "./lib/plugin-sandbox/protocol";
 
 const intlMiddleware = createIntlMiddleware(routing);
 
@@ -184,6 +186,16 @@ export function mailFrameAncestors(allowed: string | undefined): string {
   return sources.join(" ");
 }
 
+/** The origin the browser asked, behind a reverse proxy too (as lib/security/same-origin.ts reads it). */
+function requestOrigin(request: NextRequest): string {
+  const host = request.headers.get("x-forwarded-host") ?? request.headers.get("host") ?? "";
+  return `${isServedOverHttps(request) ? "https" : "http"}://${host}`;
+}
+
+function isPrivilegedSandboxPath(pathname: string): boolean {
+  return pathname === "/plugin-sandbox-privileged" || pathname.startsWith("/plugin-sandbox-privileged/");
+}
+
 const PROBE_PATHS = new Set(["/api/health", "/api/health/live", "/api/health/ready", "/api/ready", "/api/metrics"]);
 
 function isSetupPath(pathname: string): boolean {
@@ -267,6 +279,19 @@ export async function proxy(request: NextRequest) {
   // decision about the request.
   const rawPathname = request.nextUrl.pathname;
   const pathname = routePathOf(rawPathname);
+
+  // PLUGIN_FRAME_SUBDOMAIN (lib/plugin-sandbox/frame-origin.ts): privileged
+  // plugin frames load from <label>.<webmail host>. On that host this server
+  // is the privileged sandbox document and its assets, and nothing else: no
+  // mail UI, no API and no sign-in page under a second origin.
+  const frameLabel = parsePluginFrameLabel(configManager.get<string>("pluginFrameSubdomain", ""));
+  const pluginHostOf = frameLabel ? webmailOriginOfPluginHost(requestOrigin(request), frameLabel) : null;
+  if (pluginHostOf && !isPrivilegedSandboxPath(pathname) && !pathname.startsWith("/plugin-sandbox-assets/")) {
+    return new NextResponse("Not Found", {
+      status: 404,
+      headers: { "content-type": "text/plain", "X-Content-Type-Options": "nosniff", "X-Frame-Options": "DENY" },
+    });
+  }
 
   if (setupState === "bootstrap") {
     // Wizard active. Redirect HTML pages to /setup; let asset/internal
@@ -354,9 +379,14 @@ export async function proxy(request: NextRequest) {
   // (GHSA-96cx-gx36-3g79). Other destinations pass - `iframe` for the bridge,
   // `empty` for the router's own RSC refetches - and framing by any site
   // outside the mail UI's frame-ancestors is blocked by the CSP below.
+  // With a plugin origin set, the privileged document is served there and
+  // only there. The webmail's own origin refuses it, so a privileged frame
+  // can never run with the webmail's origin by mistake (a browser that has
+  // not read the setting yet, a webmail opened by IP address).
+  const privilegedOnWrongHost = isPrivilegedSandboxPath(pathname) && frameLabel !== "" && !pluginHostOf;
   if (isSandboxPath) {
     const pluginsEnabled = configManager.getPolicy().features?.pluginsEnabled === true;
-    if (!pluginsEnabled || request.headers.get("sec-fetch-dest") === "document") {
+    if (!pluginsEnabled || privilegedOnWrongHost || request.headers.get("sec-fetch-dest") === "document") {
       return new NextResponse("The plugin sandbox is only served inside the webmail.", {
         status: 403,
         headers: { "content-type": "text/plain" },
@@ -409,9 +439,12 @@ export async function proxy(request: NextRequest) {
   // inside it (#1533). The parent is still the webmail itself: the runtime
   // only takes messages from its parent posting from its own origin.
   const isAdminOrSetupPath = /^\/(?:admin|setup)(?:\/|$)/.test(pathname);
+  // On the plugin host the parent is not 'self' but the webmail this host
+  // belongs to, so that origin is named, with the same portals around it.
+  const mailAncestors = mailFrameAncestors(configManager.get<string>("allowedFrameAncestors", ""));
   const frameAncestors = isAdminOrSetupPath
     ? "'none'"
-    : mailFrameAncestors(configManager.get<string>("allowedFrameAncestors", ""));
+    : pluginHostOf ? `${pluginHostOf} ${mailAncestors}` : mailAncestors;
 
   // Plugins may declare iframe origins they need (e.g. for embedded video).
   // Each origin is validated at install time and re-validated here. None
@@ -448,9 +481,14 @@ export async function proxy(request: NextRequest) {
   // wopiClientUrl when discovery is fetched over an internal address (#1130).
   const wopiOrigins = await getWopiEditorOrigins();
 
+  // The origin privileged plugin frames load from, when one is set.
+  const privilegedFrameOrigin = !pluginHostOf && configManager.getPolicy().features?.pluginsEnabled === true
+    ? pluginFrameOriginFor(requestOrigin(request), frameLabel)
+    : null;
+
   const frameOrigins: string[] = [];
   const seenFrameOrigins = new Set<string>();
-  for (const origin of [...pluginFrameOrigins, ...managedAppFrameOrigins, ...appFrameOrigins, ...wopiOrigins, ...(ownHosts?.other ?? [])]) {
+  for (const origin of [...(privilegedFrameOrigin ? [privilegedFrameOrigin] : []), ...pluginFrameOrigins, ...managedAppFrameOrigins, ...appFrameOrigins, ...wopiOrigins, ...(ownHosts?.other ?? [])]) {
     const key = origin.toLowerCase();
     if (seenFrameOrigins.has(key)) continue;
     seenFrameOrigins.add(key);
@@ -533,7 +571,14 @@ export async function proxy(request: NextRequest) {
   // so getLocale() can't resolve the active locale there and falls back to the
   // default - emitting <html lang="en"> on e.g. /de pages, which makes browsers
   // offer to "translate this page". The layout reads x-pathname to recover it.
-  forwardRequestHeaders(response, request, { "x-nonce": nonce, "x-pathname": rawPathname });
+  // The sandbox document names the webmail's origin to a frame on the plugin
+  // host (sandbox-document.ts). Always set, so a header of that name sent by
+  // the client never reaches the route.
+  forwardRequestHeaders(response, request, {
+    "x-nonce": nonce,
+    "x-pathname": rawPathname,
+    [HOST_ORIGIN_HEADER]: isPrivilegedSandboxPath(pathname) && pluginHostOf ? pluginHostOf : "",
+  });
 
   response.headers.set("X-Content-Type-Options", "nosniff");
 

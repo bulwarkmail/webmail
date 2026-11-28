@@ -27,6 +27,7 @@ import type {
   SlotInit,
   RegionalSnapshot,
 } from './protocol';
+import { BUNDLE_KEY_META, FRAME_BUNDLE_SIGNATURE_PREFIX, HOST_ORIGIN_META } from './protocol';
 import { themeSnapshotToCSS, type ThemeSnapshot } from './host-theme';
 import { backgroundReactDom, backgroundUiKit } from './ui-kit/background-kit';
 import { initFloatingDropdownBridge, dispatchFloatingDropdownEvent } from './ui-kit/floating-dropdown-bridge';
@@ -295,6 +296,11 @@ function openActivityPort(): MessagePort | null {
  *    CSP's frame-ancestors also admits the portals the operator lets frame
  *    the mail UI (#1533), so the origin check on every message is what keeps
  *    a portal that frames this route directly from driving it.
+ *  - On the plugin origin (PLUGIN_FRAME_SUBDOMAIN, frame-origin.ts) the host
+ *    page is not served from this document's origin. The server then names
+ *    the webmail's origin in the document it writes (sandbox-document.ts),
+ *    from the host name of the request: a fact of the response, like the
+ *    script that reads it, and never a message or a part of the URL.
  *
  * Pinning the first sender instead (pre-fix) let any website window.open()
  * the route, post its own `init` before a real host could, and run its code
@@ -305,11 +311,31 @@ function resolveHost(): { window: Window; origin: string } | null {
   if (typeof window === 'undefined') return null;
   const parent = window.parent;
   if (!parent || parent === window) return null;
-  const origin = window.location.origin;
+  const origin = hostOriginOfDocument() ?? window.location.origin;
   // 'null' is what opaque URL origins (blob:, data:, file:) serialise to; an
   // attacker frame could match it, so it never counts as a host origin.
   if (!origin || origin === 'null') return null;
   return { window: parent, origin };
+}
+
+/** The webmail's origin as the server wrote it into a plugin-origin document. */
+function hostOriginOfDocument(): string | null {
+  if (typeof document === 'undefined') return null;
+  const value = document.querySelector(`meta[name="${HOST_ORIGIN_META}"]`)?.getAttribute('content');
+  if (!value) return null;
+  try {
+    const url = new URL(value);
+    // An origin and nothing else, over http(s).
+    if ((url.protocol !== 'https:' && url.protocol !== 'http:') || url.origin !== value) return null;
+    // The scheme is this frame's own. The plugin host and its webmail always
+    // share one (frame-origin.ts), and the browser knows it for certain; the
+    // server, behind a TLS proxy that sends no X-Forwarded-Proto, takes an
+    // HTTPS webmail for plain HTTP, and every message from it would miss the
+    // origin pin.
+    return `${window.location.protocol}//${url.host}`;
+  } catch {
+    return null;
+  }
 }
 
 // ─── Theme replay ────────────────────────────────────────────
@@ -1706,6 +1732,9 @@ async function handleInit(payload: InitPayload): Promise<void> {
   // Before the bundle runs, so activate() and shouldShow already see it.
   applyHostFeatures(payload.hostFeatures);
   try {
+    // On the plugin origin the page that frames us is the one thing this
+    // origin is kept apart from, so its word is not enough for what runs here.
+    if (hostOriginOfDocument() !== null) await assertBundleSigned(payload.code, payload.codeSignature);
     if (payload.mode === 'background') {
       await bootBackground(payload);
     } else {
@@ -1714,6 +1743,32 @@ async function handleInit(payload: InitPayload): Promise<void> {
   } catch (err) {
     sendToHost({ type: 'init-error', error: (err as Error).message ?? String(err) });
   }
+}
+
+function base64Bytes(value: string): Uint8Array<ArrayBuffer> {
+  const bin = atob(value);
+  const bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  return bytes;
+}
+
+/**
+ * Throws unless `signature` is the server's over this bundle, for a
+ * privileged frame (FRAME_BUNDLE_SIGNATURE_PREFIX). The key is the one the
+ * server wrote into this document, not one the host page names.
+ */
+async function assertBundleSigned(code: string, signature: string | undefined): Promise<void> {
+  const key = document.querySelector(`meta[name="${BUNDLE_KEY_META}"]`)?.getAttribute('content');
+  if (!key || !signature) throw new Error('A frame on the plugin origin only runs a bundle the server signed for it, and none was given');
+  let signed: boolean;
+  try {
+    const publicKey = await crypto.subtle.importKey('raw', base64Bytes(key), { name: 'Ed25519' }, false, ['verify']);
+    const data = new TextEncoder().encode(FRAME_BUNDLE_SIGNATURE_PREFIX + code);
+    signed = await crypto.subtle.verify({ name: 'Ed25519' }, publicKey, base64Bytes(signature), data);
+  } catch {
+    throw new Error('This browser cannot check the signature of a plugin bundle (Ed25519)');
+  }
+  if (!signed) throw new Error('The plugin bundle is not the one the server signed for a privileged frame');
 }
 
 // ─── Host message handler ────────────────────────────────────

@@ -11,6 +11,9 @@ vi.mock('node:fs/promises', async (orig) => ({
   }),
 }));
 
+const signingKey = vi.hoisted(() => ({ get: async (): Promise<string> => 'S0VZ' }));
+vi.mock('@/lib/admin/plugin-signing', () => ({ getPublicKeyBase64: () => signingKey.get() }));
+
 import { GET as untrusted } from '@/app/(sandbox)/plugin-sandbox/route';
 import { GET as privileged } from '@/app/(sandbox)/plugin-sandbox-privileged/route';
 
@@ -77,5 +80,47 @@ describe('plugin sandbox document', () => {
 
     expect(res.status).toBe(503);
     expect(await res.text()).toContain('build-plugin-sandbox');
+  });
+});
+
+// PLUGIN_FRAME_SUBDOMAIN (frame-origin.ts): on the plugin origin the runtime
+// takes its host from the document, which proxy.ts names in a request header.
+describe('the webmail origin in a plugin-origin document', () => {
+  const named = (origin: string) => new Request('http://plugins.localhost:3000/plugin-sandbox-privileged', {
+    headers: { 'x-nonce': 'n0nce', 'x-plugin-host-origin': origin },
+  });
+
+  it('is written for the runtime to read', async () => {
+    const html = await (await privileged(named('http://localhost:3000'))).text();
+
+    expect(html).toContain('<meta name="bulwark-host-origin" content="http://localhost:3000">');
+  });
+
+  it('is left out on the webmail origin', async () => {
+    expect(await (await privileged(request())).text()).not.toContain('bulwark-host-origin');
+    expect(await (await privileged(named(''))).text()).not.toContain('bulwark-host-origin');
+  });
+
+  it('comes with the key the frame checks its bundle against', async () => {
+    const html = await (await privileged(named('http://localhost:3000'))).text();
+
+    expect(html).toContain('<meta name="bulwark-bundle-key" content="S0VZ">');
+    expect(await (await privileged(request())).text()).not.toContain('bulwark-bundle-key');
+  });
+
+  // The frame then runs nothing: it never falls back to taking the page's word.
+  it('carries no key when the server has none to give', async () => {
+    signingKey.get = async () => { throw new Error('no key'); };
+    const html = await (await privileged(named('http://localhost:3000'))).text();
+    signingKey.get = async () => 'S0VZ';
+
+    expect(html).toContain('bulwark-host-origin');
+    expect(html).not.toContain('bulwark-bundle-key');
+  });
+
+  it('cannot break out of the attribute', async () => {
+    const html = await (await privileged(named('"><script>alert(1)</script>'))).text();
+
+    expect(html).not.toContain('<script>alert(1)');
   });
 });

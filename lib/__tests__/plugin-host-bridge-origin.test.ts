@@ -461,3 +461,83 @@ describe('input in a frame', () => {
     }
   });
 });
+
+// PLUGIN_FRAME_SUBDOMAIN (frame-origin.ts): a privileged frame loads from
+// <label>.<webmail host>, so the browser keeps the webmail's scripts out of
+// it. The bridge then talks to that origin and to no other.
+describe('a privileged frame on the plugin origin', () => {
+  const PLUGIN_ORIGIN = window.location.origin.replace('://', '://plugins.');
+
+  async function privilegedFrame(label: string | null) {
+    const { setPluginFrameLabel } = await import('../plugin-sandbox/frame-origin');
+    setPluginFrameLabel(label);
+    const inst = createBackgroundInstance({ plugin: plugin(), code: 'CODE', locale: 'en', tier: 'privileged' });
+    instances.push(inst);
+    return inst;
+  }
+
+  afterEach(async () => {
+    const { setPluginFrameLabel } = await import('../plugin-sandbox/frame-origin');
+    setPluginFrameLabel(null);
+  });
+
+  it('loads from the plugin origin, with WebAuthn passed down by name', async () => {
+    const inst = await privilegedFrame('plugins');
+
+    expect(inst.iframe.src).toBe(`${PLUGIN_ORIGIN}/plugin-sandbox-privileged`);
+    expect(inst.iframe.getAttribute('sandbox')).toBe('allow-scripts allow-same-origin');
+    expect(inst.iframe.getAttribute('allow')).toBe('clipboard-write; publickey-credentials-get; publickey-credentials-create');
+  });
+
+  it('answers the frame posting from the plugin origin', async () => {
+    const inst = await privilegedFrame('plugins');
+
+    post(inst.iframe.contentWindow, PLUGIN_ORIGIN, { type: 'api-request', id: '1', method: 'storage.keys', args: [] });
+    await new Promise((r) => setTimeout(r, 0));
+
+    expect(dispatchApiCall).toHaveBeenCalledTimes(1);
+  });
+
+  it.each([window.location.origin, 'null', 'https://attacker.example'])(
+    'ignores the frame posting from %s', async (origin) => {
+      const inst = await privilegedFrame('plugins');
+
+      post(inst.iframe.contentWindow, origin, { type: 'api-request', id: '1', method: 'storage.keys', args: [] });
+      await new Promise((r) => setTimeout(r, 0));
+
+      expect(dispatchApiCall).not.toHaveBeenCalled();
+    },
+  );
+
+  it('sends the bundle to the plugin origin only', async () => {
+    const inst = await privilegedFrame('plugins');
+    const send = vi.spyOn(inst.iframe.contentWindow!, 'postMessage').mockImplementation(() => {});
+
+    post(inst.iframe.contentWindow, PLUGIN_ORIGIN, { type: 'sandbox-ready' });
+    await new Promise((r) => setTimeout(r, 0));
+
+    expect(send).toHaveBeenCalledTimes(1);
+    expect(send.mock.calls[0][0]).toMatchObject({ type: 'init', payload: { code: 'CODE' } });
+    expect(send.mock.calls[0][1]).toBe(PLUGIN_ORIGIN);
+  });
+
+  it('stays on the webmail origin while the setting is off', async () => {
+    const inst = await privilegedFrame('');
+
+    expect(inst.iframe.getAttribute('src')).toBe('/plugin-sandbox-privileged');
+    expect(inst.iframe.getAttribute('allow')).toBe('clipboard-write');
+    post(inst.iframe.contentWindow, window.location.origin, { type: 'api-request', id: '1', method: 'storage.keys', args: [] });
+    await new Promise((r) => setTimeout(r, 0));
+    expect(dispatchApiCall).toHaveBeenCalledTimes(1);
+  });
+
+  it('leaves the untrusted tier where it was', async () => {
+    const { setPluginFrameLabel } = await import('../plugin-sandbox/frame-origin');
+    setPluginFrameLabel('plugins');
+    const inst = createBackgroundInstance({ plugin: plugin(), code: '', locale: 'en', tier: 'untrusted' });
+    instances.push(inst);
+
+    expect(inst.iframe.getAttribute('src')).toBe('/plugin-sandbox');
+    expect(inst.iframe.getAttribute('allow')).toBe('clipboard-write');
+  });
+});

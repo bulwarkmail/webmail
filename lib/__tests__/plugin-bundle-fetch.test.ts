@@ -11,7 +11,7 @@ vi.mock('../plugin-sandbox/bundle-signing', () => ({
   verifySignature: (...args: unknown[]) => mocks.verifySignature(...args),
 }));
 
-import { downloadManagedBundle, bundleUrl } from '../plugin-sandbox/bundle-fetch';
+import { downloadManagedBundle, bundleUrl, fetchFrameSignature } from '../plugin-sandbox/bundle-fetch';
 
 function response(code: string, opts: { ok?: boolean; status?: number; signature?: string } = {}) {
   const { ok = true, status = 200, signature } = opts;
@@ -81,5 +81,40 @@ describe('downloadManagedBundle', () => {
     mocks.apiFetch.mockResolvedValue(response('', { signature: 'sig' }));
     await expect(downloadManagedBundle('my-plugin')).rejects.toThrow(/empty bundle/);
     expect(mocks.verifySignature).not.toHaveBeenCalled();
+  });
+});
+
+// A frame on the plugin origin checks the bundle itself (protocol.ts); the
+// page only carries the server's signature to it.
+describe('fetchFrameSignature', () => {
+  const headResponse = (signature: string | null, ok = true) => ({
+    ok,
+    status: ok ? 200 : 403,
+    headers: { get: (name: string) => (name.toLowerCase() === 'x-bundle-frame-signature' ? signature : null) },
+  });
+
+  it('asks for the headers of the bundle, not the bundle', async () => {
+    mocks.apiFetch.mockResolvedValue(headResponse('FRAME-SIG'));
+
+    expect(await fetchFrameSignature('my-plugin', 'abc123')).toBe('FRAME-SIG');
+    expect(mocks.apiFetch).toHaveBeenCalledWith('/api/admin/plugins/my-plugin/bundle?v=abc123', { method: 'HEAD' });
+  });
+
+  it('fails when the server gave none', async () => {
+    mocks.apiFetch.mockResolvedValue(headResponse(null));
+
+    await expect(fetchFrameSignature('my-plugin')).rejects.toThrow(/no signature/);
+  });
+
+  it('fails when the bundle is refused', async () => {
+    mocks.apiFetch.mockResolvedValue(headResponse('FRAME-SIG', false));
+
+    await expect(fetchFrameSignature('my-plugin')).rejects.toThrow(/no signature/);
+  });
+
+  it('fails when the server cannot be reached', async () => {
+    mocks.apiFetch.mockRejectedValue(new Error('offline'));
+
+    await expect(fetchFrameSignature('my-plugin')).rejects.toThrow(/offline/);
   });
 });

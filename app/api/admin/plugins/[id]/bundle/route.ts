@@ -1,13 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getPluginBundle, getPlugin, getPluginSignature, isBundleMismatch } from '@/lib/admin/plugin-registry';
 import { getDevPlugin, readDevBundle } from '@/lib/admin/plugin-dev';
-import { signBytes } from '@/lib/admin/plugin-signing';
+import { signBytes, signPrivilegedFrameBundle } from '@/lib/admin/plugin-signing';
 import { canSeeInstanceDetails } from '@/lib/auth/instance-details';
 import { storeUnavailableResponse } from '@/lib/admin/store-unavailable-response';
 import { devicePolicyPluginRefusal } from '@/lib/desktop/server-policy';
+import { FRAME_SIGNATURE_HEADER } from '@/lib/plugin-sandbox/protocol';
 
 async function safeSign(code: string): Promise<string | null> {
   try { return await signBytes(code); } catch { return null; }
+}
+
+/**
+ * Whether the browser runs this plugin in a privileged frame at all
+ * (lib/plugin-sandbox/tier.ts): the tier and the crypto:full permission. A
+ * plugin it refuses there gets no frame signature either, so its code never
+ * runs on the plugin origin, next to what the privileged plugins keep.
+ */
+function runsPrivileged(plugin: { tier?: string; permissions?: unknown }): boolean {
+  return plugin.tier === 'privileged' && Array.isArray(plugin.permissions) && plugin.permissions.includes('crypto:full');
+}
+
+/** Without it a frame on the plugin origin refuses the bundle, so a failure here is not fatal to the route. */
+async function safeSignForFrame(code: string): Promise<string | null> {
+  try { return await signPrivilegedFrameBundle(code); } catch { return null; }
 }
 
 /**
@@ -49,6 +65,8 @@ export async function GET(
         'Content-Length': String(Buffer.byteLength(code, 'utf-8')),
       };
       if (signature) headers['X-Bundle-Signature'] = signature;
+      const frameSignature = runsPrivileged(devEntry.plugin) ? await safeSignForFrame(code) : null;
+      if (frameSignature) headers[FRAME_SIGNATURE_HEADER] = frameSignature;
       return new NextResponse(code, { headers });
     }
 
@@ -78,6 +96,10 @@ export async function GET(
 
     const signature = await getPluginSignature(id, code, plugin.bundleHash);
     if (signature) headers['X-Bundle-Signature'] = signature;
+    // What a frame on the plugin origin checks before it runs the bundle
+    // (lib/plugin-sandbox/protocol.ts). For privileged plugins only.
+    const frameSignature = runsPrivileged(plugin) ? await safeSignForFrame(code) : null;
+    if (frameSignature) headers[FRAME_SIGNATURE_HEADER] = frameSignature;
 
     if (etag && request.headers.get('if-none-match') === etag) {
       return new NextResponse(null, { status: 304, headers });

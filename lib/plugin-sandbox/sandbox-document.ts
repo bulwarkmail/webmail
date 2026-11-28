@@ -11,6 +11,8 @@
 
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
+import { BUNDLE_KEY_META, HOST_ORIGIN_HEADER, HOST_ORIGIN_META } from './protocol';
+import { getPublicKeyBase64 } from '@/lib/admin/plugin-signing';
 
 export const SANDBOX_ASSETS_PATH = '/plugin-sandbox-assets';
 
@@ -55,8 +57,25 @@ export async function sandboxDocument(request: Request): Promise<Response> {
   const base = `${process.env.NEXT_PUBLIC_BASE_PATH ?? ''}${SANDBOX_ASSETS_PATH}`;
   const slot = new URL(request.url).searchParams.get('frame') === 'slot';
   const preload = slot ? [...assets.preload, ...assets.slotPreload] : assets.preload;
+  // On the plugin origin (frame-origin.ts) the frame's host is not served
+  // from this document's origin. proxy.ts works out the webmail's origin from
+  // the host name and hands it over; the runtime takes its host from here.
+  const hostOrigin = request.headers.get(HOST_ORIGIN_HEADER) ?? '';
+  // There the frame checks the bundle it is given against this key before it
+  // runs it. Without a key the document carries none and the frame runs
+  // nothing.
+  let bundleKey = '';
+  if (hostOrigin) {
+    try {
+      bundleKey = await getPublicKeyBase64();
+    } catch {
+      bundleKey = '';
+    }
+  }
   const html = '<!doctype html><html lang="en"><head><meta charset="utf-8">'
     + '<meta name="robots" content="noindex, nofollow"><title>Plugin sandbox</title>'
+    + (hostOrigin ? `<meta name="${HOST_ORIGIN_META}" content="${escapeAttr(hostOrigin)}">` : '')
+    + (bundleKey ? `<meta name="${BUNDLE_KEY_META}" content="${escapeAttr(bundleKey)}">` : '')
     + `<link rel="stylesheet" href="${escapeAttr(`${base}/${assets.style}`)}">`
     + preload.map((p) => `<link rel="modulepreload" nonce="${nonce}" href="${escapeAttr(`${base}/${p}`)}">`).join('')
     + `<script type="module" nonce="${nonce}" src="${escapeAttr(`${base}/${assets.script}`)}"></script>`

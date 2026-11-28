@@ -17,9 +17,11 @@ import { useMessageListTabsStore } from '@/stores/message-list-tabs-store';
 import { useEmailStore } from '@/stores/email-store';
 import { emailToReadView } from '../plugin-projection';
 import { verifyBundle } from './bundle-integrity';
-import { downloadManagedBundle } from './bundle-fetch';
+import { downloadManagedBundle, fetchFrameSignature } from './bundle-fetch';
 import { createBackgroundInstance, forEachInstance, snapshotRegionalSettings, type InitDoneInfo, type RegionalSnapshot } from './host-bridge';
 import { resolvePluginTier } from './tier';
+import { privilegedFramePlace } from './frame-origin';
+import { fetchConfig } from '@/hooks/use-config';
 import { register as registerActive, deregister as deregisterActive, all as allActiveEntries, get as getActive, subscribe as subscribeActive, type SlotOffer } from './registry';
 import { cancelPluginDialogs } from './host-api';
 import { hasDialogFor, whenNoDialogFor } from './host-dialog';
@@ -308,17 +310,35 @@ async function startSandboxedPlugin(plugin: InstalledPlugin, retried = false): P
     }
     const tier = resolution.tier;
 
+    // A privileged frame loads from the plugin origin when one is set
+    // (frame-origin.ts), and the setting comes with the config: read it
+    // before the frame is created, so the frame is never placed by a guess.
+    if (tier === 'privileged') {
+      await fetchConfig();
+      if (privilegedFramePlace().kind === 'none') {
+        const error = 'Privileged plugins need the webmail to be opened by its host name, not by IP address';
+        storeAccessor?.setPluginStatus(plugin.id, 'error', error);
+        console.error(`[plugin-sandbox] "${plugin.id}" not started: ${error}`);
+        return;
+      }
+    }
+
     const { code, hash } = await getBundleCode(plugin);
+    // A frame on the plugin origin checks the bundle itself before it runs it.
+    const codeSignature = tier === 'privileged' && privilegedFramePlace().kind === 'separate'
+      ? await fetchFrameSignature(plugin.id, plugin.bundleHash)
+      : undefined;
     background = createBackgroundInstance({
       plugin,
       code,
+      codeSignature,
       locale: currentLocale,
       tier,
     });
 
     const remembered = readSlotOffers(plugin.id, hash);
     if (remembered && remembered.length > 0) {
-      registerActive({ plugin, code, tier, background, slotOffers: permittedOffers(plugin, remembered, false), hookDisposables: [] });
+      registerActive({ plugin, code, codeSignature, tier, background, slotOffers: permittedOffers(plugin, remembered, false), hookDisposables: [] });
     }
 
     // Wait for the background runtime to evaluate the bundle, register hooks,
@@ -395,6 +415,7 @@ async function startSandboxedPlugin(plugin: InstalledPlugin, retried = false): P
     registerActive({
       plugin,
       code,
+      codeSignature,
       tier,
       background: bg,
       slotOffers,

@@ -384,6 +384,7 @@ export function PluginIframeSlot({ pluginId, slot, extraProps, fill: fillAsked =
         plugin: active.plugin,
         slot,
         code: active.code,
+        codeSignature: active.codeSignature,
         locale,
         tier: active.tier,
         extraProps: props,

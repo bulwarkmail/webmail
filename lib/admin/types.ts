@@ -463,6 +463,12 @@ export const CONFIG_ENV_MAP: Record<string, { envVar?: string; fileEnvVar?: stri
   autoSsoEnabled: { envVar: 'AUTO_SSO_ENABLED', type: 'boolean', defaultValue: false },
   cookieSameSite: { envVar: 'COOKIE_SAME_SITE', type: 'enum', defaultValue: 'lax', enumValues: ['lax', 'strict', 'none'] },
   allowedFrameAncestors: { envVar: 'ALLOWED_FRAME_ANCESTORS', type: 'string', defaultValue: '' },
+  // One DNS label (for example "plugins"). When set, privileged plugin frames
+  // load from <label>.<webmail host> instead of the webmail's own origin, so
+  // the webmail's scripts and a privileged plugin cannot reach into each
+  // other. That host name must reach this same server. Empty = off
+  // (lib/plugin-sandbox/frame-origin.ts).
+  pluginFrameSubdomain: { envVar: 'PLUGIN_FRAME_SUBDOMAIN', type: 'string', defaultValue: '' },
   parentOrigin: { envVar: 'NEXT_PUBLIC_PARENT_ORIGIN', type: 'string', defaultValue: '' },
   settingsSyncEnabled: { envVar: 'SETTINGS_SYNC_ENABLED', type: 'boolean', defaultValue: false },
   logFormat: { envVar: 'LOG_FORMAT', type: 'enum', defaultValue: 'text', enumValues: ['text', 'json'] },

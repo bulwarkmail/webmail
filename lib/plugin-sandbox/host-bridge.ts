@@ -11,6 +11,7 @@ import type { HostFeaturesView, InstalledPlugin, SlotName, PluginTier } from '..
 import { dispatchApiCall } from './host-api';
 import { closeEventStreamsOf } from './event-streams';
 import { SANDBOX_PATH, SANDBOX_PRIVILEGED_PATH, type RegionalSnapshot } from './protocol';
+import { privilegedFramePlace } from './frame-origin';
 export type { RegionalSnapshot };
 import { withBasePath } from '../browser-navigation';
 import { snapshotHostTheme, type ThemeSnapshot } from './host-theme';
@@ -186,6 +187,8 @@ export function snapshotRegionalSettings(localeOverride?: string): RegionalSnaps
 export interface BackgroundOptions {
   plugin: InstalledPlugin;
   code: string;
+  /** The server's signature for a frame on the plugin origin (protocol.ts). */
+  codeSignature?: string;
   locale: string;
   /** Resolved presentation/regional preferences (time format, date locale, time zone). */
   regional?: RegionalSnapshot;
@@ -199,6 +202,8 @@ export interface SlotOptions {
   plugin: InstalledPlugin;
   slot: SlotName;
   code: string;
+  /** The server's signature for a frame on the plugin origin (protocol.ts). */
+  codeSignature?: string;
   locale: string;
   /** Resolved presentation/regional preferences (time format, date locale, time zone). */
   regional?: RegionalSnapshot;
@@ -290,8 +295,14 @@ export class SandboxInstance {
   readonly iframe: HTMLIFrameElement;
   readonly pluginId: string;
   readonly mode: 'background' | 'slot';
-  /** True for the same-origin privileged tier; gates the origin assertion. */
+  /** True for the privileged tier (a frame with a real origin); gates the origin assertion. */
   readonly privileged: boolean;
+  /**
+   * The origin of a privileged frame that loads from the plugin origin
+   * (PLUGIN_FRAME_SUBDOMAIN, frame-origin.ts); null for a frame on the
+   * webmail's own origin and for the untrusted tier.
+   */
+  private readonly separateOrigin: string | null;
   /** An inline slot (toolbar row) sized to its content's width. */
   readonly inline: boolean;
   /** The slot a slot frame renders; its height limit applies (slot-layout.ts). */
@@ -333,6 +344,8 @@ export class SandboxInstance {
     this.pluginId = plugin.id;
     this.mode = initPayload.mode;
     this.privileged = initPayload.tier === 'privileged';
+    const place = this.privileged ? privilegedFramePlace() : null;
+    this.separateOrigin = place?.kind === 'separate' ? place.origin : null;
     this.inline = initPayload.mode === 'slot' && isInlineSlot(initPayload.slot);
     this.slot = initPayload.mode === 'slot' ? initPayload.slot : null;
 
@@ -354,10 +367,14 @@ export class SandboxInstance {
     this.initPromise.catch(() => {});
 
     this.iframe = document.createElement('iframe');
-    // Privileged tier: same-origin in BOTH dev and prod so the iframe gets real
-    // `crypto.subtle` + IndexedDB and can run its own bundled crypto libs. The
-    // postMessage RPC membrane still applies; the trust gate is enforced
-    // host-side (signature + admin approval) BEFORE this instance is created.
+    // Privileged tier: allow-same-origin in BOTH dev and prod, so the iframe
+    // keeps the origin of the document it loads and gets real `crypto.subtle`
+    // + IndexedDB for its own bundled crypto libs. That origin is the
+    // webmail's, or the plugin origin when one is set (frame-origin.ts): the
+    // browser then keeps the webmail's scripts out of the frame, and the
+    // frame's out of the webmail. The postMessage RPC membrane still applies;
+    // the trust gate is enforced host-side (signature + admin approval) BEFORE
+    // this instance is created.
     // Untrusted tier: null-origin in prod; dev adds allow-same-origin only
     // because Next's HMR/dev runtime refuses requests from the opaque ("null")
     // origin a strict sandbox produces (the iframe would never hydrate and
@@ -371,8 +388,12 @@ export class SandboxInstance {
     this.iframe.setAttribute('sandbox', sandboxFlags);
     this.iframe.setAttribute('referrerpolicy', 'no-referrer');
     // "Copy" buttons in plugin UIs. Writing only; reading the clipboard
-    // stays off.
-    this.iframe.setAttribute('allow', 'clipboard-write');
+    // stays off. A privileged frame on the plugin origin is cross-origin to
+    // the page, so WebAuthn (unlocking a key with a passkey) has to be passed
+    // down by name; on the webmail's own origin the frame has it anyway.
+    this.iframe.setAttribute('allow', this.separateOrigin
+      ? 'clipboard-write; publickey-credentials-get; publickey-credentials-create'
+      : 'clipboard-write');
     this.iframe.title = `plugin-${plugin.id}-${initPayload.mode}`;
     this.iframe.style.border = 'none';
     // The frame's document declares the theme's color-scheme (themeSnapshotToCSS).
@@ -416,11 +437,13 @@ export class SandboxInstance {
     // Prefix with the mount path so the sandbox route resolves under a
     // subpath deployment (NEXT_PUBLIC_BASE_PATH=/webmail). A bare
     // "/plugin-sandbox" would hit the origin root and 404, breaking plugins.
-    // Privileged plugins load the same-origin route so the CSP/allow-same-origin
-    // pairing is consistent.
+    // Privileged plugins load the privileged route so the CSP/allow-same-origin
+    // pairing is consistent: on the webmail's own origin, or on the plugin
+    // origin when one is set.
     // ?frame=slot: the document then loads React DOM and the UI kit with the
     // runtime; a background frame never needs them (sandbox-document.ts).
-    this.iframe.src = withBasePath(this.privileged ? SANDBOX_PRIVILEGED_PATH : SANDBOX_PATH)
+    this.iframe.src = (this.separateOrigin ?? '')
+      + withBasePath(this.privileged ? SANDBOX_PRIVILEGED_PATH : SANDBOX_PATH)
       + (initPayload.mode === 'slot' ? '?frame=slot' : '');
 
     this.listener = (ev) => this.onMessage(ev);
@@ -454,20 +477,28 @@ export class SandboxInstance {
   // ─── Internal ───────────────────────────────────────────────
 
   private send(msg: HostToSandbox): void {
-    // targetOrigin '*' is required because the iframe is opaque-origin. The
-    // payload contains no host secrets - bundle code and manifest fields the
-    // plugin already owns.
-    this.iframe.contentWindow?.postMessage(msg, '*');
+    this.iframe.contentWindow?.postMessage(msg, this.targetOrigin());
+  }
+
+  /**
+   * targetOrigin '*' is required for an opaque-origin iframe. The payload
+   * contains no host secrets - bundle code and manifest fields the plugin
+   * already owns. A frame on the plugin origin has an origin to name, so
+   * whatever else that frame may come to show receives nothing.
+   */
+  private targetOrigin(): string {
+    return this.separateOrigin ?? '*';
   }
 
   private onMessage(ev: MessageEvent): void {
     if (this.destroyed) return;
     if (ev.source !== this.iframe.contentWindow) return;
-    // Privileged iframes are same-origin, so we can additionally pin the origin
-    // (defence-in-depth on top of the contentWindow check). Untrusted iframes
-    // are null-origin (event.origin === "null") in prod and can't be pinned
-    // this way, so the contentWindow check above is the sole gate for them.
-    if (this.privileged && ev.origin !== window.location.origin) return;
+    // Privileged iframes have a real origin, the webmail's or the plugin
+    // origin, so we can additionally pin it (defence-in-depth on top of the
+    // contentWindow check). Untrusted iframes are null-origin (event.origin
+    // === "null") in prod and can't be pinned this way, so the contentWindow
+    // check above is the sole gate for them.
+    if (this.privileged && ev.origin !== (this.separateOrigin ?? window.location.origin)) return;
     // Untrusted iframes are opaque-origin, so their messages say "null". A
     // sandboxed frame can still navigate itself; the page it lands on runs
     // outside the sandbox CSP and must not inherit the RPC channel. Dev mode
@@ -663,7 +694,7 @@ export class SandboxInstance {
     if (this.destroyed) return;
     if (msg.type === 'stream-chunk') {
       // Hand the buffer over instead of copying it.
-      this.iframe.contentWindow?.postMessage(msg, '*', [msg.chunk]);
+      this.iframe.contentWindow?.postMessage(msg, this.targetOrigin(), [msg.chunk]);
       return;
     }
     this.send(msg);
@@ -816,6 +847,7 @@ export function createBackgroundInstance(opts: BackgroundOptions): SandboxInstan
       httpOrigins: opts.plugin.httpOrigins,
     },
     code: opts.code,
+    ...(opts.codeSignature ? { codeSignature: opts.codeSignature } : {}),
     locale: opts.locale,
     regional: opts.regional ?? snapshotRegionalSettings(opts.locale),
     hostFeatures: snapshotHostFeatures(opts.plugin),
@@ -835,6 +867,7 @@ export function createSlotInstance(opts: SlotOptions): SandboxInstance {
     tier: opts.tier,
     slot: opts.slot,
     code: opts.code,
+    ...(opts.codeSignature ? { codeSignature: opts.codeSignature } : {}),
     manifest: {
       id: opts.plugin.id,
       version: opts.plugin.version,
