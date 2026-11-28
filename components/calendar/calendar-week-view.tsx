@@ -19,7 +19,7 @@ import type { CalendarEvent, Calendar, CalendarTask } from "@/lib/jmap/types";
 import { useSettingsStore } from "@/stores/settings-store";
 import { useDisplayHours, type RevealTime } from "@/hooks/use-display-hours";
 import { useTimeGridFocus } from "@/hooks/use-time-grid-focus";
-import { useTimeGridInteractions, type MoveEventHandler } from "@/hooks/use-time-grid-interactions";
+import { useTimeGridInteractions, slotMinuteAt, type MoveEventHandler } from "@/hooks/use-time-grid-interactions";
 import { useScrollWindow, useHiddenScrollKeeper, getScrollStart, setScrollStart, scrollToStart } from "@/hooks/use-scroll-window";
 import { dayKey, type ScrollWindowViewProps } from "@/lib/calendar-scroll-window";
 import type { PendingEventPreview } from "./event-modal";
@@ -843,8 +843,8 @@ export function CalendarWeekView({
                       role="button"
                       aria-label={`${slotDateLabel(day)}, ${formatHour(h)}`}
                       {...slotProps(day, h, !isMobile)}
-                      onClick={() => handleSlotClick(day, h)}
-                      onDoubleClick={() => handleSlotDoubleClick(day, h)}
+                      onClick={(e) => handleSlotClick(day, h, slotMinuteAt(e))}
+                      onDoubleClick={(e) => handleSlotDoubleClick(day, h, slotMinuteAt(e))}
                       onContextMenu={onContextMenuEmpty ? (e) => onContextMenuEmpty(e, day, h, false) : undefined}
                       className="relative border-b border-border/50 hover:bg-muted/30 cursor-pointer transition-colors outline-none focus-visible:after:absolute focus-visible:after:inset-0 focus-visible:after:z-[15] focus-visible:after:pointer-events-none focus-visible:after:ring-2 focus-visible:after:ring-inset focus-visible:after:ring-primary"
                       style={{ height: hourHeight }}

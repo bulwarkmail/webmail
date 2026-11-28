@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef, type PointerEvent, type DragEvent } from "react";
+import { useState, useCallback, useEffect, useRef, type PointerEvent, type DragEvent, type MouseEvent as ReactMouseEvent } from "react";
 import { format } from "date-fns";
 import { useAuthStore } from "@/stores/auth-store";
 import { useCalendarStore } from "@/stores/calendar-store";
@@ -12,6 +12,12 @@ import { fromDisplayDate, getEffectiveTimeZone } from "@/lib/timezone";
 import { movedEventUpdates } from "@/lib/calendar-participants";
 import { useEventUserEmails } from "@/hooks/use-event-user-emails";
 import type { Calendar, CalendarEvent } from "@/lib/jmap/types";
+
+/** Where in an hour's cell a click landed: 30 in its lower half, else 0. */
+export function slotMinuteAt(e: ReactMouseEvent<HTMLElement>): number {
+  const rect = e.currentTarget.getBoundingClientRect();
+  return rect.height > 0 && e.clientY - rect.top >= rect.height / 2 ? 30 : 0;
+}
 
 /** Saves a dragged or resized event; `kind` says which, for the message. */
 export type MoveEventHandler = (
@@ -388,13 +394,15 @@ export function useTimeGridInteractions({
   // clicks) and discards the clicked time (#435).
   // The end is the default length for new events away (#1318).
   const eventLength = useSettingsStore((s) => s.defaultEventLength);
-  const slotToRange = useCallback((day: Date, hour: number): [Date, Date] => {
+  const slotToRange = useCallback((day: Date, hour: number, minute: number): [Date, Date] => {
     const start = new Date(day);
-    start.setHours(hour, 0, 0, 0);
+    start.setHours(hour, minute, 0, 0);
     return [start, endAfterEventLength(start, eventLength)];
   }, [eventLength]);
 
-  const handleSlotClick = useCallback((day: Date, hour: number) => {
+  // `minute` is where in the hour the click landed (slotMinuteAt): the lower
+  // half of an hour starts the event at half past (#1874).
+  const handleSlotClick = useCallback((day: Date, hour: number, minute = 0) => {
     if (wasDragging.current) return;
     if (clickTimerRef.current) {
       clearTimeout(clickTimerRef.current);
@@ -403,17 +411,17 @@ export function useTimeGridInteractions({
     }
     clickTimerRef.current = setTimeout(() => {
       clickTimerRef.current = null;
-      onCreateRange(...slotToRange(day, hour));
+      onCreateRange(...slotToRange(day, hour, minute));
     }, 250);
   }, [onCreateRange, slotToRange]);
 
-  const handleSlotDoubleClick = useCallback((day: Date, hour: number) => {
+  const handleSlotDoubleClick = useCallback((day: Date, hour: number, minute = 0) => {
     if (wasDragging.current) return;
     if (clickTimerRef.current) {
       clearTimeout(clickTimerRef.current);
       clickTimerRef.current = null;
     }
-    onCreateRange(...slotToRange(day, hour));
+    onCreateRange(...slotToRange(day, hour, minute));
   }, [onCreateRange, slotToRange]);
 
   const handleQuickCreateSubmit = useCallback(async (title: string) => {
