@@ -74,7 +74,7 @@
     "buffer": "6.0.3",
     "clsx": "^2.1.1",
     "date-fns": "^4.4.0",
-    "dompurify": "^3.4.12",
+    "dompurify": "^3.5.0",
     "fflate": "0.8.3",
     "ioredis": "^5.11.1",
     "jalaali-js": "^2.0.1",
