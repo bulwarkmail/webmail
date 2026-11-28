@@ -4,8 +4,10 @@
  * with a Play button, and Pause once it plays.
  *
  * The message frame is sandboxed without scripts, so all of this runs from
- * the parent document: the still frame is drawn onto a canvas that takes the
- * image's place. The toggle works without any script: a checkbox holds the
+ * the parent document: the still frame is drawn onto a canvas and shown as a
+ * picture of its own in the image's place. The canvas itself can't be shown:
+ * a frame that may not run scripts renders a canvas as its (empty) fallback
+ * content. The toggle works without any script: a checkbox holds the
  * state and an injected stylesheet shows the still or the moving image.
  * WebKit does not run parent-attached listeners on nodes of a frame that is
  * sandboxed without allow-scripts, so a click handler never fired in Safari
@@ -121,19 +123,23 @@ const WRAP_ATTR = 'data-bulwark-animation-wrap';
 const TOGGLE_ATTR = 'data-bulwark-animation';
 /** Marks the label's two texts; the value is the action it names. */
 const LABEL_ATTR = 'data-bulwark-animation-label';
+/** Marks an image this pass has looked at (the moving one, once paused). */
+const SEEN_ATTR = 'data-bulwark-animated';
+/** Marks what stands in for a paused image: its still frame, or a placeholder. */
 const STILL_ATTR = 'data-bulwark-still';
 const STYLE_ATTR = 'data-bulwark-animation-style';
 
 /**
- * The checkbox sits right before its label, the canvas and the image, so
+ * The checkbox sits right before its label, the still and the image, so
  * sibling selectors switch them and no :has() is needed. Checked means
  * playing. !important beats the mail's own inline display on the image, and
- * the one the canvas copied from it.
+ * the one the still copied from it.
  */
 const STYLE = `[${WRAP_ATTR}]{position:relative;display:inline-block;max-width:100%;line-height:0}
 [${WRAP_ATTR}]>input{position:absolute;top:0;left:0;width:1px;height:1px;margin:0;padding:0;opacity:0;pointer-events:none}
-canvas[${STILL_ATTR}]{max-width:100%;height:auto}
-[${WRAP_ATTR}]>input:checked~canvas[${STILL_ATTR}],[${WRAP_ATTR}]>input:not(:checked)~img{display:none!important}
+[${STILL_ATTR}]{max-width:100%;height:auto}
+span[${STILL_ATTR}]{display:inline-block;box-sizing:border-box;border:1px solid #9ca3af;background:#e5e7eb}
+[${WRAP_ATTR}]>input:checked~[${STILL_ATTR}],[${WRAP_ATTR}]>input:not(:checked)~img[${SEEN_ATTR}]{display:none!important}
 [${WRAP_ATTR}]>input:checked+label>[${LABEL_ATTR}="play"],[${WRAP_ATTR}]>input:not(:checked)+label>[${LABEL_ATTR}="pause"]{display:none!important}
 label[${TOGGLE_ATTR}]{position:absolute;top:6px;inset-inline-start:6px;z-index:1;box-sizing:border-box;min-width:32px;min-height:32px;padding:4px 10px;border:2px solid #fff;border-radius:999px;background:rgba(0,0,0,.75);color:#fff;font:600 13px/1.2 system-ui,sans-serif;cursor:pointer;user-select:none;animation:none!important;transition:none!important}
 [${WRAP_ATTR}]>input:focus-visible+label{outline:3px solid #1d4ed8;outline-offset:2px}`;
@@ -142,11 +148,17 @@ let toggleIds = 0;
 
 /**
  * Freezes the animated images of a rendered message. Each one is swapped for
- * a canvas holding its current (first) frame, with a Play button on top;
- * Play shows the moving image again and the button becomes Pause. Where the
- * frame runs our listeners (not in Safari), Pause first draws the frame it
- * stopped at; elsewhere the still shows the first frame again. Returns a
- * cleanup that drops the listeners.
+ * a picture of its first frame, with a Play button on top; Play shows the
+ * moving image again and the button becomes Pause, which shows the first
+ * frame again. A canvas only ever gets the first frame of an animated image
+ * (the HTML spec's "default image"), so the frame it stopped at can't be
+ * kept.
+ *
+ * The frame can only be read back from an image of this origin (a data: or
+ * blob: part, or one through the remote content proxy). An image straight
+ * from another server would taint the canvas, so it is paused behind a
+ * neutral placeholder of its size instead. Returns a cleanup that drops the
+ * listener.
  */
 export function pauseAnimatedImages(
   doc: Document,
@@ -163,46 +175,59 @@ export function pauseAnimatedImages(
     doc.head.appendChild(style);
   }
 
-  const draw = (img: HTMLImageElement, canvas: HTMLCanvasElement): boolean => {
+  /** The image's first frame as a data: URL; null when it can't be read. */
+  const snapshot = (img: HTMLImageElement): string | null => {
+    const canvas = doc.createElement('canvas');
     const context = canvas.getContext('2d');
-    if (!context) return false;
+    if (!context) return null;
     canvas.width = img.naturalWidth;
     canvas.height = img.naturalHeight;
     try {
       context.drawImage(img, 0, 0);
+      return canvas.toDataURL('image/png');
     } catch {
-      return false;
+      return null; // tainted: from another origin
     }
-    return true;
   };
 
   const freeze = (img: HTMLImageElement) => {
-    if (disposed || img.hasAttribute(STILL_ATTR) || img.naturalWidth <= 1) return;
-    img.setAttribute(STILL_ATTR, '');
+    if (disposed || img.hasAttribute(SEEN_ATTR) || img.hasAttribute(STILL_ATTR) || img.naturalWidth <= 1) return;
+    img.setAttribute(SEEN_ATTR, '');
     void isAnimated(img.currentSrc || img.getAttribute('src') || '').then((animated) => {
       if (!animated || disposed || !img.isConnected) return;
-      const canvas = doc.createElement('canvas');
-      if (!draw(img, canvas)) return;
-      const width = img.getBoundingClientRect().width;
-      canvas.setAttribute(STILL_ATTR, '');
+      const box = img.getBoundingClientRect();
+      const frame = snapshot(img);
+      const alt = img.getAttribute('alt')?.trim() ?? '';
+      let still: HTMLElement;
+      if (frame) {
+        const picture = doc.createElement('img');
+        picture.src = frame;
+        picture.alt = alt;
+        still = picture;
+      } else {
+        still = doc.createElement('span');
+        if (alt) {
+          still.setAttribute('role', 'img');
+          still.setAttribute('aria-label', alt);
+        } else {
+          still.setAttribute('aria-hidden', 'true');
+        }
+      }
+      still.setAttribute(STILL_ATTR, '');
       for (const attr of ['class', 'style']) {
         const value = img.getAttribute(attr);
-        if (value) canvas.setAttribute(attr, value);
+        if (value) still.setAttribute(attr, value);
       }
-      if (width > 0) canvas.style.width = `${width}px`;
-      const alt = img.getAttribute('alt')?.trim();
-      if (alt) {
-        canvas.setAttribute('role', 'img');
-        canvas.setAttribute('aria-label', alt);
-      } else {
-        canvas.setAttribute('aria-hidden', 'true');
-      }
+      const width = box.width || img.width || img.naturalWidth;
+      still.style.width = `${width}px`;
+      // Keeps the image's shape, also where max-width narrows it.
+      if (!frame) still.style.aspectRatio = `${img.naturalWidth} / ${img.naturalHeight}`;
 
       const wrap = doc.createElement('span');
       wrap.setAttribute(WRAP_ATTR, '');
       // Visually hidden but still focusable, so the button works from the
       // keyboard. The id ties the label to it: the label can't wrap it, the
-      // canvas and the image have to follow it as siblings.
+      // still and the image have to follow it as siblings.
       const checkbox = doc.createElement('input');
       checkbox.type = 'checkbox';
       do checkbox.id = `bulwark-animation-${++toggleIds}`;
@@ -220,7 +245,7 @@ export function pauseAnimatedImages(
       }
 
       img.parentNode?.insertBefore(wrap, img);
-      wrap.append(checkbox, label, canvas, img);
+      wrap.append(checkbox, label, still, img);
     });
   };
 
@@ -235,16 +260,7 @@ export function pauseAnimatedImages(
   const onClick = (event: Event) => {
     if (toggleOf(event.target)) event.stopImmediatePropagation();
   };
-  // Pause shows the frame the image stopped at rather than the first one.
-  const onChange = (event: Event) => {
-    const checkbox = event.target as HTMLInputElement | null;
-    if (!toggleOf(checkbox) || checkbox?.checked) return;
-    const canvas = checkbox?.parentElement?.querySelector<HTMLCanvasElement>(`canvas[${STILL_ATTR}]`);
-    const img = checkbox?.parentElement?.querySelector('img');
-    if (canvas && img) draw(img, canvas);
-  };
   doc.addEventListener('click', onClick, true);
-  doc.addEventListener('change', onChange, true);
 
   doc.querySelectorAll('img').forEach((img) => {
     if (img.complete) freeze(img);
@@ -257,6 +273,5 @@ export function pauseAnimatedImages(
   return () => {
     disposed = true;
     doc.removeEventListener('click', onClick, true);
-    doc.removeEventListener('change', onChange, true);
   };
 }

@@ -59,16 +59,22 @@ describe('imageIsAnimated', () => {
 
 describe('pauseAnimatedImages', () => {
   const drawImage = vi.fn();
+  const FRAME = 'data:image/png;base64,c3RpbGw=';
   beforeEach(() => drawImage.mockReset());
   afterEach(() => vi.restoreAllMocks());
 
-  function frameDoc(html: string, { complete = true } = {}): Document {
+  function frameDoc(html: string, { complete = true, tainted = false } = {}): Document {
     const frame = document.createElement('iframe');
     document.body.appendChild(frame);
     const doc = frame.contentDocument!;
     // jsdom has no canvas; the frame's own realm needs the stub.
     const win = doc.defaultView as unknown as typeof window;
     vi.spyOn(win.HTMLCanvasElement.prototype, 'getContext').mockReturnValue({ drawImage } as never);
+    vi.spyOn(win.HTMLCanvasElement.prototype, 'toDataURL').mockImplementation(() => {
+      // What a browser does for an image from another server.
+      if (tainted) throw new win.DOMException('The operation is insecure.', 'SecurityError');
+      return FRAME;
+    });
     doc.body.innerHTML = html;
     doc.querySelectorAll('img').forEach((img) => {
       Object.defineProperty(img, 'complete', { value: complete });
@@ -78,7 +84,6 @@ describe('pauseAnimatedImages', () => {
     return doc;
   }
   const flush = () => new Promise((r) => setTimeout(r, 0));
-
   const display = (doc: Document, el: Element) => doc.defaultView!.getComputedStyle(el).display;
   const shownLabel = (doc: Document, wrap: Element) =>
     Array.from(wrap.querySelectorAll('[data-bulwark-animation-label]'))
@@ -86,8 +91,8 @@ describe('pauseAnimatedImages', () => {
       .map((el) => el.textContent)
       .join('|');
 
-  it('shows a still frame with a Play toggle, then Pause while it plays', async () => {
-    const doc = frameDoc('<a href="https://ex.com"><img src="https://cdn.example/a.gif" alt="Dancing cat"></a>');
+  it('shows the first frame as a picture with a Play toggle, then Pause while it plays', async () => {
+    const doc = frameDoc('<a href="https://ex.com"><img src="https://cdn.example/a.gif" class="hero" alt="Dancing cat"></a>');
     const linkClicks = vi.fn();
     pauseAnimatedImages(doc, { play: 'Play animation', pause: 'Pause animation' });
     // The reader's link handler, registered after.
@@ -95,33 +100,38 @@ describe('pauseAnimatedImages', () => {
     await flush();
 
     const wrap = doc.querySelector('[data-bulwark-animation-wrap]')!;
-    const img = doc.querySelector('img')!;
-    const canvas = doc.querySelector('canvas')!;
+    const [still, img] = Array.from(wrap.querySelectorAll('img'));
     const label = doc.querySelector('label')!;
     const checkbox = doc.querySelector('input')!;
     expect(wrap.closest('a')).not.toBeNull();
+    expect(img.getAttribute('src')).toBe('https://cdn.example/a.gif');
     expect(display(doc, img)).toBe('none');
-    expect(display(doc, canvas)).not.toBe('none');
-    expect(canvas.getAttribute('aria-label')).toBe('Dancing cat');
     expect(drawImage).toHaveBeenCalledWith(img, 0, 0);
+    // A canvas would show as its empty fallback in a frame without scripts.
+    expect(doc.querySelector('canvas')).toBeNull();
+    expect(still.hasAttribute('data-bulwark-still')).toBe(true);
+    expect(still.getAttribute('src')).toBe(FRAME);
+    expect(still.alt).toBe('Dancing cat');
+    expect(still.className).toBe('hero');
+    expect(display(doc, still)).not.toBe('none');
     expect(checkbox.checked).toBe(false);
     expect(shownLabel(doc, wrap)).toBe('Play animation');
 
     label.click();
     expect(checkbox.checked).toBe(true);
     expect(display(doc, img)).not.toBe('none');
-    expect(display(doc, canvas)).toBe('none');
+    expect(display(doc, still)).toBe('none');
     expect(shownLabel(doc, wrap)).toBe('Pause animation');
     expect(linkClicks).not.toHaveBeenCalled();
 
-    // Pause draws the frame the image stopped at, where listeners run.
     label.click();
     expect(checkbox.checked).toBe(false);
     expect(display(doc, img)).toBe('none');
-    expect(display(doc, canvas)).not.toBe('none');
+    expect(display(doc, still)).not.toBe('none');
     expect(shownLabel(doc, wrap)).toBe('Play animation');
-    expect(drawImage).toHaveBeenCalledTimes(2);
     expect(linkClicks).not.toHaveBeenCalled();
+    // Drawn once: a canvas only ever gets the first frame of an animation.
+    expect(drawImage).toHaveBeenCalledTimes(1);
   });
 
   it('switches by stylesheet alone, for frames where no listener runs (Safari)', async () => {
@@ -129,8 +139,8 @@ describe('pauseAnimatedImages', () => {
     pauseAnimatedImages(doc, { play: 'Play', pause: 'Pause' });
     await flush();
     const wrap = doc.querySelector('[data-bulwark-animation-wrap]')!;
-    const img = doc.querySelector('img')!;
-    const canvas = doc.querySelector('canvas')!;
+    const still = doc.querySelector('[data-bulwark-still]')!;
+    const img = doc.querySelector('img[data-bulwark-animated]')!;
     const checkbox = doc.querySelector('input')!;
     // The mail's own inline display stays on the image, untouched.
     expect(img.getAttribute('style')).toBe('display:block');
@@ -140,12 +150,27 @@ describe('pauseAnimatedImages', () => {
     // allow-scripts; only the checkbox's native state changes on a click.
     checkbox.checked = true;
     expect(display(doc, img)).toBe('block');
-    expect(display(doc, canvas)).toBe('none');
+    expect(display(doc, still)).toBe('none');
     expect(shownLabel(doc, wrap)).toBe('Pause');
     checkbox.checked = false;
     expect(display(doc, img)).toBe('none');
-    expect(display(doc, canvas)).not.toBe('none');
+    expect(display(doc, still)).not.toBe('none');
     expect(shownLabel(doc, wrap)).toBe('Play');
+  });
+
+  it('pauses an image from another server behind a placeholder of its size', async () => {
+    const doc = frameDoc('<img src="https://cdn.example/a.gif" alt="Dancing cat">', { tainted: true });
+    pauseAnimatedImages(doc, { play: 'Play', pause: 'Pause' });
+    await flush();
+    const img = doc.querySelector('img[data-bulwark-animated]')!;
+    const still = doc.querySelector<HTMLElement>('[data-bulwark-still]')!;
+    expect(still.tagName).toBe('SPAN');
+    expect(still.getAttribute('role')).toBe('img');
+    expect(still.getAttribute('aria-label')).toBe('Dancing cat');
+    expect(still.style.width).toBe('40px');
+    expect(still.style.aspectRatio).toBe('40 / 20');
+    expect(display(doc, img)).toBe('none');
+    expect(display(doc, still)).not.toBe('none');
   });
 
   it('names each checkbox by its own label', async () => {
@@ -163,6 +188,17 @@ describe('pauseAnimatedImages', () => {
     });
   });
 
+  it('does not pause the still picture or the image again on a second pass', async () => {
+    const doc = frameDoc('<img src="https://cdn.example/a.gif" alt="">');
+    const isAnimated = vi.fn(async () => true);
+    pauseAnimatedImages(doc, { play: 'Play', pause: 'Pause' }, { isAnimated });
+    await flush();
+    pauseAnimatedImages(doc, { play: 'Play', pause: 'Pause' }, { isAnimated });
+    await flush();
+    expect(isAnimated).toHaveBeenCalledTimes(1);
+    expect(doc.querySelectorAll('[data-bulwark-animation-wrap]')).toHaveLength(1);
+  });
+
   it('pauses an image that loads later without a load listener', async () => {
     const doc = frameDoc('<img src="https://cdn.example/a.gif" alt="">', { complete: false });
     const img = doc.querySelector('img')!;
@@ -173,13 +209,13 @@ describe('pauseAnimatedImages', () => {
     const addEventListener = vi.spyOn(img, 'addEventListener');
     pauseAnimatedImages(doc, { play: 'Play', pause: 'Pause' });
     await flush();
-    expect(doc.querySelector('canvas')).toBeNull();
+    expect(doc.querySelector('[data-bulwark-still]')).toBeNull();
 
     loaded();
     await flush();
     expect(decode).toHaveBeenCalled();
     expect(addEventListener).not.toHaveBeenCalledWith('load', expect.anything(), expect.anything());
-    expect(doc.querySelector('canvas')).not.toBeNull();
+    expect(doc.querySelector('[data-bulwark-still]')).not.toBeNull();
     expect(display(doc, img)).toBe('none');
   });
 
@@ -187,7 +223,7 @@ describe('pauseAnimatedImages', () => {
     const doc = frameDoc('<img src="https://cdn.example/photo.jpg" alt="Photo">');
     pauseAnimatedImages(doc, { play: 'Play', pause: 'Pause' });
     await flush();
-    expect(doc.querySelector('canvas')).toBeNull();
+    expect(doc.querySelector('[data-bulwark-still]')).toBeNull();
     expect(doc.querySelector('label')).toBeNull();
   });
 });
