@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { rejectCrossOriginRequest } from '@/lib/security/same-origin';
 import { getStalwartCredentials, type StalwartCredentials } from '@/lib/stalwart/credentials';
-import { DisallowedUrlError, fetchPublicUrl, type PublicFetchResponse } from '@/lib/security/url-guard';
+import { DisallowedUrlError, fetchPublicUrl, isAllowedPrivateUrl, type PublicFetchResponse } from '@/lib/security/url-guard';
 import { readBodyCapped } from '@/lib/security/capped-body';
 import { configManager } from '@/lib/admin/config-manager';
 import { feedForSubject, intranetFeedHost } from '@/lib/admin/company-feeds';
@@ -157,7 +157,10 @@ async function fetchIcal(
     if (!buffer) {
       return { kind: 'error', response: tooLarge(maxResponseSize) };
     }
-    if (options.requireCalendar && !looksLikeCalendar(buffer)) {
+    // Every signed-in user may fetch from a listed origin, so it hands back
+    // calendars only, not whatever else that server has on other paths.
+    const listedOrigin = isAllowedPrivateUrl(currentUrl, options.allowedPrivateUrls);
+    if ((options.requireCalendar || listedOrigin) && !looksLikeCalendar(buffer)) {
       return fail('The address did not answer with a calendar', 502);
     }
     return { kind: 'ok', buffer, etag: response.headers.get('etag'), lastModified: response.headers.get('last-modified') };

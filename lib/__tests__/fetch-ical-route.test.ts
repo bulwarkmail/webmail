@@ -84,6 +84,18 @@ describe('POST /api/fetch-ical', () => {
     expect(guardedFetch.mock.calls[1][0]).toBe('http://10.0.0.6:8080/feed.ics');
   });
 
+  it('hands back only calendars from a listed origin, not its other pages', async () => {
+    vi.stubEnv('ICAL_ALLOWED_LOCAL_ORIGINS', 'http://10.0.0.5:8080');
+    guardedFetch.mockResolvedValueOnce(new Response('<html>router admin</html>', { status: 200, headers: { 'content-type': 'text/html' } }));
+    const res = await POST(makeReq({ url: 'http://10.0.0.5:8080/admin' }));
+    expect(res.status).toBe(502);
+    expect(await (res as RouteResponse).json!()).toEqual({ error: 'The address did not answer with a calendar' });
+
+    // A public feed is passed on as it comes, as before.
+    guardedFetch.mockResolvedValueOnce(new Response('not a calendar', { status: 200 }));
+    expect((await POST(makeReq({ url: 'https://example.com/feed.ics' }))).status).toBe(200);
+  });
+
   describe('response size limit (#692)', () => {
     const bigBody = 'X'.repeat(26 * 1024 * 1024); // above the 25 MB default
 
