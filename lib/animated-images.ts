@@ -158,7 +158,7 @@ let toggleIds = 0;
  * blob: part, or one through the remote content proxy). An image straight
  * from another server would taint the canvas, so it is paused behind a
  * neutral placeholder of its size instead. Returns a cleanup that drops the
- * listener.
+ * listeners.
  */
 export function pauseAnimatedImages(
   doc: Document,
@@ -218,6 +218,14 @@ export function pauseAnimatedImages(
         const value = img.getAttribute(attr);
         if (value) still.setAttribute(attr, value);
       }
+      // An inline `display: … !important` beats the stylesheet's !important,
+      // so the paused image (and the still, which copied its style) would
+      // stay visible. Keep the mail's value, drop the priority.
+      for (const el of [img, still]) {
+        if (el.style.getPropertyPriority('display') === 'important') {
+          el.style.setProperty('display', el.style.getPropertyValue('display'));
+        }
+      }
       const width = box.width || img.width || img.naturalWidth;
       still.style.width = `${width}px`;
       // Keeps the image's shape, also where max-width narrows it.
@@ -260,7 +268,18 @@ export function pauseAnimatedImages(
   const onClick = (event: Event) => {
     if (toggleOf(event.target)) event.stopImmediatePropagation();
   };
+  // The old button toggled on Enter as well as Space; a checkbox answers
+  // only Space. Where these listeners run, Enter flips it too. In Safari
+  // Space is left, which works there natively.
+  const onKeyDown = (event: KeyboardEvent) => {
+    if (event.key !== 'Enter' || event.isComposing) return;
+    const checkbox = event.target as HTMLInputElement | null;
+    if (!checkbox?.matches?.(`[${WRAP_ATTR}]>input`)) return;
+    event.preventDefault();
+    checkbox.click();
+  };
   doc.addEventListener('click', onClick, true);
+  doc.addEventListener('keydown', onKeyDown, true);
 
   doc.querySelectorAll('img').forEach((img) => {
     if (img.complete) freeze(img);
@@ -273,5 +292,6 @@ export function pauseAnimatedImages(
   return () => {
     disposed = true;
     doc.removeEventListener('click', onClick, true);
+    doc.removeEventListener('keydown', onKeyDown, true);
   };
 }
