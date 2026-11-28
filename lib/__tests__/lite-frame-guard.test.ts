@@ -15,6 +15,8 @@ import {
   frameGuardProblems,
   isForeignFrame,
   parentOriginOf,
+  policyNamesFrameAncestors,
+  serverAllowsFraming,
 } from '../../scripts/lite/lib.mjs';
 import { runPostbuild } from '../../scripts/lite/postbuild.mjs';
 import { verifyExport } from '../../scripts/lite/verify.mjs';
@@ -178,7 +180,80 @@ describe('the frame refusal', () => {
   it('is the check the Stalwart entry uses too', () => {
     const entry = buildStalwartEntry({ locales: ['en'], shells: [''], buildId: 'b' });
     expect(entry).toContain(`var isForeignFrame = ${isForeignFrame.toString()}`);
-    expect(entry).toMatch(/if \(isForeignFrame\(window, ""\)\) return fail\(/);
+    expect(entry).toMatch(/if \(isForeignFrame\(window, ""\)\) \{/);
+  });
+});
+
+describe('a frame-ancestors header on the Stalwart target (#1861)', () => {
+  it('finds the directive in any policy of the header, and nothing else', () => {
+    expect(policyNamesFrameAncestors("frame-ancestors 'self' https://portal.example.com")).toBe(true);
+    expect(policyNamesFrameAncestors("default-src 'self'; FRAME-ANCESTORS https://portal.example.com")).toBe(true);
+    expect(policyNamesFrameAncestors("default-src 'self', frame-ancestors https://portal.example.com")).toBe(true);
+    expect(policyNamesFrameAncestors("default-src 'self'; script-src 'self'")).toBe(false);
+    expect(policyNamesFrameAncestors("default-src https://frame-ancestors.example")).toBe(false);
+    expect(policyNamesFrameAncestors('')).toBe(false);
+    expect(policyNamesFrameAncestors(null)).toBe(false);
+  });
+
+  /** The entry's own URL answered with `headers`, or the fetch failing. */
+  function page(response: Response | Error) {
+    const fetch = vi.fn(async () => {
+      if (response instanceof Error) throw response;
+      return response;
+    });
+    return { fetch, win: { location: { href: `${ORIGIN}/webmail/en/mail/#inbox` }, fetch } };
+  }
+
+  it('asks the server for this very page, without following a redirect', async () => {
+    const { fetch, win } = page(new Response('', { headers: { 'content-security-policy': "frame-ancestors 'self' https://portal.example.com" } }));
+    await expect(serverAllowsFraming(win, policyNamesFrameAncestors)).resolves.toBe(true);
+    expect(fetch).toHaveBeenCalledWith(`${ORIGIN}/webmail/en/mail/`, expect.objectContaining({ cache: 'no-store', redirect: 'error' }));
+  });
+
+  it('refuses without the header, with a report-only one, on an error status and on a redirect', async () => {
+    await expect(serverAllowsFraming(page(new Response('')).win, policyNamesFrameAncestors)).resolves.toBe(false);
+    await expect(serverAllowsFraming(page(new Response('', {
+      headers: { 'content-security-policy-report-only': "frame-ancestors 'self'" },
+    })).win, policyNamesFrameAncestors)).resolves.toBe(false);
+    await expect(serverAllowsFraming(page(new Response('', {
+      status: 500, headers: { 'content-security-policy': "frame-ancestors 'self'" },
+    })).win, policyNamesFrameAncestors)).resolves.toBe(false);
+    await expect(serverAllowsFraming(page(new TypeError('Failed to fetch')).win, policyNamesFrameAncestors)).resolves.toBe(false);
+  });
+
+  /** Runs the Stalwart entry inside another site's frame; resolves to the URLs it fetched. */
+  async function bootFramed(headers: Record<string, string>) {
+    const entry = buildStalwartEntry({ locales: ['en'], shells: ['', 'mail'], buildId: 'b' });
+    const script = /<script>([\s\S]*?)<\/script>/.exec(entry)![1];
+    const doc = document.implementation.createHTMLDocument('Bulwark');
+    doc.head.innerHTML = `<base href="${ORIGIN}/webmail/" /><meta name="oauth-client-id" content="c" />`;
+    doc.body.innerHTML = '<div id="bulwark-lite-boot" aria-busy="true">Loading</div>';
+    const fetched: string[] = [];
+    const fetch = vi.fn((url: string) => {
+      fetched.push(url);
+      // The shell request stays open: the test ends where the entry would write it.
+      return url.includes('index.html') ? new Promise<Response>(() => {}) : Promise.resolve(new Response('', { headers }));
+    });
+    const location = { origin: ORIGIN, href: `${ORIGIN}/webmail/en/mail/`, pathname: '/webmail/en/mail/', search: '', hash: '' };
+    const win = frame(ORIGIN, frame('https://portal.example.com'), { fetch, location });
+    const storage = { getItem: () => null, setItem: () => {} };
+    new Function('window', 'document', 'location', 'navigator', 'localStorage', 'history', 'fetch', script)(
+      win, doc, location, { languages: ['en'], language: 'en' }, storage, { state: null, replaceState: () => {} }, fetch,
+    );
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    return { fetched, box: doc.getElementById('bulwark-lite-boot')! };
+  }
+
+  it('boots inside a frame the server named in frame-ancestors', async () => {
+    const { fetched, box } = await bootFramed({ 'content-security-policy': "frame-ancestors 'self' https://portal.example.com" });
+    expect(fetched).toEqual([`${ORIGIN}/webmail/en/mail/`, '/webmail/en/mail/index.html?v=b']);
+    expect(box.textContent).not.toContain(FOREIGN_FRAME_MESSAGE);
+  });
+
+  it('still refuses another site when the server sends no frame-ancestors', async () => {
+    const { fetched, box } = await bootFramed({});
+    expect(fetched).toEqual([`${ORIGIN}/webmail/en/mail/`]);
+    expect(box.textContent).toBe(FOREIGN_FRAME_MESSAGE);
   });
 });
 

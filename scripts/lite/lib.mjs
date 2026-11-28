@@ -658,6 +658,38 @@ export function isForeignFrame(win, allowed) {
 }
 
 /**
+ * Whether a Content-Security-Policy response header holds a frame-ancestors
+ * directive in any of its policies (a combined header separates them with
+ * commas). Only the enforced header counts, never the report-only one.
+ */
+export function policyNamesFrameAncestors(header) {
+  if (!header) return false;
+  var policies = String(header).split(",");
+  for (var i = 0; i < policies.length; i++) {
+    var directives = policies[i].split(";");
+    for (var j = 0; j < directives.length; j++) {
+      if (directives[j].trim().split(/\s+/)[0].toLowerCase() === "frame-ancestors") return true;
+    }
+  }
+  return false;
+}
+
+/**
+ * For the Stalwart entry inside another site's frame: resolves true when the
+ * server sends a frame-ancestors policy for this very URL. The browser then
+ * checked every frame above against it before it showed the page, so the
+ * server (or the proxy in front of Stalwart) decides who may frame the
+ * webmail. No such header, a redirect or an error: false, and the entry
+ * refuses the frame. Runs in the browser, embedded with Function#toString.
+ */
+export function serverAllowsFraming(win, namesFrameAncestors) {
+  var url = String(win.location.href).split("#")[0];
+  return win.fetch(url, { credentials: "same-origin", cache: "no-store", redirect: "error" })
+    .then(function (res) { return res.ok && namesFrameAncestors(res.headers.get("content-security-policy")); })
+    .catch(function () { return false; });
+}
+
+/**
  * The first script of every page of the static target. A <meta> policy can't
  * carry frame-ancestors, and hosts such as GitHub Pages or a plain S3 bucket
  * send no headers, so the page itself stops loading inside another site's
@@ -1520,9 +1552,19 @@ export function buildStalwartEntry({ locales, shells, defaultLocale = "en", buil
 
   // Stalwart sends no X-Frame-Options or frame-ancestors for an Application:
   // inside another origin's frame the app would be open to clickjacking. Every
-  // frame above counts, not only the top one.
+  // frame above counts, not only the top one. A proxy in front of Stalwart
+  // that sends frame-ancestors decides instead: the browser has already
+  // checked this frame against it (serverAllowsFraming).
   var isForeignFrame = ${isForeignFrame.toString()};
-  if (isForeignFrame(window, "")) return fail(${inlineJson(FOREIGN_FRAME_MESSAGE)});
+  var policyNamesFrameAncestors = ${policyNamesFrameAncestors.toString()};
+  var serverAllowsFraming = ${serverAllowsFraming.toString()};
+  if (isForeignFrame(window, "")) {
+    serverAllowsFraming(window, policyNamesFrameAncestors).then(function (allowed) {
+      if (allowed) start(); else fail(${inlineJson(FOREIGN_FRAME_MESSAGE)});
+    });
+    return;
+  }
+  start();
 
   function fail(message) {
     function show() {
@@ -1537,73 +1579,76 @@ export function buildStalwartEntry({ locales, shells, defaultLocale = "en", buil
     if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", show); else show();
   }
 
-  function pick(tag) {
-    if (!tag) return null;
-    tag = String(tag);
-    if (LOCALES.indexOf(tag) !== -1) return tag;
-    var lower = tag.toLowerCase();
-    if (lower.indexOf("zh") === 0) {
-      if (/zh-(tw|hk|mo|hant)/.test(lower) && LOCALES.indexOf("zh-TW") !== -1) return "zh-TW";
-      if (LOCALES.indexOf("zh") !== -1) return "zh";
+  // Boots the shell for this address; runs once the frame check passed.
+  function start() {
+    function pick(tag) {
+      if (!tag) return null;
+      tag = String(tag);
+      if (LOCALES.indexOf(tag) !== -1) return tag;
+      var lower = tag.toLowerCase();
+      if (lower.indexOf("zh") === 0) {
+        if (/zh-(tw|hk|mo|hant)/.test(lower) && LOCALES.indexOf("zh-TW") !== -1) return "zh-TW";
+        if (LOCALES.indexOf("zh") !== -1) return "zh";
+      }
+      var short = lower.split("-")[0];
+      for (var i = 0; i < LOCALES.length; i++) if (LOCALES[i].toLowerCase() === short) return LOCALES[i];
+      return null;
     }
-    var short = lower.split("-")[0];
-    for (var i = 0; i < LOCALES.length; i++) if (LOCALES[i].toLowerCase() === short) return LOCALES[i];
-    return null;
-  }
-  var preferred = null;
-  try {
-    var stored = JSON.parse(localStorage.getItem(${inlineJson(LOCALE_STORAGE_KEY)}) || "null");
-    preferred = pick(stored && stored.state && stored.state.locale);
-  } catch (e) {}
-  var langs = navigator.languages || [navigator.language];
-  for (var j = 0; !preferred && j < langs.length; j++) preferred = pick(langs[j]);
-  preferred = preferred || FALLBACK;
+    var preferred = null;
+    try {
+      var stored = JSON.parse(localStorage.getItem(${inlineJson(LOCALE_STORAGE_KEY)}) || "null");
+      preferred = pick(stored && stored.state && stored.state.locale);
+    } catch (e) {}
+    var langs = navigator.languages || [navigator.language];
+    for (var j = 0; !preferred && j < langs.length; j++) preferred = pick(langs[j]);
+    preferred = preferred || FALLBACK;
 
-  // Stalwart rewrote the base element to point at the Application's prefix.
-  var mount = new URL(document.baseURI).pathname.replace(/[/]+$/, "");
-  if (!/^([/][A-Za-z0-9._~-]+)?$/.test(mount)) {
-    return fail("Bulwark Webmail cannot run under " + mount + "/: the mount prefix must be a single path segment such as /webmail.");
-  }
-  var metaTag = document.querySelector('meta[name="oauth-client-id"]');
-  var clientId = (metaTag && metaTag.getAttribute("content")) || "";
-  var boot = resolveStalwartBoot(location.pathname, mount, LOCALES, SHELLS, preferred);
-  if (!boot) {
-    return fail("This page was opened at " + location.pathname + ", but the bundle is mounted at " + (mount || "/") + ".");
-  }
-  if (boot.canonical) {
-    try { history.replaceState(history.state, "", boot.canonical + location.search + location.hash); } catch (e) {}
-  }
+    // Stalwart rewrote the base element to point at the Application's prefix.
+    var mount = new URL(document.baseURI).pathname.replace(/[/]+$/, "");
+    if (!/^([/][A-Za-z0-9._~-]+)?$/.test(mount)) {
+      return fail("Bulwark Webmail cannot run under " + mount + "/: the mount prefix must be a single path segment such as /webmail.");
+    }
+    var metaTag = document.querySelector('meta[name="oauth-client-id"]');
+    var clientId = (metaTag && metaTag.getAttribute("content")) || "";
+    var boot = resolveStalwartBoot(location.pathname, mount, LOCALES, SHELLS, preferred);
+    if (!boot) {
+      return fail("This page was opened at " + location.pathname + ", but the bundle is mounted at " + (mount || "/") + ".");
+    }
+    if (boot.canonical) {
+      try { history.replaceState(history.state, "", boot.canonical + location.search + location.hash); } catch (e) {}
+    }
 
-  window[MOUNT_GLOBAL] = mount;
-  window[CLIENT_ID_GLOBAL] = clientId;
-  window.TURBOPACK_CHUNK_BASE_PATH = mount + "/_next/";
-  installStalwartFetchShim(window, mount, BUILD_ID, rewriteFlightForMount);
+    window[MOUNT_GLOBAL] = mount;
+    window[CLIENT_ID_GLOBAL] = clientId;
+    window.TURBOPACK_CHUNK_BASE_PATH = mount + "/_next/";
+    installStalwartFetchShim(window, mount, BUILD_ID, rewriteFlightForMount);
 
-  // Repeated inside the written shell, in case a browser gives it a fresh
-  // global. A file, not inline: this document's policy runs no inline script
-  // but its own, and it stays on the document the shell is written into.
-  function attr(value) {
-    return String(value).replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    // Repeated inside the written shell, in case a browser gives it a fresh
+    // global. A file, not inline: this document's policy runs no inline script
+    // but its own, and it stays on the document the shell is written into.
+    function attr(value) {
+      return String(value).replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    }
+    var bootScript = '<scr' + 'ipt src="' + attr(mount + "/" + BOOT_FILE + "?v=" + encodeURIComponent(BUILD_ID)) +
+      '" data-mount="' + attr(mount) + '" data-client-id="' + attr(clientId) + '" data-build="' + attr(BUILD_ID) + '"></scr' + 'ipt>';
+
+    fetch(mount + "/" + boot.shell + "?v=" + encodeURIComponent(BUILD_ID), { credentials: "same-origin" })
+      .then(function (res) {
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        return res.text();
+      })
+      .then(function (html) {
+        // A shell missing from the zip is answered with this very document.
+        if (html.indexOf(ENTRY_MARKER) !== -1) throw new Error(boot.shell + " is not part of this bundle");
+        var page = rewriteShellForMount(html, mount, BUILD_ID, bootScript);
+        document.open();
+        document.write(page);
+        document.close();
+      })
+      .catch(function (err) {
+        fail("Bulwark Webmail could not start (" + (err && err.message ? err.message : err) + "). Reload the page; if this keeps happening, the installed bundle may be incomplete.");
+      });
   }
-  var bootScript = '<scr' + 'ipt src="' + attr(mount + "/" + BOOT_FILE + "?v=" + encodeURIComponent(BUILD_ID)) +
-    '" data-mount="' + attr(mount) + '" data-client-id="' + attr(clientId) + '" data-build="' + attr(BUILD_ID) + '"></scr' + 'ipt>';
-
-  fetch(mount + "/" + boot.shell + "?v=" + encodeURIComponent(BUILD_ID), { credentials: "same-origin" })
-    .then(function (res) {
-      if (!res.ok) throw new Error("HTTP " + res.status);
-      return res.text();
-    })
-    .then(function (html) {
-      // A shell missing from the zip is answered with this very document.
-      if (html.indexOf(ENTRY_MARKER) !== -1) throw new Error(boot.shell + " is not part of this bundle");
-      var page = rewriteShellForMount(html, mount, BUILD_ID, bootScript);
-      document.open();
-      document.write(page);
-      document.close();
-    })
-    .catch(function (err) {
-      fail("Bulwark Webmail could not start (" + (err && err.message ? err.message : err) + "). Reload the page; if this keeps happening, the installed bundle may be incomplete.");
-    });
 })();
 `;
   // The one inline script of the bundle: its hash is the only inline script the policy allows.
@@ -2009,7 +2054,8 @@ for every account.
 Stalwart sends no security headers for an Application, so the bundle
 carries its own Content-Security-Policy: scripts load from this origin
 only, and no inline script runs but the entry document's own. The entry
-also refuses to run inside another site's frame.
+also refuses to run inside another site's frame, unless the mount path is
+served with a \`frame-ancestors\` policy (see below).
 
 The webmail shares its origin with everything else this Stalwart serves,
 including every file users keep in its file storage (\`/dav/\`) and every
@@ -2031,6 +2077,20 @@ For the mount path itself the proxy may add \`X-Frame-Options: SAMEORIGIN\`,
 \`X-Content-Type-Options: nosniff\` and \`Referrer-Policy\`. A
 Content-Security-Policy header there must not limit \`script-src\`: it would
 refuse the entry document's own script.
+
+To show the webmail inside a portal on another site, have the proxy send a
+\`frame-ancestors\` policy for the mount path, naming the sites that may
+frame it:
+
+\`\`\`
+Content-Security-Policy: frame-ancestors 'self' https://portal.example.com
+\`\`\`
+
+The browser checks every frame above the webmail against that list. When
+the entry finds itself in a frame, it fetches its own URL once, and starts
+only if the answer carries a \`frame-ancestors\` policy. Sign-in pages that
+forbid framing, such as Stalwart's own login page, still open only outside
+the frame.
 
 On a server several organisations share, the static zip on a host name of
 its own is the safer choice: there the webmail's origin serves nothing but

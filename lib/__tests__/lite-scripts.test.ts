@@ -725,7 +725,7 @@ describe('Stalwart target: the entry document', () => {
     expect(html.indexOf(meta)).toBeLessThan(html.indexOf('<script>'));
     // Every frame above counts (isForeignFrame), not only the top one.
     expect(html).toContain('w.parent.location.origin !== win.location.origin');
-    expect(html).toMatch(/if \(isForeignFrame\(window, ""\)\) return fail\(/);
+    expect(html).toMatch(/if \(isForeignFrame\(window, ""\)\) \{\s*serverAllowsFraming\(window, policyNamesFrameAncestors\)/);
   });
 
   it('survives both Stalwart rewrites, including the pre-0.16.19 replace-all', () => {
