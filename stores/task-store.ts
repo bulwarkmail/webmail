@@ -1,5 +1,4 @@
 import { create } from 'zustand';
-import { format, parseISO } from 'date-fns';
 import type { CalendarTask } from '@/lib/jmap/types';
 import type { IJMAPClient } from '@/lib/jmap/client-interface';
 import { debug } from '@/lib/debug';
@@ -7,8 +6,7 @@ import { taskHooks } from '@/lib/plugin-hooks';
 import { taskToView } from '@/lib/plugin-projection';
 import { applyPatchObject, patchedProperties } from '@/lib/jmap/patch-object';
 import { getClientByLocalAccountId } from './client-registry';
-import { getNextRecurrenceDate } from '@/lib/recurrence-expansion';
-import { findTaskOverride, occurrenceRecurrenceId, overridePatch, shiftLocal, taskSeriesId } from '@/lib/calendar-tasks';
+import { findTaskOverride, nextOpenOccurrence, occurrenceRecurrenceId, overridePatch, taskSeriesId } from '@/lib/calendar-tasks';
 
 /**
  * One signed-in login whose tasks the list shows next to the others'
@@ -256,37 +254,40 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
     // Expanded occurrences carry recurrenceId and their master's id in
     // seriesId; a `:` in the id is no sign of one, other logins' and shared
     // accounts' ids have it. originalId is a shared task's id in its account.
-    const isOccurrence = !!task.recurrenceId && !!task.seriesId;
     const masterId = taskSeriesId(task);
     const master = get().tasks.find((t) => t.id === masterId) || task;
-    const recurrenceId = occurrenceRecurrenceId(task);
+    const target = splitLoginId(masterId);
+    // Ticking off a series completes one occurrence, the first still open,
+    // wherever it is ticked; the series keeps its dates, so the done date
+    // stays done in the calendar.
+    const occurrence = task.recurrenceId && task.seriesId ? task : nextOpenOccurrence(master);
+    const recurrenceId = occurrence ? occurrenceRecurrenceId(occurrence) : null;
 
-    if (isOccurrence && recurrenceId) {
-      const isCompleted = task.progress === 'completed';
-      const newProgress: CalendarTask['progress'] = isCompleted ? 'needs-action' : 'completed';
-      const existingEntry = findTaskOverride(master.recurrenceOverrides, recurrenceId) || {};
-      const overrideEntry: Partial<CalendarTask> & { excluded?: boolean } = {
-        ...existingEntry,
+    if (occurrence && recurrenceId) {
+      const newProgress: CalendarTask['progress'] = occurrence.progress === 'completed' ? 'needs-action' : 'completed';
+      const overrideEntry: Record<string, unknown> = {
+        ...(findTaskOverride(master.recurrenceOverrides, recurrenceId) || {}),
         progress: newProgress,
       };
-      delete (overrideEntry as Record<string, unknown>).id;
-      delete (overrideEntry as Record<string, unknown>).uid;
-      delete (overrideEntry as Record<string, unknown>)['@type'];
-      delete (overrideEntry as Record<string, unknown>).calendarIds;
-      delete (overrideEntry as Record<string, unknown>).recurrenceRules;
-      delete (overrideEntry as Record<string, unknown>).recurrenceOverrides;
+      for (const key of ['id', 'uid', '@type', 'calendarIds', 'recurrenceRules', 'recurrenceOverrides']) delete overrideEntry[key];
+      const overrides = { ...(master.recurrenceOverrides || {}), [recurrenceId]: overrideEntry } as CalendarTask['recurrenceOverrides'];
+      // The series is done when no occurrence is left open, and open again
+      // when one of them is reopened.
+      const seriesProgress: CalendarTask['progress'] | undefined = newProgress === 'completed'
+        ? (nextOpenOccurrence({ ...master, recurrenceOverrides: overrides }) ? undefined : 'completed')
+        : (master.progress === 'completed' ? 'needs-action' : undefined);
+      const patch = {
+        ...overridePatch(master, recurrenceId, overrideEntry),
+        ...(seriesProgress ? { progress: seriesProgress } : {}),
+      };
 
-      const target = splitLoginId(masterId);
-      await clientOf(client, target.localAccountId).updateCalendarTask(target.raw, overridePatch(master, recurrenceId, overrideEntry as Record<string, unknown>));
+      await clientOf(client, target.localAccountId).updateCalendarTask(target.raw, patch);
       set({
-        tasks: get().tasks.map((t) => {
-          if (t.id !== masterId) return t;
-          const current = t.recurrenceOverrides || {};
-          return {
-            ...t,
-            recurrenceOverrides: { ...current, [recurrenceId]: overrideEntry },
-            updated: new Date().toISOString(),
-          };
+        tasks: get().tasks.map((t) => t.id !== masterId ? t : {
+          ...t,
+          recurrenceOverrides: { ...(t.recurrenceOverrides || {}), [recurrenceId]: overrideEntry },
+          ...(seriesProgress ? { progress: seriesProgress } : {}),
+          updated: new Date().toISOString(),
         }),
       });
       // Plugins know the series' id, not the occurrence's.
@@ -294,50 +295,14 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
       return;
     }
 
-    let updates: Partial<CalendarTask>;
-
-    // A series repeats from its start (RFC 5545 DTSTART), as the calendar
-    // views expand it; without a start, from its due date.
-    const validDate = (value: string | null | undefined) => {
-      const date = value ? parseISO(value) : null;
-      return date && !isNaN(date.getTime()) ? date : null;
-    };
-    const oldStart = validDate(task.start);
-    const oldDue = validDate(task.due);
-    const anchor = oldStart ?? oldDue;
-    if (task.progress !== 'completed' && task.recurrenceRules?.length && (task.due || task.start)) {
-      const nextDate = anchor ? getNextRecurrenceDate(anchor, task.recurrenceRules[0]) : null;
-
-      if (nextDate && anchor) {
-        // LocalDateTime also for all-day tasks: keeps consistency across serializations
-        const dateFormat = task.showWithoutTime ? "yyyy-MM-dd'T'00:00:00" : "yyyy-MM-dd'T'HH:mm:ss";
-        // The next occurrence is due as long after its start as this one.
-        const newDue = oldDue ? format(shiftLocal(nextDate, anchor, oldDue), dateFormat) : null;
-        const newStart = oldStart ? format(nextDate, dateFormat) : task.start;
-        // Moving the anchor restarts the count, so the completed occurrence is used up here.
-        const [rule, ...otherRules] = task.recurrenceRules;
-        updates = {
-          progress: 'needs-action',
-          ...(newDue ? { due: newDue } : {}),
-          ...(newStart ? { start: newStart } : {}),
-          ...(rule.count != null ? { recurrenceRules: [{ ...rule, count: rule.count - 1 }, ...otherRules] } : {}),
-        };
-      } else {
-        updates = { progress: 'completed' };
-      }
-    } else {
-      const newProgress = task.progress === 'completed' ? 'needs-action' : 'completed';
-      updates = { progress: newProgress };
-    }
-
-    const target = splitLoginId(masterId);
+    const updates: Partial<CalendarTask> = { progress: master.progress === 'completed' ? 'needs-action' : 'completed' };
     await clientOf(client, target.localAccountId).updateCalendarTask(target.raw, updates);
     set({
       tasks: get().tasks.map(t => t.id === masterId ? { ...t, ...updates, updated: new Date().toISOString() } : t),
     });
     // A toggle is reported as onTaskToggleComplete only, not also as
     // onTaskUpdate, so a plugin that listens to both sees each change once.
-    void taskHooks.onTaskToggleComplete.emit({ taskId: task.id, complete: task.progress !== 'completed' });
+    void taskHooks.onTaskToggleComplete.emit({ taskId: task.id, complete: updates.progress === 'completed' });
   },
 
   clearTasks: () => {
