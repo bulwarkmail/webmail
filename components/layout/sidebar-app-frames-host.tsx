@@ -116,10 +116,11 @@ export function SidebarAppFramesHost() {
   const made = useRef(new Map<string, HTMLIFrameElement>());
 
   // Silence: an app of the policy with `badge: true` promises to report. From
-  // its frame's making and each load until its first message, at most
-  // SILENT_MS, else it is `silent` (unreachable, its reporting part missing,
-  // the frame refused). Only then: an app reports when it starts and then
-  // only on a change, so a quiet app that said "ok" stays so.
+  // its frame's making, and each time Bulwark loads it anew, until its first
+  // message, at most SILENT_MS, else it is `silent` (unreachable, its
+  // reporting part missing, the frame refused). Not from each `load`: an app
+  // may report from a startup script before its images and fonts are in, and
+  // then only on a change, so a quiet app that said "ok" stays so.
   const reports = (appId: string) => managedApps.some((a) => a.id === appId && a.badge === true);
   const silence = useRef(new Map<string, ReturnType<typeof setTimeout>>());
   const heard = (appId: string) => {
@@ -172,15 +173,21 @@ export function SidebarAppFramesHost() {
       lastLoad.current.set(app.id, now);
       // Setting src navigates even to the same URL; a cross-origin frame cannot be told to reload.
       frame.src = frame.getAttribute('src') ?? app.url;
+      listen(app.id);
     }
   };
   useWindowReturn(() => loadAnew(['signed-out', 'silent']));
+  // The interval calls this render's loadAnew (it starts the silence timer,
+  // which reads the policy's apps).
+  const latestLoadAnew = useRef(loadAnew);
+  useEffect(() => {
+    latestLoadAnew.current = loadAnew;
+  });
   const anySilent = useSidebarAppFramesStore((s) => Object.values(s.badges).some((b) => b.state === 'silent'));
   useEffect(() => {
     if (!anySilent) return;
-    const timer = setInterval(() => loadAnew(['silent']), SILENT_RELOAD_MS);
+    const timer = setInterval(() => latestLoadAnew.current(['silent']), SILENT_RELOAD_MS);
     return () => clearInterval(timer);
-    // loadAnew reads only refs and the store.
   }, [anySilent]);
 
   // Until an app's first load its frame holds the initial about:blank. That
@@ -285,10 +292,7 @@ export function SidebarAppFramesHost() {
             sandbox={rights.sandbox}
             allow={rights.allow}
             referrerPolicy="no-referrer"
-            onLoad={() => {
-              markLoaded(app.id);
-              listen(app.id);
-            }}
+            onLoad={() => markLoaded(app.id)}
           />
         );
       })}

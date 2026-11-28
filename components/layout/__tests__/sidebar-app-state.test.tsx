@@ -204,7 +204,7 @@ describe('silence', () => {
     vi.useRealTimers();
   });
 
-  it('is the app saying nothing within SILENT_MS of its frame\'s load', () => {
+  it('is the app saying nothing within SILENT_MS of its frame\'s making', () => {
     render(<SidebarAppFramesHost />);
     const frame = openFrame(CHAT);
     fireEvent.load(frame);
@@ -217,7 +217,7 @@ describe('silence', () => {
     expect(ownState()).toBe('ok');
   });
 
-  it('is waited for from the frame\'s making too, should no load come (Firefox, a refused connection)', () => {
+  it('is waited for also when no load comes (Firefox, a refused connection)', () => {
     render(<SidebarAppFramesHost />);
     openFrame(CHAT);
     act(() => vi.advanceTimersByTime(SILENT_MS));
@@ -235,17 +235,44 @@ describe('silence', () => {
     expect(ownState()).toBe('ok');
   });
 
+  it('is not an app that reported before its frame\'s load and kept quiet since', () => {
+    render(<SidebarAppFramesHost />);
+    const frame = openFrame(CHAT);
+    // A startup script reports while the images and fonts are still loading.
+    fromFrame(frame, 'ok', 2, 1);
+    act(() => vi.advanceTimersByTime(SILENT_MS - 1));
+    fireEvent.load(frame);
+    act(() => vi.advanceTimersByTime(SILENT_MS * 10));
+    expect(ownState()).toBe('ok');
+  });
+
   it('keeps the last state while a frame loaded anew is heard from in time', () => {
     render(<SidebarAppFramesHost />);
     const frame = openFrame(CHAT);
     fireEvent.load(frame);
     fromFrame(frame, 'signed-out');
-    fireEvent.load(frame);
+    // Back in the window: Bulwark loads the signed-out frame anew.
+    act(() => {
+      window.dispatchEvent(new Event('focus'));
+    });
     act(() => vi.advanceTimersByTime(SILENT_MS - 1));
     expect(ownState()).toBe('signed-out');
     fromFrame(frame, 'ok', 1, 0);
     act(() => vi.advanceTimersByTime(SILENT_MS));
     expect(ownState()).toBe('ok');
+  });
+
+  it('is a frame loaded anew whose new document says nothing', () => {
+    render(<SidebarAppFramesHost />);
+    const frame = openFrame(CHAT);
+    fireEvent.load(frame);
+    fromFrame(frame, 'signed-out');
+    act(() => {
+      window.dispatchEvent(new Event('focus'));
+    });
+    fireEvent.load(frame);
+    act(() => vi.advanceTimersByTime(SILENT_MS));
+    expect(ownState()).toBe('silent');
   });
 
   it('is not looked for in an app without badge: true', () => {
