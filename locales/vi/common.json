@@ -2379,6 +2379,10 @@
         "cc": "Thêm vào Cc",
         "off": "Chỉ hiển thị người nhận"
       },
+      "shared_sent_recipients": {
+        "label": "Gợi ý người nhận từ hộp thư được chia sẻ",
+        "description": "Khi bạn gửi từ địa chỉ của một hộp thư được chia sẻ, những người mà hộp thư đó đã viết thư cho cũng được gợi ý. Khi đăng nhập, các thư gần đây trong thư mục Đã gửi của từng hộp thư được chia sẻ sẽ được đọc."
+      },
       "hide_inline_image_attachments": {
         "label": "Ẩn ảnh trong dòng khỏi danh sách tệp đính kèm",
         "description": "Ảnh được nhúng trong nội dung thư sẽ không được liệt kê thành tệp đính kèm riêng"

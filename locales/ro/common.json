@@ -2367,6 +2367,10 @@
         "cc": "Adaugă la CC",
         "off": "Doar destinatarii"
       },
+      "shared_sent_recipients": {
+        "label": "Propune destinatari din căsuțele partajate",
+        "description": "Când trimiți de pe adresa unei căsuțe partajate, sunt propuse și persoanele cărora le-a scris acea căsuță. La conectare se citesc mesajele recente din dosarul Trimise al fiecărei căsuțe partajate."
+      },
       "hide_inline_image_attachments": {
         "label": "Ascundeți imaginile încorporate din atașamente",
         "description": "Imaginile încorporate în corpul mesajului nu sunt listate ca atașamente separate"

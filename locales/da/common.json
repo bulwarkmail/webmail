@@ -2367,6 +2367,10 @@
         "cc": "Tilføj til CC",
         "off": "Foreslå kun modtagere"
       },
+      "shared_sent_recipients": {
+        "label": "Foreslå modtagere fra delte postkasser",
+        "description": "Når du sender fra en delt postkasses adresse, foreslås også de personer, postkassen har skrevet til. Når du logger ind, læses de seneste beskeder i mappen Sendt i hver delt postkasse."
+      },
       "hide_inline_image_attachments": {
         "label": "Skjul indlejrede billeder fra vedhæftninger",
         "description": "Billeder indlejret i beskedteksten vises ikke som separate vedhæftninger"

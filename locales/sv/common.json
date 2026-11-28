@@ -2382,6 +2382,10 @@
         "cc": "Lägg till i Kopia",
         "off": "Erbjud endast mottagare"
       },
+      "shared_sent_recipients": {
+        "label": "Föreslå mottagare från delade brevlådor",
+        "description": "När du skickar från en delad brevlådas adress föreslås även de personer som brevlådan har skrivit till. När du loggar in läses de senaste meddelandena i mappen Skickat i varje delad brevlåda."
+      },
       "hide_inline_image_attachments": {
         "label": "Dölj infogade bilder från bilagor",
         "description": "Bilder som är inbäddade i meddelandetexten listas inte som separata bilagor"

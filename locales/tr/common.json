@@ -2364,6 +2364,10 @@
         "cc": "CC alanına ekle",
         "off": "Yalnızca alıcılar"
       },
+      "shared_sent_recipients": {
+        "label": "Paylaşılan posta kutularından alıcı öner",
+        "description": "Paylaşılan bir posta kutusunun adresinden gönderdiğinizde, o posta kutusunun yazdığı kişiler de önerilir. Oturum açtığınızda her paylaşılan posta kutusunun Gönderilenler klasöründeki son iletiler okunur."
+      },
       "hide_inline_image_attachments": {
         "label": "Satır içi görüntüleri eklerden gizle",
         "description": "İleti gövdesine gömülü görseller ayrı ek olarak listelenmez"

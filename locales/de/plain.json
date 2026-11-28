@@ -359,6 +359,9 @@
       "mention_adds_recipient": {
         "description": "Wenn Sie @ tippen, können Sie auch Personen aus Ihren Kontakten wählen. Sind sie noch keine Empfänger, werden sie zur E-Mail hinzugefügt."
       },
+      "shared_sent_recipients": {
+        "description": "Wenn Sie von der Adresse eines geteilten Postfachs senden, bekommen Sie auch Vorschläge für Personen, an die dieses Postfach Mails geschickt hat. Um sie zu finden, schaut die App bei der Anmeldung in die neuesten Mails im Ordner Gesendet jedes geteilten Postfachs."
+      },
       "hide_inline_image_attachments": {
         "label": "Bilder im Text nicht als Anhang zeigen",
         "description": "Bilder, die zum Text der E-Mail gehören, stehen nicht noch einmal in der Liste der Anhänge"

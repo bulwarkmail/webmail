@@ -2367,6 +2367,10 @@
         "cc": "Hozzáadás: Másolat",
         "off": "Csak a címzettek"
       },
+      "shared_sent_recipients": {
+        "label": "Címzettek javaslata a megosztott postafiókokból",
+        "description": "Ha egy megosztott postafiók címéről küldesz, azok is megjelennek, akiknek ez a postafiók írt. Bejelentkezéskor beolvassuk minden megosztott postafiók Elküldött mappájának legutóbbi üzeneteit."
+      },
       "hide_inline_image_attachments": {
         "label": "Beágyazott képek elrejtése a csatolmányok közül",
         "description": "Az üzenet törzsébe ágyazott képek nem jelennek meg külön csatolmányként"

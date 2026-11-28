@@ -2364,6 +2364,10 @@
         "cc": "Dodaj do DW",
         "off": "Tylko odbiorcy"
       },
+      "shared_sent_recipients": {
+        "label": "Podpowiadaj odbiorców z udostępnionych skrzynek",
+        "description": "Gdy wysyłasz z adresu udostępnionej skrzynki, podpowiadane są też osoby, do których ta skrzynka pisała. Po zalogowaniu odczytywane są ostatnie wiadomości z folderu Wysłane każdej udostępnionej skrzynki."
+      },
       "hide_inline_image_attachments": {
         "label": "Ukryj obrazy osadzone z listy załączników",
         "description": "Obrazy osadzone w treści wiadomości nie są wyświetlane jako osobne załączniki"

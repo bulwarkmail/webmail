@@ -2375,6 +2375,10 @@
         "cc": "Legg til i Kopi",
         "off": "Tilby berre mottakarar"
       },
+      "shared_sent_recipients": {
+        "label": "Føreslå mottakarar frå delte postkassar",
+        "description": "Når du sender frå adressa til ein delt postkasse, får du òg forslag om folka postkassen har skrive til. Når du loggar på, vert dei nyaste meldingane i Sendt-mappa i kvar delte postkasse lesne."
+      },
       "hide_inline_image_attachments": {
         "label": "Gøym innebygde bilete frå vedlegga",
         "description": "Bilete som er innebygde i meldingsteksten, vert ikkje lista som eigne vedlegg"

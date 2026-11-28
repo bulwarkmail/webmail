@@ -2367,6 +2367,10 @@
         "cc": "Lisa väljale CC",
         "off": "Paku ainult adressaate"
       },
+      "shared_sent_recipients": {
+        "label": "Soovita adressaate jagatud postkastidest",
+        "description": "Kui saadad jagatud postkasti aadressilt, pakutakse ka inimesi, kellele see postkast on kirjutanud. Sisselogimisel loetakse iga jagatud postkasti kaustast Saadetud viimased kirjad."
+      },
       "hide_inline_image_attachments": {
         "label": "Peida reasisesed pildid manuste hulgast",
         "description": "Kirja sisusse põimitud pilte ei kuvata eraldi manustena"

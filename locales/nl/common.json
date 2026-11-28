@@ -2364,6 +2364,10 @@
         "cc": "Toevoegen aan CC",
         "off": "Alleen ontvangers"
       },
+      "shared_sent_recipients": {
+        "label": "Ontvangers uit gedeelde postvakken voorstellen",
+        "description": "Als je verzendt vanaf het adres van een gedeeld postvak, worden ook mensen voorgesteld naar wie dat postvak heeft geschreven. Bij het aanmelden worden de recente berichten in de map Verzonden van elk gedeeld postvak gelezen."
+      },
       "hide_inline_image_attachments": {
         "label": "Inline-afbeeldingen verbergen uit bijlagenlijst",
         "description": "Afbeeldingen die in de berichttekst zijn ingesloten worden niet als aparte bijlagen weergegeven"

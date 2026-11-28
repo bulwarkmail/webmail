@@ -2367,6 +2367,10 @@
         "cc": "加入副本",
         "off": "僅顯示收件者"
       },
+      "shared_sent_recipients": {
+        "label": "建議共用信箱的收件者",
+        "description": "從共用信箱的地址寄信時，也會建議該信箱曾寫信給的人。登入時會讀取每個共用信箱「寄件備份」資料夾中的最近郵件。"
+      },
       "hide_inline_image_attachments": {
         "label": "在附件清單中隱藏內嵌圖片",
         "description": "嵌入到郵件內文中的圖片不會作為單獨的附件顯示"

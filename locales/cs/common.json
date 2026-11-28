@@ -2364,6 +2364,10 @@
         "cc": "Přidat do Kopie",
         "off": "Nabízet jen příjemce"
       },
+      "shared_sent_recipients": {
+        "label": "Navrhovat příjemce ze sdílených schránek",
+        "description": "Když odesíláte z adresy sdílené schránky, nabídnou se i lidé, kterým tato schránka psala. Po přihlášení se načtou nedávné zprávy ze složky Odeslané každé sdílené schránky."
+      },
       "hide_inline_image_attachments": {
         "label": "Skrýt vložené obrázky ze seznamu příloh",
         "description": "Obrázky vložené přímo do textu zprávy se nezobrazí jako samostatné přílohy"

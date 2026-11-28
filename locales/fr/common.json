@@ -2364,6 +2364,10 @@
         "cc": "Ajouter en Cc",
         "off": "Destinataires uniquement"
       },
+      "shared_sent_recipients": {
+        "label": "Suggérer des destinataires des boîtes partagées",
+        "description": "Quand vous envoyez depuis l'adresse d'une boîte partagée, les personnes auxquelles cette boîte a écrit sont aussi proposées. À la connexion, les messages récents du dossier Envoyés de chaque boîte partagée sont lus."
+      },
       "hide_inline_image_attachments": {
         "label": "Masquer les images intégrées des pièces jointes",
         "description": "Les images intégrées au corps du message ne sont pas listées comme pièces jointes séparées"

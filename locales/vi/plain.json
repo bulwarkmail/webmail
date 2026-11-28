@@ -361,6 +361,9 @@
       "mention_adds_recipient": {
         "description": "Khi nhập @, bạn cũng có thể chọn người trong danh bạ. Nếu họ chưa có trong danh sách người nhận, họ sẽ được thêm vào thư."
       },
+      "shared_sent_recipients": {
+        "description": "Khi bạn gửi từ địa chỉ của một hộp thư được chia sẻ, bạn cũng nhận được gợi ý những người mà hộp thư đó đã gửi thư đến. Để tìm họ, ứng dụng xem các thư mới nhất trong thư mục Đã gửi của từng hộp thư được chia sẻ khi bạn đăng nhập."
+      },
       "hide_inline_image_attachments": {
         "label": "Không liệt kê hình ảnh trong nội dung thư như tệp đính kèm",
         "description": "Hình ảnh trong nội dung thư không xuất hiện lại trong danh sách tệp đính kèm"

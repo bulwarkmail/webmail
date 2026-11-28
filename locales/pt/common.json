@@ -2364,6 +2364,10 @@
         "cc": "Adicionar a Cc",
         "off": "Sugerir só destinatários"
       },
+      "shared_sent_recipients": {
+        "label": "Sugerir destinatários das caixas compartilhadas",
+        "description": "Quando você envia do endereço de uma caixa compartilhada, as pessoas para quem essa caixa escreveu também são sugeridas. Ao entrar, as mensagens recentes da pasta Enviados de cada caixa compartilhada são lidas."
+      },
       "hide_inline_image_attachments": {
         "label": "Ocultar imagens incorporadas dos anexos",
         "description": "As imagens incorporadas no corpo da mensagem não são listadas como anexos separados"

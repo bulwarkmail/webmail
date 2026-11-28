@@ -2367,6 +2367,10 @@
         "cc": "Legg til i Kopi",
         "off": "Bare foreslå mottakere"
       },
+      "shared_sent_recipients": {
+        "label": "Foreslå mottakere fra delte postbokser",
+        "description": "Når du sender fra adressen til en delt postboks, foreslås også personene postboksen har skrevet til. Når du logger på, leses de nyeste meldingene i Sendt-mappen i hver delte postboks."
+      },
       "hide_inline_image_attachments": {
         "label": "Skjul innebygde bilder i vedleggslisten",
         "description": "Bilder som er innebygd i meldingsteksten, er ikke oppført som separate vedlegg"

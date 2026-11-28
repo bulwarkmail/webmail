@@ -2364,6 +2364,10 @@
         "cc": "Pievienot laukam Kopija",
         "off": "Piedāvāt tikai adresātus"
       },
+      "shared_sent_recipients": {
+        "label": "Ieteikt adresātus no koplietotajām pastkastēm",
+        "description": "Sūtot no koplietotas pastkastes adreses, tiek piedāvāti arī cilvēki, kuriem šī pastkaste ir rakstījusi. Pierakstoties tiek nolasītas jaunākās vēstules katras koplietotās pastkastes mapē Nosūtītie."
+      },
       "hide_inline_image_attachments": {
         "label": "Slēpt iegultos attēlus no pielikumu saraksta",
         "description": "Ziņojuma pamattekstā iegultie attēli netiek rādīti kā atsevišķi pielikumi"

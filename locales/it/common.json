@@ -2364,6 +2364,10 @@
         "cc": "Aggiungi in CC",
         "off": "Solo destinatari"
       },
+      "shared_sent_recipients": {
+        "label": "Suggerisci destinatari dalle caselle condivise",
+        "description": "Quando invii dall'indirizzo di una casella condivisa, vengono proposte anche le persone a cui quella casella ha scritto. All'accesso vengono letti i messaggi recenti nella cartella Inviati di ogni casella condivisa."
+      },
       "hide_inline_image_attachments": {
         "label": "Nascondi le immagini inline dagli allegati",
         "description": "Le immagini incorporate nel corpo del messaggio non vengono elencate come allegati separati"

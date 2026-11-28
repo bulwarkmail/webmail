@@ -2364,6 +2364,10 @@
         "cc": "添加到抄送",
         "off": "仅显示收件人"
       },
+      "shared_sent_recipients": {
+        "label": "推荐共享邮箱的收件人",
+        "description": "从共享邮箱的地址发送时，也会推荐该邮箱曾写信给的人。登录时会读取每个共享邮箱“已发送”文件夹中的最近邮件。"
+      },
       "hide_inline_image_attachments": {
         "label": "在附件列表中隐藏内嵌图片",
         "description": "嵌入到邮件正文中的图片不会作为单独的附件显示"

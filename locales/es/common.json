@@ -2364,6 +2364,10 @@
         "cc": "Añadir a CC",
         "off": "Solo destinatarios"
       },
+      "shared_sent_recipients": {
+        "label": "Sugerir destinatarios de los buzones compartidos",
+        "description": "Cuando envías desde la dirección de un buzón compartido, también se sugieren las personas a las que ha escrito ese buzón. Al iniciar sesión se leen los mensajes recientes de la carpeta Enviados de cada buzón compartido."
+      },
       "hide_inline_image_attachments": {
         "label": "Ocultar imágenes incrustadas de los adjuntos",
         "description": "Las imágenes incrustadas en el cuerpo del mensaje no se listan como adjuntos separados"

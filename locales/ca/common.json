@@ -2367,6 +2367,10 @@
         "cc": "Afegeix a CC",
         "off": "Només destinataris"
       },
+      "shared_sent_recipients": {
+        "label": "Suggerir destinataris de les bústies compartides",
+        "description": "Quan envies des de l'adreça d'una bústia compartida, també s'ofereixen les persones a qui ha escrit aquesta bústia. En iniciar la sessió es llegeixen els missatges recents de la carpeta Enviats de cada bústia compartida."
+      },
       "hide_inline_image_attachments": {
         "label": "Amaga les imatges incrustades dels fitxers adjunts",
         "description": "Les imatges incrustades al cos del missatge no es llisten com a fitxers adjunts separats"

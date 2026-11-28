@@ -2364,6 +2364,10 @@
         "cc": "Zu CC hinzufügen",
         "off": "Nur Empfänger anbieten"
       },
+      "shared_sent_recipients": {
+        "label": "Empfänger aus geteilten Postfächern vorschlagen",
+        "description": "Wenn Sie von der Adresse eines geteilten Postfachs senden, werden auch Personen vorgeschlagen, an die dieses Postfach geschrieben hat. Dazu werden bei der Anmeldung die neuesten Nachrichten im Ordner Gesendet jedes geteilten Postfachs gelesen."
+      },
       "hide_inline_image_attachments": {
         "label": "Eingebettete Bilder in Anhangsliste ausblenden",
         "description": "Im Nachrichtentext eingebettete Bilder werden nicht als separate Anhänge aufgeführt"
