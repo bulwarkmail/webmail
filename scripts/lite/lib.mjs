@@ -104,6 +104,11 @@ export const LITE_API_STRING_ALLOWLIST = [
   "/api/devices",
   // Stalwart's own account discovery (lib/auth/lite-oauth.ts), not a route of this app.
   "/api/discover",
+  // lib/remote-content-proxy.ts - remote pictures through this server: the
+  // proxy base is null in Lite (IS_LITE in hooks/use-remote-content-proxy.ts),
+  // so nothing loads from it; lib/animated-images.ts only reads the path to
+  // recognise an address that is already proxied.
+  "/api/remote-content",
   // OAuth / SSO / pairing - Lite discovers and redeems codes in the browser
   // (lib/auth/lite-oauth.ts); stalwartFeaturesEnabled is pinned off.
   "/api/auth/token",
