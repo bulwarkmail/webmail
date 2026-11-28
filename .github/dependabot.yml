@@ -17,6 +17,11 @@ updates:
       # covers the per-platform @swc/core-* packages that come with it.
       - dependency-name: next-intl
       - dependency-name: "@swc/core*"
+      # A new TypeScript major waits until typescript-eslint supports it
+      # (8.x accepts up to 6.0, so TypeScript 7 fails `npm ci`). Move to it
+      # by hand then.
+      - dependency-name: typescript
+        update-types: ["version-update:semver-major"]
     groups:
       # These packages require each other at the exact same version, so a
       # bump of one alone fails `npm ci`. One PR moves the whole family.
