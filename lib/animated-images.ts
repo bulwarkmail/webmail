@@ -195,7 +195,6 @@ export function pauseAnimatedImages(
     img.setAttribute(SEEN_ATTR, '');
     void isAnimated(img.currentSrc || img.getAttribute('src') || '').then((animated) => {
       if (!animated || disposed || !img.isConnected) return;
-      const box = img.getBoundingClientRect();
       const frame = snapshot(img);
       const alt = img.getAttribute('alt')?.trim() ?? '';
       let still: HTMLElement;
@@ -226,7 +225,10 @@ export function pauseAnimatedImages(
           el.style.setProperty('display', el.style.getPropertyValue('display'));
         }
       }
-      const width = box.width || img.width || img.naturalWidth;
+      // The layout width: the reader may scale the whole body to fit the
+      // pane (email-fit-width.ts), and a measured box already holds that
+      // scale, which the still would then get a second time.
+      const width = img.offsetWidth || img.width || img.naturalWidth;
       still.style.width = `${width}px`;
       // Keeps the image's shape, also where max-width narrows it.
       if (!frame) still.style.aspectRatio = `${img.naturalWidth} / ${img.naturalHeight}`;

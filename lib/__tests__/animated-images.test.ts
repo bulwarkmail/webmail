@@ -211,6 +211,18 @@ describe('pauseAnimatedImages', () => {
     expect(linkClicks).not.toHaveBeenCalled();
   });
 
+  it('sizes the still by the layout width, not the box the fit has scaled', async () => {
+    const doc = frameDoc('<img src="https://cdn.example/a.gif" alt="">', { tainted: true });
+    const img = doc.querySelector('img')!;
+    // A 600px image in a mail the reader scaled to 0.6 to fit the pane.
+    Object.defineProperty(img, 'offsetWidth', { value: 600 });
+    vi.spyOn(img, 'getBoundingClientRect').mockReturnValue({ width: 360, height: 216 } as DOMRect);
+    pauseAnimatedImages(doc, { play: 'Play', pause: 'Pause' });
+    await flush();
+    const still = doc.querySelector<HTMLElement>('[data-bulwark-still]')!;
+    expect(still.style.width).toBe('600px');
+  });
+
   it('names each checkbox by its own label', async () => {
     const doc = frameDoc('<img src="https://cdn.example/a.gif" alt=""><img src="https://cdn.example/b.gif" alt="">');
     pauseAnimatedImages(doc, { play: 'Play', pause: 'Pause' });
