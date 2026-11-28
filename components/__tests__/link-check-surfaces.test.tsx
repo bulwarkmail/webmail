@@ -127,6 +127,43 @@ describe("other plugins' ui.openExternalUrl", () => {
     expect(seen).toHaveLength(1);
     expect(open).toHaveBeenCalledWith('https://evil.example/p', '_blank', 'noopener,noreferrer');
   });
+
+  it("opens a link to an admin inline app in its pane, at that address, only during a user activation", async () => {
+    const { dispatchApiCall } = await import('@/lib/plugin-sandbox/host-api');
+    const { usePolicyStore } = await import('@/stores/policy-store');
+    const { useSidebarAppFramesStore } = await import('@/stores/sidebar-app-frames-store');
+    const policy = usePolicyStore.getState().policy;
+    usePolicyStore.setState({ policy: { ...policy, defaultSidebarApps: [
+      { id: 'chat', name: 'Chat', url: 'https://chat.example.com/', icon: 'Globe', openMode: 'inline', showOnMobile: false },
+    ] as never } });
+    const shown: { src?: string }[] = [];
+    useSidebarAppFramesStore.setState({ frames: [], shown: null, hosts: [{ id: 5, show: (app) => { shown.push(app); } }] });
+    const open = vi.spyOn(window, 'open').mockReturnValue(null);
+    const caller = { id: 'p1', name: 'p1', version: '1', author: '', description: '', type: 'hook', permissions: [], entrypoint: 'index.js', enabled: true, status: 'running', settings: {} } as never;
+    const activation = { isActive: false };
+    Object.defineProperty(navigator, 'userActivation', { configurable: true, value: activation });
+    const DM = 'https://chat.example.com/team/messages/@anna';
+    try {
+      // No user activation (a timer, a hook): a new tab, never the pane.
+      await dispatchApiCall(caller, 'ui.openExternalUrl', [DM]);
+      expect(shown).toEqual([]);
+      expect(open).toHaveBeenCalledWith(DM, '_blank', 'noopener,noreferrer');
+      open.mockClear();
+
+      // During a user activation (a click in the plugin's frame): the pane.
+      activation.isActive = true;
+      await dispatchApiCall(caller, 'ui.openExternalUrl', [DM]);
+      expect(shown.map((app) => app.src)).toEqual([DM]);
+      expect(open).not.toHaveBeenCalled();
+      // Another origin: a new tab as before.
+      await dispatchApiCall(caller, 'ui.openExternalUrl', ['https://other.example.com/x']);
+      expect(open).toHaveBeenCalledWith('https://other.example.com/x', '_blank', 'noopener,noreferrer');
+    } finally {
+      delete (navigator as unknown as Record<string, unknown>).userActivation;
+      usePolicyStore.setState({ policy });
+      useSidebarAppFramesStore.setState({ frames: [], shown: null, hosts: [] });
+    }
+  });
 });
 
 // What is checked is what opens: the host hands plugins the address as the
