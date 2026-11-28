@@ -70,6 +70,7 @@ export type MessageActionKey =
   | "create_event"
   | "archive"
   | "delete"
+  | "delete_conversation"
   | "read"
   | "remove_from_folder"
   | "star"
@@ -136,6 +137,8 @@ export interface MessageActionOptions {
   onEditAsNew?: () => void;
   onArchive?: () => void;
   onDelete?: () => void;
+  /** The reader: every message of the open conversation the list holds, as its row would (#1885). */
+  onDeleteConversation?: () => void;
   onMarkAsRead?: (read: boolean) => void;
   onToggleStar?: () => void;
   onTogglePinned?: () => void;
@@ -293,6 +296,13 @@ export function useMessageActionList(o: MessageActionOptions): MessageActionEntr
       ? [item("archive", Inbox, tP3("move_to_inbox"), o.onMoveToInbox, { testId: "ctx-move-to-inbox" })]
       : archiveEnabled ? [item("archive", Archive, t("archive"), o.onArchive)] : [];
     const del = item("delete", Trash2, deleteForever ? tActions("delete_forever") : t("delete"), o.onDelete, { destructive: !mountainView, testId: "ctx-delete" });
+    // Right under Delete: the whole conversation, where the host offers it.
+    const delConversation = o.onDeleteConversation
+      ? [item("delete_conversation", Trash2, deleteForever ? t("delete_conversation_forever") : t("delete_conversation"), o.onDeleteConversation, {
+          destructive: !mountainView,
+          testId: "ctx-delete-conversation",
+        })]
+      : [];
     const read = item("read", isUnread ? MailOpen : Mail, isUnread ? t("mark_read") : t("mark_unread"), () => o.onMarkAsRead?.(isUnread), {
       disabled: false,
       testId: isUnread ? "ctx-mark-read" : "ctx-mark-unread",
@@ -348,13 +358,13 @@ export function useMessageActionList(o: MessageActionOptions): MessageActionEntr
     // open and link; how it shows; save, print, source.
     list = mountainView
       ? [
-          ...draft, ...replies, ...restore, ...archive, del, read, SEPARATOR,
+          ...draft, ...replies, ...restore, ...archive, del, ...delConversation, read, SEPARATOR,
           ...move, tag, ...rules, ...copy, SEPARATOR,
           star, ...pin, ...spam, ...reportPhishing, ...find, SEPARATOR,
           ...createEvent, ...links, SEPARATOR, ...views, SEPARATOR, ...openWindow, ...file,
         ]
       : [
-          ...draft, ...replies, ...restore, ...archive, del, SEPARATOR,
+          ...draft, ...replies, ...restore, ...archive, del, ...delConversation, SEPARATOR,
           ...move, ...copy, ...rules, SEPARATOR,
           read, star, ...pin, tag, SEPARATOR,
           ...spam, ...reportPhishing, ...find, SEPARATOR,

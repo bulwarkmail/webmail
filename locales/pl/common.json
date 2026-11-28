@@ -4114,6 +4114,8 @@
     "remove_from_folder": "Usuń z tego folderu",
     "archive": "Archiwizuj",
     "delete": "Usuń",
+    "delete_conversation": "Usuń rozmowę",
+    "delete_conversation_forever": "Usuń rozmowę na zawsze",
     "mark_as_spam": "Zgłoś spam",
     "not_spam": "To nie spam",
     "tag": "Etykieta",

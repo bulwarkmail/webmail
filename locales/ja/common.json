@@ -4114,6 +4114,8 @@
     "remove_from_folder": "このフォルダから削除",
     "archive": "アーカイブ",
     "delete": "削除",
+    "delete_conversation": "会話を削除",
+    "delete_conversation_forever": "会話を完全に削除",
     "mark_as_spam": "迷惑メールを報告",
     "not_spam": "迷惑メールでない",
     "tag": "ラベル",

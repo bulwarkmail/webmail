@@ -4114,6 +4114,8 @@
     "remove_from_folder": "Прибрати з цієї папки",
     "archive": "Архів",
     "delete": "Видалити",
+    "delete_conversation": "Видалити розмову",
+    "delete_conversation_forever": "Видалити розмову назавжди",
     "mark_as_spam": "Повідомити про спам",
     "not_spam": "Не спам",
     "tag": "Мітка",

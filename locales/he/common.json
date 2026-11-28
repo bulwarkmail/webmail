@@ -4059,6 +4059,8 @@
     "remove_from_folder": "הסרה מתיקייה זו",
     "archive": "ארכיון",
     "delete": "לִמְחוֹק",
+    "delete_conversation": "מחיקת השיחה",
+    "delete_conversation_forever": "מחיקת השיחה לצמיתות",
     "mark_as_spam": "דווח על ספאם",
     "not_spam": "לא ספאם",
     "tag": "תווית",

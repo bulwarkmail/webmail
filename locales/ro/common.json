@@ -4114,6 +4114,8 @@
     "remove_from_folder": "Elimină din acest dosar",
     "archive": "Arhivează",
     "delete": "Șterge",
+    "delete_conversation": "Șterge conversația",
+    "delete_conversation_forever": "Șterge conversația definitiv",
     "mark_as_spam": "Raportează spamul",
     "not_spam": "Nu este spam",
     "tag": "Etichetă",

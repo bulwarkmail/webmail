@@ -83,6 +83,8 @@ interface EmailContextMenuProps {
   onToggleStar?: () => void;
   onTogglePinned?: () => void;
   onDelete?: () => void;
+  /** The reader's ⋮: delete the open conversation (#1885). */
+  onDeleteConversation?: () => void;
   onArchive?: () => void;
   /** In Archive: what takes Archive's place, when the host knows better than the browsed folder (a message window). */
   onMoveToInbox?: () => void;
@@ -190,6 +192,7 @@ export function EmailContextMenu({
   onToggleStar,
   onTogglePinned,
   onDelete,
+  onDeleteConversation,
   onArchive,
   onMoveToInbox,
   onSetTag,
@@ -332,6 +335,7 @@ export function EmailContextMenu({
     onEditAsNew,
     onArchive,
     onDelete,
+    onDeleteConversation,
     onMarkAsRead,
     onToggleStar,
     onTogglePinned,

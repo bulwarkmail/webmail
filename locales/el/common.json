@@ -4126,6 +4126,8 @@
     "remove_from_folder": "Αφαίρεση από αυτόν τον φάκελο",
     "archive": "Αρχειοθέτηση",
     "delete": "Διαγραφή",
+    "delete_conversation": "Διαγραφή συνομιλίας",
+    "delete_conversation_forever": "Οριστική διαγραφή συνομιλίας",
     "mark_as_spam": "Αναφορά ανεπιθύμητου",
     "not_spam": "Δεν είναι ανεπιθύμητο",
     "tag": "Ετικέτα",

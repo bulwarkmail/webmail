@@ -4114,6 +4114,8 @@
     "remove_from_folder": "حذف از این پوشه",
     "archive": "بایگانی",
     "delete": "حذف",
+    "delete_conversation": "حذف گفتگو",
+    "delete_conversation_forever": "حذف گفتگو برای همیشه",
     "mark_as_spam": "گزارش هرزنامه",
     "not_spam": "هرزنامه نیست",
     "tag": "برچسب",

@@ -4114,6 +4114,8 @@
     "remove_from_folder": "Remove from this folder",
     "archive": "Archive",
     "delete": "Delete",
+    "delete_conversation": "Delete conversation",
+    "delete_conversation_forever": "Delete conversation forever",
     "mark_as_spam": "Report spam",
     "not_spam": "Not spam",
     "tag": "Tag",

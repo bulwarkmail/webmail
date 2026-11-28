@@ -4114,6 +4114,8 @@
     "remove_from_folder": "Treu d'aquesta carpeta",
     "archive": "Arxiva",
     "delete": "Suprimeix",
+    "delete_conversation": "Suprimeix la conversa",
+    "delete_conversation_forever": "Suprimeix la conversa per sempre",
     "mark_as_spam": "Denuncia com a brossa",
     "not_spam": "No és brossa",
     "tag": "Etiqueta",

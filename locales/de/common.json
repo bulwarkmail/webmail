@@ -4114,6 +4114,8 @@
     "remove_from_folder": "Aus diesem Ordner entfernen",
     "archive": "Archivieren",
     "delete": "Löschen",
+    "delete_conversation": "Unterhaltung löschen",
+    "delete_conversation_forever": "Unterhaltung endgültig löschen",
     "mark_as_spam": "Spam melden",
     "not_spam": "Kein Spam",
     "tag": "Label",

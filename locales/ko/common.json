@@ -4114,6 +4114,8 @@
     "remove_from_folder": "이 폴더에서 제거",
     "archive": "보관",
     "delete": "삭제",
+    "delete_conversation": "대화 삭제",
+    "delete_conversation_forever": "대화 영구 삭제",
     "mark_as_spam": "스팸 신고",
     "not_spam": "정상 메일",
     "tag": "태그",

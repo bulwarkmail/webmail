@@ -4114,6 +4114,8 @@
     "remove_from_folder": "إزالة من هذا المجلد",
     "archive": "أرشفة",
     "delete": "حذف",
+    "delete_conversation": "حذف المحادثة",
+    "delete_conversation_forever": "حذف المحادثة نهائيًا",
     "mark_as_spam": "الإبلاغ عن بريد مزعج",
     "not_spam": "ليس مزعجًا",
     "tag": "وسم",

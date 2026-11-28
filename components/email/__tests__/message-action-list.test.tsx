@@ -336,3 +336,67 @@ describe('Create event', () => {
     expect(entryOf({ ...email, keywords: { $draft: true } } as Email)).toBeUndefined();
   });
 });
+
+// #1885: the reader's ⋮ deletes the whole conversation, right under Delete.
+describe('Delete conversation', () => {
+  const items = (role: string, onDeleteConversation?: () => void) => {
+    const { result } = renderHook(() => useMessageActionList({ email, currentMailboxRole: role, onDelete: () => {}, onDeleteConversation }));
+    return result.current.flatMap((entry) => (entry.kind === 'item' ? [entry] : []));
+  };
+
+  it('follows Delete, says "forever" in Trash, and runs the handler', () => {
+    const onDeleteConversation = vi.fn();
+    const inbox = items('inbox', onDeleteConversation);
+    const keys = inbox.map((entry) => entry.key);
+    expect(keys.indexOf('delete_conversation')).toBe(keys.indexOf('delete') + 1);
+    const entry = inbox.find((e) => e.key === 'delete_conversation')!;
+    expect(entry.label).toBe('delete_conversation');
+    expect(entry.destructive).toBe(true);
+    entry.run();
+    expect(onDeleteConversation).toHaveBeenCalledTimes(1);
+    expect(items('trash', vi.fn()).find((e) => e.key === 'delete_conversation')!.label).toBe('delete_conversation_forever');
+  });
+
+  it('is not offered without a handler', () => {
+    expect(items('inbox').some((e) => e.key === 'delete_conversation')).toBe(false);
+  });
+
+  it("is in the reader's ⋮ on a desktop, where Delete is on the toolbar", () => {
+    const onDeleteConversation = vi.fn();
+    renderViewer({ onDeleteConversation });
+    fireEvent.click(screen.getByRole('button', { name: 'more_actions' }));
+    const menu = screen.getByRole('menu', { name: 'more_actions' });
+    expect(within(menu).queryByTestId('ctx-delete')).toBeNull();
+    fireEvent.click(within(menu).getByTestId('ctx-delete-conversation'));
+    expect(onDeleteConversation).toHaveBeenCalledTimes(1);
+  });
+
+  it("is in the phone's More panel", () => {
+    device.isMobile = true;
+    const onDeleteConversation = vi.fn();
+    renderViewer({ onDeleteConversation });
+    fireEvent.click(screen.getByRole('button', { name: 'more_actions' }));
+    const panel = screen.getByRole('menu', { name: 'more_actions' });
+    fireEvent.click(within(panel).getByTestId('panel-delete_conversation'));
+    expect(onDeleteConversation).toHaveBeenCalledTimes(1);
+  });
+
+  it("is not in a list row's menu", () => {
+    render(
+      <EmailContextMenu
+        rowMenu
+        email={email}
+        position={{ x: 10, y: 10 }}
+        isOpen
+        onClose={vi.fn()}
+        menuRef={{ current: null }}
+        mailboxes={mailboxes}
+        selectedMailbox="inbox"
+        currentMailboxRole="inbox"
+        onDelete={vi.fn()}
+      />,
+    );
+    expect(screen.getByTestId('ctx-delete')).toBeTruthy();
+    expect(screen.queryByTestId('ctx-delete-conversation')).toBeNull();
+  });
+});

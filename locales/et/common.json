@@ -4114,6 +4114,8 @@
     "remove_from_folder": "Eemalda sellest kaustast",
     "archive": "Arhiveeri",
     "delete": "Kustuta",
+    "delete_conversation": "Kustuta vestlus",
+    "delete_conversation_forever": "Kustuta vestlus jäädavalt",
     "mark_as_spam": "Märgi rämpspostiks",
     "not_spam": "Pole rämpspost",
     "tag": "Märgista",

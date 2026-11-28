@@ -4114,6 +4114,8 @@
     "remove_from_folder": "從此資料夾移除",
     "archive": "封存",
     "delete": "刪除",
+    "delete_conversation": "刪除對話串",
+    "delete_conversation_forever": "永久刪除對話串",
     "mark_as_spam": "回報垃圾郵件",
     "not_spam": "非垃圾郵件",
     "tag": "標籤",

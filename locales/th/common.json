@@ -1038,6 +1038,8 @@
     "remove_from_folder": "นำออกจากโฟลเดอร์นี้",
     "archive": "เก็บถาวร",
     "delete": "ลบ",
+    "delete_conversation": "ลบการสนทนา",
+    "delete_conversation_forever": "ลบการสนทนาถาวร",
     "mark_as_spam": "รายงานเป็นจดหมายขยะ",
     "not_spam": "ไม่ใช่จดหมายขยะ",
     "tag": "ป้ายกำกับ",

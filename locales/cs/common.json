@@ -4114,6 +4114,8 @@
     "remove_from_folder": "Odebrat z této složky",
     "archive": "Archivovat",
     "delete": "Odstranit",
+    "delete_conversation": "Odstranit konverzaci",
+    "delete_conversation_forever": "Smazat konverzaci natrvalo",
     "mark_as_spam": "Nahlásit spam",
     "not_spam": "Není spam",
     "tag": "Štítek",

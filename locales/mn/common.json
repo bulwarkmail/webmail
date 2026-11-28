@@ -4114,6 +4114,8 @@
     "remove_from_folder": "Энэ хавтаснаас хасах",
     "archive": "Архив",
     "delete": "Устгах",
+    "delete_conversation": "Харилцан яриаг устгах",
+    "delete_conversation_forever": "Харилцан яриаг бүрмөсөн устгах",
     "mark_as_spam": "Спам мэдээлэх",
     "not_spam": "Спам биш",
     "tag": "Таг",

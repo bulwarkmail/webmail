@@ -4129,6 +4129,8 @@
     "remove_from_folder": "Ta bort från den här mappen",
     "archive": "Arkivera",
     "delete": "Ta bort",
+    "delete_conversation": "Ta bort konversation",
+    "delete_conversation_forever": "Ta bort konversation permanent",
     "mark_as_spam": "Rapportera skräppost",
     "not_spam": "Inte skräppost",
     "tag": "Etikettera",

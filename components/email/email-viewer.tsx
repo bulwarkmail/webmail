@@ -283,6 +283,8 @@ export interface EmailViewerProps {
   onForward?: () => void;
   onForwardAsAttachment?: () => void;
   onDelete?: () => void;
+  /** Delete every message of the open conversation the list holds; only while it has more than one (#1885). */
+  onDeleteConversation?: () => void;
   onArchive?: () => void;
   onToggleStar?: () => void;
   /**
@@ -1321,6 +1323,7 @@ function ReaderMoreMenu({ menu, options, label, mailboxes, moveHeading, selected
       onArchive={options.onArchive}
       onMoveToInbox={options.onMoveToInbox}
       onDelete={options.onDelete}
+      onDeleteConversation={options.onDeleteConversation}
       onMarkAsRead={options.onMarkAsRead}
       onToggleStar={options.onToggleStar}
       onTogglePinned={options.onTogglePinned}
@@ -1500,6 +1503,7 @@ export function EmailViewer({
   onForward,
   onForwardAsAttachment,
   onDelete,
+  onDeleteConversation,
   onArchive,
   onToggleStar,
   onMarkAsRead,
@@ -4714,6 +4718,7 @@ export function EmailViewer({
     onEditAsNew,
     onArchive,
     onDelete,
+    onDeleteConversation,
     onMarkAsRead: (read) => onMarkAsRead?.(email.id, read),
     onToggleStar,
     onTogglePinned,

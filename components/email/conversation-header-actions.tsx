@@ -32,6 +32,8 @@ export interface ConversationActions {
   currentMailboxRole?: string;
   onArchive?: () => void;
   onDelete?: () => void;
+  /** Every message of the conversation the list holds, in the ⋮ menu (#1885). */
+  onDeleteConversation?: () => void;
   onMoveToMailbox?: (mailboxId: string) => void;
   onForwardAsAttachment?: () => void;
   onMarkAsRead?: (read: boolean) => void;
@@ -132,6 +134,7 @@ export function ConversationHeaderActions({ email, actions }: { email: Email; ac
           selectedMailbox={selectedMailbox}
           currentMailboxRole={actions.currentMailboxRole}
           onForwardAsAttachment={actions.onForwardAsAttachment}
+          onDeleteConversation={actions.onDeleteConversation}
           onMarkAsRead={actions.onMarkAsRead}
           onToggleStar={actions.onToggleStar}
           onTogglePinned={actions.onTogglePinned}

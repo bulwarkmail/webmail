@@ -4114,6 +4114,8 @@
     "remove_from_folder": "Remover desta pasta",
     "archive": "Arquivar",
     "delete": "Excluir",
+    "delete_conversation": "Excluir conversa",
+    "delete_conversation_forever": "Excluir conversa permanentemente",
     "mark_as_spam": "Denunciar spam",
     "not_spam": "Não é spam",
     "tag": "Etiqueta",

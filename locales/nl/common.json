@@ -4114,6 +4114,8 @@
     "remove_from_folder": "Uit deze map verwijderen",
     "archive": "Archiveren",
     "delete": "Verwijderen",
+    "delete_conversation": "Gesprek verwijderen",
+    "delete_conversation_forever": "Gesprek definitief verwijderen",
     "mark_as_spam": "Spam melden",
     "not_spam": "Geen spam",
     "tag": "Label",

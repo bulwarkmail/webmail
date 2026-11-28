@@ -4114,6 +4114,8 @@
     "remove_from_folder": "Bu klasörden kaldır",
     "archive": "Arşivle",
     "delete": "Sil",
+    "delete_conversation": "Sohbeti sil",
+    "delete_conversation_forever": "Sohbeti kalıcı olarak sil",
     "mark_as_spam": "Spam bildir",
     "not_spam": "Spam değil",
     "tag": "Etiket",

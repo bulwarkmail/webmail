@@ -1227,6 +1227,42 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       paneConversationView ? listRows : null,
     );
   };
+  // Delete on the ticked rows: the batch delete, asked first as the
+  // settings say, with Undo. False when the user said no.
+  const deleteSelectedRows = async (opts: { beforeDelete?: () => void; reopen?: () => void } = {}): Promise<boolean> => {
+    if (!client) return false;
+    const count = useEmailStore.getState().selectedEmailKeys.size;
+    const currentMailbox = viewedFolder(mailboxes, { selectedMailbox, isUnifiedView, unifiedRole });
+    const permanent = bulkDeleteIsPermanent(currentMailbox);
+    if (shouldConfirmBulkDelete(currentMailbox)) {
+      const confirmed = await confirmDialog({
+        // One wording for a delete for good (mail-p3-5).
+        title: permanent
+          ? t('mail_p3_actions.delete_forever_batch_title', { count })
+          : t('email_list.batch_actions.delete_confirm_title'),
+        message: permanent
+          ? t('mail_p3_actions.delete_forever_batch_message', { count })
+          : t('email_list.batch_actions.delete_confirm_message', { count }),
+        confirmText: permanent
+          ? t('reader_actions.delete_forever')
+          : t('email_list.batch_actions.delete'),
+        variant: "destructive",
+      });
+      if (!confirmed) return false;
+    } else if (!(await confirmMailRemoval('delete', count, confirmDialog, tRemove))) {
+      return false;
+    }
+    const rows = selectionRowCount(resolveSelectedEmails(useEmailStore.getState()), count, disableThreading);
+    const restore = permanent ? null : restoreBatchesForSelection(client);
+    opts.beforeDelete?.();
+    await runBatchEmailAction(() => batchDelete(client, permanent), {
+      success: batchToastTitle(t, permanent ? 'delete' : 'trash', rows, disableThreading),
+      error: t('notifications.error_deleting'),
+      undo: undoMoveAction(client, restore, undo, undefined, opts.reopen),
+    });
+    return true;
+  };
+
   const keyboardHandlers = useMemo(() => ({
     onNextEmail: () => {
       const next = stepFrom(1);
@@ -1314,33 +1350,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
         return;
       }
       if (shortcutsTargetSelection && client) {
-        const currentMailbox = viewedFolder(mailboxes, { selectedMailbox, isUnifiedView, unifiedRole });
-        const permanent = bulkDeleteIsPermanent(currentMailbox);
-        if (shouldConfirmBulkDelete(currentMailbox)) {
-          const confirmed = await confirmDialog({
-            // One wording for a delete for good (mail-p3-5).
-            title: permanent
-              ? t('mail_p3_actions.delete_forever_batch_title', { count: selectedEmailKeys.size })
-              : t('email_list.batch_actions.delete_confirm_title'),
-            message: permanent
-              ? t('mail_p3_actions.delete_forever_batch_message', { count: selectedEmailKeys.size })
-              : t('email_list.batch_actions.delete_confirm_message', { count: selectedEmailKeys.size }),
-            confirmText: permanent
-              ? t('reader_actions.delete_forever')
-              : t('email_list.batch_actions.delete'),
-            variant: "destructive",
-          });
-          if (!confirmed) return;
-        } else if (!(await confirmMailRemoval('delete', selectedEmailKeys.size, confirmDialog, tRemove))) {
-          return;
-        }
-        const rows = selectionRowCount(resolveSelectedEmails(useEmailStore.getState()), selectedEmailKeys.size, disableThreading);
-        const restore = permanent ? null : restoreBatchesForSelection(client);
-        await runBatchEmailAction(() => batchDelete(client, permanent), {
-          success: batchToastTitle(t, permanent ? 'delete' : 'trash', rows, disableThreading),
-          error: t('notifications.error_deleting'),
-          undo: undoMoveAction(client, restore, undo),
-        });
+        await deleteSelectedRows();
       } else if (selectedEmail) {
         handleDelete();
       }
@@ -4355,6 +4365,18 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     }
   };
 
+  // "Delete conversation" in the reader (#1885): what ticking the
+  // conversation's row in the list and Delete do, for the messages of it the
+  // list holds (`members`), with the batch delete's question and Undo. Once
+  // the user said yes, `leave` moves on as after Delete.
+  const handleDeleteConversation = async (members: Email[], leave: () => void, reopen?: () => void) => {
+    if (!client || members.length < 2) return;
+    const before = useEmailStore.getState().selectedEmailKeys;
+    useEmailStore.setState({ selectedEmailKeys: new Set(members.map(emailKeyFor)) });
+    const done = await deleteSelectedRows({ beforeDelete: leave, reopen });
+    if (!done) useEmailStore.setState({ selectedEmailKeys: before });
+  };
+
   const handleArchive = async (emailToArchive: Email | null = selectedEmail) => {
     if (!client || !emailToArchive) return;
     // In Archive, E and Archive's place in the menus bring it back to the
@@ -7289,6 +7311,8 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
                   const leaving = (run: () => unknown) => () => { handleMobileBack(); void run(); };
                   // The folders of the conversation's own login (moveFoldersFor).
                   const offered = moveFoldersFor([target]);
+                  // What its row in the list stands for (#1885).
+                  const members = disableThreading ? [] : conversationInList(target, activeEmails);
                   return {
                     mailboxes: offered.mailboxes,
                     moveHeading: offered.owner,
@@ -7296,6 +7320,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
                     currentMailboxRole: conversationRole,
                     onArchive: archiveActionEnabled ? leaving(() => handleArchive(target)) : undefined,
                     onDelete: leaving(() => handleDelete(target)),
+                    onDeleteConversation: members.length > 1 ? () => void handleDeleteConversation(members, handleMobileBack) : undefined,
                     onMoveToMailbox: offered.unavailable
                       ? undefined
                       : (mailboxId: string) => leaving(() => handleMoveToMailbox(target.id, mailboxId, emailKeyFor(target)))(),
@@ -7326,6 +7351,10 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
                     onForward={handleForward}
                     onForwardAsAttachment={handleForwardAsAttachment}
                     onDelete={() => handleDelete()}
+                    onDeleteConversation={selectedEmail && selectedRowEmails.length > 1 ? () => {
+                      const open = selectedEmail;
+                      void handleDeleteConversation(selectedRowEmails, () => leaveIfOpen(open), reopenAfterUndo(open));
+                    } : undefined}
                     onArchive={archiveActionEnabled ? () => handleArchive() : undefined}
                     onToggleStar={handleToggleStar}
                     onTogglePinned={() => { if (selectedEmail) void handleTogglePinned(selectedEmail); }}

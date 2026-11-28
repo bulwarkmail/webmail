@@ -4114,6 +4114,8 @@
     "remove_from_folder": "Noņemt no šīs mapes",
     "archive": "Arhivēt",
     "delete": "Dzēst",
+    "delete_conversation": "Dzēst saraksti",
+    "delete_conversation_forever": "Dzēst saraksti neatgriezeniski",
     "mark_as_spam": "Atzīmēt kā mēstuli",
     "not_spam": "Nav mēstule",
     "tag": "Tags",

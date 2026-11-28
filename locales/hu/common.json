@@ -4114,6 +4114,8 @@
     "remove_from_folder": "Eltávolítás ebből a mappából",
     "archive": "Archiválás",
     "delete": "Törlés",
+    "delete_conversation": "Beszélgetés törlése",
+    "delete_conversation_forever": "Beszélgetés végleges törlése",
     "mark_as_spam": "Spam jelentése",
     "not_spam": "Nem spam",
     "tag": "Címke",

@@ -4126,6 +4126,8 @@
     "remove_from_folder": "Xóa khỏi thư mục này",
     "archive": "Lưu trữ",
     "delete": "Xóa",
+    "delete_conversation": "Xóa cuộc trò chuyện",
+    "delete_conversation_forever": "Xóa vĩnh viễn cuộc trò chuyện",
     "mark_as_spam": "Báo cáo thư rác",
     "not_spam": "Không phải thư rác",
     "tag": "Thẻ",

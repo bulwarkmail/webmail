@@ -4122,6 +4122,8 @@
     "remove_from_folder": "Fjern frå denne mappa",
     "archive": "Arkiver",
     "delete": "Slett",
+    "delete_conversation": "Slett samtale",
+    "delete_conversation_forever": "Slett samtale for alltid",
     "mark_as_spam": "Rapporter søppelpost",
     "not_spam": "Ikkje søppelpost",
     "tag": "Etikett",

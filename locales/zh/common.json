@@ -4114,6 +4114,8 @@
     "remove_from_folder": "从此文件夹中移除",
     "archive": "归档",
     "delete": "删除",
+    "delete_conversation": "删除会话",
+    "delete_conversation_forever": "永久删除会话",
     "mark_as_spam": "举报垃圾邮件",
     "not_spam": "不是垃圾邮件",
     "tag": "标签",

@@ -4114,6 +4114,8 @@
     "remove_from_folder": "Убрать из этой папки",
     "archive": "В архив",
     "delete": "Удалить",
+    "delete_conversation": "Удалить переписку",
+    "delete_conversation_forever": "Удалить переписку навсегда",
     "mark_as_spam": "Отметить как спам",
     "not_spam": "Не спам",
     "tag": "Тег",
