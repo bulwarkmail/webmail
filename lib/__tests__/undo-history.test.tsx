@@ -15,12 +15,12 @@ beforeEach(() => {
 });
 
 describe('undo history', () => {
-  it('undoes the newest action first, then the one before it, closing their toasts', () => {
+  it('undoes the newest action first, then the one before it, bringing that one forward', () => {
     const first = vi.fn();
     const second = vi.fn();
     toastWithUndo('Email archived', { label: 'Undo', onClick: first });
     toastWithUndo('Email deleted', { label: 'Undo', onClick: second });
-    expect(toastTitles()).toEqual(['Email archived', 'Email deleted']);
+    expect(toastTitles()).toEqual(['Email deleted']);
 
     undoLatest();
     expect(second).toHaveBeenCalledTimes(1);
@@ -29,6 +29,7 @@ describe('undo history', () => {
 
     undoLatest();
     expect(first).toHaveBeenCalledTimes(1);
+    expect(toastTitles()).toEqual([]);
     expect(undoLatest()).toBeNull();
   });
 

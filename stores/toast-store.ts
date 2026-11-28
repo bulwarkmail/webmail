@@ -21,6 +21,15 @@ export function toastAnnouncement(toast: Pick<Toast, "title" | "message" | "srHi
   return sentence(sentence(toast.title.trim(), toast.message), toast.srHint);
 }
 
+function replacedBy(next: Omit<Toast, "id">, shown: Toast): boolean {
+  if (next.group !== undefined) return shown.group === next.group;
+  const plain = (t: Omit<Toast, "id">) =>
+    t.group === undefined && t.progress === undefined && t.content === undefined && !t.onClick &&
+    !t.action && !t.secondaryAction && !t.tertiaryAction && !t.extraActions?.length;
+  return plain(next) && plain(shown) && shown.pluginId === next.pluginId &&
+    shown.type === next.type && shown.title === next.title && (shown.message ?? "") === (next.message ?? "");
+}
+
 interface ToastStore {
   toasts: Toast[];
   addToast: (toast: Omit<Toast, "id">) => string;
@@ -47,9 +56,11 @@ export const useToastStore = create<ToastStore>((set, get) => ({
       duration: effectiveToastDuration(toast),
     };
 
+    const replaced = get().toasts.filter((t) => replacedBy(toast, t));
     set((state) => ({
-      toasts: [...state.toasts, newToast],
+      toasts: [...state.toasts.filter((t) => !replaced.includes(t)), newToast],
     }));
+    for (const old of replaced) void toastHooks.onToastDismiss.emit({ id: old.id });
     announce(toastAnnouncement(newToast), { assertive: toast.type === "error" });
     // A plugin's notice (a toast with a body of its own) is that plugin's
     // business: other plugins hear neither its title nor that it went.
@@ -100,6 +111,11 @@ interface ToastOptions {
   /** A plugin's toast: see Toast.pluginId. */
   pluginId?: string;
   pluginName?: string;
+  group?: string;
+  behind?: Toast["behind"];
+  cardId?: string;
+  revision?: number;
+  onLeave?: () => void;
 }
 
 function showToast(type: Toast["type"], title: string, options?: string | ToastOptions, defaultDuration?: number): string {
@@ -115,6 +131,11 @@ function showToast(type: Toast["type"], title: string, options?: string | ToastO
     pauseOnHover: opts?.pauseOnHover,
     srHint: opts?.srHint,
     ...(opts?.pluginId ? { pluginId: opts.pluginId, pluginName: opts.pluginName } : {}),
+    group: opts?.group,
+    behind: opts?.behind,
+    cardId: opts?.cardId,
+    revision: opts?.revision,
+    onLeave: opts?.onLeave,
   });
 }
 

@@ -127,10 +127,11 @@ describe('email-store archive thread behavior', () => {
 
     expect(onMoved).toHaveBeenCalledTimes(1);
     const [batches] = onMoved.mock.calls[0];
-    expect(batches).toEqual([{ client, accountId: 'shared-account', points: [
+    expect(batches).toEqual([expect.objectContaining({ client, accountId: 'shared-account', points: [
       { id: 'email-1', mailboxIds: { 'server-inbox': true }, seen: true },
       { id: 'email-2', mailboxIds: { 'server-inbox': true, 'server-work': true }, seen: false },
-    ] }]);
+    ] })]);
+    expect(Object.keys(batches[0].messages)).toEqual(['email-1', 'email-2']);
 
     await useEmailStore.getState().restoreEmails(client, batches);
     expect(client.restoreEmails).toHaveBeenCalledWith(batches[0].points, 'shared-account');

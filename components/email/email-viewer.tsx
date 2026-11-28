@@ -6246,7 +6246,7 @@ export function EmailViewer({
 
           {/* The reply already started on this message, as Gmail shows it. */}
           {showReplyDraft && replyDraft && (
-            <div ref={quickReplyBoxRef} data-quick-reply-box="" data-toast-avoid="bottom" data-testid="reply-draft" className="bg-background border-t border-border px-6 mt-auto" style={{ paddingBlock: 'var(--density-header-py)' }}>
+            <div ref={quickReplyBoxRef} data-quick-reply-box="" data-reply-started="" data-toast-avoid="bottom" data-testid="reply-draft" className="bg-background border-t border-border px-6 mt-auto" style={{ paddingBlock: 'var(--density-header-py)' }}>
               <div className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-lg border border-border bg-muted/30 px-3 py-2">
                 <span className="inline-flex items-center gap-1.5 text-sm font-medium text-destructive shrink-0">
                   <File className="w-4 h-4" />
@@ -6268,7 +6268,7 @@ export function EmailViewer({
           )}
 
           {/* Quick Reply Section - hidden for drafts and while loading a new email */}
-          {showQuickReply && (<div ref={quickReplyBoxRef} data-quick-reply-box="" data-toast-avoid="bottom" className="bg-background border-t border-border px-6 mt-auto max-sm:scroll-mb-16" style={{ paddingBlock: 'var(--density-header-py)' }}>
+          {showQuickReply && (<div ref={quickReplyBoxRef} data-quick-reply-box="" data-reply-started={quickReplyStarted ? "" : undefined} data-toast-avoid="bottom" className="bg-background border-t border-border px-6 mt-auto max-sm:scroll-mb-16" style={{ paddingBlock: 'var(--density-header-py)' }}>
             {/* Team mailboxes: the note line right above the reply box. */}
             {!isDraft && !isScheduled && <TeamNoteArea messages={teamMessages} docked />}
             <div className="flex items-start" style={{ gap: 'var(--density-item-gap)' }}>

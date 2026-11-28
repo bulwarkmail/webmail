@@ -110,7 +110,7 @@ describe('toasts after acting on the open message', () => {
   it('a move names the folder once', async () => {
     render(<MailApp />);
     fireEvent.click(await screen.findByText('stub move', {}, { timeout: 5000 }));
-    await waitFor(() => expect(toastTitles()).toContainEqual(['mail_list_extra.moved_to', null]));
+    await waitFor(() => expect(toastTitles()).toContainEqual(['mail_list_extra.moved_to', 'Hello']));
   });
 
   it('archiving says Archived', async () => {
@@ -122,6 +122,6 @@ describe('toasts after acting on the open message', () => {
   it('deleting to Trash says Moved to Trash', async () => {
     render(<MailApp />);
     fireEvent.click(await screen.findByText('stub delete', {}, { timeout: 5000 }));
-    await waitFor(() => expect(toastTitles()).toContainEqual(['mail_list_extra.moved_to_trash', null]));
+    await waitFor(() => expect(toastTitles()).toContainEqual(['mail_list_extra.moved_to_trash', 'Hello']));
   });
 });

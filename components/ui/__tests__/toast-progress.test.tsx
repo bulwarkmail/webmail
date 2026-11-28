@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { act, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import { ToastContainer } from '../toast';
 import { toast, useToastStore } from '@/stores/toast-store';
 
@@ -50,8 +50,8 @@ describe('progress toasts', () => {
       toast.info('Deadline', { duration: 1000, pauseOnHover: false });
     });
     act(() => {
-      screen.getByText('Readable').closest('.toast-item')!.dispatchEvent(new MouseEvent('mouseover', { bubbles: true }));
-      screen.getByText('Deadline').closest('.toast-item')!.dispatchEvent(new MouseEvent('mouseover', { bubbles: true }));
+      fireEvent.pointerOver(screen.getByText('Readable').closest('.toast-item')!, { pointerType: 'mouse' });
+      fireEvent.pointerOver(screen.getByText('Deadline').closest('.toast-item')!, { pointerType: 'mouse' });
     });
     act(() => { vi.advanceTimersByTime(1500); });
 

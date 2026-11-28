@@ -133,6 +133,7 @@ export interface EmailRestoreBatch {
   client: IJMAPClient;
   accountId?: string;
   points: EmailRestorePoint[];
+  messages?: Record<string, { key: string; subject?: string }>;
 }
 
 /**
@@ -197,6 +198,7 @@ export function restoreBatchesFor(emails: Email[], client: IJMAPClient, source?:
       batches.push(batch);
     }
     if (!batch.points.some(p => p.id === email.id)) batch.points.push(point);
+    batch.messages = { ...batch.messages, [email.id]: { key: emailKeyFor(email), subject: email.subject } };
   }
   return batches;
 }
@@ -6038,7 +6040,11 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
       if (onMoved) {
         const picked = restoreBatchesFor([email], client)[0]?.points ?? [];
         const points = [...restorePoints, ...picked.filter(p => !restorePoints.some(r => r.id === p.id))];
-        onMoved([{ client: effectiveClient, accountId, points }]);
+        const messages = Object.fromEntries(points.map(p => [p.id, {
+          key: emailKeyFor({ id: p.id, sourceClientAccountId: email.sourceClientAccountId, sourceAccountId: email.sourceAccountId }),
+          subject: p.id === email.id ? email.subject : undefined,
+        }]));
+        onMoved([{ client: effectiveClient, accountId, points, messages }]);
       }
     } catch (error) {
       set({

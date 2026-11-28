@@ -1,5 +1,3 @@
-import { toast } from '@/stores/toast-store';
-
 /**
  * The mail actions that can still be undone, newest last: the moves, deletes
  * and archives a toast offered Undo for, and the read, flag and tag changes.
@@ -12,8 +10,8 @@ export interface UndoEntry {
   label: string;
   /** Puts it back. Reports its own outcome (a toast). */
   run: () => void;
-  /** The toast that offers this Undo, if one is still up. */
-  toastId?: string;
+  keys?: string[];
+  onGone?: () => void;
 }
 
 /** How many actions are kept. */
@@ -23,16 +21,17 @@ let entries: UndoEntry[] = [];
 let nextId = 1;
 
 /** Adds an action that can be undone; the oldest goes when there are too many. */
-export function recordUndo(label: string, run: () => void): UndoEntry {
-  const entry: UndoEntry = { id: `undo-${nextId++}`, label, run };
-  entries = [...entries, entry].slice(-MAX_UNDO_HISTORY);
+export function recordUndo(label: string, run: () => void, keys?: string[]): UndoEntry {
+  const entry: UndoEntry = { id: `undo-${nextId++}`, label, run, keys };
+  const all = [...entries, entry];
+  entries = all.slice(-MAX_UNDO_HISTORY);
+  for (const dropped of all.slice(0, -MAX_UNDO_HISTORY)) dropped.onGone?.();
   return entry;
 }
 
-/** Remembers which toast offers an entry's Undo, so Ctrl+Z can close it. */
-export function linkUndoToast(id: string, toastId: string | undefined): void {
+export function onUndoGone(id: string, listener: () => void): void {
   const entry = entries.find((e) => e.id === id);
-  if (entry && toastId) entry.toastId = toastId;
+  if (entry) entry.onGone = listener;
 }
 
 /**
@@ -40,11 +39,15 @@ export function linkUndoToast(id: string, toastId: string | undefined): void {
  * toast's Undo after Ctrl+Z, or the other way round). False when it was
  * already undone or dropped.
  */
-export function runUndo(id: string, options: { closeToast?: boolean } = {}): boolean {
+export function runUndo(id: string): boolean {
   const entry = entries.find((e) => e.id === id);
   if (!entry) return false;
-  entries = entries.filter((e) => e !== entry);
-  if (options.closeToast && entry.toastId) toast.dismiss(entry.toastId);
+  const keys = new Set(entry.keys ?? []);
+  const later = entries.slice(entries.indexOf(entry) + 1);
+  const stale = later.filter((e) => e.keys?.some((k) => keys.has(k)));
+  entries = entries.filter((e) => e !== entry && !stale.includes(e));
+  entry.onGone?.();
+  for (const e of stale) e.onGone?.();
   entry.run();
   return true;
 }
@@ -53,7 +56,7 @@ export function runUndo(id: string, options: { closeToast?: boolean } = {}): boo
 export function undoLatest(): UndoEntry | null {
   const entry = entries.at(-1);
   if (!entry) return null;
-  runUndo(entry.id, { closeToast: true });
+  runUndo(entry.id);
   return entry;
 }
 
@@ -63,5 +66,7 @@ export function undoHistory(): readonly UndoEntry[] {
 
 /** Forgets everything, e.g. after signing out. */
 export function clearUndoHistory(): void {
+  const gone = entries;
   entries = [];
+  for (const e of gone) e.onGone?.();
 }

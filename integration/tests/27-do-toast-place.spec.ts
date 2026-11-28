@@ -87,7 +87,9 @@ async function measure(page: Page): Promise<Measured> {
       .map((t) => ({ ...box(t), text: (t as HTMLElement).innerText.replace(/\s+/g, ' ').slice(0, 40) }));
     // Docked at the bottom, named the way the app has always named them.
     const dockedSel = '[data-quick-reply-box], [data-composer-footer], nav[data-mobile-navigation]';
-    const docked = [...document.querySelectorAll(dockedSel)].filter(shown).map((el) => ({
+    const inUse = (el: Element) => !el.hasAttribute('data-quick-reply-box') || innerWidth < 640
+      || el.hasAttribute('data-reply-started') || el.contains(document.activeElement);
+    const docked = [...document.querySelectorAll(dockedSel)].filter(shown).filter(inUse).map((el) => ({
       ...box(el),
       what: el.hasAttribute('data-quick-reply-box') ? 'quick reply' : el.hasAttribute('data-composer-footer') ? 'composer footer' : 'tab bar',
     }));
@@ -207,7 +209,6 @@ test('toasts keep their place on the desktop: folders, next message, reply box a
   const subjects = await rows(page).evaluateAll((els) => els.slice(0, 8).map((e) => e.getAttribute('data-subject')));
   const unread = await page.locator('[data-testid=email-list-item][data-unread="true"]').count();
 
-  // Archive: the toast stands above the quick reply box of the next message.
   await openRow(page, 2);
   await archive(page);
   await check(page, 'desktop-archived', found);
