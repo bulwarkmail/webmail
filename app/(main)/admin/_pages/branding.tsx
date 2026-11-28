@@ -6,8 +6,12 @@ import { apiFetch, withBasePath } from '@/lib/browser-navigation';
 import { adminPageDef } from '@/lib/admin/admin-nav';
 import { useAdminUnsavedChanges } from '@/stores/admin-unsaved-store';
 import {
+  BRAND_PALETTE_TOKENS,
   BRANDING_OVERRIDE_KEYS,
+  isBrandPaletteColor,
   parseDomainBranding,
+  type BrandPalette,
+  type BrandPaletteToken,
   type BrandingOverrideKey,
   type DomainBrandingEntry,
 } from '@/lib/admin/domain-branding';
@@ -92,6 +96,49 @@ const PWA_COLOR_FIELDS = [
   { key: 'pwaBackgroundColor', label: 'Background colour', defaultValue: '#ffffff' },
 ] as const;
 
+// A domain's palette (DOMAIN_BRANDING `palette`), edited as one field per
+// mode and token under keys like `palette.light.primary`. The defaults are
+// the built-in look's (app/globals.css), for the preview and the pickers.
+type PaletteMode = 'light' | 'dark';
+const PALETTE_MODES: { mode: PaletteMode; label: string }[] = [
+  { mode: 'light', label: 'light mode' },
+  { mode: 'dark', label: 'dark mode' },
+];
+const PALETTE_LABELS: Record<BrandPaletteToken, string> = {
+  primary: 'Button colour',
+  'primary-foreground': 'Button text',
+  accent: 'Highlight colour',
+  'accent-foreground': 'Highlight text',
+};
+const PALETTE_DEFAULTS: Record<PaletteMode, Record<BrandPaletteToken, string>> = {
+  light: { primary: '#185aea', 'primary-foreground': '#ffffff', accent: '#dbeafe', 'accent-foreground': '#1e40af' },
+  dark: { primary: '#fafafa', 'primary-foreground': '#171717', accent: '#1e3a8a', 'accent-foreground': '#dbeafe' },
+};
+const PALETTE_KEY_RE = /^palette\.(light|dark)\.(.+)$/;
+
+const paletteKey = (mode: PaletteMode, token: BrandPaletteToken) => `palette.${mode}.${token}`;
+
+function parsePaletteKey(key: string): { mode: PaletteMode; token: BrandPaletteToken } | null {
+  const m = PALETTE_KEY_RE.exec(key);
+  if (!m || !(BRAND_PALETTE_TOKENS as readonly string[]).includes(m[2])) return null;
+  return { mode: m[1] as PaletteMode, token: m[2] as BrandPaletteToken };
+}
+
+/** A field's saved value in a domain's entry, palette fields included. */
+function entryValue(entry: DomainBrandingEntry | null, key: string): string | undefined {
+  const p = parsePaletteKey(key);
+  if (p) return entry?.palette?.[p.mode]?.[p.token];
+  return entry?.[key as BrandingOverrideKey] as string | undefined;
+}
+
+/** #rgb and #rrggbb as the colour picker takes them (#rrggbb); anything else is null. */
+function pickerValue(value: string): string | null {
+  const v = value.trim().toLowerCase();
+  if (/^#[0-9a-f]{6}$/.test(v)) return v;
+  if (/^#[0-9a-f]{3}$/.test(v)) return `#${v[1]}${v[1]}${v[2]}${v[2]}${v[3]}${v[3]}`;
+  return null;
+}
+
 // Accepts exact hosts and one-level wildcards (e.g. *.example.com).
 const HOST_RE = /^(\*\.)?[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)*$/;
 // Tighter rule for uploads: wildcards can only point to externally-hosted
@@ -154,7 +201,7 @@ export function BrandingPage() {
 
   function handleChange(key: string, value: string) {
     const saved = selectedHost
-      ? selectedEntry()?.[key as BrandingOverrideKey]
+      ? entryValue(selectedEntry(), key)
       : config[key]?.value;
     setEdits(prev => withEdit(prev, key, value, saved));
     setMessage(null);
@@ -162,10 +209,7 @@ export function BrandingPage() {
 
   function currentValue(key: string): string {
     if (key in edits) return edits[key];
-    if (selectedHost) {
-      const entry = selectedEntry();
-      return (entry?.[key as BrandingOverrideKey] as string | undefined) ?? '';
-    }
+    if (selectedHost) return entryValue(selectedEntry(), key) ?? '';
     return (config[key]?.value as string) ?? '';
   }
 
@@ -179,8 +223,7 @@ export function BrandingPage() {
 
   function isOverriddenInScope(key: string): boolean {
     if (selectedHost) {
-      const entry = selectedEntry();
-      const v = entry?.[key as BrandingOverrideKey];
+      const v = entryValue(selectedEntry(), key);
       return typeof v === 'string' && v.length > 0;
     }
     return config[key]?.source === 'admin';
@@ -198,7 +241,17 @@ export function BrandingPage() {
     const base: DomainBrandingEntry =
       idx === -1 ? { host: selectedHost } : { ...next[idx] };
     const writable = base as unknown as Record<string, string | undefined>;
+    const palette: Record<PaletteMode, Partial<Record<BrandPaletteToken, string>>> = {
+      light: { ...base.palette?.light },
+      dark: { ...base.palette?.dark },
+    };
     for (const [key, value] of Object.entries(merge)) {
+      const p = parsePaletteKey(key);
+      if (p) {
+        if (value.trim()) palette[p.mode][p.token] = value.trim().toLowerCase();
+        else delete palette[p.mode][p.token];
+        continue;
+      }
       if (!(BRANDING_OVERRIDE_KEYS as readonly string[]).includes(key)) continue;
       if (typeof value === 'string' && value.length > 0) {
         writable[key] = value;
@@ -206,6 +259,10 @@ export function BrandingPage() {
         delete writable[key];
       }
     }
+    const kept: BrandPalette = {};
+    for (const { mode } of PALETTE_MODES) if (Object.keys(palette[mode]).length > 0) kept[mode] = palette[mode];
+    if (kept.light || kept.dark) base.palette = kept;
+    else delete base.palette;
     if (idx === -1) next.push(base);
     else next[idx] = base;
     return next;
@@ -213,6 +270,12 @@ export function BrandingPage() {
 
   async function handleSave() {
     if (Object.keys(edits).length === 0) return;
+    // The server drops a colour that isn't hex; say so before it does.
+    const badColor = Object.entries(edits).find(([key, value]) => parsePaletteKey(key) && value.trim() && !isBrandPaletteColor(value));
+    if (badColor) {
+      setMessage({ type: 'error', text: `"${badColor[1].trim()}" is not a colour. Use a hex value like #0b3d91.` });
+      return;
+    }
     setSaving(true);
     setMessage(null);
 
@@ -566,6 +629,60 @@ export function BrandingPage() {
         </SettingsSection>
 
         <SettingsSection
+          id="colors"
+          title="Button colours"
+          description="Hex values like #0b3d91. The button colour fills the main buttons (Sign in, Compose, Save), links and selected items; the highlight colour is the background of selected and hovered entries in lists and menus. Empty fields keep the built-in colours. A theme the user picked, or one set as the default, still wins."
+        >
+          {selectedHost ? (
+            <>
+              {PALETTE_MODES.flatMap(({ mode, label: modeLabel }) => BRAND_PALETTE_TOKENS.map((token) => {
+                const key = paletteKey(mode, token);
+                const label = `${PALETTE_LABELS[token]} (${modeLabel})`;
+                const value = currentValue(key);
+                const invalid = !!value.trim() && !isBrandPaletteColor(value);
+                return (
+                  <SettingItem key={key} label={label}>
+                    <div className="flex w-full items-center gap-1.5 sm:w-auto">
+                      {overrideBadge(key)}
+                      <input
+                        type="color"
+                        value={pickerValue(value) ?? PALETTE_DEFAULTS[mode][token]}
+                        onChange={(e) => handleChange(key, e.target.value)}
+                        aria-label={`${label} picker`}
+                        className="h-9 w-10 shrink-0 cursor-pointer rounded-md border border-input bg-background p-0.5"
+                        title="Pick a color"
+                      />
+                      <input
+                        type="text"
+                        value={value}
+                        onChange={(e) => handleChange(key, e.target.value)}
+                        placeholder={PALETTE_DEFAULTS[mode][token]}
+                        aria-label={label}
+                        aria-invalid={invalid || undefined}
+                        autoComplete="off"
+                        spellCheck={false}
+                        className={cn(inputClass, 'w-full min-w-0 font-mono sm:w-32', invalid && 'border-destructive')}
+                      />
+                      {isOverriddenInScope(key) && <RevertButton onClick={() => handleRevert(key)} />}
+                    </div>
+                  </SettingItem>
+                );
+              }))}
+              <PalettePreview
+                colors={Object.fromEntries(PALETTE_MODES.map(({ mode }) => [mode, Object.fromEntries(BRAND_PALETTE_TOKENS.map((token) => {
+                  const v = currentValue(paletteKey(mode, token));
+                  return [token, isBrandPaletteColor(v) ? v.trim() : PALETTE_DEFAULTS[mode][token]];
+                }))])) as Record<PaletteMode, Record<BrandPaletteToken, string>>}
+              />
+            </>
+          ) : (
+            <p className="text-xs text-muted-foreground" data-testid="branding-colors-default">
+              Button colours are set per domain. Pick a domain under Scope, or add one.
+            </p>
+          )}
+        </SettingsSection>
+
+        <SettingsSection
           id="login-page"
           title="Login page"
           description="The layout of the sign-in page and the picture behind it. Backgrounds can be JPEG, PNG, WebP or SVG up to 5 MB; without a dark-mode picture, dark mode uses the light one."
@@ -853,5 +970,39 @@ function PreviewScreen({ mode, layout, url, dim, blur }: { mode: 'light' | 'dark
       </div>
       <figcaption className="text-xs text-muted-foreground">{mode === 'light' ? 'Light mode' : 'Dark mode'}</figcaption>
     </figure>
+  );
+}
+
+/** A domain's button and highlight colours on the light and dark surfaces, as the app draws them. */
+function PalettePreview({ colors }: { colors: Record<'light' | 'dark', Record<BrandPaletteToken, string>> }) {
+  return (
+    <div className="flex flex-wrap gap-4 py-2" aria-label="Preview of the button colours" data-testid="branding-palette-preview">
+      {(['light', 'dark'] as const).map((mode) => {
+        const c = PREVIEW_COLORS[mode];
+        const p = colors[mode];
+        return (
+          <figure key={mode} className="m-0 flex flex-col gap-1.5">
+            <div className="flex w-[256px] flex-col gap-2 rounded-md border p-3" style={{ background: c.card, borderColor: c.border }}>
+              <span
+                data-preview-button={mode}
+                className="self-start rounded-md px-3 py-1.5 text-sm font-medium"
+                style={{ background: p.primary, color: p['primary-foreground'] }}
+              >
+                Compose
+              </span>
+              <span
+                data-preview-highlight={mode}
+                className="rounded-md px-2 py-1 text-sm"
+                style={{ background: p.accent, color: p['accent-foreground'] }}
+              >
+                Inbox
+              </span>
+              <span className="px-2 text-sm" style={{ color: mode === 'light' ? '#0f172a' : '#fafafa' }}>Sent</span>
+            </div>
+            <figcaption className="text-xs text-muted-foreground">{mode === 'light' ? 'Light mode' : 'Dark mode'}</figcaption>
+          </figure>
+        );
+      })}
+    </div>
   );
 }

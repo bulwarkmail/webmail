@@ -107,6 +107,11 @@ const HOST_RE = /^(\*\.)?[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z
 // Hex colours only: the values are written into a <style> element.
 const HEX_COLOR_RE = /^#(?:[0-9a-f]{3,4}|[0-9a-f]{6}|[0-9a-f]{8})$/i;
 
+/** Whether a palette value is kept: a hex colour (#rgb, #rgba, #rrggbb or #rrggbbaa). */
+export function isBrandPaletteColor(value: string): boolean {
+  return HEX_COLOR_RE.test(value.trim());
+}
+
 function parsePaletteMode(raw: unknown): BrandPalette['light'] {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return undefined;
   const rec = raw as Record<string, unknown>;
