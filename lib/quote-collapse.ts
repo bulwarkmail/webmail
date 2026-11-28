@@ -422,13 +422,30 @@ export function stripQuotedHtml(html: string): string {
  * line before it. A "-- " signature after the quote stays. Kept whole when
  * the quote is all there is.
  */
+const HEADER_LINE = /^\s*\p{L}[\p{L}\p{M} .-]{0,30}:\s*\S/u;
+
+/**
+ * Whether the lines from `from` on are a forwarded message's header block
+ * (From:, Date:, Subject:… in any language): two header lines with an
+ * address among them, or three. A `--- Agenda ---` heading has no such block.
+ */
+function startsHeaderBlock(lines: string[], from: number): boolean {
+  let count = 0;
+  let address = false;
+  for (let i = from; i < lines.length && HEADER_LINE.test(lines[i]); i++) {
+    count++;
+    if (lines[i].includes('@')) address = true;
+  }
+  return count >= 3 || (count >= 2 && address);
+}
+
 export function stripPlainTextQuotes(text: string): string {
   if (!text) return text;
   const lines = text.split(/\r?\n/);
   const blank = (l: string) => l.trim() === '';
   const join = (part: string[]) => part.join('\n').replace(/\s+$/, '');
 
-  const forward = lines.findIndex((l) => FORWARD_LINE.test(l));
+  const forward = lines.findIndex((l, i) => FORWARD_LINE.test(l) && startsHeaderBlock(lines, i + 1));
   if (forward > 0 && lines.slice(0, forward).some((l) => !blank(l))) return join(lines.slice(0, forward));
 
   const isQuote = (l: string) => /^\s*>/.test(l);

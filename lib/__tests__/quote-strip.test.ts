@@ -68,7 +68,12 @@ describe('stripPlainTextQuotes', () => {
   });
 
   it('removes a forwarded message from its separator line on', () => {
-    expect(stripPlainTextQuotes('FYI\n\n---------- Forwarded message ----------\nFrom: Bob\n\nOriginal')).toBe('FYI');
+    const gmail = '---------- Forwarded message ---------\nFrom: Bob <bob@example.com>\nDate: Mon, Nov 23, 2026\nSubject: Lunch\n\nOriginal';
+    expect(stripPlainTextQuotes(`FYI\n\n${gmail}`)).toBe('FYI');
+    const outlook = '-----Original Message-----\nFrom: Bob Martin\nSent: Monday, November 23, 2026 10:12\nTo: Dev\nSubject: Lunch\n\nOriginal';
+    expect(stripPlainTextQuotes(`FYI\n\n${outlook}`)).toBe('FYI');
+    const thunderbird = '-------- Forwarded Message --------\nSubject: Lunch\nDate: Mon, 23 Nov 2026 10:12:00 +0100\nFrom: Bob <bob@example.com>\n\nOriginal';
+    expect(stripPlainTextQuotes(`FYI\n\n${thunderbird}`)).toBe('FYI');
   });
 
   it('keeps an interleaved reply, a message that is only a quote, and a rule of dashes', () => {
@@ -78,5 +83,8 @@ describe('stripPlainTextQuotes', () => {
     expect(stripPlainTextQuotes(onlyQuote)).toBe(onlyQuote);
     const rule = 'Agenda\n----------\nItem one';
     expect(stripPlainTextQuotes(rule)).toBe(rule);
+    // A heading between dashes is not a forward header without the header lines after it.
+    const headings = 'Plan for the week\n\n--- Agenda ---\n9:00 Welcome\n\n----- Day 2 -----\nTopic: review\nRoom: B';
+    expect(stripPlainTextQuotes(headings)).toBe(headings);
   });
 });
