@@ -19,6 +19,7 @@ import { PluginNoticeHost } from "@/components/plugins/plugin-notice-host";
 import { PluginFileViewerHost } from "@/components/plugins/plugin-file-viewer-host";
 import { ExternalRecipientConfirmHost } from "@/components/email/external-recipient-confirm";
 import { PhishingReportHost } from "@/components/email/phishing-report-host";
+import { SaveAsTemplateHost } from "@/components/templates/save-as-template-host";
 import { PluginPageNavigator } from "@/components/plugins/plugin-page-navigator";
 import { PaneCycleHost } from "@/components/layout/pane-cycle";
 import { SidebarAppFramesHost } from "@/components/layout/sidebar-app-frames-host";
@@ -138,6 +139,7 @@ export default async function LocaleLayout({
                   {!IS_LITE && <PluginFileViewerHost />}
                   <ExternalRecipientConfirmHost />
                   <PhishingReportHost />
+                  <SaveAsTemplateHost />
                   <MainWindowOnly>
                     <CommandPaletteHost />
                   </MainWindowOnly>

@@ -6421,6 +6421,11 @@
     "menu": "Criar evento…",
     "link_line": "E-mail: {link}"
   },
+  "save_as_template": {
+    "read_failed": "Não foi possível ler a mensagem. Tente novamente.",
+    "images_dropped": "{count, plural, one {Não foi possível carregar uma imagem, que foi deixada de fora.} other {Não foi possível carregar # imagens, que foram deixadas de fora.}}",
+    "too_large_to_sync": "Este modelo ultrapassa os 8 KB que o servidor armazena por modelo, por isso fica só neste navegador."
+  },
   "free_busy_share": {
     "button": "Compartilhar minha disponibilidade com {group}",
     "already": "Sua disponibilidade está compartilhada com {group}",

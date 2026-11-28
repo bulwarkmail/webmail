@@ -142,6 +142,28 @@ export function sniffImageMime(bytes: Uint8Array): string | null {
 }
 
 /**
+ * The bytes of an inline image part as a data: URL, with the type to send it
+ * under again: the declared one when it is image/*, else the one sniffed from
+ * the bytes (#543). Null when the bytes are no image.
+ */
+export async function inlineImageDataUrl(
+  buffer: ArrayBuffer,
+  declaredType: string | undefined,
+): Promise<{ dataUrl: string; type: string } | null> {
+  const type = (declaredType || "").startsWith("image/")
+    ? declaredType!
+    : sniffImageMime(new Uint8Array(buffer));
+  if (!type) return null;
+  const dataUrl = await new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(new Blob([buffer], { type }));
+  });
+  return { dataUrl, type };
+}
+
+/**
  * Rewrites `<img src="cid:xxx">` references into `<img src="<placeholder>" data-cid="xxx">`
  * so TipTap can render the editor (the original cid: URL would 404) while still
  * carrying the cid through edits. The placeholder is swapped to the actual

@@ -6421,6 +6421,11 @@
     "menu": "Termin erstellen…",
     "link_line": "E-Mail: {link}"
   },
+  "save_as_template": {
+    "read_failed": "Die Nachricht konnte nicht gelesen werden. Versuchen Sie es erneut.",
+    "images_dropped": "{count, plural, one {Ein Bild konnte nicht geladen werden und wurde weggelassen.} other {# Bilder konnten nicht geladen werden und wurden weggelassen.}}",
+    "too_large_to_sync": "Diese Vorlage ist größer als die 8 KB, die der Server pro Vorlage speichert, und bleibt daher nur in diesem Browser."
+  },
   "free_busy_share": {
     "button": "Meine Frei/Gebucht-Zeiten für {group} freigeben",
     "already": "Ihre Frei/Gebucht-Zeiten sind für {group} freigegeben",

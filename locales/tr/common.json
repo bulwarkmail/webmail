@@ -5776,6 +5776,11 @@
     "menu": "Etkinlik oluştur…",
     "link_line": "E-posta: {link}"
   },
+  "save_as_template": {
+    "read_failed": "İleti okunamadı. Yeniden deneyin.",
+    "images_dropped": "{count, plural, one {Bir görsel yüklenemedi ve dışarıda bırakıldı.} other {# görsel yüklenemedi ve dışarıda bırakıldı.}}",
+    "too_large_to_sync": "Bu şablon, sunucunun şablon başına sakladığı 8 KB'tan büyük; bu yüzden yalnızca bu tarayıcıda kalacak."
+  },
   "free_busy_share": {
     "button": "Müsaitlik durumumu {group} ile paylaş",
     "already": "Müsaitlik durumunuz {group} ile paylaşılıyor",

@@ -5776,6 +5776,11 @@
     "menu": "Esemény létrehozása…",
     "link_line": "E-mail: {link}"
   },
+  "save_as_template": {
+    "read_failed": "Nem sikerült beolvasni az üzenetet. Próbálja újra.",
+    "images_dropped": "{count, plural, one {Egy képet nem sikerült betölteni, ezért kimaradt.} other {# képet nem sikerült betölteni, ezért kimaradtak.}}",
+    "too_large_to_sync": "Ez a sablon nagyobb annál a 8 KB-nál, amennyit a szerver sablononként tárol, ezért csak ebben a böngészőben marad meg."
+  },
   "free_busy_share": {
     "button": "Szabad/foglalt időim megosztása ezzel: {group}",
     "already": "Szabad/foglalt idői meg vannak osztva ezzel: {group}",

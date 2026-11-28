@@ -5791,6 +5791,11 @@
     "menu": "Skapa händelse…",
     "link_line": "E-post: {link}"
   },
+  "save_as_template": {
+    "read_failed": "Det gick inte att läsa meddelandet. Försök igen.",
+    "images_dropped": "{count, plural, one {En bild kunde inte läsas in och utelämnades.} other {# bilder kunde inte läsas in och utelämnades.}}",
+    "too_large_to_sync": "Mallen är större än de 8 KB som servern sparar per mall, så den finns bara kvar i den här webbläsaren."
+  },
   "free_busy_share": {
     "button": "Dela min free/busy med {group}",
     "already": "Din free/busy är delad med {group}",

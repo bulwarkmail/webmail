@@ -47,8 +47,10 @@ import {
   Undo,
   Inbox,
   CalendarPlus,
+  BookmarkPlus,
 } from "@/components/icons";
 import { useCreateEventFromMail } from "./use-create-event-from-mail";
+import { useSaveAsTemplate } from "./use-save-as-template";
 
 type Icon = ComponentType<{ className?: string }>;
 
@@ -68,6 +70,7 @@ export type MessageActionKey =
   | "copy_message_link"
   | "copy_conversation_link"
   | "create_event"
+  | "save_as_template"
   | "archive"
   | "delete"
   | "delete_conversation"
@@ -198,6 +201,7 @@ export function useMessageActionList(o: MessageActionOptions): MessageActionEntr
   const tP3 = useTranslations("mail_p3_actions");
   const tSave = useTranslations("desktopSaveOpen");
   const tEventFromMail = useTranslations("event_from_mail");
+  const tComposer = useTranslations("email_composer");
   const copyLink = useCopyLink();
   const archiveEnabled = useArchiveActionEnabled();
   const mountainView = useSettingsStore((state) => state.interfaceLayout === "mountain-view");
@@ -206,6 +210,7 @@ export function useMessageActionList(o: MessageActionOptions): MessageActionEntr
   // the message's account. It sends mail, so it opens a confirm first.
   const phishing = usePhishingReport([email], o.currentMailboxRole);
   const createEventFromMail = useCreateEventFromMail();
+  const saveAsTemplate = useSaveAsTemplate(o.email);
 
   const isUnread = o.unread ?? !email.keywords?.$seen;
   const isStarred = !!email.keywords?.$flagged;
@@ -287,6 +292,10 @@ export function useMessageActionList(o: MessageActionOptions): MessageActionEntr
     const createEvent = createEventFromMail && !isDraft
       ? [item("create_event", CalendarPlus, tEventFromMail("menu"), () => createEventFromMail(email), { testId: "ctx-create-event" })]
       : [];
+    // Its subject and body as one of the user's templates, as from the composer.
+    const template = saveAsTemplate
+      ? [item("save_as_template", BookmarkPlus, tComposer("save_as_template"), () => saveAsTemplate(email), { testId: "ctx-save-as-template" })]
+      : [];
     // In Trash the first thing after answering: getting it back.
     const restore = o.onRestore && o.currentMailboxRole === "trash"
       ? [item("restore", Undo, tRecover("restore"), o.onRestore, { testId: "ctx-restore" }), SEPARATOR]
@@ -361,14 +370,14 @@ export function useMessageActionList(o: MessageActionOptions): MessageActionEntr
           ...draft, ...replies, ...restore, ...archive, del, ...delConversation, read, SEPARATOR,
           ...move, tag, ...rules, ...copy, SEPARATOR,
           star, ...pin, ...spam, ...reportPhishing, ...find, SEPARATOR,
-          ...createEvent, ...links, SEPARATOR, ...views, SEPARATOR, ...openWindow, ...file,
+          ...createEvent, ...template, ...links, SEPARATOR, ...views, SEPARATOR, ...openWindow, ...file,
         ]
       : [
           ...draft, ...replies, ...restore, ...archive, del, ...delConversation, SEPARATOR,
           ...move, ...copy, ...rules, SEPARATOR,
           read, star, ...pin, tag, SEPARATOR,
           ...spam, ...reportPhishing, ...find, SEPARATOR,
-          ...openWindow, ...createEvent, ...links, SEPARATOR,
+          ...openWindow, ...createEvent, ...template, ...links, SEPARATOR,
           ...views, SEPARATOR,
           ...file,
         ];
@@ -409,7 +418,7 @@ export const ROW_MENU_KEYS: ReadonlySet<MessageActionKey> = new Set<MessageActio
  */
 const MORE_GROUPS: MessageActionKey[][] = [
   ["forward_as_attachment"],
-  ["create_event"],
+  ["create_event", "save_as_template"],
   ["copy_message_link", "copy_conversation_link"],
   ["copy_to_account", "rules", "remove_from_folder", "pin", "report_phishing", "find_from_sender"],
   ["export", "print", "view_source"],

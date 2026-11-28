@@ -173,7 +173,7 @@ import {
   rewriteCidImagesForEditor,
   replaceInlineImagePlaceholders,
   collectInlineImageCids,
-  sniffImageMime,
+  inlineImageDataUrl,
   formatRecipient,
   parseRecipient,
   parseRecipientList,
@@ -2037,22 +2037,12 @@ export function EmailComposer({
             ? await originClient.fetchBlobArrayBuffer(att.blobId, att.name || 'inline', att.type, originOwner)
             : await originClient.fetchBlobArrayBuffer(att.blobId, att.name || 'inline', att.type);
           if (cancelled) return;
-          // Trust a declared image/* type; otherwise sniff the magic bytes so
-          // an octet-stream-embedded image still gets a renderable data URL
-          // and, on send, is re-attached with a correct image/* type that
-          // stricter clients (Thunderbird) will display.
-          const imageType = (att.type || '').startsWith('image/')
-            ? att.type
-            : sniffImageMime(new Uint8Array(buffer));
+          // The sniffed type also goes out on send: stricter clients
+          // (Thunderbird) only show an image/* part.
+          const image = await inlineImageDataUrl(buffer, att.type);
           // Not an image at all - leave it alone rather than inlining it.
-          if (!imageType) continue;
-          const blob = new Blob([buffer], { type: imageType });
-          const dataUrl = await new Promise<string>((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = () => resolve(reader.result as string);
-            reader.onerror = () => reject(reader.error);
-            reader.readAsDataURL(blob);
-          });
+          if (!image) continue;
+          const { dataUrl, type: imageType } = image;
           if (cancelled) return;
           const entry = inlineImagesRef.current.find((e) => e.cid === att.cid);
           if (entry) {

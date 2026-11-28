@@ -6421,6 +6421,11 @@
     "menu": "Izveidot notikumu…",
     "link_line": "E-pasts: {link}"
   },
+  "save_as_template": {
+    "read_failed": "Neizdevās nolasīt vēstuli. Mēģiniet vēlreiz.",
+    "images_dropped": "{count, plural, one {# attēlu neizdevās ielādēt, un tas tika izlaists.} other {# attēlus neizdevās ielādēt, un tie tika izlaisti.}}",
+    "too_large_to_sync": "Šī veidne ir lielāka par 8 KB, ko serveris glabā vienai veidnei, tāpēc tā paliks tikai šajā pārlūkā."
+  },
   "free_busy_share": {
     "button": "Kopīgot manu brīvs/aizņemts ar {group}",
     "already": "Jūsu brīvs/aizņemts ir kopīgots ar {group}",

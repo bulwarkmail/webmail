@@ -176,6 +176,48 @@ function collectSeparatorRange(body: HTMLElement, marker: Element): HTMLElement[
   return range;
 }
 
+interface FoundQuote {
+  marker: Element;
+  /** What the quote takes up: the container, or a separator and all that follows it. */
+  range: HTMLElement[];
+  /** A container with the reply or a signature after it: the reader shows it open. */
+  startsExpanded: boolean;
+}
+
+/**
+ * The quoted original of a message body, as the reader folds it. None when
+ * there is no marker, when the quote is the whole message, or when a
+ * bare-blockquote fallback has content after it and its boundary is less certain.
+ */
+function findQuote(body: HTMLElement): FoundQuote | null {
+  const marker = body.querySelector(ALL_SELECTORS) ?? findAttributedBlockquote(body);
+  if (!marker) return null;
+
+  let isSeparator = SEPARATOR_SELECTORS.some((sel) => marker.matches(sel));
+  let startsExpanded = false;
+
+  // Never collapse the entire message down to just the toggle.
+  if (!hasVisibleContent(body, marker, 'before')) return null;
+  if (!isSeparator && hasVisibleContent(body, marker, 'after')) {
+    if (onlyQuotesAfter(body, marker)) {
+      // More quote follows: fold the whole run from here to the end.
+      isSeparator = true;
+    } else if (CONTAINER_SELECTORS.some((sel) => marker.matches(sel))) {
+      // A reply or signature follows an explicit container. Keep everything
+      // visible on open, but let the user fold just that container.
+      startsExpanded = true;
+    } else {
+      return null;
+    }
+  }
+
+  return {
+    marker,
+    range: isSeparator ? collectSeparatorRange(body, marker) : [marker as HTMLElement],
+    startsExpanded,
+  };
+}
+
 /**
  * Detect a quoted original in `doc` and add a "•••" toggle button. Trailing
  * quotes collapse by default; explicit containers followed by other content
@@ -192,30 +234,9 @@ export function setupQuoteCollapse(doc: Document, labels: QuoteCollapseLabels, o
   const body = doc.body;
   if (!body || body.querySelector(`[${QUOTE_TOGGLE_ATTR}]`)) return false;
 
-  const marker = body.querySelector(ALL_SELECTORS) ?? findAttributedBlockquote(body);
-  if (!marker) return false;
-
-  let isSeparator = SEPARATOR_SELECTORS.some((sel) => marker.matches(sel));
-  let initiallyExpanded = false;
-
-  // Never collapse the entire message down to just the toggle.
-  if (!hasVisibleContent(body, marker, 'before')) return false;
-  if (!isSeparator && hasVisibleContent(body, marker, 'after')) {
-    if (onlyQuotesAfter(body, marker)) {
-      // More quote follows: fold the whole run from here to the end.
-      isSeparator = true;
-    } else if (CONTAINER_SELECTORS.some((sel) => marker.matches(sel))) {
-      // A reply or signature follows an explicit container. Keep everything
-      // visible on open, but let the user fold just that container.
-      initiallyExpanded = true;
-    } else {
-      return false;
-    }
-  }
-
-  const hidden = isSeparator
-    ? collectSeparatorRange(body, marker)
-    : [marker as HTMLElement];
+  const quote = findQuote(body);
+  if (!quote) return false;
+  const { marker, range: hidden, startsExpanded: initiallyExpanded } = quote;
 
   const toggle = doc.createElement('label');
   toggle.setAttribute(QUOTE_TOGGLE_ATTR, '');
@@ -325,4 +346,135 @@ export function collapsePlainTextQuotes(safeHtml: string, labels: QuoteCollapseL
     'background:#e3e6ea;color:#3c4043;font-size:11px;line-height:1;' +
     `letter-spacing:2px;cursor:pointer;">•••</summary>`;
   return `${before}\n<details>${summary}${quoted}</details>${after ? '\n' + after : ''}`;
+}
+
+// ─── Without the quote (a message saved as a template) ───────
+
+const HEADING_BLOCKS = 'p, div, h1, h2, h3, h4, h5, h6, li, td';
+/** A forward's header line, in every language: "---------- Forwarded message ----------". */
+const FORWARD_LINE = /^\s*-{3,}\s*[^-\s](?:.*[^-\s])?\s*-{3,}\s*$/;
+const MAX_ATTRIBUTION = 500;
+
+/**
+ * What introduces the quote right before `marker`, to go with it: an
+ * attribution ending with a colon ("On …, X wrote:", "Le … a écrit :") or a
+ * forward's header, which starts with a row of dashes in every language.
+ * The block when it holds that and nothing else, else the line alone.
+ */
+function quoteHeading(body: HTMLElement, marker: Element): ChildNode | null {
+  const walker = body.ownerDocument.createTreeWalker(body, NodeFilter.SHOW_TEXT);
+  let last: Text | null = null;
+  for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+    if (!(marker.compareDocumentPosition(node) & Node.DOCUMENT_POSITION_PRECEDING)) break;
+    if (node.parentElement?.tagName === 'STYLE') continue;
+    if ((node.nodeValue || '').trim() !== '') last = node as Text;
+  }
+  if (!last) return null;
+  const line = (last.nodeValue || '').trim();
+  const candidate = last.parentElement?.closest(HEADING_BLOCKS);
+  const block = candidate && candidate !== body && body.contains(candidate) && !candidate.contains(marker) ? candidate : null;
+  const blockText = block?.textContent?.trim() ?? '';
+  // A forward's header block: its first line, then From, Date, Subject, To.
+  if (block && /^-{3,}/.test(blockText) && blockText.length <= 4 * MAX_ATTRIBUTION) return block;
+  if (!line.endsWith(':') || line.length > MAX_ATTRIBUTION) return null;
+  return block && blockText === line ? block : last;
+}
+
+/** Drops blank lines and empty blocks the quote leaves at the end. */
+function trimTrailingBlank(body: HTMLElement): void {
+  for (let node = body.lastChild; node; node = body.lastChild) {
+    if (node.nodeType === Node.TEXT_NODE && !(node.nodeValue || '').trim()) {
+      node.remove();
+      continue;
+    }
+    if (node.nodeType === Node.ELEMENT_NODE) {
+      const el = node as Element;
+      if (el.tagName === 'BR' || (!(el.textContent || '').trim() && !el.querySelector('img, table, hr'))) {
+        el.remove();
+        continue;
+      }
+    }
+    break;
+  }
+}
+
+/**
+ * The HTML of a message without the quoted original the reader folds, nor
+ * the attribution or forward header that introduces it. Kept whole when the
+ * quote is all there is.
+ */
+export function stripQuotedHtml(html: string): string {
+  if (!html || typeof DOMParser === 'undefined') return html;
+  // DOMParser documents are inert: nothing in the mail runs or loads.
+  const doc = new DOMParser().parseFromString(`<body>${html}</body>`, 'text/html');
+  const quote = findQuote(doc.body);
+  if (!quote) return html;
+  const heading = quoteHeading(doc.body, quote.marker);
+  for (const el of quote.range) el.remove();
+  heading?.remove();
+  trimTrailingBlank(doc.body);
+  return doc.body.textContent?.trim() || doc.body.querySelector('img') ? doc.body.innerHTML : html;
+}
+
+/**
+ * A text message without its quoted original: a forwarded message from its
+ * separator line on, or the trailing run of ">" lines with the attribution
+ * line before it. A "-- " signature after the quote stays. Kept whole when
+ * the quote is all there is.
+ */
+const HEADER_LINE = /^\s*\p{L}[\p{L}\p{M} .-]{0,30}:\s*\S/u;
+
+/**
+ * Whether the lines from `from` on are a forwarded message's header block
+ * (From:, Date:, Subject:… in any language): two header lines with an
+ * address among them, or three. A `--- Agenda ---` heading has no such block.
+ */
+function startsHeaderBlock(lines: string[], from: number): boolean {
+  let count = 0;
+  let address = false;
+  for (let i = from; i < lines.length && HEADER_LINE.test(lines[i]); i++) {
+    count++;
+    if (lines[i].includes('@')) address = true;
+  }
+  return count >= 3 || (count >= 2 && address);
+}
+
+export function stripPlainTextQuotes(text: string): string {
+  if (!text) return text;
+  const lines = text.split(/\r?\n/);
+  const blank = (l: string) => l.trim() === '';
+  const join = (part: string[]) => part.join('\n').replace(/\s+$/, '');
+
+  const forward = lines.findIndex((l, i) => FORWARD_LINE.test(l) && startsHeaderBlock(lines, i + 1));
+  if (forward > 0 && lines.slice(0, forward).some((l) => !blank(l))) return join(lines.slice(0, forward));
+
+  const isQuote = (l: string) => /^\s*>/.test(l);
+  let end = -1;
+  for (let i = lines.length - 1; i >= 0; i--) {
+    if (isQuote(lines[i])) { end = i; break; }
+  }
+  if (end === -1) return text;
+  // Only blank lines or a "-- " signature may follow; else the reply is interleaved.
+  let inSignature = false;
+  for (let i = end + 1; i < lines.length; i++) {
+    if (inSignature || blank(lines[i])) continue;
+    if (/^--\s*$/.test(lines[i].trim())) { inSignature = true; continue; }
+    return text;
+  }
+  let start = end;
+  for (let i = end - 1; i >= 0; i--) {
+    if (isQuote(lines[i])) start = i;
+    else if (!blank(lines[i])) break;
+  }
+  let cut = start;
+  for (let i = start - 1; i >= 0; i--) {
+    if (blank(lines[i])) continue;
+    const line = lines[i].trim();
+    if (line.endsWith(':') && line.length <= MAX_ATTRIBUTION) cut = i;
+    break;
+  }
+  if (!lines.slice(0, cut).some((l) => !blank(l))) return text;
+  const before = join(lines.slice(0, cut));
+  const after = join(lines.slice(end + 1)).replace(/^\s*\n/, '');
+  return after.trim() ? `${before}\n\n${after}` : before;
 }

@@ -5776,6 +5776,11 @@
     "menu": "Loo sündmus…",
     "link_line": "E-kiri: {link}"
   },
+  "save_as_template": {
+    "read_failed": "Kirja ei õnnestunud lugeda. Proovige uuesti.",
+    "images_dropped": "{count, plural, one {Üht pilti ei õnnestunud laadida ja see jäeti välja.} other {# pilti ei õnnestunud laadida ja need jäeti välja.}}",
+    "too_large_to_sync": "See mall on suurem kui 8 KB, mida server ühe malli kohta hoiab, seega jääb see ainult sellesse brauserisse."
+  },
   "free_busy_share": {
     "button": "Jaga minu vaba/hõivatud aega grupiga {group}",
     "already": "Sinu vaba/hõivatud aeg on jagatud grupiga {group}",

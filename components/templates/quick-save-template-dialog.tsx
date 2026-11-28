@@ -3,6 +3,7 @@
 import { useId, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
+import { AlertTriangle, Loader2 } from '@/components/icons';
 import { Dialog } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
@@ -15,6 +16,10 @@ interface QuickSaveTemplateDialogProps {
   /** "Edit details…": the full template editor, with the name typed so far. */
   onEditDetails: (name: string) => void;
   onClose: () => void;
+  /** What is saved is still being read (a message's images): Save and Edit details wait. */
+  busy?: boolean;
+  /** A warning about what Save will do, shown under the name. */
+  notice?: string;
 }
 
 /**
@@ -22,7 +27,7 @@ interface QuickSaveTemplateDialogProps {
  * (category, recipients, sending identity, favourite) is one click further,
  * behind "Edit details…"; it used to open straight away with nine fields.
  */
-export function QuickSaveTemplateDialog({ defaultName, onSave, onEditDetails, onClose }: QuickSaveTemplateDialogProps) {
+export function QuickSaveTemplateDialog({ defaultName, onSave, onEditDetails, onClose, busy = false, notice }: QuickSaveTemplateDialogProps) {
   const tComposer = useTranslations('email_composer');
   const tSend = useTranslations('compose_send');
   const tSettings = useTranslations('settings.templates');
@@ -32,6 +37,7 @@ export function QuickSaveTemplateDialog({ defaultName, onSave, onEditDetails, on
   const [error, setError] = useState<string | null>(null);
 
   const save = () => {
+    if (busy) return;
     const problem = validateTemplateName(name);
     if (problem) {
       setError(problem);
@@ -54,11 +60,14 @@ export function QuickSaveTemplateDialog({ defaultName, onSave, onEditDetails, on
       }}
       footer={
         <>
-          <Button type="button" variant="ghost" className="me-auto" onClick={() => onEditDetails(name)}>
+          <Button type="button" variant="ghost" className="me-auto" disabled={busy} onClick={() => onEditDetails(name)}>
             {tSend('template_edit_details')}
           </Button>
           <Button type="button" variant="outline" onClick={onClose}>{tCommon('cancel')}</Button>
-          <Button type="submit" disabled={!name.trim()}>{tCommon('save')}</Button>
+          <Button type="submit" disabled={busy || !name.trim()} aria-busy={busy || undefined}>
+            {busy && <Loader2 className="me-2 h-4 w-4 animate-spin" aria-hidden="true" />}
+            {tCommon('save')}
+          </Button>
         </>
       }
     >
@@ -79,6 +88,12 @@ export function QuickSaveTemplateDialog({ defaultName, onSave, onEditDetails, on
         {error && (
           <p id={`${fieldId}-error`} className="text-xs text-red-600 dark:text-red-400 mt-1">
             {tSettings(`validation.${error}`)}
+          </p>
+        )}
+        {notice && (
+          <p role="status" data-testid="quick-save-template-notice" className="mt-3 flex items-start gap-2 rounded-md border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-xs text-amber-900 dark:text-amber-200">
+            <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+            <span>{notice}</span>
           </p>
         )}
       </div>
