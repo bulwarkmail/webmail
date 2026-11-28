@@ -1399,13 +1399,20 @@ export function CalendarApp({ linkSegments: routeSegments, surface = "calendar" 
 
   // Changes made elsewhere (another device, another session, an invitation)
   // reach the open calendar through push (#1349).
-  useCalendarPushRefresh(() => {
+  useCalendarPushRefresh((changes) => {
     if (!client || !supportsCalendar) return;
     // The standard instance under the Pro takeover leaves the data to the Pro tab.
     if (!isEmbedded && proInterfaceActive) return;
     const merged = multiAccountEnabled && accountClients.length > 0 && activeAccountId;
-    void (merged ? fetchAllAccountsCalendarsFn(accountClients, activeAccountId) : fetchCalendars(client));
-    void refetchCurrentRange();
+    // A changed event reloads its account's events only: a reload of every
+    // calendar shared with the user took seconds for each save (#1857).
+    if (changes.calendars || changes.eventAccountIds === null || merged) {
+      void (merged ? fetchAllAccountsCalendarsFn(accountClients, activeAccountId) : fetchCalendars(client));
+      void refetchCurrentRange();
+    } else if (changes.eventAccountIds.length > 0) {
+      const { dateRange: currentRange } = useCalendarStore.getState();
+      if (currentRange) void fetchEvents(client, currentRange.start, currentRange.end, { accountIds: changes.eventAccountIds });
+    }
     // Tasks are calendar objects too (e.g. one created over CalDAV).
     if (enableCalendarTasks && (normalizedViewMode === "tasks" || showTasksOnCalendar)) void fetchTasksFn(client);
   }, { enabled: isAuthenticated && !!client, includeBackground: multiAccountEnabled });

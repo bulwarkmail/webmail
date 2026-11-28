@@ -89,5 +89,20 @@ describe('calendar push refresh', () => {
     emit(eventChange, 'background');
     act(() => { vi.advanceTimersByTime(1_000); });
     expect(refresh).toHaveBeenCalledTimes(1);
+    // Another login's account ids: reload everything.
+    expect(refresh).toHaveBeenCalledWith({ calendars: false, eventAccountIds: null });
+  });
+
+  it('names the accounts whose events changed, and a change of a calendar itself (#1857)', () => {
+    const refresh = vi.fn();
+    renderHook(() => useCalendarPushRefresh(refresh, { enabled: true, includeBackground: false }));
+    emit({ '@type': 'StateChange', changed: { own: { CalendarEvent: 'e2' }, boss: { Email: 'm9' } } }, 'active');
+    emit({ '@type': 'StateChange', changed: { colleague: { CalendarEvent: 'x4' } } }, 'active');
+    act(() => { vi.advanceTimersByTime(1_000); });
+    expect(refresh).toHaveBeenLastCalledWith({ calendars: false, eventAccountIds: ['own', 'colleague'] });
+
+    emit({ '@type': 'StateChange', changed: { own: { Calendar: 'c3' } } }, 'active');
+    act(() => { vi.advanceTimersByTime(1_000); });
+    expect(refresh).toHaveBeenLastCalledWith({ calendars: true, eventAccountIds: [] });
   });
 });

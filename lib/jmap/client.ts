@@ -10101,7 +10101,8 @@ export class JMAPClient implements IJMAPClient {
   ): Promise<CalendarEvent[]> {
     const allEvents: CalendarEvent[] = [];
     const primaryId = this.getCalendarsAccountId();
-    const accountIds = this.getCalendarCapableAccountIds();
+    const only = options?.accountIds ? new Set(options.accountIds) : null;
+    const accountIds = this.getCalendarCapableAccountIds().filter((id) => !only || only.has(id));
 
     for (const accountId of accountIds) {
       const isPrimary = accountId === primaryId;

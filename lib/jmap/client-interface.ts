@@ -84,6 +84,8 @@ export interface CalendarEventUpdateOptions {
 export interface CalendarQueryOptions {
   /** Stops a query of several requests (a long range, several accounts) between them. */
   signal?: AbortSignal;
+  /** queryAllCalendarEvents: only these accounts (a push named them as changed). */
+  accountIds?: readonly string[];
 }
 
 /**

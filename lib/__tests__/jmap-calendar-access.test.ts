@@ -126,6 +126,13 @@ describe('calendar fan-out to shared accounts without access', () => {
     expect(consoleErrorSpy).not.toHaveBeenCalled();
   });
 
+  it('queries only the accounts it is asked for (#1857)', async () => {
+    await client.queryAllCalendarEvents({}, undefined, undefined, { accountIds: ['acct-1'] });
+
+    expect(callsForAccount('acct-1')).toHaveLength(1);
+    expect(callsForAccount('ev')).toHaveLength(0);
+  });
+
   it('getAllCalendars skips an account already known to be inaccessible', async () => {
     await client.queryAllCalendarEvents({});
     fetchSpy.mockClear();

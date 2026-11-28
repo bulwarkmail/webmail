@@ -967,6 +967,12 @@ export interface CalendarAccountClient {
 export interface FetchEventsOptions {
   /** Reload without flipping `isLoadingEvents` (background refresh after a mutation). */
   silent?: boolean;
+  /**
+   * Reload only these accounts' events and keep the others' (a push named
+   * them as changed). The whole range is loaded again while the calendar
+   * shows several logins or a plugin edits the loaded events.
+   */
+  accountIds?: readonly string[];
 }
 
 interface CalendarStore {
@@ -1248,15 +1254,22 @@ export const useCalendarStore = create<CalendarStore>()(
         if (merged) return get().fetchAllAccountsEvents(merged, start, end, options);
         const epoch = currentStoreEpoch();
         refetchVisibleRange = () => get().fetchEvents(client, start, end, { silent: true });
+        // Some accounts only, when the events on screen are this range's
+        // and no plugin adds to them.
+        const range = get().dateRange;
+        const accountIds = options?.accountIds && calendarHooks.onFetchingEvents.size === 0
+          && range?.start === start && range.end === end
+          ? options.accountIds
+          : undefined;
         const seq = ++rangeLoadSeq;
         set(options?.silent ? { error: null } : { isLoadingEvents: true, error: null });
 
         try {
           const serverRange = await pluginFetchRange(start, end);
-          let rawEvents = await client.queryAllCalendarEvents({
-            after: serverRange.start,
-            before: serverRange.end,
-          })
+          const rangeFilter = { after: serverRange.start, before: serverRange.end };
+          let rawEvents = accountIds
+            ? await client.queryAllCalendarEvents(rangeFilter, undefined, undefined, { accountIds })
+            : await client.queryAllCalendarEvents(rangeFilter)
           const editedEvents = await calendarHooks.onFetchingEvents.transform(rawEvents);
           if(calendarHooks.onFetchingEvents.size > 0){
             if(!isCalendarEventArray(editedEvents)){
@@ -1288,6 +1301,16 @@ export const useCalendarStore = create<CalendarStore>()(
           });
           if (droppedEvents > 0) {
             debug.warn('calendar', 'Calendar fetchEvents dropped malformed events without a start field', { droppedEvents });
+          }
+          if (accountIds) {
+            const reloaded = new Set(accountIds);
+            const primaryId = client.getCalendarsAccountId();
+            set((state) => ({
+              events: [...state.events.filter((e) => !reloaded.has(e.accountId ?? primaryId)), ...events],
+              isLoadingEvents: false,
+              eventsLoadError: false,
+            }));
+            return;
           }
           set({ events, isLoadingEvents: false, eventsLoadError: false, dateRange: { start, end } });
         } catch (error) {
