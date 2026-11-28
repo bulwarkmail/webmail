@@ -1,10 +1,11 @@
-import { fireEvent, render, screen } from '@testing-library/react';
-import { beforeEach, describe, expect, it } from 'vitest';
-import { MessageListTabs, useMessageListPanelProps } from '../message-list-tabs';
+import { act, fireEvent, render, screen } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { MessageListTabs, listChangeMayAffectCategoryUnread, useMessageListPanelProps } from '../message-list-tabs';
 import { useMessageListTabsStore } from '@/stores/message-list-tabs-store';
 import { useEmailStore } from '@/stores/email-store';
+import { useAuthStore } from '@/stores/auth-store';
 import { DEFAULT_SEARCH_FILTERS } from '@/lib/jmap/search-utils';
-import type { Mailbox } from '@/lib/jmap/types';
+import type { Email, Mailbox } from '@/lib/jmap/types';
 
 // The category strip is a tablist in the user's language whose active tab
 // labels the message list, and the arrow keys move between the tabs.
@@ -38,7 +39,12 @@ describe('MessageListTabs', () => {
       searchQuery: '',
       searchFilters: { ...DEFAULT_SEARCH_FILTERS },
       isUnifiedView: false,
+      emails: [],
     } as never);
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   it('names the strip from the translations and makes the list its panel', () => {
@@ -88,5 +94,90 @@ describe('MessageListTabs', () => {
     useEmailStore.setState({ searchFilters: { ...DEFAULT_SEARCH_FILTERS, from: 'bob' } } as never);
     render(<Harness />);
     expect(screen.queryByRole('tablist')).toBeNull();
+  });
+
+  it('refreshes unread chips when a row leaves the list or $seen flips', async () => {
+    vi.useFakeTimers();
+    const getCategoryUnreadCounts = vi.fn().mockResolvedValue({ primary: 2, promotions: 0, social: 0 });
+    useAuthStore.setState({ client: { getCategoryUnreadCounts } } as never);
+    const unreadA = { id: 'a', keywords: {} } as Email;
+    const unreadB = { id: 'b', keywords: {} } as Email;
+    useEmailStore.setState({ emails: [unreadA, unreadB] } as never);
+
+    render(<Harness />);
+    await act(async () => {
+      await Promise.resolve();
+    });
+    expect(getCategoryUnreadCounts).toHaveBeenCalledTimes(1);
+
+    // Scroll / load-more: same rows plus another page — no recount.
+    act(() => {
+      useEmailStore.setState({
+        emails: [unreadA, unreadB, { id: 'c', keywords: { $seen: true } } as Email],
+      } as never);
+    });
+    await act(async () => {
+      vi.advanceTimersByTime(200);
+      await Promise.resolve();
+    });
+    expect(getCategoryUnreadCounts).toHaveBeenCalledTimes(1);
+
+    // Star toggle rebuilds the array without touching $seen — no recount.
+    act(() => {
+      useEmailStore.setState({
+        emails: [
+          { ...unreadA, keywords: { $flagged: true } } as Email,
+          unreadB,
+          { id: 'c', keywords: { $seen: true } } as Email,
+        ],
+      } as never);
+    });
+    await act(async () => {
+      vi.advanceTimersByTime(200);
+      await Promise.resolve();
+    });
+    expect(getCategoryUnreadCounts).toHaveBeenCalledTimes(1);
+
+    // Delete / archive drops a row — recount after debounce.
+    act(() => {
+      useEmailStore.setState({
+        emails: [
+          { ...unreadA, keywords: { $flagged: true } } as Email,
+          { id: 'c', keywords: { $seen: true } } as Email,
+        ],
+      } as never);
+    });
+    expect(getCategoryUnreadCounts).toHaveBeenCalledTimes(1);
+    await act(async () => {
+      vi.advanceTimersByTime(200);
+      await Promise.resolve();
+    });
+    expect(getCategoryUnreadCounts).toHaveBeenCalledTimes(2);
+
+    // Mark-read flips $seen — recount.
+    act(() => {
+      useEmailStore.setState({
+        emails: [
+          { id: 'a', keywords: { $flagged: true, $seen: true } } as Email,
+          { id: 'c', keywords: { $seen: true } } as Email,
+        ],
+      } as never);
+    });
+    await act(async () => {
+      vi.advanceTimersByTime(200);
+      await Promise.resolve();
+    });
+    expect(getCategoryUnreadCounts).toHaveBeenCalledTimes(3);
+  });
+
+  it('detects list changes that can move unread tab totals', () => {
+    const a = { id: 'a', keywords: {} } as Email;
+    const aRead = { id: 'a', keywords: { $seen: true } } as Email;
+    const b = { id: 'b', keywords: { $seen: true } } as Email;
+    expect(listChangeMayAffectCategoryUnread([a, b], [a, b])).toBe(false);
+    expect(listChangeMayAffectCategoryUnread([a, b], [a, b, { id: 'c' } as Email])).toBe(false);
+    expect(listChangeMayAffectCategoryUnread([a, b], [{ ...a, keywords: { $flagged: true } } as Email, b])).toBe(false);
+    expect(listChangeMayAffectCategoryUnread([a, b], [a])).toBe(true);
+    expect(listChangeMayAffectCategoryUnread([a, b], [aRead, b])).toBe(true);
   });
 });
