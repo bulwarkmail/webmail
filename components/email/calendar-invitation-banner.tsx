@@ -715,6 +715,16 @@ function MessageInvitationBanner({ email, onForward }: CalendarInvitationBannerP
 
   loadSharedCopyRef.current = loadSharedCopy;
 
+  /** Finds the invitation's copy in the user's own calendar on the server and adds it to the store. */
+  async function loadOwnCopy(uid: string): Promise<CalendarEvent | null> {
+    if (!client) return null;
+    const found = (await client.queryCalendarEvents({ uid })).find((e) => e.uid === uid && !e.recurrenceId && !e.isShared) ?? null;
+    if (found) {
+      useCalendarStore.setState((s) => (s.events.some((e) => e.id === found.id) ? s : { events: [...s.events, found] }));
+    }
+    return found;
+  }
+
   // The copy in the account the message belongs to. For the user's own
   // mailbox that is their own calendar: a calendar shared with them by
   // someone invited too holds that person's copy under the same uid, and
@@ -887,6 +897,8 @@ function MessageInvitationBanner({ email, onForward }: CalendarInvitationBannerP
         resolveExisting: () => (existingEvent
           ? resolveExistingEventForRsvp()
           : parsedEvent.uid ? loadSharedCopy(parsedEvent.uid) : Promise.resolve(null)),
+        // The copy just added, when the calendar hasn't loaded its dates.
+        findImported: (uid) => (sharedMailAccount ? loadSharedCopy(uid) : loadOwnCopy(uid)),
       }, status);
       // 'stopped': a plugin stopped it and said why; keep the old answer.
       if (outcome === 'answered') {

@@ -828,6 +828,30 @@ describe('CalendarInvitationBanner', () => {
     expect(await screen.findByText('Response sent')).toBeInTheDocument();
   });
 
+  it('answers with one click an invitation it adds outside the dates the calendar loaded (#1893)', async () => {
+    const participants = {
+      org: { '@type': 'Participant', calendarAddress: 'MAILTO:boss@outside.test', roles: { owner: true } },
+      me: { '@type': 'Participant', calendarAddress: 'MAILTO:user@example.com', roles: { required: true }, participationStatus: 'needs-action' },
+    };
+    const invitation = { uid: 'uid-ext', title: 'External', start: '2026-12-03T10:00:00', organizerCalendarAddress: 'MAILTO:boss@outside.test', participants };
+    mocks.clientMock.parseCalendarEvents.mockResolvedValue([invitation]);
+    // The import refetches only the range the calendar loaded: the new copy
+    // is on the server, not in the store.
+    let imported = false;
+    mocks.calendarState.importEvents.mockImplementation(async () => { imported = true; return 1; });
+    mocks.clientMock.queryCalendarEvents.mockImplementation(async () => (imported ? [{ ...invitation, id: 'event-new' }] : []));
+    mocks.calendarState.rsvpEvent.mockResolvedValue(true);
+
+    render(<CalendarInvitationBanner email={makeEmail({ id: 'email-ext' })} />);
+    fireEvent.click(await screen.findByText('Accept'));
+
+    await waitFor(() => expect(mocks.calendarState.rsvpEvent).toHaveBeenCalledWith(
+      mocks.clientMock, 'event-new', 'me', 'accepted', { imip: 'MAILTO:boss@outside.test' },
+    ));
+    expect(mocks.calendarState.importEvents).toHaveBeenCalledTimes(1);
+    expect(await screen.findByText('Response sent')).toBeInTheDocument();
+  });
+
   it("answers on the user's own copy, not on a copy in a calendar shared with them (#634)", async () => {
     const participants = {
       user: { '@type': 'Participant', email: 'user@example.com', name: 'User', roles: { attendee: true }, participationStatus: 'needs-action' },
