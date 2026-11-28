@@ -917,16 +917,17 @@ export function findParticipantByEmail(
     if (p.email?.toLowerCase() === lowerEmail) {
       return { id, participant: p };
     }
-    // Stalwart uses calendarAddress (mailto:...) instead of email/sendTo
+    // Stalwart uses calendarAddress (mailto:...) instead of email/sendTo;
+    // Outlook and Exchange write the scheme as MAILTO:.
     if (p.calendarAddress) {
-      const addr = p.calendarAddress.replace('mailto:', '').toLowerCase();
+      const addr = p.calendarAddress.replace(/^mailto:/i, '').toLowerCase();
       if (addr === lowerEmail) {
         return { id, participant: p };
       }
     }
     if (p.sendTo) {
       for (const addr of Object.values(p.sendTo)) {
-        if (addr.replace('mailto:', '').toLowerCase() === lowerEmail) {
+        if (addr.replace(/^mailto:/i, '').toLowerCase() === lowerEmail) {
           return { id, participant: p };
         }
       }

@@ -7,6 +7,7 @@ import {
   formatEventSummary,
   formatInvitationSchedule,
   findParticipantByEmail,
+  findParticipantByEmails,
 } from '../calendar-invitation';
 import type { Email, CalendarEvent, CalendarParticipant } from '@/lib/jmap/types';
 
@@ -709,6 +710,20 @@ describe('findParticipantByEmail', () => {
     const result = findParticipantByEmail(event, 'bob@example.com');
     expect(result).toBeTruthy();
     expect(result!.id).toBe('p1');
+  });
+
+  it('finds an attendee whose address an Outlook invitation spells MAILTO: (#1893, #1907)', () => {
+    // CalendarEvent/parse keeps the scheme as the ICS wrote it.
+    const event: Partial<CalendarEvent> = {
+      participants: {
+        org: makeParticipant({ email: '', calendarAddress: 'MAILTO:boss@outside.test', roles: { owner: true } }),
+        me: makeParticipant({ email: '', calendarAddress: 'MAILTO:Me@Example.com' }),
+        old: makeParticipant({ email: '', sendTo: { imip: 'MAILTO:old@example.com' } }),
+      },
+    };
+    expect(findParticipantByEmail(event, 'me@example.com')?.id).toBe('me');
+    expect(findParticipantByEmails(event, ['other@example.com', 'me@example.com'])?.id).toBe('me');
+    expect(findParticipantByEmail(event, 'old@example.com')?.id).toBe('old');
   });
 
   it('returns null when no match', () => {
