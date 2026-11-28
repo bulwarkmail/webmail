@@ -931,6 +931,24 @@ function LoginPageContent() {
     startServerSideSso();
   }, [autoSsoEnabled, oauthOnly, oauthDiscoveryDone, oauthMetadata, passwordFallbackMode, ssoError, isAddAccountMode, isAuthenticated, jmapServers.length, startServerSideSso]);
 
+  // Lite on Stalwart: a link that names the account (?login_hint=) and an
+  // account that signs in at an outside provider start that sign-in once,
+  // as the button would (#1860). Not after a sign-out on purpose (#905), nor
+  // again soon after the last attempt (#1819), so a failed one can't loop.
+  // startLiteOAuth is defined below the early returns, hence the ref; and
+  // no dependency list, so a render that set the ref runs the check again.
+  const startLiteOAuthRef = useRef<((liteServerUrl: string) => Promise<void>) | null>(null);
+  const liteHintSsoTriggered = useRef(false);
+  useEffect(() => {
+    if (!liteSsoRequired || !loginHint || typedAddress !== loginHint || !startLiteOAuthRef.current) return;
+    if (liteHintSsoTriggered.current || oauthLoading || isAddAccountMode || isAuthenticated) return;
+    if (signedOutOnPurpose.current === null) signedOutOnPurpose.current = consumeSignedOut();
+    if (signedOutOnPurpose.current) return;
+    liteHintSsoTriggered.current = true;
+    if (!claimAutoSsoAttempt()) return;
+    void startLiteOAuthRef.current(probeTarget);
+  });
+
   const handleThemeSelect = useCallback((newTheme: "light" | "dark" | "system") => {
     setTheme(newTheme);
     themeMenu.closeContextMenu();
@@ -1128,6 +1146,8 @@ function LoginPageContent() {
 
     window.location.href = authUrl.toString();
   };
+
+  startLiteOAuthRef.current = startLiteOAuth;
 
   /**
    * Starts OAuth for the selected server, or for `target`: a server in the
